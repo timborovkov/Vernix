@@ -139,9 +139,7 @@ describe("VoiceSession", () => {
 
     // Wait for async handler
     await vi.waitFor(() => {
-      expect(mockGetRAGContext).toHaveBeenCalledWith("test query", {
-        meetingId: "m1",
-      });
+      expect(mockGetRAGContext).toHaveBeenCalledWith("test query");
     });
 
     expect(mockRt.send).toHaveBeenCalledWith(
