@@ -15,6 +15,14 @@ const eslintConfig = defineConfig([
       "drizzle/enforce-update-with-where": "error",
     },
   },
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "react-hooks/globals": "off",
+      "react-hooks/immutability": "off",
+      "drizzle/enforce-delete-with-where": "off",
+    },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
 ]);
 
