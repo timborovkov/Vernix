@@ -41,6 +41,10 @@ export interface RAGOptions {
   meetingId?: string;
   limit?: number;
   scoreThreshold?: number;
+  /** Boost results from this meeting so they rank higher. */
+  boostMeetingId?: string;
+  /** Multiplier applied to boosted meeting scores (default 1.15). */
+  boostFactor?: number;
 }
 
 /**
@@ -140,9 +144,16 @@ export async function getRAGContext(
     throw new AllSearchesFailedError();
   }
 
+  const boostId = options?.boostMeetingId;
+  const boostFactor = options?.boostFactor ?? 1.15;
+
   return allHits
     .filter((h) => h.score >= scoreThreshold)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      const aScore = boostId && a.meetingId === boostId ? a.score * boostFactor : a.score;
+      const bScore = boostId && b.meetingId === boostId ? b.score * boostFactor : b.score;
+      return bScore - aScore;
+    })
     .slice(0, limit);
 }
 
