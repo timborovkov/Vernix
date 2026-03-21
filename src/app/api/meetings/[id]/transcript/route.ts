@@ -15,6 +15,13 @@ export async function GET(
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
-  const segments = await scrollTranscript(meeting.qdrantCollectionName);
-  return NextResponse.json({ segments });
+  try {
+    const segments = await scrollTranscript(meeting.qdrantCollectionName);
+    return NextResponse.json({ segments });
+  } catch {
+    return NextResponse.json(
+      { error: "Failed to fetch transcript" },
+      { status: 500 }
+    );
+  }
 }
