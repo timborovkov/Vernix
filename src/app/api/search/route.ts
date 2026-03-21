@@ -1,0 +1,102 @@
+import { NextResponse } from "next/server";
+import { z } from "zod/v4";
+import { db } from "@/lib/db";
+import { meetings } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { getQdrantClient } from "@/lib/vector/client";
+import { createEmbedding } from "@/lib/openai/embeddings";
+
+const searchSchema = z.object({
+  q: z.string().min(1, "Query is required"),
+  meetingId: z.uuid().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+interface SearchResult {
+  text: string;
+  speaker: string;
+  timestamp_ms: number;
+  score: number;
+  meetingId: string;
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const parsed = searchSchema.safeParse({
+    q: searchParams.get("q") ?? undefined,
+    meetingId: searchParams.get("meetingId") ?? undefined,
+    limit: searchParams.get("limit") ?? undefined,
+  });
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid search params", issues: parsed.error.issues },
+      { status: 400 }
+    );
+  }
+
+  const { q, meetingId, limit } = parsed.data;
+  const queryVector = await createEmbedding(q);
+  const client = getQdrantClient();
+
+  let collectionsToSearch: { collectionName: string; meetingId: string }[];
+
+  if (meetingId) {
+    const [meeting] = await db
+      .select()
+      .from(meetings)
+      .where(eq(meetings.id, meetingId));
+
+    if (!meeting) {
+      return NextResponse.json(
+        { error: "Meeting not found" },
+        { status: 404 }
+      );
+    }
+
+    collectionsToSearch = [
+      { collectionName: meeting.qdrantCollectionName, meetingId: meeting.id },
+    ];
+  } else {
+    const searchable = await db
+      .select()
+      .from(meetings)
+      .where(inArray(meetings.status, ["active", "completed"]));
+
+    collectionsToSearch = searchable.map((m) => ({
+      collectionName: m.qdrantCollectionName,
+      meetingId: m.id,
+    }));
+  }
+
+  const allResults: SearchResult[] = [];
+
+  await Promise.all(
+    collectionsToSearch.map(async ({ collectionName, meetingId: mId }) => {
+      try {
+        const hits = await client.search(collectionName, {
+          vector: queryVector,
+          limit,
+          with_payload: true,
+        });
+
+        for (const hit of hits) {
+          const payload = hit.payload as Record<string, unknown>;
+          allResults.push({
+            text: payload.text as string,
+            speaker: payload.speaker as string,
+            timestamp_ms: payload.timestamp_ms as number,
+            score: hit.score,
+            meetingId: mId,
+          });
+        }
+      } catch {
+        // Skip collections that don't exist or error
+      }
+    })
+  );
+
+  allResults.sort((a, b) => b.score - a.score);
+
+  return NextResponse.json({ results: allResults.slice(0, limit) });
+}
