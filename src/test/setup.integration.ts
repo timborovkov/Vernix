@@ -16,7 +16,7 @@ beforeAll(async () => {
   await adminPool.query(`CREATE DATABASE "${TEST_DB}"`);
 
   process.env.DATABASE_URL = TEST_URL;
-  process.env.QDRANT_URL = "http://localhost:6333";
+  process.env.QDRANT_URL = process.env.QDRANT_URL ?? "http://localhost:6380";
   process.env.MEETING_BOT_PROVIDER = "mock";
 
   const pool = new pg.Pool({ connectionString: TEST_URL });
