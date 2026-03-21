@@ -1,16 +1,16 @@
 # TODO
 
-## P0 — Core Pipeline (makes the app functional)
+## P0 — Core Pipeline ~~(makes the app functional)~~ DONE
 
-- **Recall.ai transcript webhook** — Create `src/app/api/webhooks/recall/transcript/route.ts` to receive real-time transcript chunks from Recall.ai bot
-- **Embedding pipeline** — Wire transcript reception → `createEmbedding()` → Qdrant upsert with payload `{ text, speaker, timestamp_ms, type }` into the meeting's collection
-- **Vector search endpoint** — Create `src/app/api/search/route.ts` accepting a query string + optional meetingId, returns relevant transcript segments via cosine similarity
+- ~~**Recall.ai transcript webhook** — `src/app/api/webhooks/recall/transcript/route.ts`~~
+- ~~**Embedding pipeline** — `src/lib/vector/upsert.ts` wires transcript → embedding → Qdrant upsert~~
+- ~~**Vector search endpoint** — `src/app/api/search/route.ts` with single-meeting and cross-meeting search~~
 
 ## P1 — Voice Agent (the differentiator)
 
 - **OpenAI Realtime API integration** — Add `src/lib/openai/voice.ts` for bidirectional audio streaming (listen + speak)
 - **RAG-powered responses** — When agent is asked a question during a call, search Qdrant for context (current meeting + past meetings), feed into LLM, generate spoken response
-- **Cross-meeting search** — Either maintain a global Qdrant collection with `meeting_id` in payload, or fan-out search across per-meeting collections
+- ~~**Cross-meeting search** — Implemented in `/api/search` via fan-out across per-meeting collections~~
 
 ## P2 — Post-Meeting Processing
 
