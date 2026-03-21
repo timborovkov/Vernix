@@ -1,0 +1,119 @@
+import { db } from "@/lib/db";
+import { meetings } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
+import { getQdrantClient } from "@/lib/vector/client";
+import { createEmbedding } from "@/lib/openai/embeddings";
+
+const MAX_CONCURRENT = 5;
+
+export interface RAGResult {
+  text: string;
+  speaker: string;
+  timestampMs: number;
+  score: number;
+  meetingId: string;
+}
+
+export interface RAGOptions {
+  meetingId?: string;
+  limit?: number;
+  scoreThreshold?: number;
+}
+
+export async function getRAGContext(
+  query: string,
+  options?: RAGOptions
+): Promise<RAGResult[]> {
+  const limit = options?.limit ?? 10;
+  const scoreThreshold = options?.scoreThreshold ?? 0.5;
+
+  let collectionsToSearch: { collectionName: string; meetingId: string }[];
+
+  if (options?.meetingId) {
+    const [meeting] = await db
+      .select()
+      .from(meetings)
+      .where(eq(meetings.id, options.meetingId));
+
+    if (!meeting) {
+      return [];
+    }
+
+    collectionsToSearch = [
+      { collectionName: meeting.qdrantCollectionName, meetingId: meeting.id },
+    ];
+  } else {
+    const searchable = await db
+      .select()
+      .from(meetings)
+      .where(inArray(meetings.status, ["active", "completed"]));
+
+    collectionsToSearch = searchable.map((m) => ({
+      collectionName: m.qdrantCollectionName,
+      meetingId: m.id,
+    }));
+  }
+
+  if (collectionsToSearch.length === 0) {
+    return [];
+  }
+
+  let queryVector: number[];
+  try {
+    queryVector = await createEmbedding(query);
+  } catch {
+    return [];
+  }
+
+  const client = getQdrantClient();
+  const allHits: RAGResult[] = [];
+
+  for (let i = 0; i < collectionsToSearch.length; i += MAX_CONCURRENT) {
+    const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT);
+    const outcomes = await Promise.all(
+      batch.map(async ({ collectionName, meetingId: mId }) => {
+        try {
+          const results = await client.search(collectionName, {
+            vector: queryVector,
+            limit,
+            with_payload: true,
+          });
+
+          return results.map((hit) => {
+            const payload = hit.payload as Record<string, unknown>;
+            return {
+              text: payload.text as string,
+              speaker: payload.speaker as string,
+              timestampMs: payload.timestamp_ms as number,
+              score: hit.score,
+              meetingId: mId,
+            };
+          });
+        } catch {
+          return [];
+        }
+      })
+    );
+
+    for (const hits of outcomes) {
+      allHits.push(...hits);
+    }
+  }
+
+  return allHits
+    .filter((h) => h.score >= scoreThreshold)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+export function formatContextForPrompt(results: RAGResult[]): string {
+  if (results.length === 0) {
+    return "";
+  }
+
+  const lines = results.map(
+    (r) => `[${r.speaker}] (${r.timestampMs}ms): ${r.text}`
+  );
+
+  return `## Relevant meeting context\n\n${lines.join("\n")}`;
+}
