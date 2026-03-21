@@ -43,7 +43,7 @@ export class VoiceSession {
     });
 
     this.rt.on("session.created", () => {
-      this.rt!.send({
+      this.rt?.send({
         type: "session.update",
         session: {
           type: "realtime",
