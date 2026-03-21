@@ -196,6 +196,8 @@
         <div class="stat"><div class="stat-val grad-warm">0</div><div class="stat-label">searchable records left</div></div>
       </div>
 
+      <p style="font-size:.75rem; color:#52525b; margin-bottom:.8rem;">Sources: Atlassian State of Teams 2024, Harvard Business Review</p>
+
       <div class="callout fragment up">
         <p>Decisions, context, and action items <strong style="color:#f87171;">disappear</strong> the moment the call ends.<br/>What if every meeting automatically built a <strong style="color:#c084fc;">searchable knowledge base</strong>?</p>
       </div>
@@ -215,7 +217,7 @@
         <div class="card center">
           <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F9E0;</div>
           <h3 style="color:#67e8f9;">Understands Context</h3>
-          <p style="font-size:1rem;">Real-time transcription into semantic vectors.</p>
+          <p style="font-size:1rem;">Transcribes and understands what's being said &mdash; in real time.</p>
         </div>
         <div class="card center">
           <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F399;&#xFE0F;</div>
@@ -256,7 +258,7 @@
         <div class="left">
           <div class="accent-line"></div>
           <h2><span class="grad">The Product</span></h2>
-          <p style="margin-bottom:1rem;">Marketing site and product entry point with clear value proposition.</p>
+          <p style="margin-bottom:1rem;">One link to invite the agent. One dashboard to see everything.</p>
           <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
             <h3 style="color:#c084fc; margin:0;">Clear Value Prop</h3>
             <p style="font-size:1rem; margin:.2rem 0 0;">"Your AI agent for smarter meetings" &mdash; one line that explains everything.</p>
@@ -278,29 +280,6 @@
       </div>
     </section>
 
-    <!-- ═══ 6. LOGIN ═══ -->
-    <section>
-      <div class="split">
-        <div class="left">
-          <div class="accent-line"></div>
-          <h2><span class="grad">Sign In</span></h2>
-          <p style="margin-bottom:1rem;">One click to access your workspace.</p>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#c084fc; margin:0;">SSO Ready</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Google and GitHub authentication built in.</p>
-          </div>
-          <div class="card" style="padding:1.3rem;">
-            <h3 style="color:#67e8f9; margin:0;">Email Login</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Classic email + password with forgot-password flow.</p>
-          </div>
-        </div>
-        <div>
-          <div class="shot">
-            <img src="screen-login.png" alt="Login" />
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- ═══ 7. DASHBOARD ═══ -->
     <section>
@@ -369,7 +348,7 @@
         <div class="left">
           <div class="accent-line"></div>
           <h2><span class="grad">Knowledge Base</span></h2>
-          <p style="margin-bottom:1rem;">Give your agent the full picture.</p>
+          <p style="margin-bottom:1rem;">Upload docs, specs, and notes &mdash; so the AI knows your business.</p>
           <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
             <h3 style="color:#c084fc; margin:0;">Upload Documents</h3>
             <p style="font-size:1rem; margin:.2rem 0 0;">PDFs, docs, notes &mdash; everything indexed for the AI.</p>
@@ -470,40 +449,31 @@
       <p class="subtitle">Clean, typed, Zod-validated endpoints</p>
       <div class="grid-2" style="margin-top:.5rem;">
         <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/agent/join
-export async function POST(req: Request) {
-  const { meetingId, joinUrl } = await req.json();
+const provider = getMeetingBotProvider();
+const { botId } = await provider.joinMeeting(
+  meeting.joinLink, meetingId
+);
 
-  const bot = await meetingBotClient.createBot({
-    meetingUrl: joinUrl,
-    botName: "KiviKova",
-    transcriptionOptions: {
-      provider: "meeting_captions"
-    },
-  });
+await db.update(meetings).set({
+  status: "active",
+  startedAt: new Date(),
+  metadata: { ...meeting.metadata, botId },
+}).where(eq(meetings.id, meetingId));
 
-  await db.update(meetings)
-    .set({ botId: bot.id, status: "active" })
-    .where(eq(meetings.id, meetingId));
-
-  return NextResponse.json({ botId: bot.id });
-}</code></pre>
+return NextResponse.json({ success: true, botId });</code></pre>
         <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/webhooks/recall/transcript
-export async function POST(req: Request) {
-  const { data } = await req.json();
-  const chunks = data.transcript.map(t => t.words);
+const text = transcript.words
+  .map((w) => w.text).join(" ");
+const timestampMs = Math.round(
+  transcript.words[0].start_time * 1000
+);
 
-  const embeddings = await openai.embeddings.create({
-    model: "text-embedding-3-small",
-    input: chunks,
-  });
+await upsertTranscriptChunk(
+  meeting.qdrantCollectionName,
+  { text, speaker: transcript.speaker, timestampMs }
+);
 
-  await qdrantUpsert(meetingId, {
-    vectors: embeddings.data.map(e => e.embedding),
-    payloads: chunks.map(c => ({ text: c })),
-  });
-
-  return NextResponse.json({ ok: true });
-}</code></pre>
+return NextResponse.json({ success: true });</code></pre>
       </div>
     </section>
 
