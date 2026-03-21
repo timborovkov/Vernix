@@ -82,4 +82,15 @@ describe("GET /api/meetings/[id]/transcript", () => {
     expect(status).toBe(200);
     expect(data.segments).toEqual([]);
   });
+
+  it("returns 500 when scroll fails", async () => {
+    mockDb.where.mockResolvedValueOnce([fakeMeeting()]);
+    mockScrollTranscript.mockRejectedValueOnce(new Error("Qdrant down"));
+
+    const response = await GET(makeRequest(validUuid), makeParams(validUuid));
+    const { status, data } = await parseJsonResponse(response);
+
+    expect(status).toBe(500);
+    expect(data.error).toMatch(/failed/i);
+  });
 });
