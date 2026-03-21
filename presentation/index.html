@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KiviKova — AI Meeting Agent</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+  <style>
+    :root {
+      --purple: #8b5cf6;
+      --cyan: #22d3ee;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --pink: #f472b6;
+      --bg: #09090b;
+      --text: #e4e4e7;
+      --muted: #71717a;
+      --surface: rgba(255,255,255,.04);
+      --border: rgba(255,255,255,.08);
+    }
+
+    * { box-sizing: border-box; }
+    body { background: var(--bg); overflow: hidden; }
+
+    .reveal {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+    }
+    .reveal .slides section { background: transparent; }
+
+    /* ── Canvas ─────────────────────────────────── */
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .4; }
+
+    /* ── Typography ────────────────────────────── */
+    .reveal h1 { font-size: 4.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
+    .reveal h2 { font-size: 2.8rem; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: .5rem; }
+    .reveal h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: .3rem; }
+    .reveal p  { font-size: 1.15rem; line-height: 1.7; color: #a1a1aa; }
+    .reveal li { font-size: 1.1rem; line-height: 1.7; color: #a1a1aa; }
+    .reveal ul { list-style: none; padding: 0; margin: 0; }
+    .reveal ul li { padding-left: 1.4rem; position: relative; margin-bottom: .3rem; }
+    .reveal ul li::before {
+      content: ''; position: absolute; left: 0; top: .6rem;
+      width: 7px; height: 7px; border-radius: 50%; background: var(--purple);
+    }
+    .reveal pre { font-size: .82rem; border-radius: 12px; box-shadow: 0 6px 30px rgba(0,0,0,.5); }
+
+    /* ── Gradients ──────────────────────────────── */
+    .grad      { background: linear-gradient(135deg, #c084fc, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-warm { background: linear-gradient(135deg, #fbbf24, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── Card ───────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* ── Badges ─────────────────────────────────── */
+    .badge {
+      display: inline-block; padding: .25rem .8rem; border-radius: 999px;
+      font-size: .78rem; font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; border: 1px solid; margin: .15rem;
+    }
+    .b-purple { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: #c4b5fd; }
+    .b-cyan   { background: rgba(34,211,238,.1);  border-color: rgba(34,211,238,.3); color: #67e8f9; }
+    .b-green  { background: rgba(52,211,153,.1);  border-color: rgba(52,211,153,.3); color: #6ee7b7; }
+    .b-amber  { background: rgba(251,191,36,.1);  border-color: rgba(251,191,36,.3); color: #fde68a; }
+    .b-pink   { background: rgba(244,114,182,.1); border-color: rgba(244,114,182,.3); color: #f9a8d4; }
+
+    /* ── Layout ─────────────────────────────────── */
+    .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; align-items: start; }
+    .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
+    .split   { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; }
+    .center  { text-align: center; }
+    .left    { text-align: left; }
+
+    /* ── Screenshot ─────────────────────────────── */
+    .shot {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 16px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .shot img { width: 100%; display: block; }
+    /* For tall screenshots: show top portion only */
+    .shot-crop {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
+      max-height: 620px;
+    }
+    .shot-crop img { width: 100%; display: block; object-fit: cover; object-position: top; }
+    /* Fade-out at bottom for cropped screenshots */
+    .shot-crop::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+      background: linear-gradient(transparent, var(--bg));
+      pointer-events: none;
+    }
+    .shot-crop { position: relative; }
+
+    /* ── Pipeline ───────────────────────────────── */
+    .pipeline { display: flex; align-items: center; justify-content: center; gap: .3rem; flex-wrap: wrap; }
+    .pipe-step {
+      background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25);
+      border-radius: 12px; padding: .6rem 1rem; text-align: center;
+      font-size: .95rem; font-weight: 500; color: #d4d4d8; min-width: 100px;
+    }
+    .pipe-step .icon { font-size: 1.6rem; display: block; margin-bottom: .15rem; }
+    .pipe-arrow { color: rgba(139,92,246,.4); font-size: 1.2rem; }
+
+    /* ── Stats ──────────────────────────────────── */
+    .stat { text-align: center; }
+    .stat-val { font-size: 3.8rem; font-weight: 900; line-height: 1; }
+    .stat-label { font-size: .9rem; color: var(--muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ── Callout ────────────────────────────────── */
+    .callout {
+      background: linear-gradient(135deg, rgba(139,92,246,.06), rgba(34,211,238,.04));
+      border: 1px solid rgba(139,92,246,.15); border-radius: 14px;
+      padding: 1.2rem 1.8rem; text-align: center;
+    }
+    .callout p { color: #d4d4d8; font-size: 1.2rem; line-height: 1.7; margin: 0; }
+
+    /* ── Accent line ───────────────────────────── */
+    .accent-line {
+      width: 50px; height: 4px; border-radius: 4px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      margin-bottom: 1rem;
+    }
+    .accent-line.c { margin-left: auto; margin-right: auto; }
+
+    .subtitle { font-size: 1.1rem; color: var(--muted); margin-bottom: 1.2rem; }
+
+    /* ── Reveal overrides ──────────────────────── */
+    .reveal .progress { background: rgba(139,92,246,.12); height: 3px; }
+    .reveal .progress span { background: linear-gradient(90deg, #8b5cf6, #22d3ee); }
+    .reveal .controls { color: #8b5cf6; }
+    .reveal .slide-number { font-family: 'Inter', sans-serif; font-size: .75rem; color: var(--muted); }
+
+    /* ── Custom fragment: gentle fade-up ──────── */
+    .reveal .slides section .fragment.up {
+      opacity: 0; transform: translateY(18px);
+      transition: all .5s cubic-bezier(.4,0,.2,1);
+    }
+    .reveal .slides section .fragment.up.visible {
+      opacity: 1; transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ═══ 1. COVER ═══ -->
+    <section data-background-image="cover.jpeg" data-background-size="cover" data-background-position="center">
+      <div style="background:rgba(0,0,0,.55); border-radius:20px; padding:3rem 4rem; max-width:800px; margin:0 auto; backdrop-filter:blur(6px);">
+        <div class="accent-line c"></div>
+        <h1><span class="grad">KiviKova</span></h1>
+        <p style="font-size:1.5rem; color:#e4e4e7; margin-bottom:1.5rem; font-weight:300;">AI Meeting Agent</p>
+        <div style="display:flex; gap:.35rem; justify-content:center; flex-wrap:wrap;">
+          <span class="badge b-purple">Next.js 16</span>
+          <span class="badge b-cyan">Qdrant</span>
+          <span class="badge b-green">Recall.ai</span>
+          <span class="badge b-amber">OpenAI</span>
+          <span class="badge b-pink">Voice RAG</span>
+        </div>
+        <p style="margin-top:1.5rem; color:#a1a1aa; font-size:.95rem; font-weight:400;">
+          <a href="https://github.com/timborovkov" target="_blank" style="color:#c084fc; text-decoration:none;">Tim Borovkov</a> &amp;
+          <a href="https://github.com/mankin3n" target="_blank" style="color:#67e8f9; text-decoration:none;">Pauli Mankinen</a>
+        </p>
+        <p style="margin-top:.4rem; color:#52525b; font-size:.85rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
+      </div>
+    </section>
+
+    <!-- ═══ 2. PROBLEM ═══ -->
+    <section>
+      <h2><span class="grad-warm">The Problem</span></h2>
+      <p class="subtitle">Meetings are the biggest time sink in modern work</p>
+
+      <div class="grid-3" style="margin-bottom:1rem;">
+        <div class="stat"><div class="stat-val grad-warm">23h</div><div class="stat-label">per week in meetings</div></div>
+        <div class="stat"><div class="stat-val grad-warm">86%</div><div class="stat-label">of insights never actioned</div></div>
+        <div class="stat"><div class="stat-val grad-warm">0</div><div class="stat-label">searchable records left</div></div>
+      </div>
+
+      <div class="callout fragment up">
+        <p>Decisions, context, and action items <strong style="color:#f87171;">disappear</strong> the moment the call ends.<br/>What if every meeting automatically built a <strong style="color:#c084fc;">searchable knowledge base</strong>?</p>
+      </div>
+    </section>
+
+    <!-- ═══ 3. SOLUTION ═══ -->
+    <section>
+      <h2><span class="grad">The Solution</span></h2>
+      <p class="subtitle">An AI agent that joins your calls and remembers everything</p>
+
+      <div class="grid-3" style="margin-top:.8rem;">
+        <div class="card center">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F916;</div>
+          <h3 style="color:#c084fc;">Joins Automatically</h3>
+          <p style="font-size:1rem;">Paste a link &mdash; bot joins Meet, Zoom, or Teams.</p>
+        </div>
+        <div class="card center">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F9E0;</div>
+          <h3 style="color:#67e8f9;">Understands Context</h3>
+          <p style="font-size:1rem;">Real-time transcription into semantic vectors.</p>
+        </div>
+        <div class="card center">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F399;&#xFE0F;</div>
+          <h3 style="color:#6ee7b7;">Answers Questions</h3>
+          <p style="font-size:1rem;">Ask by voice or text &mdash; answers from meeting history.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 4. HOW IT WORKS ═══ -->
+    <section>
+      <h2><span class="grad">How It Works</span></h2>
+      <p class="subtitle">From meeting link to searchable intelligence in real-time</p>
+
+      <div class="pipeline" style="margin:1.2rem 0;">
+        <div class="pipe-step"><span class="icon">&#x1F517;</span>Paste Link</div>
+        <span class="pipe-arrow">&rarr;</span>
+        <div class="pipe-step" style="border-color:rgba(34,211,238,.3); background:rgba(34,211,238,.06);"><span class="icon">&#x1F916;</span>Bot Joins</div>
+        <span class="pipe-arrow">&rarr;</span>
+        <div class="pipe-step" style="border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.06);"><span class="icon">&#x1F3A4;</span>Transcribe</div>
+        <span class="pipe-arrow">&rarr;</span>
+        <div class="pipe-step" style="border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.06);"><span class="icon">&#x1F522;</span>Embed</div>
+        <span class="pipe-arrow">&rarr;</span>
+        <div class="pipe-step" style="border-color:rgba(244,114,182,.3); background:rgba(244,114,182,.06);"><span class="icon">&#x1F4BE;</span>Store</div>
+        <span class="pipe-arrow">&rarr;</span>
+        <div class="pipe-step" style="border-color:rgba(139,92,246,.4); background:rgba(139,92,246,.12);"><span class="icon">&#x2728;</span>Query</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card"><h3 style="color:#67e8f9;">Webhook Pipeline</h3><p style="font-size:1rem;">Recall.ai sends transcript chunks via webhooks. Each chunk is embedded with OpenAI and upserted into Qdrant.</p></div>
+        <div class="card"><h3 style="color:#c084fc;">Per-Meeting Memory</h3><p style="font-size:1rem;">Every meeting gets its own vector collection. Search one meeting or across your entire history.</p></div>
+      </div>
+    </section>
+
+    <!-- ═══ 5. LANDING PAGE ═══ -->
+    <section>
+      <div class="split">
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2><span class="grad">The Product</span></h2>
+          <p style="margin-bottom:1rem;">Marketing site and product entry point with clear value proposition.</p>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#c084fc; margin:0;">Clear Value Prop</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">"Your AI agent for smarter meetings" &mdash; one line that explains everything.</p>
+          </div>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#67e8f9; margin:0;">Instant Onboarding</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Invite KiviKova to your next call with a single click.</p>
+          </div>
+          <div class="card" style="padding:1.3rem;">
+            <h3 style="color:#6ee7b7; margin:0;">Pricing Built In</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Free tier, Pro at $29/mo, and Enterprise custom plans.</p>
+          </div>
+        </div>
+        <div>
+          <div class="shot-crop">
+            <img src="screen-landing.png" alt="Landing Page" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 6. LOGIN ═══ -->
+    <section>
+      <div class="split">
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2><span class="grad">Sign In</span></h2>
+          <p style="margin-bottom:1rem;">One click to access your workspace.</p>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#c084fc; margin:0;">SSO Ready</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Google and GitHub authentication built in.</p>
+          </div>
+          <div class="card" style="padding:1.3rem;">
+            <h3 style="color:#67e8f9; margin:0;">Email Login</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Classic email + password with forgot-password flow.</p>
+          </div>
+        </div>
+        <div>
+          <div class="shot">
+            <img src="screen-login.png" alt="Login" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 7. DASHBOARD ═══ -->
+    <section>
+      <div class="split">
+        <div>
+          <div class="shot-crop">
+            <img src="screen-dashboard.png" alt="Dashboard" />
+          </div>
+        </div>
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2><span class="grad">Dashboard</span></h2>
+          <p style="margin-bottom:1rem;">Command center for meeting intelligence.</p>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#c084fc; margin:0;">Intelligence Pulse</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">124 hours analyzed, 42 action items extracted.</p>
+          </div>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#67e8f9; margin:0;">Quick Join</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Paste a link, KiviKova joins instantly.</p>
+          </div>
+          <div class="card" style="padding:1.3rem;">
+            <h3 style="color:#6ee7b7; margin:0;">Smart Recommendations</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">AI suggests follow-ups from meeting patterns.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 8. MEETING DETAIL ═══ -->
+    <section>
+      <div class="split">
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2><span class="grad">Meeting Intelligence</span></h2>
+          <p style="margin-bottom:1rem;">Every meeting becomes actionable.</p>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#c084fc; margin:0;">AI Summary + Sentiment</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Executive digest with 94% collaboration score.</p>
+          </div>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#fde68a; margin:0;">Auto Action Items</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Tasks with assignees and deadlines, extracted automatically.</p>
+          </div>
+          <div class="card" style="padding:1.3rem;">
+            <h3 style="color:#67e8f9; margin:0;">Ask Anything</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">"What were Marcus's concerns?" &mdash; grounded in transcript.</p>
+          </div>
+        </div>
+        <div>
+          <div class="shot-crop">
+            <img src="screen-meeting-detail.png" alt="Meeting Detail" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 9. KNOWLEDGE BASE ═══ -->
+    <section>
+      <div class="split">
+        <div>
+          <div class="shot-crop">
+            <img src="screen-knowledge.png" alt="Knowledge Base" />
+          </div>
+        </div>
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2><span class="grad">Knowledge Base</span></h2>
+          <p style="margin-bottom:1rem;">Give your agent the full picture.</p>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#c084fc; margin:0;">Upload Documents</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">PDFs, docs, notes &mdash; everything indexed for the AI.</p>
+          </div>
+          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
+            <h3 style="color:#6ee7b7; margin:0;">Semantic Coverage</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">See where AI has deep knowledge vs. needs more data.</p>
+          </div>
+          <div class="card" style="padding:1.3rem;">
+            <h3 style="color:#67e8f9; margin:0;">AI Ready Status</h3>
+            <p style="font-size:1rem; margin:.2rem 0 0;">Each file shows indexing state with full transparency.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 10. TECH STACK ═══ -->
+    <section>
+      <h2><span class="grad">Tech Stack</span></h2>
+      <p class="subtitle">Modern, scalable, fully open</p>
+      <div class="grid-2" style="margin-top:.6rem;">
+        <div class="card">
+          <h3 style="color:#c084fc;">Frontend</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
+            <span class="badge b-purple">Next.js 16</span><span class="badge b-purple">App Router</span><span class="badge b-purple">Turbopack</span><span class="badge b-purple">TypeScript</span><span class="badge b-purple">Tailwind v4</span><span class="badge b-purple">Shadcn/ui</span>
+          </div>
+          <p style="font-size:.95rem;">Server components, streaming UI, dark-mode design system.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:#67e8f9;">Backend &amp; Data</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
+            <span class="badge b-cyan">PostgreSQL</span><span class="badge b-cyan">Drizzle ORM</span><span class="badge b-cyan">Qdrant</span><span class="badge b-cyan">Docker Compose</span>
+          </div>
+          <p style="font-size:.95rem;">Relational metadata in Postgres, semantic vectors in Qdrant.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:#6ee7b7;">AI Layer</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
+            <span class="badge b-green">OpenAI Embeddings</span><span class="badge b-green">text-embedding-3-small</span><span class="badge b-green">OpenAI TTS</span><span class="badge b-green">RAG Pipeline</span>
+          </div>
+          <p style="font-size:.95rem;">1536-dim embeddings, cosine similarity, voice synthesis.</p>
+        </div>
+        <div class="card">
+          <h3 style="color:#fde68a;">Meeting Infrastructure</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
+            <span class="badge b-amber">Recall.ai</span><span class="badge b-amber">Webhooks</span><span class="badge b-amber">Real-time Transcripts</span>
+          </div>
+          <p style="font-size:.95rem;">Bot joins Meet/Zoom/Teams, delivers transcript chunks via webhooks.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 11. ARCHITECTURE ═══ -->
+    <section>
+      <h2><span class="grad">Architecture</span></h2>
+      <p class="subtitle">Clean layers, clear responsibilities</p>
+      <div class="grid-2" style="margin-top:.5rem; align-items:start;">
+        <div>
+          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #c084fc;">
+            <h3 style="color:#c084fc; margin:0;">Dashboard</h3>
+            <p style="font-size:.95rem; margin:.15rem 0 0;">Next.js App Router &mdash; meeting list, join flow, search</p>
+          </div>
+          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #67e8f9;">
+            <h3 style="color:#67e8f9; margin:0;">API Routes</h3>
+            <p style="font-size:.95rem; margin:.15rem 0 0;">/api/meetings &middot; /api/agent/join &middot; /api/agent/stop &middot; /api/search</p>
+          </div>
+          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #6ee7b7;">
+            <h3 style="color:#6ee7b7; margin:0;">Webhook Handler</h3>
+            <p style="font-size:.95rem; margin:.15rem 0 0;">/api/webhooks/recall/transcript &rarr; embed &rarr; upsert</p>
+          </div>
+          <div class="card" style="padding:.9rem; border-left:3px solid #fde68a;">
+            <h3 style="color:#fde68a; margin:0;">Dual Storage</h3>
+            <p style="font-size:.95rem; margin:.15rem 0 0;">PostgreSQL (metadata) + Qdrant (1536-dim vectors)</p>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="font-family:'SF Mono','Fira Code',monospace; font-size:.9rem; line-height:1.9; color:#a1a1aa; padding:1.1rem 1.3rem; border:1px solid rgba(139,92,246,.2);">
+            <div style="color:#fde68a; font-weight:600;">src/</div>
+            <div style="padding-left:1rem; color:#c084fc;">app/</div>
+            <div style="padding-left:2rem;">dashboard/page.tsx</div>
+            <div style="padding-left:2rem; color:#67e8f9;">api/meetings/</div>
+            <div style="padding-left:2rem; color:#67e8f9;">api/agent/join | stop/</div>
+            <div style="padding-left:2rem; color:#6ee7b7;">api/webhooks/recall/</div>
+            <div style="padding-left:2rem; color:#67e8f9;">api/search/</div>
+            <div style="padding-left:1rem; color:#c084fc;">lib/</div>
+            <div style="padding-left:2rem;">db/ <span style="color:#52525b;">&mdash; Drizzle</span></div>
+            <div style="padding-left:2rem;">vector/ <span style="color:#52525b;">&mdash; Qdrant</span></div>
+            <div style="padding-left:2rem;">openai/ <span style="color:#52525b;">&mdash; embeddings</span></div>
+            <div style="padding-left:2rem;">meeting-bot/ <span style="color:#52525b;">&mdash; Recall.ai</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 12. API ═══ -->
+    <section>
+      <h2><span class="grad">API at a Glance</span></h2>
+      <p class="subtitle">Clean, typed, Zod-validated endpoints</p>
+      <div class="grid-2" style="margin-top:.5rem;">
+        <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/agent/join
+export async function POST(req: Request) {
+  const { meetingId, joinUrl } = await req.json();
+
+  const bot = await meetingBotClient.createBot({
+    meetingUrl: joinUrl,
+    botName: "KiviKova",
+    transcriptionOptions: {
+      provider: "meeting_captions"
+    },
+  });
+
+  await db.update(meetings)
+    .set({ botId: bot.id, status: "active" })
+    .where(eq(meetings.id, meetingId));
+
+  return NextResponse.json({ botId: bot.id });
+}</code></pre>
+        <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/webhooks/recall/transcript
+export async function POST(req: Request) {
+  const { data } = await req.json();
+  const chunks = data.transcript.map(t => t.words);
+
+  const embeddings = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: chunks,
+  });
+
+  await qdrantUpsert(meetingId, {
+    vectors: embeddings.data.map(e => e.embedding),
+    payloads: chunks.map(c => ({ text: c })),
+  });
+
+  return NextResponse.json({ ok: true });
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- ═══ 13. ROADMAP ═══ -->
+    <section>
+      <h2><span class="grad">What's Next</span></h2>
+      <p class="subtitle">From hackathon to platform</p>
+      <div class="grid-3" style="margin-top:.8rem;">
+        <div class="card" style="border-top:3px solid #c084fc;">
+          <h3 style="color:#c084fc;">Near-term</h3>
+          <ul><li>Speaker diarization</li><li>Auto meeting summaries</li><li>Action item extraction</li><li>Slack / Notion export</li></ul>
+        </div>
+        <div class="card" style="border-top:3px solid #67e8f9;">
+          <h3 style="color:#67e8f9;">Platform</h3>
+          <ul><li>Multi-tenant orgs</li><li>SSO + RBAC</li><li>Custom embedding models</li><li>API for integrations</li></ul>
+        </div>
+        <div class="card" style="border-top:3px solid #6ee7b7;">
+          <h3 style="color:#6ee7b7;">AI Layer</h3>
+          <ul><li>Agentic follow-ups</li><li>Cross-meeting synthesis</li><li>Proactive knowledge surfacing</li><li>Fine-tuned domain models</li></ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:.8rem;">
+        <p style="font-size:.88rem;">Vision: KiviKova becomes your org's <strong style="color:#c084fc;">collective brain</strong> &mdash; every decision permanently searchable.</p>
+      </div>
+    </section>
+
+    <!-- ═══ 14. CLOSING ═══ -->
+    <section data-background-image="cover.jpeg" data-background-size="cover" data-background-position="center">
+      <div style="background:rgba(0,0,0,.6); border-radius:20px; padding:3rem 4rem; max-width:750px; margin:0 auto; backdrop-filter:blur(8px); text-align:center;">
+        <div class="accent-line c"></div>
+        <h1 style="font-size:3.8rem;"><span class="grad">KiviKova</span></h1>
+        <p style="color:#d4d4d8; font-size:1.4rem; margin-bottom:1.5rem; font-weight:300;">Every meeting. Remembered.<br/>Searchable. Actionable.</p>
+        <div style="display:flex; gap:.35rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.2rem;">
+          <span class="badge b-purple">Next.js 16</span><span class="badge b-cyan">Qdrant</span><span class="badge b-green">Recall.ai</span><span class="badge b-amber">OpenAI</span><span class="badge b-pink">TypeScript</span><span class="badge b-purple">Drizzle</span><span class="badge b-cyan">PostgreSQL</span>
+        </div>
+        <p style="color:#a1a1aa; font-size:.95rem; margin-bottom:.4rem;">
+          Built by
+          <a href="https://github.com/timborovkov" target="_blank" style="color:#c084fc; text-decoration:none;">Tim Borovkov</a> &amp;
+          <a href="https://github.com/mankin3n" target="_blank" style="color:#67e8f9; text-decoration:none;">Pauli Mankinen</a>
+        </p>
+        <p style="color:#52525b; font-size:.8rem; margin:0; font-weight:500; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    transition: 'fade',
+    transitionSpeed: 'slow',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+    slideNumber: 'c/t',
+    plugins: [RevealHighlight, RevealNotes],
+    width: 1920,
+    height: 1080,
+    margin: 0.04,
+    autoAnimateEasing: 'cubic-bezier(.4,0,.2,1)',
+    autoAnimateDuration: 0.7,
+  });
+
+  // Subtle particle background
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  let W, H, dots = [];
+
+  function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+
+  class Dot {
+    constructor(init) {
+      this.x = Math.random() * W;
+      this.y = init ? Math.random() * H : H + 10;
+      this.r = Math.random() * 1 + .3;
+      this.vy = -(Math.random() * .2 + .06);
+      this.vx = (Math.random() - .5) * .12;
+      this.o = Math.random() * .25 + .04;
+      this.c = ['#8b5cf6','#22d3ee','#34d399'][Math.floor(Math.random() * 3)];
+    }
+    update() { this.x += this.vx; this.y += this.vy; if (this.y < -10) Object.assign(this, new Dot(false)); }
+    draw() {
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.c; ctx.globalAlpha = this.o; ctx.fill(); ctx.globalAlpha = 1;
+    }
+  }
+
+  function init() { dots = Array.from({ length: 60 }, () => new Dot(true)); }
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    dots.forEach(d => { d.update(); d.draw(); });
+    for (let i = 0; i < dots.length; i++)
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 90) {
+          ctx.beginPath(); ctx.moveTo(dots[i].x, dots[i].y); ctx.lineTo(dots[j].x, dots[j].y);
+          ctx.strokeStyle = '#8b5cf6'; ctx.globalAlpha = (1 - d/90) * .03;
+          ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
+        }
+      }
+    requestAnimationFrame(loop);
+  }
+
+  resize(); init(); loop();
+  addEventListener('resize', () => { resize(); init(); });
+</script>
+</body>
+</html>
