@@ -171,6 +171,49 @@ describe("POST /api/webhooks/recall/transcript", () => {
     });
   });
 
+  it("adds new speaker to participants array", async () => {
+    const meeting = fakeMeeting({
+      status: "active",
+      participants: [],
+    });
+    mockDb.where.mockResolvedValueOnce([meeting]).mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      {
+        method: "POST",
+        body: fakePayload(),
+      }
+    );
+    await POST(req);
+
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        participants: ["Alice"],
+      })
+    );
+  });
+
+  it("does not duplicate existing speaker in participants", async () => {
+    const meeting = fakeMeeting({
+      status: "active",
+      participants: ["Alice"],
+    });
+    mockDb.where.mockResolvedValueOnce([meeting]);
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      {
+        method: "POST",
+        body: fakePayload(),
+      }
+    );
+    const { status } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    expect(mockDb.set).not.toHaveBeenCalled();
+  });
+
   it("returns 500 when upsert fails", async () => {
     mockDb.where.mockResolvedValueOnce([fakeMeeting({ status: "active" })]);
     mockUpsert.mockRejectedValueOnce(new Error("Qdrant down"));
