@@ -6,6 +6,8 @@ import { eq, inArray } from "drizzle-orm";
 import { getQdrantClient } from "@/lib/vector/client";
 import { createEmbedding } from "@/lib/openai/embeddings";
 
+const MAX_CONCURRENT_SEARCHES = 5;
+
 const searchSchema = z.object({
   q: z.string().min(1, "Query is required"),
   meetingId: z.uuid().optional(),
@@ -74,33 +76,40 @@ export async function GET(request: Request) {
 
   const client = getQdrantClient();
 
-  const nested = await Promise.all(
-    collectionsToSearch.map(async ({ collectionName, meetingId: mId }) => {
-      try {
-        const hits = await client.search(collectionName, {
-          vector: queryVector,
-          limit,
-          with_payload: true,
-        });
+  async function searchCollection(collectionName: string, mId: string) {
+    try {
+      const hits = await client.search(collectionName, {
+        vector: queryVector,
+        limit,
+        with_payload: true,
+      });
 
-        return hits.map((hit) => {
-          const payload = hit.payload as Record<string, unknown>;
-          return {
-            text: payload.text as string,
-            speaker: payload.speaker as string,
-            timestamp_ms: payload.timestamp_ms as number,
-            score: hit.score,
-            meetingId: mId,
-          };
-        });
-      } catch {
-        // Skip collections that don't exist or error
-        return [];
-      }
-    })
-  );
+      return hits.map((hit) => {
+        const payload = hit.payload as Record<string, unknown>;
+        return {
+          text: payload.text as string,
+          speaker: payload.speaker as string,
+          timestamp_ms: payload.timestamp_ms as number,
+          score: hit.score,
+          meetingId: mId,
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
 
-  const results = nested.flat().sort((a, b) => b.score - a.score).slice(0, limit);
+  const allResults: { text: string; speaker: string; timestamp_ms: number; score: number; meetingId: string }[] = [];
+
+  for (let i = 0; i < collectionsToSearch.length; i += MAX_CONCURRENT_SEARCHES) {
+    const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT_SEARCHES);
+    const nested = await Promise.all(
+      batch.map(({ collectionName, meetingId: mId }) => searchCollection(collectionName, mId))
+    );
+    allResults.push(...nested.flat());
+  }
+
+  const results = allResults.sort((a, b) => b.score - a.score).slice(0, limit);
 
   return NextResponse.json({ results });
 }
