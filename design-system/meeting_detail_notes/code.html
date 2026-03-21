@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script id="tailwind-config">
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
@@ -18,10 +19,10 @@
               "surface-container-low": "#f2f4f7",
               "on-surface-variant": "#44474a",
               "on-error-container": "#93000a",
-              "background": "#f7f9fc",
+              background: "#f7f9fc",
               "on-surface": "#191c1e",
               "secondary-fixed-dim": "#b3c6f6",
-              "primary": "#000101",
+              primary: "#000101",
               "tertiary-fixed-dim": "#cdbdff",
               "inverse-on-surface": "#eff1f4",
               "inverse-primary": "#c6c6c9",
@@ -29,8 +30,8 @@
               "surface-tint": "#5d5e61",
               "tertiary-container": "#200060",
               "surface-container": "#eceef1",
-              "outline": "#75777a",
-              "tertiary": "#010007",
+              outline: "#75777a",
+              tertiary: "#010007",
               "surface-container-high": "#e6e8eb",
               "on-tertiary-fixed-variant": "#4f00d0",
               "surface-dim": "#d8dadd",
@@ -38,8 +39,8 @@
               "primary-fixed-dim": "#c6c6c9",
               "tertiary-fixed": "#e8deff",
               "on-primary-fixed": "#1a1c1e",
-              "error": "#ba1a1a",
-              "surface": "#f7f9fc",
+              error: "#ba1a1a",
+              surface: "#f7f9fc",
               "surface-container-lowest": "#ffffff",
               "on-secondary-fixed-variant": "#33466e",
               "inverse-surface": "#2d3133",
@@ -53,255 +54,471 @@
               "surface-variant": "#e0e3e6",
               "surface-container-highest": "#e0e3e6",
               "on-secondary": "#ffffff",
-              "secondary": "#4b5e88",
+              secondary: "#4b5e88",
               "on-secondary-container": "#445781",
               "secondary-container": "#bbceff",
-              "on-tertiary": "#ffffff"
+              "on-tertiary": "#ffffff",
             },
             fontFamily: {
-              "headline": ["Manrope"],
-              "body": ["Inter"],
-              "label": ["Inter"]
+              headline: ["Manrope"],
+              body: ["Inter"],
+              label: ["Inter"],
             },
-            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+            borderRadius: {
+              DEFAULT: "0.125rem",
+              lg: "0.25rem",
+              xl: "0.5rem",
+              full: "0.75rem",
+            },
           },
         },
-      }
+      };
     </script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings:
+          "FILL" 0,
+          "wght" 400,
+          "GRAD" 0,
+          "opsz" 24;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: "Manrope", sans-serif;
+      }
     </style>
-</head>
-<body class="bg-background text-on-background selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
-<!-- SideNavBar (Authority: JSON) -->
-<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f7] flex flex-col p-4 space-y-8 z-50">
-<div class="flex items-center gap-3 px-2">
-<span class="font-['Manrope'] font-black text-xl tracking-tighter text-primary">KiviKova</span>
-</div>
-<nav class="flex-1 space-y-1">
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">dashboard</span>
-                Dashboard
-            </a>
-<!-- Active State: Meetings -->
-<a class="flex items-center gap-3 px-3 py-2 bg-[#ffffff] text-[#000101] rounded-lg shadow-sm font-medium text-sm" href="#">
-<span class="material-symbols-outlined">video_call</span>
-                Meetings
-            </a>
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">mic_none</span>
-                Recordings
-            </a>
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">description</span>
-                Documents
-            </a>
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">psychology</span>
-                Insights
-            </a>
-</nav>
-<div class="space-y-1 pt-4 border-t border-outline-variant/10">
-<button class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary py-2.5 rounded-xl text-sm font-semibold mb-6 shadow-sm active:scale-95 transition-transform">
-<span class="material-symbols-outlined text-sm">add</span>
-                Invite Agent
-            </button>
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">settings</span>
-                Settings
-            </a>
-<a class="flex items-center gap-3 px-3 py-2 text-[#5c5e61] hover:bg-[#e0e3e6] transition-all rounded-lg font-medium text-sm" href="#">
-<span class="material-symbols-outlined">help_outline</span>
-                Support
-            </a>
-</div>
-</aside>
-<!-- Main Content Canvas -->
-<main class="ml-64 mr-96 p-16 min-h-screen">
-<!-- Header Section -->
-<header class="mb-12">
-<div class="flex items-center gap-2 text-on-surface-variant text-xs font-semibold uppercase tracking-widest mb-4">
-<span class="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded">AI Processed</span>
-<span>• Oct 24, 2023</span>
-</div>
-<h1 class="text-5xl font-extrabold tracking-tighter text-primary mb-6 leading-tight">Product Strategy Sync: Q4 Roadmap</h1>
-<div class="flex flex-wrap items-center gap-8">
-<div class="flex items-center gap-3">
-<div class="flex -space-x-2">
-<img alt="User" class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Portrait of a female team member" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQjQhGW1s26sZc310qcJLzphDlkBQapK2ixJbDcO2ychDjEShLc8w-svgdeSwsa-KTD09Qv75XznermKxFVFjPJy0p_s5S9_-9uRJ7uCVEmmswGkXs9664WwLXnJZ7fV4KQJqfQC8M1eOUPbjCo6YM0ZuaUdiKSyRAIzXhXDZo26DEbe896Z7l8FCkvCMGK-LXOTCvVNyF0ekJl_xyrJh0MwfnV6rtOCa5BJAk-xkG2ZgMdqTFKnRg_BdIdrnezExzwgioPtNh-7s5"/>
-<img alt="User" class="w-8 h-8 rounded-full border-2 border-surface" data-alt="Portrait of a male team member" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgNBn8MInGKvE-pIM0c6wLsveronETDdLJjtjf6O3w_rDcMmt-a0-I7dfrrDZ0MoweXnmJMnwnFAyEbM_CYRDtU1maWQCUH9PKJcV3DqO-UrzUVEZ-kjravIKzo9KTxx07v6smzs56lZigrB-J1UrTEero7OewSWzffiJg4d7klwgxWHlOCHZTUtX92LKvrYgye_VsvbSIQA9Ui2DHIdSYVvRmeuYfhWHIxowh4BitMWrX4ZtK6x-S69PAQMV0O6k7slu1MrlAPPMg"/>
-<div class="w-8 h-8 rounded-full bg-surface-container-high border-2 border-surface flex items-center justify-center text-[10px] font-bold">+3</div>
-</div>
-<span class="text-sm font-medium text-on-surface-variant">5 Participants</span>
-</div>
-<div class="flex items-center gap-2 text-on-surface-variant">
-<span class="material-symbols-outlined text-lg">schedule</span>
-<span class="text-sm font-medium">45 Minutes</span>
-</div>
-<div class="flex items-center gap-2 text-on-surface-variant">
-<span class="material-symbols-outlined text-lg">location_on</span>
-<span class="text-sm font-medium">Virtual (Zoom)</span>
-</div>
-</div>
-</header>
-<!-- Bento Grid Insights -->
-<div class="grid grid-cols-12 gap-6 mb-16">
-<!-- Executive Summary -->
-<div class="col-span-8 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/5">
-<div class="flex items-center gap-3 mb-6">
-<span class="material-symbols-outlined text-primary">auto_awesome</span>
-<h2 class="text-xl font-bold tracking-tight">AI Executive Summary</h2>
-</div>
-<p class="text-on-surface-variant leading-relaxed text-lg">
-                    The team aligned on the core priorities for the Q4 roadmap, specifically focusing on the integration of the new Intelligence Layer. Key discussions revolved around technical debt reduction versus feature velocity. Sarah proposed a phased rollout for the RAG infrastructure to minimize latency impacts on existing enterprise clients.
+  </head>
+  <body
+    class="bg-background text-on-background selection:bg-tertiary-fixed selection:text-on-tertiary-fixed"
+  >
+    <!-- SideNavBar (Authority: JSON) -->
+    <aside
+      class="fixed top-0 left-0 z-50 flex h-screen w-64 flex-col space-y-8 bg-[#f2f4f7] p-4"
+    >
+      <div class="flex items-center gap-3 px-2">
+        <span
+          class="text-primary font-['Manrope'] text-xl font-black tracking-tighter"
+          >KiviKova</span
+        >
+      </div>
+      <nav class="flex-1 space-y-1">
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">dashboard</span>
+          Dashboard
+        </a>
+        <!-- Active State: Meetings -->
+        <a
+          class="flex items-center gap-3 rounded-lg bg-[#ffffff] px-3 py-2 text-sm font-medium text-[#000101] shadow-sm"
+          href="#"
+        >
+          <span class="material-symbols-outlined">video_call</span>
+          Meetings
+        </a>
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">mic_none</span>
+          Recordings
+        </a>
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">description</span>
+          Documents
+        </a>
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">psychology</span>
+          Insights
+        </a>
+      </nav>
+      <div class="border-outline-variant/10 space-y-1 border-t pt-4">
+        <button
+          class="bg-primary text-on-primary mb-6 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold shadow-sm transition-transform active:scale-95"
+        >
+          <span class="material-symbols-outlined text-sm">add</span>
+          Invite Agent
+        </button>
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">settings</span>
+          Settings
+        </a>
+        <a
+          class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[#5c5e61] transition-all hover:bg-[#e0e3e6]"
+          href="#"
+        >
+          <span class="material-symbols-outlined">help_outline</span>
+          Support
+        </a>
+      </div>
+    </aside>
+    <!-- Main Content Canvas -->
+    <main class="mr-96 ml-64 min-h-screen p-16">
+      <!-- Header Section -->
+      <header class="mb-12">
+        <div
+          class="text-on-surface-variant mb-4 flex items-center gap-2 text-xs font-semibold tracking-widest uppercase"
+        >
+          <span
+            class="bg-tertiary-fixed text-on-tertiary-fixed rounded px-2 py-0.5"
+            >AI Processed</span
+          >
+          <span>• Oct 24, 2023</span>
+        </div>
+        <h1
+          class="text-primary mb-6 text-5xl leading-tight font-extrabold tracking-tighter"
+        >
+          Product Strategy Sync: Q4 Roadmap
+        </h1>
+        <div class="flex flex-wrap items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="flex -space-x-2">
+              <img
+                alt="User"
+                class="border-surface h-8 w-8 rounded-full border-2"
+                data-alt="Portrait of a female team member"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQjQhGW1s26sZc310qcJLzphDlkBQapK2ixJbDcO2ychDjEShLc8w-svgdeSwsa-KTD09Qv75XznermKxFVFjPJy0p_s5S9_-9uRJ7uCVEmmswGkXs9664WwLXnJZ7fV4KQJqfQC8M1eOUPbjCo6YM0ZuaUdiKSyRAIzXhXDZo26DEbe896Z7l8FCkvCMGK-LXOTCvVNyF0ekJl_xyrJh0MwfnV6rtOCa5BJAk-xkG2ZgMdqTFKnRg_BdIdrnezExzwgioPtNh-7s5"
+              />
+              <img
+                alt="User"
+                class="border-surface h-8 w-8 rounded-full border-2"
+                data-alt="Portrait of a male team member"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgNBn8MInGKvE-pIM0c6wLsveronETDdLJjtjf6O3w_rDcMmt-a0-I7dfrrDZ0MoweXnmJMnwnFAyEbM_CYRDtU1maWQCUH9PKJcV3DqO-UrzUVEZ-kjravIKzo9KTxx07v6smzs56lZigrB-J1UrTEero7OewSWzffiJg4d7klwgxWHlOCHZTUtX92LKvrYgye_VsvbSIQA9Ui2DHIdSYVvRmeuYfhWHIxowh4BitMWrX4ZtK6x-S69PAQMV0O6k7slu1MrlAPPMg"
+              />
+              <div
+                class="bg-surface-container-high border-surface flex h-8 w-8 items-center justify-center rounded-full border-2 text-[10px] font-bold"
+              >
+                +3
+              </div>
+            </div>
+            <span class="text-on-surface-variant text-sm font-medium"
+              >5 Participants</span
+            >
+          </div>
+          <div class="text-on-surface-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">schedule</span>
+            <span class="text-sm font-medium">45 Minutes</span>
+          </div>
+          <div class="text-on-surface-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">location_on</span>
+            <span class="text-sm font-medium">Virtual (Zoom)</span>
+          </div>
+        </div>
+      </header>
+      <!-- Bento Grid Insights -->
+      <div class="mb-16 grid grid-cols-12 gap-6">
+        <!-- Executive Summary -->
+        <div
+          class="bg-surface-container-lowest border-outline-variant/5 col-span-8 rounded-xl border p-8 shadow-sm"
+        >
+          <div class="mb-6 flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary"
+              >auto_awesome</span
+            >
+            <h2 class="text-xl font-bold tracking-tight">
+              AI Executive Summary
+            </h2>
+          </div>
+          <p class="text-on-surface-variant text-lg leading-relaxed">
+            The team aligned on the core priorities for the Q4 roadmap,
+            specifically focusing on the integration of the new Intelligence
+            Layer. Key discussions revolved around technical debt reduction
+            versus feature velocity. Sarah proposed a phased rollout for the RAG
+            infrastructure to minimize latency impacts on existing enterprise
+            clients.
+          </p>
+        </div>
+        <!-- Key Metrics/Stats -->
+        <div
+          class="bg-primary text-on-primary col-span-4 flex flex-col justify-between rounded-xl p-8 shadow-sm"
+        >
+          <span class="text-xs font-bold tracking-widest uppercase opacity-60"
+            >Sentiment Score</span
+          >
+          <div class="mt-4">
+            <div class="text-6xl font-black tracking-tighter">94%</div>
+            <p class="mt-2 text-sm font-medium opacity-80">
+              Highly collaborative with strong alignment on technical
+              objectives.
+            </p>
+          </div>
+        </div>
+        <!-- Action Items -->
+        <div class="bg-surface-container-low col-span-12 rounded-xl p-8">
+          <h3 class="mb-6 flex items-center gap-2 text-lg font-bold">
+            <span class="material-symbols-outlined text-error"
+              >assignment_turned_in</span
+            >
+            Critical Action Items
+          </h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div
+              class="bg-surface-container-lowest flex items-start gap-4 rounded-lg p-5 shadow-sm"
+            >
+              <input
+                class="border-outline text-primary mt-1 rounded-sm focus:ring-0"
+                type="checkbox"
+              />
+              <div>
+                <p class="text-primary font-semibold">
+                  Finalize RAG Architecture documentation
                 </p>
-</div>
-<!-- Key Metrics/Stats -->
-<div class="col-span-4 bg-primary text-on-primary p-8 rounded-xl shadow-sm flex flex-col justify-between">
-<span class="text-xs font-bold uppercase tracking-widest opacity-60">Sentiment Score</span>
-<div class="mt-4">
-<div class="text-6xl font-black tracking-tighter">94%</div>
-<p class="text-sm opacity-80 mt-2 font-medium">Highly collaborative with strong alignment on technical objectives.</p>
-</div>
-</div>
-<!-- Action Items -->
-<div class="col-span-12 bg-surface-container-low p-8 rounded-xl">
-<h3 class="text-lg font-bold mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-error">assignment_turned_in</span>
-                    Critical Action Items
-                </h3>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-surface-container-lowest p-5 rounded-lg flex items-start gap-4 shadow-sm">
-<input class="mt-1 rounded-sm border-outline text-primary focus:ring-0" type="checkbox"/>
-<div>
-<p class="font-semibold text-primary">Finalize RAG Architecture documentation</p>
-<p class="text-xs text-on-surface-variant mt-1">Assignee: David • Due Oct 27</p>
-</div>
-</div>
-<div class="bg-surface-container-lowest p-5 rounded-lg flex items-start gap-4 shadow-sm">
-<input class="mt-1 rounded-sm border-outline text-primary focus:ring-0" type="checkbox"/>
-<div>
-<p class="font-semibold text-primary">Budget approval for additional API credits</p>
-<p class="text-xs text-on-surface-variant mt-1">Assignee: Sarah • Due Tomorrow</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Full Transcript Section -->
-<section class="max-w-3xl">
-<div class="flex items-center justify-between mb-8">
-<h2 class="text-2xl font-bold tracking-tight">Meeting Transcript</h2>
-<div class="flex items-center gap-2">
-<button class="text-sm font-semibold flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors">
-<span class="material-symbols-outlined text-lg">search</span> Find
-                    </button>
-<button class="text-sm font-semibold flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors ml-4">
-<span class="material-symbols-outlined text-lg">download</span> Export
-                    </button>
-</div>
-</div>
-<!-- Transcript Messages -->
-<div class="space-y-10">
-<div class="flex gap-6">
-<div class="w-10 text-xs font-bold text-on-surface-variant/40 pt-1">00:12</div>
-<div class="flex-1">
-<span class="font-bold text-sm text-primary block mb-1">Sarah Jenkins</span>
-<p class="text-on-surface-variant leading-relaxed">Alright everyone, let's dive into the Q4 roadmap. We need to be very realistic about our bandwidth given the new intelligence layer requirements. David, can you give us a status update on the RAG pipeline?</p>
-</div>
-</div>
-<div class="flex gap-6">
-<div class="w-10 text-xs font-bold text-on-surface-variant/40 pt-1">01:45</div>
-<div class="flex-1">
-<span class="font-bold text-sm text-primary block mb-1">David Chen</span>
-<p class="text-on-surface-variant leading-relaxed">Sure thing Sarah. We've successfully completed the vector database migration. The latency is currently sitting at 250ms for retrieval, which is slightly higher than our target, but we're optimizing the embedding calls. I'd say we're 80% there for a beta release.</p>
-</div>
-</div>
-<!-- AI Insight In-line -->
-<div class="flex gap-6 relative py-4">
-<div class="absolute inset-0 bg-tertiary-fixed opacity-5 rounded-xl -mx-4"></div>
-<div class="w-10 z-10"></div>
-<div class="flex-1 z-10 flex gap-4">
-<span class="material-symbols-outlined text-on-tertiary-container">psychology</span>
-<div>
-<p class="text-xs font-bold text-on-tertiary-container uppercase tracking-widest mb-1">AI Insight</p>
-<p class="text-sm font-medium text-on-tertiary-container/80 italic">David expressed technical confidence, but mentioned "optimization" as a potential bottleneck for the beta timeline.</p>
-</div>
-</div>
-</div>
-<div class="flex gap-6">
-<div class="w-10 text-xs font-bold text-on-surface-variant/40 pt-1">03:20</div>
-<div class="flex-1">
-<span class="font-bold text-sm text-primary block mb-1">Marcus Thorne</span>
-<p class="text-on-surface-variant leading-relaxed">I have a concern about the UI. If we're pushing for an "Architectural" feel, how does the RAG search results panel look? We need to make sure it doesn't just look like another chat window.</p>
-</div>
-</div>
-</div>
-</section>
-</main>
-<!-- AI Chat Sidebar (RAG) -->
-<aside class="fixed right-0 top-0 bottom-0 w-96 bg-surface-container-low border-l border-outline-variant/10 flex flex-col z-50">
-<div class="p-6 border-b border-outline-variant/5 bg-surface-container-lowest/70 backdrop-blur-xl">
-<div class="flex items-center justify-between mb-2">
-<div class="flex items-center gap-2">
-<div class="w-2 h-2 rounded-full bg-on-tertiary-container"></div>
-<h2 class="font-bold text-sm text-primary">KiviKova Intelligence</h2>
-</div>
-<button class="text-on-surface-variant hover:text-primary">
-<span class="material-symbols-outlined text-lg">close</span>
-</button>
-</div>
-<p class="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">Asking about this meeting</p>
-</div>
-<div class="flex-1 overflow-y-auto p-6 space-y-6">
-<!-- User Prompt -->
-<div class="flex flex-col items-end">
-<div class="bg-primary text-on-primary p-4 rounded-xl rounded-tr-none max-w-[85%] shadow-sm">
-<p class="text-sm">What were the main concerns Marcus raised about the new UI design?</p>
-</div>
-</div>
-<!-- AI Response -->
-<div class="flex flex-col items-start">
-<div class="bg-surface-container-lowest p-4 rounded-xl rounded-tl-none max-w-[85%] shadow-sm border border-outline-variant/10">
-<p class="text-sm text-on-surface-variant leading-relaxed">
-                        Marcus raised concerns about the <span class="text-primary font-bold">visual integration</span> of the RAG search results. He specifically wants to ensure the design avoids the standard "chat window" look and adheres to the "Architectural" design language established in the brand guidelines.
-                    </p>
-<div class="mt-4 flex flex-wrap gap-2">
-<button class="text-[10px] bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded font-bold uppercase tracking-tighter">03:20 Transcript</button>
-</div>
-</div>
-</div>
-<div class="flex flex-col items-start">
-<div class="bg-surface-container-lowest p-4 rounded-xl rounded-tl-none max-w-[85%] shadow-sm border border-outline-variant/10">
-<div class="flex gap-2 items-center mb-2">
-<div class="flex gap-0.5">
-<span class="w-1 h-1 bg-on-tertiary-container rounded-full animate-bounce"></span>
-<span class="w-1 h-1 bg-on-tertiary-container rounded-full animate-bounce delay-75"></span>
-<span class="w-1 h-1 bg-on-tertiary-container rounded-full animate-bounce delay-150"></span>
-</div>
-<span class="text-[10px] font-bold text-on-tertiary-container uppercase">Reasoning...</span>
-</div>
-</div>
-</div>
-</div>
-<div class="p-6 bg-surface-container-lowest/50 backdrop-blur-xl">
-<div class="relative group">
-<input class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/20 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-surface-container-highest transition-all pr-12" placeholder="Ask intelligence anything..." type="text"/>
-<button class="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:scale-110 transition-transform">
-<span class="material-symbols-outlined">send</span>
-</button>
-</div>
-<div class="mt-4 flex gap-4 overflow-x-auto pb-2 no-scrollbar">
-<button class="whitespace-nowrap text-[10px] font-bold text-on-surface-variant/60 hover:text-primary uppercase tracking-widest bg-surface-container-high px-3 py-1.5 rounded-full transition-colors">Action Items?</button>
-<button class="whitespace-nowrap text-[10px] font-bold text-on-surface-variant/60 hover:text-primary uppercase tracking-widest bg-surface-container-high px-3 py-1.5 rounded-full transition-colors">Compare to Q3</button>
-<button class="whitespace-nowrap text-[10px] font-bold text-on-surface-variant/60 hover:text-primary uppercase tracking-widest bg-surface-container-high px-3 py-1.5 rounded-full transition-colors">Summarize Tech Debt</button>
-</div>
-</div>
-</aside>
-</body></html>
+                <p class="text-on-surface-variant mt-1 text-xs">
+                  Assignee: David • Due Oct 27
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-surface-container-lowest flex items-start gap-4 rounded-lg p-5 shadow-sm"
+            >
+              <input
+                class="border-outline text-primary mt-1 rounded-sm focus:ring-0"
+                type="checkbox"
+              />
+              <div>
+                <p class="text-primary font-semibold">
+                  Budget approval for additional API credits
+                </p>
+                <p class="text-on-surface-variant mt-1 text-xs">
+                  Assignee: Sarah • Due Tomorrow
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Full Transcript Section -->
+      <section class="max-w-3xl">
+        <div class="mb-8 flex items-center justify-between">
+          <h2 class="text-2xl font-bold tracking-tight">Meeting Transcript</h2>
+          <div class="flex items-center gap-2">
+            <button
+              class="text-on-surface-variant hover:text-primary flex items-center gap-1 text-sm font-semibold transition-colors"
+            >
+              <span class="material-symbols-outlined text-lg">search</span> Find
+            </button>
+            <button
+              class="text-on-surface-variant hover:text-primary ml-4 flex items-center gap-1 text-sm font-semibold transition-colors"
+            >
+              <span class="material-symbols-outlined text-lg">download</span>
+              Export
+            </button>
+          </div>
+        </div>
+        <!-- Transcript Messages -->
+        <div class="space-y-10">
+          <div class="flex gap-6">
+            <div class="text-on-surface-variant/40 w-10 pt-1 text-xs font-bold">
+              00:12
+            </div>
+            <div class="flex-1">
+              <span class="text-primary mb-1 block text-sm font-bold"
+                >Sarah Jenkins</span
+              >
+              <p class="text-on-surface-variant leading-relaxed">
+                Alright everyone, let's dive into the Q4 roadmap. We need to be
+                very realistic about our bandwidth given the new intelligence
+                layer requirements. David, can you give us a status update on
+                the RAG pipeline?
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-6">
+            <div class="text-on-surface-variant/40 w-10 pt-1 text-xs font-bold">
+              01:45
+            </div>
+            <div class="flex-1">
+              <span class="text-primary mb-1 block text-sm font-bold"
+                >David Chen</span
+              >
+              <p class="text-on-surface-variant leading-relaxed">
+                Sure thing Sarah. We've successfully completed the vector
+                database migration. The latency is currently sitting at 250ms
+                for retrieval, which is slightly higher than our target, but
+                we're optimizing the embedding calls. I'd say we're 80% there
+                for a beta release.
+              </p>
+            </div>
+          </div>
+          <!-- AI Insight In-line -->
+          <div class="relative flex gap-6 py-4">
+            <div
+              class="bg-tertiary-fixed absolute inset-0 -mx-4 rounded-xl opacity-5"
+            ></div>
+            <div class="z-10 w-10"></div>
+            <div class="z-10 flex flex-1 gap-4">
+              <span class="material-symbols-outlined text-on-tertiary-container"
+                >psychology</span
+              >
+              <div>
+                <p
+                  class="text-on-tertiary-container mb-1 text-xs font-bold tracking-widest uppercase"
+                >
+                  AI Insight
+                </p>
+                <p
+                  class="text-on-tertiary-container/80 text-sm font-medium italic"
+                >
+                  David expressed technical confidence, but mentioned
+                  "optimization" as a potential bottleneck for the beta
+                  timeline.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-6">
+            <div class="text-on-surface-variant/40 w-10 pt-1 text-xs font-bold">
+              03:20
+            </div>
+            <div class="flex-1">
+              <span class="text-primary mb-1 block text-sm font-bold"
+                >Marcus Thorne</span
+              >
+              <p class="text-on-surface-variant leading-relaxed">
+                I have a concern about the UI. If we're pushing for an
+                "Architectural" feel, how does the RAG search results panel
+                look? We need to make sure it doesn't just look like another
+                chat window.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- AI Chat Sidebar (RAG) -->
+    <aside
+      class="bg-surface-container-low border-outline-variant/10 fixed top-0 right-0 bottom-0 z-50 flex w-96 flex-col border-l"
+    >
+      <div
+        class="border-outline-variant/5 bg-surface-container-lowest/70 border-b p-6 backdrop-blur-xl"
+      >
+        <div class="mb-2 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="bg-on-tertiary-container h-2 w-2 rounded-full"></div>
+            <h2 class="text-primary text-sm font-bold">
+              KiviKova Intelligence
+            </h2>
+          </div>
+          <button class="text-on-surface-variant hover:text-primary">
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+        <p
+          class="text-on-surface-variant text-[11px] font-semibold tracking-wider uppercase"
+        >
+          Asking about this meeting
+        </p>
+      </div>
+      <div class="flex-1 space-y-6 overflow-y-auto p-6">
+        <!-- User Prompt -->
+        <div class="flex flex-col items-end">
+          <div
+            class="bg-primary text-on-primary max-w-[85%] rounded-xl rounded-tr-none p-4 shadow-sm"
+          >
+            <p class="text-sm">
+              What were the main concerns Marcus raised about the new UI design?
+            </p>
+          </div>
+        </div>
+        <!-- AI Response -->
+        <div class="flex flex-col items-start">
+          <div
+            class="bg-surface-container-lowest border-outline-variant/10 max-w-[85%] rounded-xl rounded-tl-none border p-4 shadow-sm"
+          >
+            <p class="text-on-surface-variant text-sm leading-relaxed">
+              Marcus raised concerns about the
+              <span class="text-primary font-bold">visual integration</span> of
+              the RAG search results. He specifically wants to ensure the design
+              avoids the standard "chat window" look and adheres to the
+              "Architectural" design language established in the brand
+              guidelines.
+            </p>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button
+                class="bg-tertiary-fixed text-on-tertiary-fixed rounded px-2 py-1 text-[10px] font-bold tracking-tighter uppercase"
+              >
+                03:20 Transcript
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col items-start">
+          <div
+            class="bg-surface-container-lowest border-outline-variant/10 max-w-[85%] rounded-xl rounded-tl-none border p-4 shadow-sm"
+          >
+            <div class="mb-2 flex items-center gap-2">
+              <div class="flex gap-0.5">
+                <span
+                  class="bg-on-tertiary-container h-1 w-1 animate-bounce rounded-full"
+                ></span>
+                <span
+                  class="bg-on-tertiary-container h-1 w-1 animate-bounce rounded-full delay-75"
+                ></span>
+                <span
+                  class="bg-on-tertiary-container h-1 w-1 animate-bounce rounded-full delay-150"
+                ></span>
+              </div>
+              <span
+                class="text-on-tertiary-container text-[10px] font-bold uppercase"
+                >Reasoning...</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest/50 p-6 backdrop-blur-xl">
+        <div class="group relative">
+          <input
+            class="bg-surface-container-lowest ring-outline-variant/20 focus:ring-primary focus:bg-surface-container-highest w-full rounded-xl border-none px-4 py-3 pr-12 text-sm ring-1 transition-all focus:ring-2"
+            placeholder="Ask intelligence anything..."
+            type="text"
+          />
+          <button
+            class="text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-transform hover:scale-110"
+          >
+            <span class="material-symbols-outlined">send</span>
+          </button>
+        </div>
+        <div class="no-scrollbar mt-4 flex gap-4 overflow-x-auto pb-2">
+          <button
+            class="text-on-surface-variant/60 hover:text-primary bg-surface-container-high rounded-full px-3 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-colors"
+          >
+            Action Items?
+          </button>
+          <button
+            class="text-on-surface-variant/60 hover:text-primary bg-surface-container-high rounded-full px-3 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-colors"
+          >
+            Compare to Q3
+          </button>
+          <button
+            class="text-on-surface-variant/60 hover:text-primary bg-surface-container-high rounded-full px-3 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-colors"
+          >
+            Summarize Tech Debt
+          </button>
+        </div>
+      </div>
+    </aside>
+  </body>
+</html>
