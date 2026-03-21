@@ -12,11 +12,11 @@
 - ~~**RAG-powered responses** — `src/lib/agent/rag.ts` builds context from Qdrant, `src/app/api/agent/respond/route.ts` provides text-based RAG endpoint~~
 - ~~**Cross-meeting search** — Implemented in `/api/search` via fan-out across per-meeting collections~~
 
-## P2 — Post-Meeting Processing
+## P2 — Post-Meeting Processing ~~DONE~~
 
-- **Meeting summary generation** — After meeting ends (status → `processing`), generate a summary from all embedded segments using an LLM, store in `metadata.summary`
-- **Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting
-- **Participants tracking** — Populate `participants` JSONB from bot transcript speaker data
+- ~~**Meeting summary generation** — After meeting ends (status → `processing`), generate a summary from all embedded segments using an LLM, store in `metadata.summary`~~
+- ~~**Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting~~
+- ~~**Participants tracking** — Populate `participants` JSONB from bot transcript speaker data~~
 
 ## P3 — UX Polish
 
