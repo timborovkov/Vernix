@@ -190,6 +190,57 @@ describe("GET /api/search", () => {
     expect(data.error).toMatch(/embedding/i);
   });
 
+  it("returns 500 when all collection searches fail", async () => {
+    const m1 = fakeMeeting({
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      qdrantCollectionName: "coll_1",
+    });
+    const m2 = fakeMeeting({
+      id: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      qdrantCollectionName: "coll_2",
+    });
+    mockDb.where.mockResolvedValueOnce([m1, m2]);
+    mockQdrantClient.search
+      .mockRejectedValueOnce(new Error("Qdrant down"))
+      .mockRejectedValueOnce(new Error("Qdrant down"));
+
+    const { status, data } = await parseJsonResponse(
+      await GET(searchRequest("?q=test"))
+    );
+
+    expect(status).toBe(500);
+    expect(data.error).toMatch(/failed/i);
+  });
+
+  it("returns partial results when some collections fail", async () => {
+    const m1 = fakeMeeting({
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      qdrantCollectionName: "coll_1",
+    });
+    const m2 = fakeMeeting({
+      id: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      qdrantCollectionName: "coll_2",
+    });
+    mockDb.where.mockResolvedValueOnce([m1, m2]);
+    mockQdrantClient.search
+      .mockRejectedValueOnce(new Error("Qdrant down"))
+      .mockResolvedValueOnce([
+        {
+          id: "p1",
+          score: 0.9,
+          payload: { text: "OK", speaker: "A", timestamp_ms: 100 },
+        },
+      ]);
+
+    const { status, data } = await parseJsonResponse(
+      await GET(searchRequest("?q=test"))
+    );
+
+    expect(status).toBe(200);
+    expect(data.results).toHaveLength(1);
+    expect(data.results[0].text).toBe("OK");
+  });
+
   it("returns empty results array when no matches", async () => {
     mockDb.where.mockResolvedValueOnce([
       fakeMeeting({ qdrantCollectionName: "coll_1" }),
