@@ -204,4 +204,15 @@ describe("VoiceSession", () => {
     expect(mockRt.close).toHaveBeenCalled();
     expect(events).toContainEqual({ type: "closed" });
   });
+
+  it("connect() closes existing WebSocket before creating new one", async () => {
+    const session = new VoiceSession({ meetingId: "m1" });
+    await session.connect();
+
+    // Connect again — should close the previous connection first
+    await session.connect();
+
+    expect(mockRt.close).toHaveBeenCalled();
+    expect(mockCreate).toHaveBeenCalledTimes(2);
+  });
 });

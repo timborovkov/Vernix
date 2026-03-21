@@ -31,7 +31,13 @@ vi.mock("@/lib/openai/embeddings", () => ({
   createEmbedding: mockCreateEmbedding,
 }));
 
-import { getRAGContext, formatContextForPrompt } from "./rag";
+import {
+  getRAGContext,
+  formatContextForPrompt,
+  MeetingNotFoundError,
+  EmbeddingError,
+  AllSearchesFailedError,
+} from "./rag";
 import { fakeMeeting } from "@/test/helpers";
 
 describe("getRAGContext", () => {
@@ -146,24 +152,24 @@ describe("getRAGContext", () => {
     expect(mockQdrantClient.search).toHaveBeenCalledTimes(2);
   });
 
-  it("returns empty array when meeting not found", async () => {
+  it("throws MeetingNotFoundError when meeting not found", async () => {
     mockDb.where.mockResolvedValueOnce([]);
 
-    const results = await getRAGContext("test", {
-      meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-    });
-
-    expect(results).toEqual([]);
+    await expect(
+      getRAGContext("test", {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      })
+    ).rejects.toThrow(MeetingNotFoundError);
   });
 
-  it("returns empty array when embedding fails", async () => {
+  it("throws EmbeddingError when embedding fails", async () => {
     const meeting = fakeMeeting({ qdrantCollectionName: "coll_1" });
     mockDb.where.mockResolvedValueOnce([meeting]);
     mockCreateEmbedding.mockRejectedValueOnce(new Error("OpenAI down"));
 
-    const results = await getRAGContext("test", { meetingId: meeting.id });
-
-    expect(results).toEqual([]);
+    await expect(
+      getRAGContext("test", { meetingId: meeting.id })
+    ).rejects.toThrow(EmbeddingError);
   });
 
   it("returns partial results when some collections fail", async () => {
@@ -190,6 +196,23 @@ describe("getRAGContext", () => {
 
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("OK");
+  });
+
+  it("throws AllSearchesFailedError when all collections fail", async () => {
+    const m1 = fakeMeeting({
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      qdrantCollectionName: "coll_1",
+    });
+    const m2 = fakeMeeting({
+      id: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      qdrantCollectionName: "coll_2",
+    });
+    mockDb.where.mockResolvedValueOnce([m1, m2]);
+    mockQdrantClient.search
+      .mockRejectedValueOnce(new Error("Qdrant down"))
+      .mockRejectedValueOnce(new Error("Qdrant down"));
+
+    await expect(getRAGContext("test")).rejects.toThrow(AllSearchesFailedError);
   });
 });
 

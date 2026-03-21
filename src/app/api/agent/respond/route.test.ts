@@ -1,34 +1,22 @@
-const { mockDb, mockGetRAGContext, mockFormatContext, mockChatCreate } =
-  vi.hoisted(() => {
-    const db: Record<string, ReturnType<typeof vi.fn>> = {};
-    for (const m of [
-      "select",
-      "from",
-      "where",
-      "orderBy",
-      "insert",
-      "values",
-      "returning",
-      "update",
-      "set",
-      "delete",
-    ]) {
-      db[m] = vi.fn().mockImplementation(() => db);
-    }
-    return {
-      mockDb: db,
-      mockGetRAGContext: vi.fn().mockResolvedValue([]),
-      mockFormatContext: vi.fn().mockReturnValue(""),
-      mockChatCreate: vi.fn().mockResolvedValue({
-        choices: [{ message: { content: "Test answer" } }],
-      }),
-    };
-  });
+const { mockGetRAGContext, mockFormatContext, mockChatCreate } = vi.hoisted(
+  () => ({
+    mockGetRAGContext: vi.fn().mockResolvedValue([]),
+    mockFormatContext: vi.fn().mockReturnValue(""),
+    mockChatCreate: vi.fn().mockResolvedValue({
+      choices: [{ message: { content: "Test answer" } }],
+    }),
+  })
+);
 
-vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/agent/rag", () => ({
   getRAGContext: mockGetRAGContext,
   formatContextForPrompt: mockFormatContext,
+  MeetingNotFoundError: class MeetingNotFoundError extends Error {
+    constructor(id: string) {
+      super(`Meeting not found: ${id}`);
+      this.name = "MeetingNotFoundError";
+    }
+  },
 }));
 vi.mock("@/lib/openai/client", () => ({
   getOpenAIClient: () => ({
@@ -37,11 +25,8 @@ vi.mock("@/lib/openai/client", () => ({
 }));
 
 import { POST } from "./route";
-import {
-  createJsonRequest,
-  parseJsonResponse,
-  fakeMeeting,
-} from "@/test/helpers";
+import { MeetingNotFoundError } from "@/lib/agent/rag";
+import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
 
 const URL = "http://localhost/api/agent/respond";
 
@@ -85,7 +70,9 @@ describe("POST /api/agent/respond", () => {
   });
 
   it("returns 404 when meeting not found", async () => {
-    mockDb.where.mockResolvedValueOnce([]);
+    mockGetRAGContext.mockRejectedValueOnce(
+      new MeetingNotFoundError("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+    );
 
     const req = createJsonRequest(URL, {
       method: "POST",
@@ -99,15 +86,13 @@ describe("POST /api/agent/respond", () => {
   });
 
   it("returns 200 with answer and sources on success", async () => {
-    const meeting = fakeMeeting();
-    mockDb.where.mockResolvedValueOnce([meeting]);
     const sources = [
       {
         text: "context",
         speaker: "Alice",
         timestampMs: 1000,
         score: 0.9,
-        meetingId: meeting.id,
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
       },
     ];
     mockGetRAGContext.mockResolvedValueOnce(sources);
@@ -118,7 +103,10 @@ describe("POST /api/agent/respond", () => {
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: { meetingId: meeting.id, question: "What was said?" },
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "What was said?",
+      },
     });
     const { status, data } = await parseJsonResponse(await POST(req));
 
@@ -129,28 +117,26 @@ describe("POST /api/agent/respond", () => {
   });
 
   it("passes meetingId to getRAGContext", async () => {
-    const meeting = fakeMeeting();
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    const meetingId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: { meetingId: meeting.id, question: "test" },
+      body: { meetingId, question: "test" },
     });
     await POST(req);
 
-    expect(mockGetRAGContext).toHaveBeenCalledWith("test", {
-      meetingId: meeting.id,
-    });
+    expect(mockGetRAGContext).toHaveBeenCalledWith("test", { meetingId });
   });
 
   it("includes RAG context in system prompt", async () => {
-    const meeting = fakeMeeting();
-    mockDb.where.mockResolvedValueOnce([meeting]);
     mockFormatContext.mockReturnValueOnce("## Context\nSome context");
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: { meetingId: meeting.id, question: "test" },
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "test",
+      },
     });
     await POST(req);
 
@@ -159,13 +145,14 @@ describe("POST /api/agent/respond", () => {
   });
 
   it("returns 500 when chat completion throws", async () => {
-    const meeting = fakeMeeting();
-    mockDb.where.mockResolvedValueOnce([meeting]);
     mockChatCreate.mockRejectedValueOnce(new Error("LLM down"));
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: { meetingId: meeting.id, question: "test" },
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "test",
+      },
     });
     const { status, data } = await parseJsonResponse(await POST(req));
 

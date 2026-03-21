@@ -32,6 +32,11 @@ export class VoiceSession {
   }
 
   async connect(): Promise<void> {
+    if (this.rt) {
+      this.rt.close();
+      this.rt = null;
+    }
+
     const client = getOpenAIClient();
     this.rt = await OpenAIRealtimeWebSocket.create(client, {
       model: this.config.model ?? "gpt-4o-realtime-preview",

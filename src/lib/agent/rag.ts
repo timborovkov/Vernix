@@ -6,6 +6,29 @@ import { createEmbedding } from "@/lib/openai/embeddings";
 
 const MAX_CONCURRENT = 5;
 
+export class MeetingNotFoundError extends Error {
+  constructor(meetingId: string) {
+    super(`Meeting not found: ${meetingId}`);
+    this.name = "MeetingNotFoundError";
+  }
+}
+
+export class EmbeddingError extends Error {
+  constructor(cause: unknown) {
+    super(
+      `Failed to create embedding: ${cause instanceof Error ? cause.message : "Unknown error"}`
+    );
+    this.name = "EmbeddingError";
+  }
+}
+
+export class AllSearchesFailedError extends Error {
+  constructor() {
+    super("Vector search failed for all collections");
+    this.name = "AllSearchesFailedError";
+  }
+}
+
 export interface RAGResult {
   text: string;
   speaker: string;
@@ -20,12 +43,18 @@ export interface RAGOptions {
   scoreThreshold?: number;
 }
 
+/**
+ * Search Qdrant for relevant transcript context.
+ *
+ * Throws MeetingNotFoundError, EmbeddingError, or AllSearchesFailedError.
+ * Callers that want graceful degradation should catch these.
+ */
 export async function getRAGContext(
   query: string,
   options?: RAGOptions
 ): Promise<RAGResult[]> {
   const limit = options?.limit ?? 10;
-  const scoreThreshold = options?.scoreThreshold ?? 0.5;
+  const scoreThreshold = options?.scoreThreshold ?? 0;
 
   let collectionsToSearch: { collectionName: string; meetingId: string }[];
 
@@ -36,7 +65,7 @@ export async function getRAGContext(
       .where(eq(meetings.id, options.meetingId));
 
     if (!meeting) {
-      return [];
+      throw new MeetingNotFoundError(options.meetingId);
     }
 
     collectionsToSearch = [
@@ -61,12 +90,14 @@ export async function getRAGContext(
   let queryVector: number[];
   try {
     queryVector = await createEmbedding(query);
-  } catch {
-    return [];
+  } catch (error) {
+    throw new EmbeddingError(error);
   }
 
   const client = getQdrantClient();
   const allHits: RAGResult[] = [];
+  let totalSearched = 0;
+  let totalFailed = 0;
 
   for (let i = 0; i < collectionsToSearch.length; i += MAX_CONCURRENT) {
     const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT);
@@ -79,25 +110,34 @@ export async function getRAGContext(
             with_payload: true,
           });
 
-          return results.map((hit) => {
-            const payload = hit.payload as Record<string, unknown>;
-            return {
-              text: payload.text as string,
-              speaker: payload.speaker as string,
-              timestampMs: payload.timestamp_ms as number,
-              score: hit.score,
-              meetingId: mId,
-            };
-          });
+          return {
+            hits: results.map((hit) => {
+              const payload = hit.payload as Record<string, unknown>;
+              return {
+                text: payload.text as string,
+                speaker: payload.speaker as string,
+                timestampMs: payload.timestamp_ms as number,
+                score: hit.score,
+                meetingId: mId,
+              };
+            }),
+            failed: false,
+          };
         } catch {
-          return [];
+          return { hits: [] as RAGResult[], failed: true };
         }
       })
     );
 
-    for (const hits of outcomes) {
-      allHits.push(...hits);
+    for (const outcome of outcomes) {
+      totalSearched++;
+      if (outcome.failed) totalFailed++;
+      allHits.push(...outcome.hits);
     }
+  }
+
+  if (totalSearched > 0 && totalFailed === totalSearched) {
+    throw new AllSearchesFailedError();
   }
 
   return allHits

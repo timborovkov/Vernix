@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
-import { db } from "@/lib/db";
-import { meetings } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { getOpenAIClient } from "@/lib/openai/client";
-import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
+import {
+  getRAGContext,
+  formatContextForPrompt,
+  MeetingNotFoundError,
+} from "@/lib/agent/rag";
 import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
 
 const respondSchema = z.object({
@@ -31,15 +32,6 @@ export async function POST(request: Request) {
 
   const { meetingId, question } = parsed.data;
 
-  const [meeting] = await db
-    .select()
-    .from(meetings)
-    .where(eq(meetings.id, meetingId));
-
-  if (!meeting) {
-    return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
-  }
-
   try {
     const ragResults = await getRAGContext(question, { meetingId });
     const contextString = formatContextForPrompt(ragResults);
@@ -65,6 +57,9 @@ export async function POST(request: Request) {
       sources: ragResults,
     });
   } catch (error) {
+    if (error instanceof MeetingNotFoundError) {
+      return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
+    }
     return NextResponse.json(
       {
         error: "Failed to generate response",
