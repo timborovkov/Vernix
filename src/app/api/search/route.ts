@@ -31,7 +31,15 @@ export async function GET(request: Request) {
   const { q, meetingId, limit } = parsed.data;
 
   try {
-    const results = await getRAGContext(q, { meetingId, limit });
+    const ragResults = await getRAGContext(q, { meetingId, limit });
+
+    const results = ragResults.map((r) => ({
+      text: r.text,
+      speaker: r.speaker,
+      timestamp_ms: r.timestampMs,
+      score: r.score,
+      meetingId: r.meetingId,
+    }));
 
     return NextResponse.json({ results });
   } catch (error) {
