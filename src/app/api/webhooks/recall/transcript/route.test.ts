@@ -176,7 +176,9 @@ describe("POST /api/webhooks/recall/transcript", () => {
       status: "active",
       participants: [],
     });
-    mockDb.where.mockResolvedValueOnce([meeting]).mockResolvedValueOnce(undefined);
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockResolvedValueOnce(undefined);
 
     const req = createJsonRequest(
       "http://localhost/api/webhooks/recall/transcript",

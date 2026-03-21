@@ -127,9 +127,7 @@ describe("POST /api/agent/stop", () => {
   });
 
   it("sets processing then completed with summary in metadata", async () => {
-    const segments = [
-      { text: "Hello", speaker: "Alice", timestampMs: 1000 },
-    ];
+    const segments = [{ text: "Hello", speaker: "Alice", timestampMs: 1000 }];
     mockScrollTranscript.mockResolvedValueOnce(segments);
     mockGenerateSummary.mockResolvedValueOnce("Summary text");
     mockDb.where

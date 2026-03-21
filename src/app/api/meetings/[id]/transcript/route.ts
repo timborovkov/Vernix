@@ -9,10 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const [meeting] = await db
-    .select()
-    .from(meetings)
-    .where(eq(meetings.id, id));
+  const [meeting] = await db.select().from(meetings).where(eq(meetings.id, id));
 
   if (!meeting) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });

@@ -41,9 +41,7 @@ describe("generateMeetingSummary", () => {
     const result = await generateMeetingSummary(segments);
 
     expect(result).toBe("Meeting summary here.");
-    expect(
-      mockOpenAIClient.chat.completions.create
-    ).toHaveBeenCalledWith(
+    expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "gpt-4o-mini",
         messages: expect.arrayContaining([
