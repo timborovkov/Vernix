@@ -169,6 +169,19 @@ describe("GET /api/search", () => {
     );
   });
 
+  it("returns 500 when embedding fails", async () => {
+    const meeting = fakeMeeting({ qdrantCollectionName: "coll_1" });
+    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockCreateEmbedding.mockRejectedValueOnce(new Error("OpenAI down"));
+
+    const { status, data } = await parseJsonResponse(
+      await GET(searchRequest(`?q=test&meetingId=${meeting.id}`))
+    );
+
+    expect(status).toBe(500);
+    expect(data.error).toMatch(/embedding/i);
+  });
+
   it("returns empty results array when no matches", async () => {
     mockDb.where.mockResolvedValueOnce([
       fakeMeeting({ qdrantCollectionName: "coll_1" }),

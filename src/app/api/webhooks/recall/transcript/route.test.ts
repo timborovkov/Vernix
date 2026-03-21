@@ -47,6 +47,17 @@ function fakePayload(overrides?: Record<string, unknown>) {
 }
 
 describe("POST /api/webhooks/recall/transcript", () => {
+  it("returns 400 on malformed JSON body", async () => {
+    const req = new Request("http://localhost/api/webhooks/recall/transcript", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not json",
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(data.error).toMatch(/invalid json/i);
+  });
+
   it("returns 400 on invalid payload", async () => {
     const req = createJsonRequest("http://localhost/api/webhooks/recall/transcript", {
       method: "POST",

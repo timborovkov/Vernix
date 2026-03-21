@@ -12,14 +12,6 @@ const searchSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(10),
 });
 
-interface SearchResult {
-  text: string;
-  speaker: string;
-  timestamp_ms: number;
-  score: number;
-  meetingId: string;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const parsed = searchSchema.safeParse({
@@ -36,8 +28,6 @@ export async function GET(request: Request) {
   }
 
   const { q, meetingId, limit } = parsed.data;
-  const queryVector = await createEmbedding(q);
-  const client = getQdrantClient();
 
   let collectionsToSearch: { collectionName: string; meetingId: string }[];
 
@@ -69,9 +59,22 @@ export async function GET(request: Request) {
     }));
   }
 
-  const allResults: SearchResult[] = [];
+  let queryVector: number[];
+  try {
+    queryVector = await createEmbedding(q);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to create embedding",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 
-  await Promise.all(
+  const client = getQdrantClient();
+
+  const nested = await Promise.all(
     collectionsToSearch.map(async ({ collectionName, meetingId: mId }) => {
       try {
         const hits = await client.search(collectionName, {
@@ -80,23 +83,24 @@ export async function GET(request: Request) {
           with_payload: true,
         });
 
-        for (const hit of hits) {
+        return hits.map((hit) => {
           const payload = hit.payload as Record<string, unknown>;
-          allResults.push({
+          return {
             text: payload.text as string,
             speaker: payload.speaker as string,
             timestamp_ms: payload.timestamp_ms as number,
             score: hit.score,
             meetingId: mId,
-          });
-        }
+          };
+        });
       } catch {
         // Skip collections that don't exist or error
+        return [];
       }
     })
   );
 
-  allResults.sort((a, b) => b.score - a.score);
+  const results = nested.flat().sort((a, b) => b.score - a.score).slice(0, limit);
 
-  return NextResponse.json({ results: allResults.slice(0, limit) });
+  return NextResponse.json({ results });
 }
