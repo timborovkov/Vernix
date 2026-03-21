@@ -30,4 +30,3 @@
 - **Authentication** — Add auth (e.g. NextAuth / Clerk) to protect dashboard and API routes
 - **Rate limiting** — Protect webhook and public API endpoints
 - **Env validation** — Validate required env vars at startup with Zod
-
