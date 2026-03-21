@@ -6,10 +6,10 @@
 - ~~**Embedding pipeline** — `src/lib/vector/upsert.ts` wires transcript → embedding → Qdrant upsert~~
 - ~~**Vector search endpoint** — `src/app/api/search/route.ts` with single-meeting and cross-meeting search~~
 
-## P1 — Voice Agent (the differentiator)
+## P1 — Voice Agent ~~(the differentiator)~~ DONE
 
-- **OpenAI Realtime API integration** — Add `src/lib/openai/voice.ts` for bidirectional audio streaming (listen + speak)
-- **RAG-powered responses** — When agent is asked a question during a call, search Qdrant for context (current meeting + past meetings), feed into LLM, generate spoken response
+- ~~**OpenAI Realtime API integration** — `src/lib/openai/voice.ts` wraps `OpenAIRealtimeWebSocket` with RAG tool calling~~
+- ~~**RAG-powered responses** — `src/lib/agent/rag.ts` builds context from Qdrant, `src/app/api/agent/respond/route.ts` provides text-based RAG endpoint~~
 - ~~**Cross-meeting search** — Implemented in `/api/search` via fan-out across per-meeting collections~~
 
 ## P2 — Post-Meeting Processing
@@ -29,5 +29,4 @@
 
 - **Authentication** — Add auth (e.g. NextAuth / Clerk) to protect dashboard and API routes
 - **Rate limiting** — Protect webhook and public API endpoints
-- **Structured logging** — Replace `console.log` with a proper logger
 - **Env validation** — Validate required env vars at startup with Zod
