@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
+import { scrollTranscript } from "@/lib/vector/scroll";
+import { generateMeetingSummary } from "@/lib/summary/generate";
 import { z } from "zod/v4";
 
 const stopSchema = z.object({
@@ -47,14 +49,38 @@ export async function POST(request: Request) {
     await provider.leaveMeeting(botId);
   }
 
+  // Set processing status while generating summary
   await db
     .update(meetings)
     .set({
-      status: "completed",
+      status: "processing",
       endedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(meetings.id, meetingId));
+
+  // Generate summary (best-effort)
+  try {
+    const segments = await scrollTranscript(meeting.qdrantCollectionName);
+    const summary = await generateMeetingSummary(segments);
+    const existingMetadata =
+      (meeting.metadata as Record<string, unknown>) ?? {};
+
+    await db
+      .update(meetings)
+      .set({
+        status: "completed",
+        metadata: { ...existingMetadata, summary },
+        updatedAt: new Date(),
+      })
+      .where(eq(meetings.id, meetingId));
+  } catch {
+    // Still complete on failure, just without summary
+    await db
+      .update(meetings)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(meetings.id, meetingId));
+  }
 
   return NextResponse.json({ success: true });
 }
