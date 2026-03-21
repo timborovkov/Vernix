@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
-import { db } from "@/lib/db";
-import { meetings } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
-import { getQdrantClient } from "@/lib/vector/client";
-import { createEmbedding } from "@/lib/openai/embeddings";
-
-const MAX_CONCURRENT_SEARCHES = 5;
+import {
+  getRAGContext,
+  MeetingNotFoundError,
+  EmbeddingError,
+  AllSearchesFailedError,
+} from "@/lib/agent/rag";
 
 const searchSchema = z.object({
   q: z.string().min(1, "Query is required"),
@@ -31,115 +30,40 @@ export async function GET(request: Request) {
 
   const { q, meetingId, limit } = parsed.data;
 
-  let collectionsToSearch: { collectionName: string; meetingId: string }[];
+  try {
+    const ragResults = await getRAGContext(q, { meetingId, limit });
 
-  if (meetingId) {
-    const [meeting] = await db
-      .select()
-      .from(meetings)
-      .where(eq(meetings.id, meetingId));
+    const results = ragResults.map((r) => ({
+      text: r.text,
+      speaker: r.speaker,
+      timestamp_ms: r.timestampMs,
+      score: r.score,
+      meetingId: r.meetingId,
+    }));
 
-    if (!meeting) {
+    return NextResponse.json({ results });
+  } catch (error) {
+    if (error instanceof MeetingNotFoundError) {
       return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
     }
-
-    collectionsToSearch = [
-      { collectionName: meeting.qdrantCollectionName, meetingId: meeting.id },
-    ];
-  } else {
-    const searchable = await db
-      .select()
-      .from(meetings)
-      .where(inArray(meetings.status, ["active", "completed"]));
-
-    collectionsToSearch = searchable.map((m) => ({
-      collectionName: m.qdrantCollectionName,
-      meetingId: m.id,
-    }));
-  }
-
-  let queryVector: number[];
-  try {
-    queryVector = await createEmbedding(q);
-  } catch (error) {
+    if (error instanceof EmbeddingError) {
+      return NextResponse.json(
+        {
+          error: "Failed to create embedding",
+          details: error.message,
+        },
+        { status: 500 }
+      );
+    }
+    if (error instanceof AllSearchesFailedError) {
+      return NextResponse.json(
+        { error: "Vector search failed for all collections" },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
-      {
-        error: "Failed to create embedding",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
-
-  const client = getQdrantClient();
-
-  type SearchHit = {
-    text: string;
-    speaker: string;
-    timestamp_ms: number;
-    score: number;
-    meetingId: string;
-  };
-
-  async function searchCollection(
-    collectionName: string,
-    mId: string
-  ): Promise<{ hits: SearchHit[]; failed: boolean }> {
-    try {
-      const results = await client.search(collectionName, {
-        vector: queryVector,
-        limit,
-        with_payload: true,
-      });
-
-      return {
-        hits: results.map((hit) => {
-          const payload = hit.payload as Record<string, unknown>;
-          return {
-            text: payload.text as string,
-            speaker: payload.speaker as string,
-            timestamp_ms: payload.timestamp_ms as number,
-            score: hit.score,
-            meetingId: mId,
-          };
-        }),
-        failed: false,
-      };
-    } catch {
-      return { hits: [], failed: true };
-    }
-  }
-
-  const allHits: SearchHit[] = [];
-  let totalSearched = 0;
-  let totalFailed = 0;
-
-  for (
-    let i = 0;
-    i < collectionsToSearch.length;
-    i += MAX_CONCURRENT_SEARCHES
-  ) {
-    const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT_SEARCHES);
-    const outcomes = await Promise.all(
-      batch.map(({ collectionName, meetingId: mId }) =>
-        searchCollection(collectionName, mId)
-      )
-    );
-    for (const outcome of outcomes) {
-      totalSearched++;
-      if (outcome.failed) totalFailed++;
-      allHits.push(...outcome.hits);
-    }
-  }
-
-  if (totalSearched > 0 && totalFailed === totalSearched) {
-    return NextResponse.json(
-      { error: "Vector search failed for all collections" },
-      { status: 500 }
-    );
-  }
-
-  const results = allHits.sort((a, b) => b.score - a.score).slice(0, limit);
-
-  return NextResponse.json({ results });
 }

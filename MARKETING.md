@@ -76,13 +76,13 @@ Upload documents, specs, and notes to give KiviKova deeper context. It indexes e
 
 ## Differentiators
 
-| Feature | KiviKova | Otter.ai | Fireflies | Grain |
-|---------|----------|----------|-----------|-------|
-| Cross-meeting semantic search | Yes | No | Limited | No |
-| Voice Q&A during meetings | Yes | No | No | No |
-| Per-meeting vector storage | Yes | No | No | No |
-| Knowledge base upload | Yes | No | No | No |
-| Open architecture (self-host) | Yes | No | No | No |
+| Feature                       | KiviKova | Otter.ai | Fireflies | Grain |
+| ----------------------------- | -------- | -------- | --------- | ----- |
+| Cross-meeting semantic search | Yes      | No       | Limited   | No    |
+| Voice Q&A during meetings     | Yes      | No       | No        | No    |
+| Per-meeting vector storage    | Yes      | No       | No        | No    |
+| Knowledge base upload         | Yes      | No       | No        | No    |
+| Open architecture (self-host) | Yes      | No       | No        | No    |
 
 ---
 
