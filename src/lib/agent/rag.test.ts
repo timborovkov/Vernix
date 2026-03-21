@@ -198,6 +198,41 @@ describe("getRAGContext", () => {
     expect(results[0].text).toBe("OK");
   });
 
+  it("boostMeetingId ranks boosted meeting results higher", async () => {
+    const m1 = fakeMeeting({
+      id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      qdrantCollectionName: "coll_1",
+    });
+    const m2 = fakeMeeting({
+      id: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      qdrantCollectionName: "coll_2",
+    });
+    mockDb.where.mockResolvedValueOnce([m1, m2]);
+    // m1 result has lower raw score than m2, but m1 is the boosted meeting
+    mockQdrantClient.search
+      .mockResolvedValueOnce([
+        {
+          id: "p1",
+          score: 0.85,
+          payload: { text: "Current", speaker: "A", timestamp_ms: 100 },
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: "p2",
+          score: 0.9,
+          payload: { text: "Old", speaker: "B", timestamp_ms: 200 },
+        },
+      ]);
+
+    const results = await getRAGContext("test", { boostMeetingId: m1.id });
+
+    // m1 score 0.85 * 1.15 = 0.9775 > m2 score 0.9
+    expect(results[0].text).toBe("Current");
+    expect(results[0].meetingId).toBe(m1.id);
+    expect(results[1].text).toBe("Old");
+  });
+
   it("throws AllSearchesFailedError when all collections fail", async () => {
     const m1 = fakeMeeting({
       id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
