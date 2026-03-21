@@ -73,36 +73,46 @@ export async function GET(request: Request) {
 
   const client = getQdrantClient();
 
-  async function searchCollection(collectionName: string, mId: string) {
-    try {
-      const hits = await client.search(collectionName, {
-        vector: queryVector,
-        limit,
-        with_payload: true,
-      });
-
-      return hits.map((hit) => {
-        const payload = hit.payload as Record<string, unknown>;
-        return {
-          text: payload.text as string,
-          speaker: payload.speaker as string,
-          timestamp_ms: payload.timestamp_ms as number,
-          score: hit.score,
-          meetingId: mId,
-        };
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  const allResults: {
+  type SearchHit = {
     text: string;
     speaker: string;
     timestamp_ms: number;
     score: number;
     meetingId: string;
-  }[] = [];
+  };
+
+  async function searchCollection(
+    collectionName: string,
+    mId: string
+  ): Promise<{ hits: SearchHit[]; failed: boolean }> {
+    try {
+      const results = await client.search(collectionName, {
+        vector: queryVector,
+        limit,
+        with_payload: true,
+      });
+
+      return {
+        hits: results.map((hit) => {
+          const payload = hit.payload as Record<string, unknown>;
+          return {
+            text: payload.text as string,
+            speaker: payload.speaker as string,
+            timestamp_ms: payload.timestamp_ms as number,
+            score: hit.score,
+            meetingId: mId,
+          };
+        }),
+        failed: false,
+      };
+    } catch {
+      return { hits: [], failed: true };
+    }
+  }
+
+  const allHits: SearchHit[] = [];
+  let totalSearched = 0;
+  let totalFailed = 0;
 
   for (
     let i = 0;
@@ -110,15 +120,26 @@ export async function GET(request: Request) {
     i += MAX_CONCURRENT_SEARCHES
   ) {
     const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT_SEARCHES);
-    const nested = await Promise.all(
+    const outcomes = await Promise.all(
       batch.map(({ collectionName, meetingId: mId }) =>
         searchCollection(collectionName, mId)
       )
     );
-    allResults.push(...nested.flat());
+    for (const outcome of outcomes) {
+      totalSearched++;
+      if (outcome.failed) totalFailed++;
+      allHits.push(...outcome.hits);
+    }
   }
 
-  const results = allResults.sort((a, b) => b.score - a.score).slice(0, limit);
+  if (totalSearched > 0 && totalFailed === totalSearched) {
+    return NextResponse.json(
+      { error: "Vector search failed for all collections" },
+      { status: 500 }
+    );
+  }
+
+  const results = allHits.sort((a, b) => b.score - a.score).slice(0, limit);
 
   return NextResponse.json({ results });
 }
