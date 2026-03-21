@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KiviKova — AI Video Call Agent</title>
+
+  <!-- Reveal.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+  <!-- Highlight.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+  <style>
+    /* ─── Globals ──────────────────────────────────────────── */
+    :root {
+      --accent:   #7c3aed;
+      --accent2:  #06b6d4;
+      --accent3:  #f59e0b;
+      --glow:     0 0 40px rgba(124,58,237,.55);
+      --glass-bg: rgba(255,255,255,.06);
+      --glass-border: rgba(255,255,255,.12);
+    }
+
+    .reveal { font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    /* ─── Particle canvas (sits behind slides) ─────────────── */
+    #particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+    /* ─── Background gradient per section ─────────────────── */
+    .reveal .slides section {
+      background: transparent;
+    }
+
+    body {
+      background: radial-gradient(ellipse at 20% 50%, #1e0a3c 0%, #0a0a14 60%);
+      overflow: hidden;
+    }
+
+    /* ─── Gradient title text ──────────────────────────────── */
+    .grad { background: linear-gradient(135deg, #a78bfa, #38bdf8, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .grad-warm { background: linear-gradient(135deg, #f59e0b, #ef4444, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ─── Glassmorphism card ───────────────────────────────── */
+    .glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      padding: 1.4rem 1.8rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1);
+      transition: transform .25s, box-shadow .25s;
+    }
+    .glass:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(124,58,237,.35), inset 0 1px 0 rgba(255,255,255,.15); }
+
+    /* ─── Tag badges ───────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      padding: .25rem .8rem;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin: .2rem;
+    }
+    .badge-purple { background: rgba(124,58,237,.3); border: 1px solid #7c3aed; color: #c4b5fd; }
+    .badge-cyan   { background: rgba(6,182,212,.2);  border: 1px solid #06b6d4; color: #67e8f9; }
+    .badge-amber  { background: rgba(245,158,11,.2); border: 1px solid #f59e0b; color: #fcd34d; }
+    .badge-green  { background: rgba(52,211,153,.2); border: 1px solid #34d399; color: #6ee7b7; }
+    .badge-pink   { background: rgba(236,72,153,.2); border: 1px solid #ec4899; color: #f9a8d4; }
+
+    /* ─── Grid helpers ─────────────────────────────────────── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: .8rem; }
+
+    /* ─── Step flow ────────────────────────────────────────── */
+    .flow { display: flex; align-items: center; justify-content: center; gap: .6rem; flex-wrap: wrap; }
+    .step {
+      background: rgba(124,58,237,.25);
+      border: 1px solid rgba(124,58,237,.5);
+      border-radius: 12px;
+      padding: .7rem 1rem;
+      font-size: .78rem;
+      text-align: center;
+      min-width: 100px;
+      position: relative;
+    }
+    .step .num {
+      display: block;
+      font-size: 1.4rem;
+      margin-bottom: .2rem;
+    }
+    .arrow { color: #7c3aed; font-size: 1.4rem; }
+
+    /* ─── Highlight bar ────────────────────────────────────── */
+    .hl { border-left: 4px solid var(--accent); padding-left: 1rem; margin: .6rem 0; }
+    .hl2 { border-left: 4px solid var(--accent2); padding-left: 1rem; margin: .6rem 0; }
+    .hl3 { border-left: 4px solid var(--accent3); padding-left: 1rem; margin: .6rem 0; }
+
+    /* ─── Big stat number ──────────────────────────────────── */
+    .stat-num { font-size: 3.5rem; font-weight: 900; line-height: 1; }
+
+    /* ─── Slide-specific overrides ─────────────────────────── */
+    .reveal h1 { font-size: 2.4rem; line-height: 1.15; }
+    .reveal h2 { font-size: 1.8rem; margin-bottom: .8rem; }
+    .reveal h3 { font-size: 1.15rem; margin-bottom: .5rem; }
+    .reveal p, .reveal li { font-size: .9rem; line-height: 1.65; }
+    .reveal ul { list-style: none; padding: 0; }
+    .reveal ul li::before { content: '▸ '; color: var(--accent2); }
+    .reveal pre { font-size: .62rem; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.5); }
+    .reveal code { border-radius: 6px; }
+
+    /* ─── Pulsing orb accent ───────────────────────────────── */
+    @keyframes pulse-orb { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+    .orb {
+      width: 220px; height: 220px; border-radius: 50%;
+      background: radial-gradient(circle, #7c3aed 0%, rgba(6,182,212,.4) 60%, transparent 80%);
+      filter: blur(30px);
+      animation: pulse-orb 4s ease-in-out infinite;
+      margin: 0 auto;
+    }
+
+    /* ─── Neon border ──────────────────────────────────────── */
+    .neon-border {
+      border: 1px solid rgba(124,58,237,.6);
+      box-shadow: var(--glow), inset 0 0 20px rgba(124,58,237,.1);
+      border-radius: 16px;
+      padding: 1.2rem;
+    }
+
+    /* ─── Timeline ─────────────────────────────────────────── */
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before { content:''; position:absolute; left:.6rem; top:0; bottom:0; width:2px; background:linear-gradient(to bottom,#7c3aed,#06b6d4); }
+    .tl-item { position:relative; margin-bottom:1rem; }
+    .tl-item::before { content:''; position:absolute; left:-1.65rem; top:.3rem; width:10px; height:10px; border-radius:50%; background:#7c3aed; box-shadow:0 0 8px #7c3aed; }
+
+    /* ─── Reveal.js overrides ──────────────────────────────── */
+    .reveal .progress { background: rgba(124,58,237,.2); }
+    .reveal .progress span { background: linear-gradient(to right,#7c3aed,#06b6d4); }
+    .reveal .controls { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<!-- Animated particle canvas -->
+<canvas id="particles"></canvas>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ══════════ 1. TITLE ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 30% 40%, #1e0a3c 0%, #0d1117 70%)">
+      <div style="position:relative; z-index:1;">
+        <div class="orb" style="margin-bottom:-60px; margin-top:-20px;"></div>
+        <h1 style="margin-bottom:.3rem;">
+          <span class="grad">KiviKova</span>
+        </h1>
+        <p style="font-size:1.25rem; color:#94a3b8; margin-bottom:1.4rem; letter-spacing:.04em;">
+          AI Video Call Agent · Meeting Intelligence Platform
+        </p>
+        <div style="display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap;">
+          <span class="badge badge-purple">Next.js 16</span>
+          <span class="badge badge-cyan">Qdrant</span>
+          <span class="badge badge-green">Recall.ai</span>
+          <span class="badge badge-amber">OpenAI</span>
+          <span class="badge badge-pink">Voice Agent</span>
+        </div>
+        <p style="margin-top:1.6rem; color:#64748b; font-size:.75rem;">LotusHack · 2025</p>
+      </div>
+    </section>
+
+    <!-- ══════════ 2. THE PROBLEM ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 70% 30%, #1a0a0a 0%, #0d1117 70%)">
+      <h2><span class="grad-warm">The Problem</span></h2>
+      <div class="grid-2" style="margin-top:1rem;">
+        <div class="glass">
+          <h3 style="color:#f87171;">😤 Meetings are black holes</h3>
+          <ul style="font-size:.82rem;">
+            <li>Hours of valuable discussion — vanish</li>
+            <li>Action items scattered in chat logs</li>
+            <li>No searchable record of decisions</li>
+            <li>Context lost between calls</li>
+          </ul>
+        </div>
+        <div class="glass">
+          <h3 style="color:#fbbf24;">📉 The cost</h3>
+          <div style="text-align:center; margin-top:.5rem;">
+            <div class="stat-num grad-warm">23h</div>
+            <p style="color:#94a3b8; font-size:.75rem;">avg. hours/week in meetings per knowledge worker</p>
+          </div>
+          <div class="hl3" style="margin-top:.8rem; font-size:.78rem;">Only <strong>~14%</strong> of meeting insights are ever actioned</div>
+        </div>
+      </div>
+      <div class="glass" style="margin-top:1rem; text-align:center;">
+        <p style="color:#94a3b8; font-size:.82rem; margin:0;">
+          What if every meeting automatically built a <strong style="color:#a78bfa;">searchable knowledge base</strong>
+          with a live <strong style="color:#38bdf8;">AI participant</strong> ready to answer questions?
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════ 3. THE SOLUTION ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 50% 50%, #0a1a2e 0%, #0d1117 70%)">
+      <h2><span class="grad">The Solution</span></h2>
+      <div class="neon-border" style="margin-top:1rem; text-align:center; padding:1.5rem;">
+        <p style="font-size:1.05rem; margin:0; line-height:1.7; color:#e2e8f0;">
+          KiviKova deploys an <strong style="color:#a78bfa;">AI bot</strong> that silently joins your video calls,
+          transcribes everything in real-time, generates <strong style="color:#38bdf8;">semantic embeddings</strong>,
+          and becomes a <strong style="color:#34d399;">voice-enabled RAG agent</strong>
+          that anyone in the call can query — live or later.
+        </p>
+      </div>
+      <div class="grid-3" style="margin-top:1.2rem;">
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2rem;">🤖</div>
+          <h3 style="color:#a78bfa;">Autonomous Bot</h3>
+          <p style="font-size:.75rem; color:#94a3b8;">Joins calls via Recall.ai with zero friction</p>
+        </div>
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2rem;">🧠</div>
+          <h3 style="color:#38bdf8;">Live Embeddings</h3>
+          <p style="font-size:.75rem; color:#94a3b8;">OpenAI text-embedding-3-small, stored in Qdrant</p>
+        </div>
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2rem;">🎙️</div>
+          <h3 style="color:#34d399;">Voice RAG</h3>
+          <p style="font-size:.75rem; color:#94a3b8;">Ask questions by voice, get context-aware answers</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 4. HOW IT WORKS ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 20% 80%, #0a1a0a 0%, #0d1117 70%)">
+      <h2><span class="grad">How It Works</span></h2>
+      <div class="flow" style="margin: 1.2rem 0;">
+        <div class="step">
+          <span class="num">📅</span>
+          Schedule<br/>Meeting
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">🤖</span>
+          Bot Joins<br/>via Recall.ai
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">🎙️</span>
+          Audio<br/>Streamed
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">📝</span>
+          Transcript<br/>Generated
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">🔢</span>
+          OpenAI<br/>Embeddings
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">💾</span>
+          Qdrant<br/>Vector Store
+        </div>
+        <span class="arrow">→</span>
+        <div class="step">
+          <span class="num">🔍</span>
+          RAG<br/>Query
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:.8rem;">
+        <div class="glass">
+          <div class="hl2">
+            <strong style="color:#38bdf8;">Webhook-driven pipeline</strong>
+          </div>
+          <p style="font-size:.78rem; color:#94a3b8; margin:0;">
+            Recall.ai fires transcript webhooks → Next.js API route embeds chunks → Qdrant collection per meeting for zero-collision search.
+          </p>
+        </div>
+        <div class="glass">
+          <div class="hl">
+            <strong style="color:#a78bfa;">Per-meeting isolation</strong>
+          </div>
+          <p style="font-size:.78rem; color:#94a3b8; margin:0;">
+            Each meeting gets its own Qdrant collection. Cross-meeting search enabled via shared namespace queries.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 5. TECH STACK ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 80% 20%, #0a0a2a 0%, #0d1117 70%)">
+      <h2><span class="grad">Tech Stack</span></h2>
+      <div class="grid-2" style="margin-top:1rem;">
+        <!-- Frontend -->
+        <div class="glass">
+          <h3 style="color:#a78bfa; margin-top:0;">🖥️ Frontend</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+            <span class="badge badge-purple">Next.js 16</span>
+            <span class="badge badge-purple">App Router</span>
+            <span class="badge badge-purple">Turbopack</span>
+            <span class="badge badge-purple">TypeScript</span>
+            <span class="badge badge-purple">Tailwind v4</span>
+            <span class="badge badge-purple">Shadcn/ui</span>
+          </div>
+          <p style="font-size:.72rem; color:#94a3b8; margin-top:.7rem;">Server components, streaming UI, dark-mode first design system.</p>
+        </div>
+        <!-- Backend -->
+        <div class="glass">
+          <h3 style="color:#38bdf8; margin-top:0;">⚙️ Backend / Data</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+            <span class="badge badge-cyan">PostgreSQL</span>
+            <span class="badge badge-cyan">Drizzle ORM</span>
+            <span class="badge badge-cyan">Qdrant</span>
+            <span class="badge badge-cyan">Docker Compose</span>
+          </div>
+          <p style="font-size:.72rem; color:#94a3b8; margin-top:.7rem;">Relational metadata in Postgres · semantic vectors in Qdrant · fully containerised.</p>
+        </div>
+        <!-- AI -->
+        <div class="glass">
+          <h3 style="color:#34d399; margin-top:0;">🧠 AI / ML</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+            <span class="badge badge-green">OpenAI Embeddings</span>
+            <span class="badge badge-green">text-embedding-3-small</span>
+            <span class="badge badge-green">OpenAI Voice</span>
+            <span class="badge badge-green">RAG Pipeline</span>
+          </div>
+          <p style="font-size:.72rem; color:#94a3b8; margin-top:.7rem;">1536-dim embeddings, cosine similarity search, voice synthesis for agent responses.</p>
+        </div>
+        <!-- Meeting Infra -->
+        <div class="glass">
+          <h3 style="color:#f59e0b; margin-top:0;">🎥 Meeting Infrastructure</h3>
+          <div style="display:flex; flex-wrap:wrap; gap:.4rem;">
+            <span class="badge badge-amber">Recall.ai</span>
+            <span class="badge badge-amber">Webhook Pipelines</span>
+            <span class="badge badge-amber">Real-time Transcripts</span>
+          </div>
+          <p style="font-size:.72rem; color:#94a3b8; margin-top:.7rem;">Recall.ai bot joins Google Meet / Zoom / Teams, streams audio, delivers transcript chunks.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 6. ARCHITECTURE ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 50% 80%, #0d0a2e 0%, #0d1117 70%)">
+      <h2><span class="grad">Architecture</span></h2>
+      <div class="grid-2" style="margin-top:.8rem; align-items:start;">
+        <div>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="glass" style="padding:.8rem 1rem;">
+                <strong style="color:#a78bfa; font-size:.82rem;">Dashboard (Next.js)</strong>
+                <p style="font-size:.72rem; color:#94a3b8; margin:.2rem 0 0;">Meeting list, create/join flow, search UI</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="glass" style="padding:.8rem 1rem;">
+                <strong style="color:#38bdf8; font-size:.82rem;">API Routes</strong>
+                <p style="font-size:.72rem; color:#94a3b8; margin:.2rem 0 0;">/api/meetings · /api/agent/join · /api/agent/stop · /api/search</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="glass" style="padding:.8rem 1rem;">
+                <strong style="color:#34d399; font-size:.82rem;">Webhook Handler</strong>
+                <p style="font-size:.72rem; color:#94a3b8; margin:.2rem 0 0;">/api/webhooks/recall/transcript → embed → upsert</p>
+              </div>
+            </div>
+            <div class="tl-item">
+              <div class="glass" style="padding:.8rem 1rem;">
+                <strong style="color:#f59e0b; font-size:.82rem;">Dual Storage</strong>
+                <p style="font-size:.72rem; color:#94a3b8; margin:.2rem 0 0;">PostgreSQL (metadata) + Qdrant (vectors)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="glass neon-border" style="font-size:.7rem; font-family:monospace; color:#94a3b8; line-height:1.9;">
+            <div style="color:#f59e0b; margin-bottom:.4rem;">📁 src/</div>
+            <div style="padding-left:1rem; color:#a78bfa;">app/</div>
+            <div style="padding-left:2rem;">dashboard/page.tsx</div>
+            <div style="padding-left:2rem; color:#38bdf8;">api/meetings/</div>
+            <div style="padding-left:2rem; color:#38bdf8;">api/agent/join|stop/</div>
+            <div style="padding-left:2rem; color:#34d399;">api/webhooks/recall/</div>
+            <div style="padding-left:2rem; color:#38bdf8;">api/search/</div>
+            <div style="padding-left:1rem; color:#a78bfa;">lib/</div>
+            <div style="padding-left:2rem;">db/ <span style="color:#64748b;">(Drizzle + Postgres)</span></div>
+            <div style="padding-left:2rem;">vector/ <span style="color:#64748b;">(Qdrant client)</span></div>
+            <div style="padding-left:2rem;">openai/ <span style="color:#64748b;">(embeddings)</span></div>
+            <div style="padding-left:2rem;">meeting-bot/ <span style="color:#64748b;">(Recall.ai)</span></div>
+            <div style="padding-left:1rem; color:#a78bfa;">components/</div>
+            <div style="padding-left:2rem;">meeting-list.tsx</div>
+            <div style="padding-left:2rem;">meeting-card.tsx</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 7. KEY FEATURES ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 30% 70%, #0a1a3a 0%, #0d1117 70%)">
+      <h2><span class="grad">Key Features</span></h2>
+      <div class="grid-2" style="margin-top:1rem;">
+        <div class="glass" style="border-left:3px solid #7c3aed;">
+          <h3 style="color:#a78bfa; font-size:1rem;">🤖 Autonomous Bot Deployment</h3>
+          <ul style="font-size:.78rem;">
+            <li>One-click: paste a meeting URL, bot joins</li>
+            <li>Works with Google Meet, Zoom, Teams</li>
+            <li>No participant action required</li>
+          </ul>
+        </div>
+        <div class="glass" style="border-left:3px solid #06b6d4;">
+          <h3 style="color:#38bdf8; font-size:1rem;">📚 Semantic Memory</h3>
+          <ul style="font-size:.78rem;">
+            <li>Per-meeting Qdrant vector collections</li>
+            <li>1536-dim OpenAI embeddings</li>
+            <li>Instant semantic search across all meetings</li>
+          </ul>
+        </div>
+        <div class="glass" style="border-left:3px solid #34d399;">
+          <h3 style="color:#34d399; font-size:1rem;">🎙️ Voice-Enabled RAG Agent</h3>
+          <ul style="font-size:.78rem;">
+            <li>Ask questions mid-call by voice</li>
+            <li>Pulls context from current + past meetings</li>
+            <li>OpenAI TTS delivers spoken answers</li>
+          </ul>
+        </div>
+        <div class="glass" style="border-left:3px solid #f59e0b;">
+          <h3 style="color:#f59e0b; font-size:1rem;">🔍 Cross-Meeting Search</h3>
+          <ul style="font-size:.78rem;">
+            <li>Natural language search across all history</li>
+            <li>Returns ranked, cited transcript chunks</li>
+            <li>Zero-latency with HNSW vector indexing</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 8. API SNAPSHOT ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 60% 40%, #001a0a 0%, #0d1117 70%)">
+      <h2><span class="grad">API at a Glance</span></h2>
+      <div class="grid-2" style="margin-top:.8rem;">
+        <pre><code class="language-typescript" style="font-size:.58rem;">// POST /api/agent/join
+// Sends the bot into a live meeting
+export async function POST(req: Request) {
+  const { meetingId, joinUrl } = await req.json();
+  const bot = await meetingBotClient.createBot({
+    meetingUrl: joinUrl,
+    botName: "KiviKova",
+    transcriptionOptions: { provider: "meeting_captions" },
+  });
+  await db.update(meetings)
+    .set({ botId: bot.id, status: "active" })
+    .where(eq(meetings.id, meetingId));
+  return NextResponse.json({ botId: bot.id });
+}</code></pre>
+        <pre><code class="language-typescript" style="font-size:.58rem;">// POST /api/webhooks/recall/transcript
+// Embeds incoming transcript chunks
+export async function POST(req: Request) {
+  const { data } = await req.json();
+  const chunks = data.transcript.map(t => t.words);
+  const embeddings = await openai.embeddings.create({
+    model: "text-embedding-3-small",
+    input: chunks,
+  });
+  await qdrantUpsert(meetingId, {
+    vectors: embeddings.data.map(e => e.embedding),
+    payloads: chunks.map(c => ({ text: c })),
+  });
+  return NextResponse.json({ ok: true });
+}</code></pre>
+        <pre><code class="language-typescript" style="font-size:.58rem;">// GET /api/search?q=&meetingId=
+// Semantic search across embeddings
+export async function GET(req: Request) {
+  const { q, meetingId } = parseParams(req);
+  const [queryVec] = await embedText(q);
+  const results = await qdrantClient.search(
+    meetingId ?? "global",
+    { vector: queryVec, limit: 5,
+      with_payload: true }
+  );
+  return NextResponse.json(results);
+}</code></pre>
+        <pre><code class="language-typescript" style="font-size:.58rem;">// Drizzle schema (simplified)
+export const meetings = pgTable("meetings", {
+  id:          uuid().primaryKey().defaultRandom(),
+  title:       text().notNull(),
+  joinUrl:     text(),
+  status:      text().default("pending"),
+  botId:       text(),
+  participants: text().array(),
+  createdAt:   timestamp().defaultNow(),
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- ══════════ 9. DATA FLOW ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 80% 60%, #1a0a1a 0%, #0d1117 70%)">
+      <h2><span class="grad">Data Flow Deep Dive</span></h2>
+      <div style="margin-top:1rem;">
+        <div class="flow" style="font-size:.72rem;">
+          <div class="step" style="min-width:90px;">
+            <span class="num">🎤</span>
+            Audio<br/>Stream
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(6,182,212,.2); border-color:rgba(6,182,212,.5); min-width:90px;">
+            <span class="num">📝</span>
+            Recall.ai<br/>Transcript
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(52,211,153,.2); border-color:rgba(52,211,153,.5); min-width:90px;">
+            <span class="num">🔢</span>
+            1536-dim<br/>Vectors
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(245,158,11,.2); border-color:rgba(245,158,11,.5); min-width:90px;">
+            <span class="num">💾</span>
+            Qdrant<br/>HNSW
+          </div>
+        </div>
+        <div class="flow" style="font-size:.72rem; margin-top:.6rem;">
+          <div class="step" style="background:rgba(236,72,153,.2); border-color:rgba(236,72,153,.5); min-width:90px;">
+            <span class="num">❓</span>
+            User<br/>Query
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(52,211,153,.2); border-color:rgba(52,211,153,.5); min-width:90px;">
+            <span class="num">🔢</span>
+            Query<br/>Embedding
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(245,158,11,.2); border-color:rgba(245,158,11,.5); min-width:90px;">
+            <span class="num">🔍</span>
+            ANN<br/>Search
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(6,182,212,.2); border-color:rgba(6,182,212,.5); min-width:90px;">
+            <span class="num">📄</span>
+            Top-K<br/>Chunks
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="min-width:90px;">
+            <span class="num">🤖</span>
+            LLM<br/>Answer
+          </div>
+          <span class="arrow">→</span>
+          <div class="step" style="background:rgba(236,72,153,.2); border-color:rgba(236,72,153,.5); min-width:90px;">
+            <span class="num">🔊</span>
+            TTS<br/>Voice
+          </div>
+        </div>
+      </div>
+      <div class="glass" style="margin-top:1rem; text-align:center;">
+        <p style="font-size:.8rem; color:#94a3b8; margin:0;">
+          Full round-trip: meeting audio → searchable vector memory → spoken answer in <strong style="color:#38bdf8;">&lt; 2 seconds</strong>
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════ 10. TESTING ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 40% 30%, #0a1a0a 0%, #0d1117 70%)">
+      <h2><span class="grad">Quality & Testing</span></h2>
+      <div class="grid-3" style="margin-top:1rem;">
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">🧪</div>
+          <h3 style="color:#34d399; font-size:.9rem;">Unit Tests</h3>
+          <p style="font-size:.72rem; color:#94a3b8;">Vitest · every lib module has <code>.test.ts</code> alongside it</p>
+          <div style="margin-top:.5rem;">
+            <span class="badge badge-green">meeting-bot</span>
+            <span class="badge badge-green">vector/upsert</span>
+            <span class="badge badge-green">embeddings</span>
+          </div>
+        </div>
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">🔗</div>
+          <h3 style="color:#38bdf8; font-size:.9rem;">Integration Tests</h3>
+          <p style="font-size:.72rem; color:#94a3b8;">Separate Vitest config · real DB + Qdrant in Docker</p>
+          <div style="margin-top:.5rem;">
+            <span class="badge badge-cyan">meetings API</span>
+            <span class="badge badge-cyan">webhooks</span>
+          </div>
+        </div>
+        <div class="glass" style="text-align:center;">
+          <div style="font-size:2.2rem; margin-bottom:.4rem;">🎭</div>
+          <h3 style="color:#a78bfa; font-size:.9rem;">Mock Layer</h3>
+          <p style="font-size:.72rem; color:#94a3b8;">Recall.ai mock client for offline development & CI</p>
+          <div style="margin-top:.5rem;">
+            <span class="badge badge-purple">meeting-bot/mock.ts</span>
+          </div>
+        </div>
+      </div>
+      <div class="glass" style="margin-top:1rem;">
+        <div class="grid-2">
+          <div class="hl">ESLint + TypeScript strict mode throughout</div>
+          <div class="hl2">Prettier formatting enforced via <code>pnpm format</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 11. FUTURE ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 60% 70%, #0a0a2a 0%, #0d1117 70%)">
+      <h2><span class="grad">Roadmap & Vision</span></h2>
+      <div class="grid-2" style="margin-top:1rem;">
+        <div>
+          <div class="glass" style="margin-bottom:.8rem;">
+            <h3 style="color:#a78bfa; font-size:.9rem; margin-top:0;">🚀 Near-term</h3>
+            <ul style="font-size:.78rem;">
+              <li>Real-time speaker diarization</li>
+              <li>Auto-generated meeting summaries</li>
+              <li>Action-item extraction + task creation</li>
+              <li>Slack / Notion export integration</li>
+            </ul>
+          </div>
+          <div class="glass">
+            <h3 style="color:#38bdf8; font-size:.9rem; margin-top:0;">🌐 Platform</h3>
+            <ul style="font-size:.78rem;">
+              <li>Multi-tenant organisation accounts</li>
+              <li>SSO + RBAC permissions</li>
+              <li>Custom embedding model support</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="glass" style="margin-bottom:.8rem;">
+            <h3 style="color:#34d399; font-size:.9rem; margin-top:0;">🧠 AI Layer</h3>
+            <ul style="font-size:.78rem;">
+              <li>Agentic follow-ups post-meeting</li>
+              <li>Cross-meeting insight synthesis</li>
+              <li>Proactive knowledge surfacing</li>
+              <li>Fine-tuned domain models</li>
+            </ul>
+          </div>
+          <div class="neon-border" style="text-align:center; padding:.9rem;">
+            <p style="font-size:.82rem; margin:0; color:#94a3b8;">
+              Long-term vision: <strong style="color:#a78bfa;">KiviKova becomes your org's collective brain</strong> —
+              every decision, discussion, and insight permanently searchable.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════ 12. CLOSING ══════════ -->
+    <section data-background-gradient="radial-gradient(ellipse at 50% 50%, #1e0a3c 0%, #0d1117 60%)">
+      <div style="text-align:center;">
+        <div class="orb" style="margin-bottom:-50px;"></div>
+        <h1 style="font-size:2.8rem; margin-bottom:.5rem;">
+          <span class="grad">KiviKova</span>
+        </h1>
+        <p style="color:#94a3b8; font-size:1rem; margin-bottom:1.5rem;">
+          Every meeting. Remembered. Searchable. Actionable.
+        </p>
+        <div class="glass" style="display:inline-block; padding:1rem 2.5rem; margin-bottom:1.5rem;">
+          <p style="font-size:.85rem; color:#e2e8f0; margin:0;">
+            Built with <span style="color:#ef4444;">♥</span> at <strong style="color:#a78bfa;">LotusHack</strong>
+          </p>
+        </div>
+        <div style="display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap; margin-top:.8rem;">
+          <span class="badge badge-purple">Next.js 16</span>
+          <span class="badge badge-cyan">Qdrant</span>
+          <span class="badge badge-green">Recall.ai</span>
+          <span class="badge badge-amber">OpenAI</span>
+          <span class="badge badge-pink">TypeScript</span>
+          <span class="badge badge-purple">Drizzle ORM</span>
+          <span class="badge badge-cyan">PostgreSQL</span>
+        </div>
+        <p style="color:#475569; font-size:.7rem; margin-top:1.5rem;">
+          Use ← → arrow keys to navigate · Press F for fullscreen
+        </p>
+      </div>
+    </section>
+
+  </div><!-- .slides -->
+</div><!-- .reveal -->
+
+<!-- Reveal.js core -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+
+<script>
+  // ─── Reveal init ───────────────────────────────────────────
+  Reveal.initialize({
+    hash: true,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+    slideNumber: 'c/t',
+    plugins: [ RevealHighlight, RevealNotes ],
+    autoAnimateEasing: 'ease',
+    autoAnimateDuration: 0.6,
+  });
+
+  // ─── Particle system ───────────────────────────────────────
+  const canvas = document.getElementById('particles');
+  const ctx    = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  class Particle {
+    constructor() { this.reset(true); }
+    reset(init = false) {
+      this.x  = Math.random() * W;
+      this.y  = init ? Math.random() * H : H + 10;
+      this.r  = Math.random() * 1.8 + .4;
+      this.vy = -(Math.random() * .4 + .15);
+      this.vx = (Math.random() - .5) * .3;
+      this.o  = Math.random() * .5 + .1;
+      const palette = ['#7c3aed','#06b6d4','#34d399','#f59e0b','#a78bfa','#38bdf8'];
+      this.color = palette[Math.floor(Math.random() * palette.length)];
+    }
+    update() {
+      this.x += this.vx;
+      this.y += this.vy;
+      if (this.y < -10) this.reset();
+    }
+    draw() {
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = this.o;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function initParticles() {
+    particles = Array.from({ length: 120 }, () => new Particle());
+  }
+
+  function loop() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => { p.update(); p.draw(); });
+    // Draw faint connecting lines
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < 90) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = '#7c3aed';
+          ctx.globalAlpha = (1 - d / 90) * .08;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  initParticles();
+  loop();
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+</script>
+</body>
+</html>
