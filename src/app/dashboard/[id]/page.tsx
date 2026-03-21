@@ -31,8 +31,15 @@ const statusVariant: Record<
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { meeting, transcript, searchResults, loading, searching, search } =
-    useMeetingDetail(id);
+  const {
+    meeting,
+    transcript,
+    searchResults,
+    loading,
+    searching,
+    error,
+    search,
+  } = useMeetingDetail(id);
   const [query, setQuery] = useState("");
 
   if (loading) {
@@ -44,7 +51,7 @@ export default function MeetingDetailPage() {
   if (!meeting) {
     return (
       <div className="text-muted-foreground py-12 text-center">
-        Meeting not found
+        {error ?? "Meeting not found"}
       </div>
     );
   }
@@ -92,7 +99,7 @@ export default function MeetingDetailPage() {
           <CardTitle className="text-lg">Summary</CardTitle>
         </CardHeader>
         <CardContent>
-          {meeting.status === "processing" ? (
+          {meeting.status === "processing" && !summary ? (
             <p className="text-muted-foreground italic">
               Generating summary...
             </p>
