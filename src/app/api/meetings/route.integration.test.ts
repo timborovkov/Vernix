@@ -14,6 +14,7 @@ vi.mock("@/lib/vector/collections", () => ({
 // Use the test database URL set by setup.integration.ts
 let testDb: ReturnType<typeof drizzle>;
 let pool: pg.Pool;
+const testUserId = "00000000-0000-0000-0000-000000000001";
 
 beforeEach(async () => {
   pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -64,6 +65,7 @@ describe("Integration: /api/meetings", () => {
   it("GET returns meetings ordered by createdAt desc", async () => {
     // Insert directly
     await testDb.insert(schema.meetings).values({
+      userId: testUserId,
       title: "First",
       joinLink: "https://a.com",
       qdrantCollectionName: "c1",
@@ -73,6 +75,7 @@ describe("Integration: /api/meetings", () => {
     await new Promise((r) => setTimeout(r, 10));
 
     await testDb.insert(schema.meetings).values({
+      userId: testUserId,
       title: "Second",
       joinLink: "https://b.com",
       qdrantCollectionName: "c2",

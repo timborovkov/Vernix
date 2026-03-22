@@ -40,7 +40,7 @@ export interface RAGResult {
 export interface RAGOptions {
   meetingId?: string;
   /** Filter to only this user's meetings (required for multi-user). */
-  userId?: string;
+  userId: string;
   limit?: number;
   scoreThreshold?: number;
   /** Boost results from this meeting so they rank higher. */
@@ -57,16 +57,16 @@ export interface RAGOptions {
  */
 export async function getRAGContext(
   query: string,
-  options?: RAGOptions
+  options: RAGOptions
 ): Promise<RAGResult[]> {
-  const limit = options?.limit ?? 10;
-  const scoreThreshold = options?.scoreThreshold ?? 0;
+  const limit = options.limit ?? 10;
+  const scoreThreshold = options.scoreThreshold ?? 0;
 
   let collectionsToSearch: { collectionName: string; meetingId: string }[];
 
-  if (options?.meetingId) {
+  if (options.meetingId) {
     const conditions = [eq(meetings.id, options.meetingId)];
-    if (options.userId) conditions.push(eq(meetings.userId, options.userId));
+    conditions.push(eq(meetings.userId, options.userId));
 
     const [meeting] = await db
       .select()
@@ -82,7 +82,7 @@ export async function getRAGContext(
     ];
   } else {
     const conditions = [inArray(meetings.status, ["active", "completed"])];
-    if (options?.userId) conditions.push(eq(meetings.userId, options.userId));
+    conditions.push(eq(meetings.userId, options.userId));
 
     const searchable = await db
       .select()
@@ -152,8 +152,8 @@ export async function getRAGContext(
     throw new AllSearchesFailedError();
   }
 
-  const boostId = options?.boostMeetingId;
-  const boostFactor = options?.boostFactor ?? 1.15;
+  const boostId = options.boostMeetingId;
+  const boostFactor = options.boostFactor ?? 1.15;
 
   return allHits
     .filter((h) => h.score >= scoreThreshold)

@@ -40,6 +40,8 @@ import {
 } from "./rag";
 import { fakeMeeting } from "@/test/helpers";
 
+const TEST_USER_ID = "00000000-0000-0000-0000-000000000001";
+
 describe("getRAGContext", () => {
   it("returns results sorted by score desc", async () => {
     const meeting = fakeMeeting({ qdrantCollectionName: "coll_1" });
@@ -57,7 +59,10 @@ describe("getRAGContext", () => {
       },
     ]);
 
-    const results = await getRAGContext("test", { meetingId: meeting.id });
+    const results = await getRAGContext("test", {
+      meetingId: meeting.id,
+      userId: TEST_USER_ID,
+    });
 
     expect(results[0].score).toBe(0.95);
     expect(results[1].score).toBe(0.7);
@@ -81,6 +86,7 @@ describe("getRAGContext", () => {
 
     const results = await getRAGContext("test", {
       meetingId: meeting.id,
+      userId: TEST_USER_ID,
       scoreThreshold: 0.5,
     });
 
@@ -111,6 +117,7 @@ describe("getRAGContext", () => {
 
     const results = await getRAGContext("test", {
       meetingId: meeting.id,
+      userId: TEST_USER_ID,
       limit: 2,
     });
 
@@ -125,7 +132,10 @@ describe("getRAGContext", () => {
     mockDb.where.mockResolvedValueOnce([meeting]);
     mockQdrantClient.search.mockResolvedValueOnce([]);
 
-    await getRAGContext("test", { meetingId: meeting.id });
+    await getRAGContext("test", {
+      meetingId: meeting.id,
+      userId: TEST_USER_ID,
+    });
 
     expect(mockQdrantClient.search).toHaveBeenCalledWith(
       "meeting_specific",
@@ -147,7 +157,7 @@ describe("getRAGContext", () => {
     mockDb.where.mockResolvedValueOnce([m1, m2]);
     mockQdrantClient.search.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
-    await getRAGContext("test");
+    await getRAGContext("test", { userId: TEST_USER_ID });
 
     expect(mockQdrantClient.search).toHaveBeenCalledTimes(2);
   });
@@ -158,6 +168,7 @@ describe("getRAGContext", () => {
     await expect(
       getRAGContext("test", {
         meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        userId: TEST_USER_ID,
       })
     ).rejects.toThrow(MeetingNotFoundError);
   });
@@ -168,7 +179,7 @@ describe("getRAGContext", () => {
     mockCreateEmbedding.mockRejectedValueOnce(new Error("OpenAI down"));
 
     await expect(
-      getRAGContext("test", { meetingId: meeting.id })
+      getRAGContext("test", { meetingId: meeting.id, userId: TEST_USER_ID })
     ).rejects.toThrow(EmbeddingError);
   });
 
@@ -192,7 +203,7 @@ describe("getRAGContext", () => {
         },
       ]);
 
-    const results = await getRAGContext("test");
+    const results = await getRAGContext("test", { userId: TEST_USER_ID });
 
     expect(results).toHaveLength(1);
     expect(results[0].text).toBe("OK");
@@ -225,7 +236,10 @@ describe("getRAGContext", () => {
         },
       ]);
 
-    const results = await getRAGContext("test", { boostMeetingId: m1.id });
+    const results = await getRAGContext("test", {
+      userId: TEST_USER_ID,
+      boostMeetingId: m1.id,
+    });
 
     // m1 score 0.85 * 1.15 = 0.9775 > m2 score 0.9
     expect(results[0].text).toBe("Current");
@@ -247,7 +261,9 @@ describe("getRAGContext", () => {
       .mockRejectedValueOnce(new Error("Qdrant down"))
       .mockRejectedValueOnce(new Error("Qdrant down"));
 
-    await expect(getRAGContext("test")).rejects.toThrow(AllSearchesFailedError);
+    await expect(
+      getRAGContext("test", { userId: TEST_USER_ID })
+    ).rejects.toThrow(AllSearchesFailedError);
   });
 });
 
