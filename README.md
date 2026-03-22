@@ -2,6 +2,8 @@
 
 AI that joins your video calls, creates embeddings from the meeting content, and acts as a voice agent participant with RAG capabilities.
 
+**Supported platforms:** Zoom, Google Meet, Microsoft Teams, and Cisco Webex.
+
 ## Tech Stack
 
 - **Next.js 16** (App Router, Turbopack, TypeScript)
