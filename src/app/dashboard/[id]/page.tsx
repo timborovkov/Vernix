@@ -9,37 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { statusVariant } from "@/lib/meetings/constants";
+import { ChatPanel } from "@/components/chat-panel";
+import { formatTime, renderMarkdown } from "@/lib/format";
 import { ArrowLeft, Search, Clock, Users } from "lucide-react";
-
-function renderMarkdown(md: string): string {
-  const escaped = md
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-
-  // Split into blocks by double newlines
-  const blocks = escaped.split(/\n{2,}/);
-
-  return blocks
-    .map((block) => {
-      const lines = block.trim().split("\n");
-      // Check if all lines are list items
-      if (lines.every((l) => l.startsWith("- "))) {
-        const items = lines.map((l) => `<li>${l.slice(2)}</li>`).join("");
-        return `<ul>${items}</ul>`;
-      }
-      return `<p>${lines.join("<br>")}</p>`;
-    })
-    .join("");
-}
-
-function formatTime(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-}
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -181,6 +153,11 @@ export default function MeetingDetailPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Chat */}
+      <div className="mt-6">
+        <ChatPanel meetingId={id} placeholder="Ask about this meeting..." />
       </div>
 
       {/* Transcript Timeline */}
