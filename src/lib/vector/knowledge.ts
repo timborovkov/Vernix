@@ -17,9 +17,14 @@ export async function ensureKnowledgeCollection(
   try {
     await client.getCollection(name);
   } catch {
-    await client.createCollection(name, {
-      vectors: { size: EMBEDDING_DIM, distance: "Cosine" },
-    });
+    try {
+      await client.createCollection(name, {
+        vectors: { size: EMBEDDING_DIM, distance: "Cosine" },
+      });
+    } catch {
+      // Another request may have created it concurrently — verify it exists
+      await client.getCollection(name);
+    }
   }
 
   return name;
