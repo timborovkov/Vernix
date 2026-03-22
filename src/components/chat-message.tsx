@@ -24,6 +24,7 @@ function SourcesList({ sources }: { sources: Source[] }) {
         variant="ghost"
         size="sm"
         onClick={() => setExpanded(!expanded)}
+        aria-label={expanded ? "Hide sources" : "Show sources"}
         className="text-muted-foreground h-auto px-1 py-0.5 text-xs"
       >
         {sources.length} source{sources.length !== 1 ? "s" : ""}
@@ -69,19 +70,21 @@ export function ChatMessage({ message }: { message: UIMessage }) {
       textContent += part.text;
     }
     // Tool parts have type "tool-{name}" in v6
-    if (part.type.startsWith("tool-")) {
-      const toolPart = part as {
-        state: string;
-        output?: { sources?: Source[] };
-      };
-      if (
-        toolPart.state === "input-streaming" ||
-        toolPart.state === "input-available"
-      ) {
+    if (part.type.startsWith("tool-") && "state" in part) {
+      const state = (part as { state: string }).state;
+      if (state === "input-streaming" || state === "input-available") {
         hasActiveToolCall = true;
       }
-      if (toolPart.state === "output-available" && toolPart.output?.sources) {
-        sources.push(...toolPart.output.sources);
+      if (state === "output-available") {
+        const output = (part as { output?: unknown }).output;
+        if (
+          output &&
+          typeof output === "object" &&
+          "sources" in output &&
+          Array.isArray((output as { sources: unknown }).sources)
+        ) {
+          sources.push(...(output as { sources: Source[] }).sources);
+        }
       }
     }
   }
