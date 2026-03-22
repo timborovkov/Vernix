@@ -171,7 +171,7 @@ describe("POST /api/webhooks/recall/transcript", () => {
     });
   });
 
-  it("adds new speaker to participants array", async () => {
+  it("updates participants atomically after upsert", async () => {
     const meeting = fakeMeeting({
       status: "active",
       participants: [],
@@ -187,33 +187,16 @@ describe("POST /api/webhooks/recall/transcript", () => {
         body: fakePayload(),
       }
     );
-    await POST(req);
-
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        participants: ["Alice"],
-      })
-    );
-  });
-
-  it("does not duplicate existing speaker in participants", async () => {
-    const meeting = fakeMeeting({
-      status: "active",
-      participants: ["Alice"],
-    });
-    mockDb.where.mockResolvedValueOnce([meeting]);
-
-    const req = createJsonRequest(
-      "http://localhost/api/webhooks/recall/transcript",
-      {
-        method: "POST",
-        body: fakePayload(),
-      }
-    );
     const { status } = await parseJsonResponse(await POST(req));
 
     expect(status).toBe(200);
-    expect(mockDb.set).not.toHaveBeenCalled();
+    // Atomic SQL update is called (CASE with @> containment check)
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        updatedAt: expect.any(Date),
+      })
+    );
   });
 
   it("returns 500 when upsert fails", async () => {
