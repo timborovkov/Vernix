@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { statusVariant } from "@/lib/meetings/constants";
 import { ArrowLeft, Search, Clock, Users } from "lucide-react";
 
 function formatTime(ms: number): string {
@@ -16,18 +17,6 @@ function formatTime(ms: number): string {
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
-
-const statusVariant: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  pending: "outline",
-  joining: "secondary",
-  active: "default",
-  processing: "secondary",
-  completed: "default",
-  failed: "destructive",
-};
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
