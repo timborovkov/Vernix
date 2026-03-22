@@ -204,11 +204,21 @@
       async function connect() {
         setStatus("Getting token...", "");
 
-        const tokenRes = await fetch(
-          `${appUrl}/api/agent/voice-token?meetingId=${meetingId}`
-        );
+        let tokenRes;
+        try {
+          tokenRes = await fetch(
+            `${appUrl}/api/agent/voice-token?meetingId=${meetingId}`
+          );
+        } catch (err) {
+          log("Token fetch failed: " + err.message);
+          setStatus("Retrying in 5s...", "");
+          setTimeout(connect, 5000);
+          return;
+        }
         if (!tokenRes.ok) {
-          setStatus("Failed to get token", "");
+          log("Token error: " + tokenRes.status);
+          setStatus("Retrying in 5s...", "");
+          setTimeout(connect, 5000);
           return;
         }
         const { token } = await tokenRes.json();
