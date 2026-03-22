@@ -13,6 +13,8 @@ export class RecallProvider implements MeetingBotProvider {
     joinLink: string,
     meetingId: string
   ): Promise<{ botId: string }> {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
     const response = await fetch(`${this.apiUrl}/bot`, {
       method: "POST",
       headers: {
@@ -21,11 +23,19 @@ export class RecallProvider implements MeetingBotProvider {
       },
       body: JSON.stringify({
         meeting_url: joinLink,
-        bot_name: `KiviKova Agent`,
-        transcription_options: { provider: "default" },
-        real_time_transcription: {
-          destination_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/webhooks/recall/transcript`,
-          partial_results: false,
+        bot_name: "KiviKova Agent",
+        recording_config: {
+          transcript: {
+            provider: { recallai_streaming: {} },
+            diarization: { use_separate_streams_when_available: true },
+          },
+          realtime_endpoints: [
+            {
+              type: "webhook",
+              url: `${appUrl}/api/webhooks/recall/transcript`,
+              events: ["transcript.data"],
+            },
+          ],
         },
         metadata: { meetingId },
       }),

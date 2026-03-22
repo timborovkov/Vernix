@@ -40,23 +40,55 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 
+## Environment Variables
+
+| Variable               | Description                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`         | PostgreSQL connection string                                                               |
+| `QDRANT_URL`           | Qdrant instance URL (e.g. `http://localhost:6333` or `https://your-qdrant.up.railway.app`) |
+| `OPENAI_API_KEY`       | OpenAI API key (for embeddings and LLM)                                                    |
+| `MEETING_BOT_PROVIDER` | `recall` or `mock`                                                                         |
+| `RECALL_API_KEY`       | Recall.ai API token                                                                        |
+| `RECALL_API_URL`       | Recall.ai API base URL (region-specific, e.g. `https://eu-central-1.recall.ai/api/v1`)     |
+| `NEXT_PUBLIC_APP_URL`  | Your app's public URL (used for webhook callbacks, e.g. `https://your-app.up.railway.app`) |
+
+## Recall.ai Webhook Configuration
+
+Two webhook endpoints, each serving a different purpose:
+
+### 1. Realtime Transcripts — `/api/webhooks/recall/transcript` (automatic)
+
+Configured per-bot in code when creating a bot via `POST /api/agent/join`. Recall streams live `transcript.data` events here during the call. No manual setup needed — just make sure `NEXT_PUBLIC_APP_URL` is set correctly.
+
+### 2. Bot Status Events — `/api/webhooks/recall/status` (manual)
+
+Go to **Recall Dashboard → Webhooks → Add Endpoint** and configure:
+
+- **URL:** `https://your-app.up.railway.app/api/webhooks/recall/status`
+- **Events:** `bot.call_ended`
+
+This auto-updates meeting status and triggers summary generation when the bot leaves a call, so users don't need to manually click "Stop".
+
 ## Scripts
 
-| Command            | Description          |
-| ------------------ | -------------------- |
-| `pnpm dev`         | Start dev server     |
-| `pnpm build`       | Production build     |
-| `pnpm lint`        | Run ESLint           |
-| `pnpm format`      | Format with Prettier |
-| `pnpm db:push`     | Push schema to DB    |
-| `pnpm db:generate` | Generate migrations  |
-| `pnpm db:migrate`  | Run migrations       |
-| `pnpm db:studio`   | Open Drizzle Studio  |
+| Command          | Description                       |
+| ---------------- | --------------------------------- |
+| `pnpm dev`       | Start dev server                  |
+| `pnpm build`     | Push DB schema + production build |
+| `pnpm validate`  | Format, lint, typecheck, and test |
+| `pnpm test`      | Run unit tests                    |
+| `pnpm typecheck` | TypeScript type check             |
+| `pnpm lint`      | Run ESLint                        |
+| `pnpm format`    | Format with Prettier              |
+| `pnpm db:push`   | Push schema to DB                 |
+| `pnpm db:studio` | Open Drizzle Studio               |
 
 ## Architecture
 
-- **Meetings** are stored in PostgreSQL with metadata (title, join link, status, participants)
+- **Meetings** are stored in PostgreSQL with metadata (title, join link, status, participants, summary)
 - Each meeting gets its own **Qdrant collection** for vector embeddings
 - The **meeting bot** (Recall.ai) joins calls, streams audio, and generates transcripts
 - Transcripts are embedded with OpenAI's `text-embedding-3-small` and stored in Qdrant
-- The **voice agent** uses RAG to pull context from current and past meetings
+- After a meeting ends, an **LLM summary** is generated from all transcript segments
+- The **RAG agent** searches current and past meeting transcripts to answer questions
+- The dashboard provides **meeting notes**, transcript timeline, search, and filtering

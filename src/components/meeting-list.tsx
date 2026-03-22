@@ -5,6 +5,7 @@ import type { Meeting } from "@/lib/db/schema";
 
 interface MeetingListProps {
   meetings: Meeting[];
+  emptyMessage?: string;
   onJoin: (id: string) => Promise<void>;
   onStop: (id: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
@@ -12,6 +13,7 @@ interface MeetingListProps {
 
 export function MeetingList({
   meetings,
+  emptyMessage,
   onJoin,
   onStop,
   onDelete,
@@ -19,10 +21,12 @@ export function MeetingList({
   if (meetings.length === 0) {
     return (
       <div className="text-muted-foreground py-12 text-center">
-        <p className="text-lg">No meetings yet</p>
-        <p className="text-sm">
-          Create a meeting to get started with your AI agent.
-        </p>
+        <p className="text-lg">{emptyMessage ?? "No meetings yet"}</p>
+        {!emptyMessage && (
+          <p className="text-sm">
+            Create a meeting to get started with your AI agent.
+          </p>
+        )}
       </div>
     );
   }
