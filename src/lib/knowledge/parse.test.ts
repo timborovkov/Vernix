@@ -1,7 +1,7 @@
 const { mockGetDocument, mockMammoth } = vi.hoisted(() => {
   const mockPage = {
     getTextContent: vi.fn().mockResolvedValue({
-      items: [{ str: "PDF" }, { str: " content here" }],
+      items: [{ str: "PDF content" }, { str: "here" }],
     }),
   };
   const mockDoc = {
@@ -34,10 +34,10 @@ describe("parseDocument", () => {
     const buffer = Buffer.from("fake pdf");
     const result = await parseDocument(buffer, "pdf");
 
-    expect(result).toBe("PDF  content here");
-    expect(mockGetDocument).toHaveBeenCalledWith({
-      data: expect.any(Uint8Array),
-    });
+    expect(result).toBe("PDF content here");
+    expect(mockGetDocument).toHaveBeenCalledTimes(1);
+    const call = mockGetDocument.mock.calls[0][0];
+    expect(call.data).toBeInstanceOf(Uint8Array);
   });
 
   it("parses DOCX files", async () => {
