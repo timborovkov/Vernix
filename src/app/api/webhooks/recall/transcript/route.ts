@@ -91,9 +91,9 @@ export async function POST(request: Request) {
       .set({
         participants: sql`
           CASE
-            WHEN NOT (${meetings.participants} @> ${JSON.stringify([transcript.speaker])}::jsonb)
-            THEN (${meetings.participants} || ${JSON.stringify([transcript.speaker])}::jsonb)
-            ELSE ${meetings.participants}
+            WHEN NOT (COALESCE(${meetings.participants}, '[]'::jsonb) @> ${JSON.stringify([transcript.speaker])}::jsonb)
+            THEN (COALESCE(${meetings.participants}, '[]'::jsonb) || ${JSON.stringify([transcript.speaker])}::jsonb)
+            ELSE COALESCE(${meetings.participants}, '[]'::jsonb)
           END
         `,
         updatedAt: new Date(),
