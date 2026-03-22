@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,16 +21,23 @@ export function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
 
-  const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/agent/chat",
-      body: { meetingId },
-    }),
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/agent/chat",
+        body: { meetingId },
+      }),
+    [meetingId]
+  );
+
+  const { messages, sendMessage, status, error, clearError } = useChat({
+    transport,
   });
 
   const isLoading = status === "streaming" || status === "submitted";
 
-  useEffect(() => {
+  // Auto-scroll after DOM updates
+  useLayoutEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -39,6 +46,7 @@ export function ChatPanel({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
+    if (error) clearError();
     sendMessage({ text: inputValue });
     setInputValue("");
   };
@@ -54,6 +62,8 @@ export function ChatPanel({
       <CardContent>
         <div
           ref={scrollRef}
+          role="log"
+          aria-live="polite"
           className="mb-3 max-h-96 min-h-48 space-y-3 overflow-y-auto"
         >
           {messages.length === 0 && (
@@ -67,9 +77,17 @@ export function ChatPanel({
             <ChatMessage key={message.id} message={message} />
           ))}
           {error && (
-            <p className="text-destructive text-center text-sm">
-              {error.message}
-            </p>
+            <div className="text-destructive flex items-center justify-center gap-2 text-sm">
+              <span>{error.message}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearError}
+                className="h-auto px-2 py-0.5 text-xs"
+              >
+                Dismiss
+              </Button>
+            </div>
           )}
         </div>
 
@@ -79,11 +97,13 @@ export function ChatPanel({
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={placeholder}
             disabled={isLoading}
+            aria-label="Chat message"
           />
           <Button
             type="submit"
             size="sm"
             disabled={isLoading || !inputValue.trim()}
+            aria-label="Send message"
           >
             <SendHorizontal className="h-4 w-4" />
           </Button>
