@@ -4,17 +4,11 @@ export type FileType = "pdf" | "docx" | "txt" | "md";
 
 /**
  * Extract text from a PDF buffer using pdfjs-dist legacy build.
- * Dynamic import avoids worker issues in Next.js server bundles.
- * Setting workerSrc to the actual worker file allows pdfjs to
- * set up its "fake worker" (main-thread fallback) correctly.
+ * Workers are automatically disabled in Node.js by pdfjs-dist,
+ * so no workerSrc configuration is needed.
  */
 async function parsePDF(buffer: Buffer): Promise<string> {
-  const { createRequire } = await import("module");
-  const req = createRequire(import.meta.url);
-  const workerSrc = req.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs");
-
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
   const doc = await pdfjs.getDocument({
     data: new Uint8Array(buffer),
