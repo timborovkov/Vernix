@@ -207,4 +207,31 @@ describe("POST /api/agent/stop", () => {
 
     expect(mockGenerateSummary).toHaveBeenCalledWith(segments);
   });
+
+  it("recovers stuck processing meeting without calling leaveMeeting", async () => {
+    const endedAt = new Date("2026-03-20T10:00:00Z");
+    mockDb.where
+      .mockResolvedValueOnce([
+        fakeMeeting({
+          status: "processing",
+          metadata: { botId: "bot-1" },
+          endedAt,
+        }),
+      ])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest("http://localhost/api/agent/stop", {
+      method: "POST",
+      body: { meetingId: validUuid },
+    });
+
+    const response = await POST(req);
+    expect(response.status).toBe(200);
+    expect(mockProvider.leaveMeeting).not.toHaveBeenCalled();
+
+    // Should preserve original endedAt, not overwrite with new Date
+    const setCalls = mockDb.set.mock.calls;
+    expect(setCalls[0][0].endedAt).toEqual(endedAt);
+  });
 });
