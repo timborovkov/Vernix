@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { documents } from "@/lib/db/schema";
+import { documents, meetings } from "@/lib/db/schema";
 import { ensureBucket, uploadFile } from "@/lib/storage/operations";
 import { processDocument } from "@/lib/knowledge/process";
 
@@ -23,14 +23,22 @@ function sanitizeFileName(name: string): string {
   return name.replace(/[/\\:\x00-\x1f]/g, "_").replace(/\.\./g, "_");
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await requireSessionUser();
   if (user instanceof NextResponse) return user;
+
+  const { searchParams } = new URL(request.url);
+  const meetingId = searchParams.get("meetingId");
+
+  const conditions = [eq(documents.userId, user.id)];
+  if (meetingId) {
+    conditions.push(eq(documents.meetingId, meetingId));
+  }
 
   const docs = await db
     .select()
     .from(documents)
-    .where(eq(documents.userId, user.id))
+    .where(and(...conditions))
     .orderBy(desc(documents.createdAt));
 
   return NextResponse.json({ documents: docs });
@@ -83,6 +91,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
   }
 
+  // Optional meeting scoping
+  const meetingIdStr = formData.get("meetingId");
+  const meetingId =
+    typeof meetingIdStr === "string" && meetingIdStr ? meetingIdStr : null;
+
+  if (meetingId) {
+    const [meeting] = await db
+      .select({ id: meetings.id })
+      .from(meetings)
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
+    if (!meeting) {
+      return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
+    }
+  }
+
   const documentId = randomUUID();
   const s3Key = `knowledge/${user.id}/${documentId}/${safeName}`;
 
@@ -97,6 +120,7 @@ export async function POST(request: Request) {
       .values({
         id: documentId,
         userId: user.id,
+        meetingId,
         fileName: safeName,
         fileType,
         fileSize: file.size,
@@ -107,7 +131,7 @@ export async function POST(request: Request) {
 
     // Process synchronously — files ≤10MB complete in seconds
     try {
-      await processDocument(documentId, user.id);
+      await processDocument(documentId, user.id, meetingId ?? undefined);
     } catch {
       // processDocument already sets status=failed in DB
     }

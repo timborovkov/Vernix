@@ -35,11 +35,15 @@ export function useMeetings() {
     return () => clearInterval(interval);
   }, [meetings, fetchMeetings]);
 
-  const createMeeting = async (title: string, joinLink: string) => {
+  const createMeeting = async (
+    title: string,
+    joinLink: string,
+    agenda?: string
+  ) => {
     const res = await fetch("/api/meetings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, joinLink }),
+      body: JSON.stringify({ title, joinLink, agenda }),
     });
 
     if (!res.ok) {

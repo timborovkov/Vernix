@@ -5,6 +5,7 @@ export interface SummaryOptions {
   title?: string;
   startedAt?: Date | null;
   participants?: string[];
+  agenda?: string;
 }
 
 export async function generateMeetingSummary(
@@ -27,6 +28,7 @@ export async function generateMeetingSummary(
     context += `Date: ${options.startedAt.toISOString()}\n`;
   if (options?.participants?.length)
     context += `Participants: ${options.participants.join(", ")}\n`;
+  if (options?.agenda) context += `Meeting Agenda:\n${options.agenda}\n`;
 
   const client = getOpenAIClient();
   const response = await client.chat.completions.create({
@@ -35,7 +37,7 @@ export async function generateMeetingSummary(
       {
         role: "system",
         content:
-          "You are a meeting assistant. Summarize the following meeting transcript concisely. Include key decisions, action items, and main discussion points. Keep it under 500 words. Use the provided meeting metadata (title, date, participants) in your summary.",
+          "You are a meeting assistant. Summarize the following meeting transcript concisely. Include key decisions, action items, and main discussion points. Keep it under 500 words. Use the provided meeting metadata (title, date, participants, agenda) in your summary. If an agenda was provided, note which items were discussed and any that were not covered.",
       },
       {
         role: "user",

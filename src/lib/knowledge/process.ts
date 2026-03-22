@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { documents } from "@/lib/db/schema";
+import { documents, meetings } from "@/lib/db/schema";
 import { getDownloadUrl } from "@/lib/storage/operations";
 import { parseDocument, type FileType } from "./parse";
 import { chunkText } from "./chunk";
@@ -13,7 +13,8 @@ const MAX_CHUNKS = 500;
 
 export async function processDocument(
   documentId: string,
-  userId: string
+  userId: string,
+  meetingId?: string
 ): Promise<void> {
   try {
     // 1. Get document metadata (scoped to user for safety)
@@ -38,11 +39,7 @@ export async function processDocument(
     }
     const text = await parseDocument(buffer, doc.fileType as FileType);
     if (!text.trim()) {
-      await db
-        .update(documents)
-        .set({ status: "ready", chunkCount: 0, updatedAt: new Date() })
-        .where(eq(documents.id, documentId));
-      return;
+      throw new Error("Document contains no extractable text");
     }
 
     // 4. Chunk text
@@ -53,8 +50,20 @@ export async function processDocument(
       );
     }
 
-    // 5. Ensure knowledge collection exists
-    const collectionName = await ensureKnowledgeCollection(userId);
+    // 5. Determine target collection
+    let collectionName: string;
+    if (meetingId) {
+      // Meeting-scoped: upsert into the meeting's existing collection
+      const [meeting] = await db
+        .select({ qdrantCollectionName: meetings.qdrantCollectionName })
+        .from(meetings)
+        .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+      if (!meeting) throw new Error(`Meeting not found: ${meetingId}`);
+      collectionName = meeting.qdrantCollectionName;
+    } else {
+      // Global: upsert into the user's knowledge collection
+      collectionName = await ensureKnowledgeCollection(userId);
+    }
 
     // 6. Batch embed + upsert
     await upsertDocumentChunks(

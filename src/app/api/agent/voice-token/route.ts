@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getOpenAIClient } from "@/lib/openai/client";
-import { VOICE_AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
+import { getVoiceAgentSystemPrompt } from "@/lib/agent/prompts";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -45,7 +45,9 @@ export async function GET(request: Request) {
       session: {
         type: "realtime",
         model: "gpt-4o-realtime-preview",
-        instructions: VOICE_AGENT_SYSTEM_PROMPT,
+        instructions: getVoiceAgentSystemPrompt(
+          (meeting.metadata as Record<string, unknown>)?.agenda as string
+        ),
         tools: [
           {
             type: "function",

@@ -65,6 +65,9 @@ export const documents = pgTable("documents", {
   userId: uuid("user_id")
     .references(() => users.id)
     .notNull(),
+  meetingId: uuid("meeting_id").references(() => meetings.id, {
+    onDelete: "set null",
+  }),
   fileName: text("file_name").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),

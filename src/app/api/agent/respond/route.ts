@@ -7,7 +7,10 @@ import {
   formatContextForPrompt,
   MeetingNotFoundError,
 } from "@/lib/agent/rag";
-import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
+import { getAgentSystemPrompt } from "@/lib/agent/prompts";
+import { db } from "@/lib/db";
+import { meetings } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 
 const respondSchema = z.object({
   meetingId: z.uuid(),
@@ -45,6 +48,16 @@ export async function POST(request: Request) {
     });
     const contextString = formatContextForPrompt(ragResults);
 
+    // Fetch agenda for the meeting
+    const [meeting] = await db
+      .select({ metadata: meetings.metadata })
+      .from(meetings)
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
+    const agenda = (meeting?.metadata as Record<string, unknown>)?.agenda as
+      | string
+      | undefined;
+    const systemPrompt = getAgentSystemPrompt(agenda);
+
     const client = getOpenAIClient();
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
@@ -52,8 +65,8 @@ export async function POST(request: Request) {
         {
           role: "system",
           content: contextString
-            ? `${AGENT_SYSTEM_PROMPT}\n\n${contextString}`
-            : AGENT_SYSTEM_PROMPT,
+            ? `${systemPrompt}\n\n${contextString}`
+            : systemPrompt,
         },
         { role: "user", content: question },
       ],
