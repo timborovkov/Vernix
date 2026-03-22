@@ -35,9 +35,11 @@ export async function POST(request: Request) {
               formatContextForPrompt(results) || "No relevant context found.",
             sources: results.map((r) => ({
               text: r.text,
+              score: r.score,
+              source: r.source,
               speaker: r.speaker,
               timestampMs: r.timestampMs,
-              score: r.score,
+              fileName: r.fileName,
             })),
           };
         },
