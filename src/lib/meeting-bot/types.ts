@@ -1,5 +1,8 @@
 export interface MeetingBotProvider {
-  joinMeeting(joinLink: string, meetingId: string): Promise<{ botId: string }>;
+  joinMeeting(
+    joinLink: string,
+    meetingId: string
+  ): Promise<{ botId: string; voiceSecret?: string }>;
   leaveMeeting(botId: string): Promise<void>;
   onTranscript(
     botId: string,

@@ -56,14 +56,17 @@ export async function POST(request: Request) {
   const provider = getMeetingBotProvider();
 
   try {
-    const { botId } = await provider.joinMeeting(meeting.joinLink, meetingId);
+    const { botId, voiceSecret } = await provider.joinMeeting(
+      meeting.joinLink,
+      meetingId
+    );
 
     await db
       .update(meetings)
       .set({
         status: "active",
         startedAt: new Date(),
-        metadata: { ...meeting.metadata, botId },
+        metadata: { ...meeting.metadata, botId, voiceSecret },
         updatedAt: new Date(),
       })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));

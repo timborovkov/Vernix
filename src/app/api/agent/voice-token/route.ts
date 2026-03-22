@@ -30,9 +30,10 @@ export async function GET(request: Request) {
     );
   }
 
-  // Verify the bot secret matches the stored botId
-  const storedBotId = (meeting.metadata as Record<string, unknown>)?.botId;
-  if (!storedBotId || storedBotId !== botSecret) {
+  // Verify the bot secret matches the stored voiceSecret
+  const storedSecret = (meeting.metadata as Record<string, unknown>)
+    ?.voiceSecret;
+  if (!storedSecret || storedSecret !== botSecret) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 

@@ -44,8 +44,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ context: "Meeting not found." });
   }
 
-  const storedBotId = (meeting.metadata as Record<string, unknown>)?.botId;
-  if (!storedBotId || storedBotId !== botSecret) {
+  const storedSecret = (meeting.metadata as Record<string, unknown>)
+    ?.voiceSecret;
+  if (!storedSecret || storedSecret !== botSecret) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 

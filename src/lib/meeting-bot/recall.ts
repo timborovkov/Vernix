@@ -58,7 +58,7 @@ export class RecallProvider implements MeetingBotProvider {
     }
 
     const data = (await response.json()) as { id: string };
-    return { botId: data.id };
+    return { botId: data.id, voiceSecret };
   }
 
   async leaveMeeting(botId: string): Promise<void> {
