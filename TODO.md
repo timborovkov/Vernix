@@ -49,15 +49,23 @@
 - ~~**Source citations** — Expandable source list with speaker, timestamp, and relevance score~~
 - ~~**Tool call visualization** — "Searching meeting context..." indicator during RAG lookup~~
 
-## P7 — Knowledge Base (file uploads + RAG)
+## P7 — Knowledge Base (file uploads + RAG) ~~DONE~~
 
-- **File upload API** — `POST /api/knowledge` accepts PDF, DOCX, TXT, MD files
-- **Object storage** — Minio / S3 for file persistence
-- **Document chunking** — Split uploaded files into chunks, embed, store in a per-org Qdrant collection
-- **Unified RAG** — Extend `getRAGContext` to search both meeting transcripts and uploaded documents
-- **Knowledge base UI** — Upload page, file list, delete files
+- ~~**File upload API** — `POST /api/knowledge` accepts PDF, DOCX, TXT, MD files (multipart form-data, 10MB limit)~~
+- ~~**Object storage** — Minio locally, S3-compatible in prod; `src/lib/storage/` with upload, delete, presigned URL~~
+- ~~**Document chunking** — `src/lib/knowledge/chunk.ts` with sentence-boundary-aware splitting (1000 chars, 200 overlap)~~
+- ~~**Unified RAG** — `getRAGContext` now searches per-user knowledge collection alongside meeting transcripts; `RAGResult` has `source: "transcript" | "document"`~~
+- ~~**Knowledge base UI** — `/dashboard/knowledge` page with upload dialog, document list, status badges, delete~~
 
-## P8 — Meeting Context & Agenda
+## P8 — Meeting-Scoped Knowledge
+
+- **`meetingId` on documents** — Optional FK on `documents` table linking uploads to a specific meeting
+- **Upload during meeting creation** — Allow attaching files (agenda, specs, briefs) when creating a meeting
+- **Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting
+- **Scoped RAG boost** — When chatting about a meeting, boost its linked documents the same way transcripts are boosted
+- **Knowledge list integration** — Global `/dashboard/knowledge` shows all docs with optional meeting link; meeting detail page shows only that meeting's docs
+
+## P9 — Meeting Context & Agenda
 
 - **Agenda field** — Optional free-form text field on meetings (stored in `metadata.agenda`) for agenda, prep notes, goals, or background info
 - **UI** — Editable text area on meeting detail page and in the create meeting dialog (optional)
@@ -65,14 +73,14 @@
 - **Agent context** — Include agenda in the system prompt for voice agent and chat agent so they know what the call is about
 - **Summary awareness** — Pass agenda to the summary generation prompt so the LLM can compare what was planned vs. what was discussed
 
-## P9 — Action Items & Tasks
+## P10 — Action Items & Tasks
 
 - **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
 - **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
 - **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
 - **Cross-meeting task view** — Dashboard widget showing all open tasks and action items across meetings
 
-## P10 — MCP Tool Connections
+## P11 — MCP Tool Connections
 
 - **KiviKova MCP server** — Expose meeting data (transcripts, summaries, search, action items) as an MCP server so users can give Claude Desktop or other AI assistants access to their meeting context
 - **MCP config UI** — Settings page where users paste MCP server configs (like Claude Desktop's config format)
@@ -80,7 +88,7 @@
 - **Tool routing** — Expose discovered MCP tools to the voice agent and chat agent as callable functions
 - **Config storage** — Store MCP server configs per user in DB (url, auth, enabled/disabled)
 
-## P11 — Data Export
+## P12 — Data Export
 
 - **Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown
 - **Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)
@@ -119,7 +127,24 @@
 - **Account linking** — Allow users to link multiple auth providers to one account
 - **Profile API** — `PATCH /api/user/profile` endpoint for updating user details
 
-## P17 — Billing with Polar
+## P17 — Vision-Based Document Parsing (low priority)
+
+- **OpenAI Vision for PDFs** — Current PDF parsing (pdfjs-dist) extracts raw text only — images, charts, tables, and scanned pages are invisible. Use GPT-4o vision to process PDF pages as images for richer extraction
+- **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
+- **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
+- **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
+
+## P18 — Silent Agent Mode (Text Agent)
+
+- **Silent mode toggle** — Per-meeting toggle (in create dialog and meeting detail). This is a fundamentally different agent type: text agent instead of voice agent
+- **Recall without Output Media** — Omit `output_media` and `include_bot_in_recording: { audio: false }` so the bot joins as a passive listener with no voice/screen presence
+- **Text agent** — Instead of OpenAI Realtime API (audio in/out via voice-agent.html), the agent monitors the transcript stream server-side. Same RAG pipeline and tools, but no audio bridging, no WebSocket, no voice session
+- **Chat-based replies** — When addressed in the transcript (by name or direct question), use Recall's chat API (`POST /api/v1/bot/{id}/send_chat_message`) to respond as a text message in the meeting chat
+- **Transcript monitoring** — Server-side: watch incoming `transcript.data` webhooks for mentions/questions, run through LLM with RAG context, send response via chat API
+- **UI indicator** — Show "Silent" badge on meeting card and detail page
+- **Storage** — `metadata.silent: boolean` on the meeting row
+
+## P19 — Billing with Polar
 
 - **Polar integration** — Connect Polar.sh for subscription management
 - **Pricing tiers** — Free (limited meetings/month), Pro (unlimited), Enterprise (team features)

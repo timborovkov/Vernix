@@ -29,7 +29,7 @@ vi.mock("@ai-sdk/openai", () => ({
 }));
 
 import { POST } from "./route";
-import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
+import { createJsonRequest } from "@/test/helpers";
 
 const URL = "http://localhost/api/agent/chat";
 

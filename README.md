@@ -12,6 +12,8 @@ AI that joins your video calls, creates embeddings from the meeting content, and
 - **Qdrant** for vector storage
 - **OpenAI** for embeddings and voice
 - **Recall.ai** for meeting bot integration
+- **Vercel AI SDK** for streaming chat with tool calls
+- **Minio / S3** for knowledge base file storage
 
 ## Quick Start
 
@@ -30,7 +32,7 @@ pnpm install
 # 2. Copy env file and configure
 cp .env.example .env.local
 
-# 3. Start Postgres and Qdrant
+# 3. Start Postgres, Qdrant, and Minio
 docker compose up -d
 
 # 4. Push database schema
@@ -55,6 +57,11 @@ Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 | `MEETING_BOT_PROVIDER` | `recall` or `mock`                                                                         |
 | `RECALL_API_KEY`       | Recall.ai API token                                                                        |
 | `RECALL_API_URL`       | Recall.ai API base URL (region-specific, e.g. `https://eu-central-1.recall.ai/api/v1`)     |
+| `S3_ENDPOINT`          | S3-compatible endpoint (e.g. `http://localhost:9002` for local Minio)                      |
+| `S3_ACCESS_KEY`        | S3 access key (Minio root user for local dev)                                              |
+| `S3_SECRET_KEY`        | S3 secret key (Minio root password for local dev)                                          |
+| `S3_BUCKET`            | S3 bucket name for knowledge base files (default: `kivikova-knowledge`)                    |
+| `S3_REGION`            | S3 region (default: `us-east-1`)                                                           |
 
 ## Recall.ai Webhook Configuration
 
@@ -95,4 +102,6 @@ Go to **Recall Dashboard → Webhooks → Add Endpoint** and configure:
 - Transcripts are embedded with OpenAI's `text-embedding-3-small` and stored in Qdrant
 - After a meeting ends, an **LLM summary** is generated from all transcript segments
 - The **RAG agent** searches current and past meeting transcripts to answer questions
+- The **knowledge base** lets users upload PDF, DOCX, TXT, and MD files — parsed, chunked, embedded, and searchable alongside meeting transcripts via unified RAG
+- **Streaming chat** on meeting detail and dashboard pages with tool-call visualization and source citations
 - The dashboard provides **meeting notes**, transcript timeline, search, and filtering

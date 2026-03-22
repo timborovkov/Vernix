@@ -13,7 +13,7 @@ pnpm lint             # ESLint
 pnpm format           # Prettier write
 pnpm db:push          # Push Drizzle schema to Postgres (uses dotenv for .env.local)
 pnpm db:studio        # Drizzle Studio GUI
-docker compose up -d  # Start Postgres + Qdrant locally
+docker compose up -d  # Start Postgres + Qdrant + Minio locally
 ```
 
 Run `pnpm validate` after every change. It formats, lints with autofix, typechecks, and runs all tests.
@@ -32,13 +32,15 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users` and `meetings` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, and `documents` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with status enum (`processing → ready | failed`). Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface with `RecallProvider` and `MockProvider`. Selected via `MEETING_BOT_PROVIDER` env var.
-- **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine). `scroll.ts` fetches all transcript points for summary generation.
+- **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine). `scroll.ts` fetches all transcript points for summary generation. `knowledge.ts` manages per-user knowledge collections for uploaded documents.
 - **`src/lib/openai/`** — OpenAI client singleton. `embeddings.ts` for text embedding, `voice.ts` for server-side VoiceSession class (wraps OpenAI Realtime API).
-- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting search with boost). `prompts.ts` has separate `AGENT_SYSTEM_PROMPT` (text) and `VOICE_AGENT_SYSTEM_PROMPT` (in-call voice).
+- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). `RAGResult` has `source: "transcript" | "document"`. `prompts.ts` has separate `AGENT_SYSTEM_PROMPT` (text) and `VOICE_AGENT_SYSTEM_PROMPT` (in-call voice).
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
+- **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
+- **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, and presigned download URLs.
 
 ### API Routes
 
@@ -57,11 +59,14 @@ All under `src/app/api/`:
 - `webhooks/recall/status/route.ts` — Receives bot lifecycle events (call_ended, transcript.done)
 - `auth/[...nextauth]/route.ts` — NextAuth handlers
 - `auth/register/route.ts` — User registration
-- `search/route.ts` — Vector search across meetings
+- `agent/chat/route.ts` — POST streaming RAG chat (Vercel AI SDK, tool-based)
+- `search/route.ts` — Vector search across meetings and knowledge base
+- `knowledge/route.ts` — GET list documents, POST upload (multipart form-data)
+- `knowledge/[id]/route.ts` — GET document + download URL, DELETE document
 
 ### Auth & Middleware
 
-- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`
+- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`
 - Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag` (verified by botSecret instead)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
@@ -83,7 +88,7 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 - **Validation**: Zod v4 schemas on all API inputs (`import { z } from "zod/v4"`)
 - **IDs**: UUID v4 everywhere
 - **ORM**: Drizzle enforces WHERE on UPDATE/DELETE via ESLint plugin
-- **Singletons**: OpenAI, Qdrant, and DB clients use module-level lazy singletons
+- **Singletons**: OpenAI, Qdrant, S3, and DB clients use module-level lazy singletons
 - **Path alias**: `@/*` maps to `src/*`
 - **Error handling**: API routes use try/catch with `NextResponse.json({ error }, { status })`. Toast notifications via sonner on the client.
 - **Status variant map**: `src/lib/meetings/constants.ts` — shared between meeting card and detail page
@@ -93,8 +98,8 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 - Tests live next to source files as `*.test.ts`
 - Mock pattern: `vi.hoisted()` for mock setup, chainable DB mock, `vi.mock()` for modules
 - Auth is globally mocked in `src/test/setup.ts` — `requireSessionUser` returns a test user
-- Test helpers: `createJsonRequest`, `parseJsonResponse`, `fakeMeeting` in `src/test/helpers.ts`
-- `fakeMeeting()` includes `userId` field matching the test user
+- Test helpers: `createJsonRequest`, `parseJsonResponse`, `fakeMeeting`, `fakeDocument` in `src/test/helpers.ts`
+- `fakeMeeting()` and `fakeDocument()` include `userId` field matching the test user
 
 ## Checklist for Changes
 
@@ -107,4 +112,4 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 
 ## Environment
 
-Copy `.env.example` to `.env.local`. Required: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `MEETING_BOT_PROVIDER`. For Recall: `RECALL_API_KEY`, `RECALL_API_URL`.
+Copy `.env.example` to `.env.local`. Required: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `MEETING_BOT_PROVIDER`. For Recall: `RECALL_API_KEY`, `RECALL_API_URL`. For knowledge base: `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_REGION`.
