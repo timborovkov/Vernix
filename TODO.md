@@ -111,6 +111,18 @@
 - **Responsive polish** — Mobile-optimized dashboard and meeting detail views
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
 
-## P16 — Allow users to modify their own profiles (company, email, change password), allow SSO with Google, Github and X
+## P16 — User Profiles & SSO
 
-## P17 — Configure billing using Polar
+- **Profile page** — `/settings/profile` page where users can edit name, email, company, and avatar
+- **Change password** — Current password verification + new password form
+- **SSO providers** — Add Google, GitHub, and X (Twitter) OAuth providers to NextAuth config
+- **Account linking** — Allow users to link multiple auth providers to one account
+- **Profile API** — `PATCH /api/user/profile` endpoint for updating user details
+
+## P17 — Billing with Polar
+
+- **Polar integration** — Connect Polar.sh for subscription management
+- **Pricing tiers** — Free (limited meetings/month), Pro (unlimited), Enterprise (team features)
+- **Usage tracking** — Track meeting minutes, API calls, and storage per user
+- **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
+- **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
