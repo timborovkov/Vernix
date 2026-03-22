@@ -9,7 +9,7 @@ declare module "pdfjs-dist/legacy/build/pdf.mjs" {
       numPages: number;
       getPage(num: number): Promise<{
         getTextContent(): Promise<{
-          items: Array<{ str: string }>;
+          items: Array<{ str: string } | Record<string, unknown>>;
         }>;
       }>;
     }>;
