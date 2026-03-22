@@ -63,6 +63,7 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const meetingId = params.get("meetingId");
+      const botSecret = params.get("botSecret");
       const appUrl = params.get("appUrl") || window.location.origin;
 
       const statusEl = document.getElementById("status");
@@ -71,7 +72,7 @@
 
       let ws = null;
       let audioContext = null;
-      let isSpeaking = false;
+      let audioDone = true; // true when no more audio chunks expected
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -88,6 +89,7 @@
       let isPlaying = false;
 
       function queueAudio(base64Pcm) {
+        audioDone = false;
         // Decode base64 to Int16Array
         const binary = atob(base64Pcm);
         const bytes = new Uint8Array(binary.length);
@@ -105,11 +107,10 @@
       function playNext() {
         if (audioQueue.length === 0) {
           isPlaying = false;
-          if (!isSpeaking) setStatus("Listening...", "listening");
+          if (audioDone) setStatus("Listening...", "listening");
           return;
         }
         isPlaying = true;
-        isSpeaking = true;
         setStatus("Speaking...", "speaking");
 
         const samples = audioQueue.shift();
@@ -175,7 +176,7 @@
           const res = await fetch(`${appUrl}/api/agent/rag`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ meetingId, query: args.query }),
+            body: JSON.stringify({ meetingId, botSecret, query: args.query }),
           });
           const data = await res.json();
           sendToolOutput(callId, data.context || "No context found.");
@@ -207,7 +208,7 @@
         let tokenRes;
         try {
           tokenRes = await fetch(
-            `${appUrl}/api/agent/voice-token?meetingId=${meetingId}`
+            `${appUrl}/api/agent/voice-token?meetingId=${meetingId}&botSecret=${botSecret}`
           );
         } catch (err) {
           log("Token fetch failed: " + err.message);
@@ -252,7 +253,8 @@
               break;
 
             case "response.output_audio.done":
-              isSpeaking = false;
+              audioDone = true;
+              if (!isPlaying) setStatus("Listening...", "listening");
               break;
 
             case "response.function_call_arguments.done":
