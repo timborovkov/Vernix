@@ -205,7 +205,10 @@ describe("POST /api/agent/stop", () => {
 
     await POST(req);
 
-    expect(mockGenerateSummary).toHaveBeenCalledWith(segments);
+    expect(mockGenerateSummary).toHaveBeenCalledWith(
+      segments,
+      expect.objectContaining({ title: "Test Meeting" })
+    );
   });
 
   it("recovers stuck processing meeting without calling leaveMeeting", async () => {
