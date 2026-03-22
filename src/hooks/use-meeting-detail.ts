@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Meeting } from "@/lib/db/schema";
 
 interface TranscriptSegment {
@@ -47,6 +48,18 @@ export function useMeetingDetail(meetingId: string) {
     );
   }, [fetchMeeting, fetchTranscript]);
 
+  // Poll when meeting is in a transient status
+  useEffect(() => {
+    if (!meeting) return;
+    const transient = ["joining", "active", "processing"].includes(
+      meeting.status
+    );
+    if (!transient) return;
+
+    const interval = setInterval(fetchMeeting, 5000);
+    return () => clearInterval(interval);
+  }, [meeting, fetchMeeting]);
+
   const search = useCallback(
     async (query: string) => {
       if (!query.trim()) {
@@ -61,6 +74,8 @@ export function useMeetingDetail(meetingId: string) {
         if (res.ok) {
           const data = await res.json();
           setSearchResults(data.results);
+        } else {
+          toast.error("Search failed");
         }
       } finally {
         setSearching(false);

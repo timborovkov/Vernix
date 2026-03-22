@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Meeting } from "@/lib/db/schema";
 
 export function useMeetings() {
@@ -12,8 +13,8 @@ export function useMeetings() {
       const res = await fetch("/api/meetings");
       const data = await res.json();
       setMeetings(data);
-    } catch (error) {
-      console.error("Failed to fetch meetings:", error);
+    } catch {
+      toast.error("Failed to load meetings", { id: "fetch-meetings-error" });
     } finally {
       setLoading(false);
     }
@@ -22,6 +23,17 @@ export function useMeetings() {
   useEffect(() => {
     fetchMeetings();
   }, [fetchMeetings]);
+
+  // Poll when any meeting is in a transient status
+  useEffect(() => {
+    const hasTransient = meetings.some((m) =>
+      ["joining", "active", "processing"].includes(m.status)
+    );
+    if (!hasTransient) return;
+
+    const interval = setInterval(fetchMeetings, 5000);
+    return () => clearInterval(interval);
+  }, [meetings, fetchMeetings]);
 
   const createMeeting = async (title: string, joinLink: string) => {
     const res = await fetch("/api/meetings", {
@@ -36,6 +48,7 @@ export function useMeetings() {
 
     const meeting = await res.json();
     setMeetings((prev) => [meeting, ...prev]);
+    toast.success("Meeting created");
     return meeting;
   };
 
@@ -47,7 +60,8 @@ export function useMeetings() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to join meeting");
+      toast.error("Failed to join meeting");
+      return;
     }
 
     await fetchMeetings();
@@ -61,7 +75,8 @@ export function useMeetings() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to stop agent");
+      toast.error("Failed to stop agent");
+      return;
     }
 
     await fetchMeetings();
@@ -73,7 +88,8 @@ export function useMeetings() {
     });
 
     if (!res.ok) {
-      throw new Error("Failed to delete meeting");
+      toast.error("Failed to delete meeting");
+      return;
     }
 
     setMeetings((prev) => prev.filter((m) => m.id !== meetingId));

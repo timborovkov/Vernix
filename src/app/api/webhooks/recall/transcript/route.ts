@@ -5,7 +5,35 @@ import { meetings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { upsertTranscriptChunk } from "@/lib/vector/upsert";
 
-const recallTranscriptSchema = z.object({
+// New format (recording_config / realtime_endpoints)
+const newTranscriptSchema = z.object({
+  event: z.literal("transcript.data"),
+  data: z.object({
+    data: z.object({
+      words: z.array(
+        z.object({
+          text: z.string(),
+          start_timestamp: z.object({ relative: z.number() }),
+          end_timestamp: z
+            .object({ relative: z.number() })
+            .nullable()
+            .optional(),
+        })
+      ),
+      participant: z.object({
+        id: z.number(),
+        name: z.string().nullable(),
+      }),
+    }),
+    bot: z.object({
+      id: z.string(),
+      metadata: z.record(z.string(), z.unknown()).optional(),
+    }),
+  }),
+});
+
+// Legacy format (transcription_options / real_time_transcription)
+const legacyTranscriptSchema = z.object({
   bot_id: z.string().min(1),
   transcript: z.object({
     original_transcript_id: z.number(),
@@ -23,6 +51,45 @@ const recallTranscriptSchema = z.object({
   }),
 });
 
+interface NormalizedTranscript {
+  botId: string;
+  speaker: string;
+  text: string;
+  timestampMs: number;
+}
+
+function parsePayload(body: unknown): NormalizedTranscript | "skip" | null {
+  // Try new format first
+  const newParsed = newTranscriptSchema.safeParse(body);
+  if (newParsed.success) {
+    const { data, bot } = newParsed.data.data;
+    if (data.words.length === 0) return "skip";
+
+    return {
+      botId: bot.id,
+      speaker: data.participant.name ?? `Speaker ${data.participant.id}`,
+      text: data.words.map((w) => w.text).join(" "),
+      timestampMs: Math.round(data.words[0].start_timestamp.relative * 1000),
+    };
+  }
+
+  // Try legacy format
+  const legacyParsed = legacyTranscriptSchema.safeParse(body);
+  if (legacyParsed.success) {
+    const { bot_id: botId, transcript } = legacyParsed.data;
+    if (!transcript.is_final || transcript.words.length === 0) return "skip";
+
+    return {
+      botId,
+      speaker: transcript.speaker,
+      text: transcript.words.map((w) => w.text).join(" "),
+      timestampMs: Math.round(transcript.words[0].start_time * 1000),
+    };
+  }
+
+  return null;
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -31,20 +98,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const parsed = recallTranscriptSchema.safeParse(body);
+  const result = parsePayload(body);
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", issues: parsed.error.issues },
-      { status: 400 }
-    );
+  if (result === null) {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
-  const { bot_id: botId, transcript } = parsed.data;
-
-  if (!transcript.is_final || transcript.words.length === 0) {
+  if (result === "skip") {
     return NextResponse.json({ skipped: true });
   }
+
+  const { botId, speaker, text, timestampMs } = result;
 
   const [meeting] = await db
     .select()
@@ -65,13 +129,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const text = transcript.words.map((w) => w.text).join(" ");
-  const timestampMs = Math.round(transcript.words[0].start_time * 1000);
-
   try {
     await upsertTranscriptChunk(meeting.qdrantCollectionName, {
       text,
-      speaker: transcript.speaker,
+      speaker,
       timestampMs,
     });
   } catch (error) {
@@ -91,8 +152,8 @@ export async function POST(request: Request) {
       .set({
         participants: sql`
           CASE
-            WHEN NOT (COALESCE(${meetings.participants}, '[]'::jsonb) @> ${JSON.stringify([transcript.speaker])}::jsonb)
-            THEN (COALESCE(${meetings.participants}, '[]'::jsonb) || ${JSON.stringify([transcript.speaker])}::jsonb)
+            WHEN NOT (COALESCE(${meetings.participants}, '[]'::jsonb) @> ${JSON.stringify([speaker])}::jsonb)
+            THEN (COALESCE(${meetings.participants}, '[]'::jsonb) || ${JSON.stringify([speaker])}::jsonb)
             ELSE COALESCE(${meetings.participants}, '[]'::jsonb)
           END
         `,

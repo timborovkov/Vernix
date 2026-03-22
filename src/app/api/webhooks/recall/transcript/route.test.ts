@@ -32,7 +32,7 @@ import {
   fakeMeeting,
 } from "@/test/helpers";
 
-function fakePayload(overrides?: Record<string, unknown>) {
+function fakeLegacyPayload(overrides?: Record<string, unknown>) {
   return {
     bot_id: "recall-bot-123",
     transcript: {
@@ -48,6 +48,36 @@ function fakePayload(overrides?: Record<string, unknown>) {
     },
     ...overrides,
   };
+}
+
+function fakeNewPayload(overrides?: Record<string, unknown>) {
+  return {
+    event: "transcript.data",
+    data: {
+      data: {
+        words: [
+          {
+            text: "Hello",
+            start_timestamp: { relative: 1.5 },
+            end_timestamp: { relative: 2.0 },
+          },
+          {
+            text: "world",
+            start_timestamp: { relative: 2.0 },
+            end_timestamp: { relative: 2.5 },
+          },
+        ],
+        participant: { id: 1, name: "Alice" },
+      },
+      bot: { id: "recall-bot-123", metadata: {} },
+    },
+    ...overrides,
+  };
+}
+
+// Default to legacy for existing tests
+function fakePayload(overrides?: Record<string, unknown>) {
+  return fakeLegacyPayload(overrides);
 }
 
 describe("POST /api/webhooks/recall/transcript", () => {
@@ -197,6 +227,80 @@ describe("POST /api/webhooks/recall/transcript", () => {
         updatedAt: expect.any(Date),
       })
     );
+  });
+
+  it("handles new transcript.data format", async () => {
+    const meeting = fakeMeeting({
+      status: "active",
+      qdrantCollectionName: "meeting_new",
+    });
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      {
+        method: "POST",
+        body: fakeNewPayload(),
+      }
+    );
+    const { status } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    expect(mockUpsert).toHaveBeenCalledWith("meeting_new", {
+      text: "Hello world",
+      speaker: "Alice",
+      timestampMs: 1500,
+    });
+  });
+
+  it("uses fallback speaker name when participant name is null", async () => {
+    const meeting = fakeMeeting({ status: "active" });
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockResolvedValueOnce(undefined);
+
+    const payload = fakeNewPayload();
+    (payload.data as Record<string, unknown>).data = {
+      words: [
+        {
+          text: "Hi",
+          start_timestamp: { relative: 0.5 },
+          end_timestamp: { relative: 1.0 },
+        },
+      ],
+      participant: { id: 42, name: null },
+    };
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      { method: "POST", body: payload }
+    );
+    const { status } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ speaker: "Speaker 42" })
+    );
+  });
+
+  it("skips new format with empty words", async () => {
+    const payload = fakeNewPayload();
+    (payload.data as Record<string, unknown>).data = {
+      words: [],
+      participant: { id: 1, name: "Alice" },
+    };
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      { method: "POST", body: payload }
+    );
+    const { status, data } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    expect(data.skipped).toBe(true);
   });
 
   it("returns 500 when upsert fails", async () => {

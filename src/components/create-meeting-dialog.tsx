@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,8 +34,8 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
       setTitle("");
       setJoinLink("");
       setOpen(false);
-    } catch (error) {
-      console.error("Failed to create meeting:", error);
+    } catch {
+      toast.error("Failed to create meeting");
     } finally {
       setLoading(false);
     }

@@ -49,7 +49,12 @@ export async function POST(request: Request) {
       | undefined;
 
     if (botId) {
-      await provider.leaveMeeting(botId);
+      try {
+        await provider.leaveMeeting(botId);
+      } catch (error) {
+        // Bot may have already left/completed — continue with processing
+        console.warn("leaveMeeting failed (bot may have already left):", error);
+      }
     }
   }
 

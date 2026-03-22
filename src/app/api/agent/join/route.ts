@@ -10,7 +10,13 @@ const joinSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
   const parsed = joinSchema.safeParse(body);
 
   if (!parsed.success) {
@@ -60,6 +66,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, botId });
   } catch (error) {
+    console.error("Failed to join meeting:", error);
+
     await db
       .update(meetings)
       .set({ status: "failed", updatedAt: new Date() })
