@@ -28,7 +28,10 @@ export function MeetingCard({
   onDelete,
 }: MeetingCardProps) {
   const canJoin = meeting.status === "pending" || meeting.status === "failed";
-  const canStop = meeting.status === "active" || meeting.status === "joining";
+  const canStop =
+    meeting.status === "active" ||
+    meeting.status === "joining" ||
+    meeting.status === "processing";
 
   return (
     <Card>
