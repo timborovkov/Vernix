@@ -24,13 +24,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  console.log(
+    "[Webhook:status] Received:",
+    JSON.stringify(body).slice(0, 300)
+  );
+
   const parsed = statusEventSchema.safeParse(body);
   if (!parsed.success) {
+    console.log("[Webhook:status] Invalid payload");
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
   const { event, data } = parsed.data;
   const botId = data.bot.id;
+  console.log(`[Webhook:status] Event: ${event}, botId: ${botId}`);
 
   // Only handle call ended events
   if (event !== "bot.call_ended") {
