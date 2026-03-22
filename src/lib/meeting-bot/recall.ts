@@ -13,14 +13,15 @@ export class RecallProvider implements MeetingBotProvider {
 
   async joinMeeting(
     joinLink: string,
-    meetingId: string
+    meetingId: string,
+    userName?: string
   ): Promise<{ botId: string; voiceSecret: string }> {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const voiceSecret = randomUUID();
 
     const botConfig = {
       meeting_url: joinLink,
-      bot_name: "KiviKova Agent",
+      bot_name: userName ? `${userName}'s KiviKova Agent` : "KiviKova Agent",
       variant: {
         zoom: "web_4_core",
         google_meet: "web_4_core",
