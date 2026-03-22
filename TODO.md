@@ -19,6 +19,7 @@
 - ~~**Participants tracking** — Populate `participants` JSONB from bot transcript speaker data~~
 
 ## P3 — UX Polish ~~DONE~~
+
 - ~~**Real-time status updates** — Poll every 5s when meetings are in transient states (joining/active/processing)~~
 - ~~**Error toasts** — Sonner toasts for all API errors and success feedback~~
 - ~~**Meeting filters/search** — Filter dashboard by status, search by title~~
