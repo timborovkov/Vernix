@@ -10,6 +10,12 @@ vi.mock("@/lib/vector/collections", () => ({
   createMeetingCollection: vi.fn().mockResolvedValue(undefined),
   deleteMeetingCollection: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("@/lib/auth/session", () => ({
+  requireSessionUser: vi.fn().mockResolvedValue({
+    id: "00000000-0000-0000-0000-000000000001",
+    email: "integration-test@example.com",
+  }),
+}));
 
 // Use the test database URL set by setup.integration.ts
 let testDb: ReturnType<typeof drizzle>;
@@ -30,8 +36,6 @@ afterEach(async () => {
 
 // Dynamic import so the module picks up the test DATABASE_URL
 async function getRoutes() {
-  // Reset module cache so db module re-initializes with test URL
-  vi.resetModules();
   return await import("./route");
 }
 
