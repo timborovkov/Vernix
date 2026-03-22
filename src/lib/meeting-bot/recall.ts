@@ -21,6 +21,11 @@ export class RecallProvider implements MeetingBotProvider {
     const botConfig = {
       meeting_url: joinLink,
       bot_name: "KiviKova Agent",
+      variant: {
+        zoom: "web_4_core",
+        google_meet: "web_4_core",
+        microsoft_teams: "web_4_core",
+      },
       output_media: {
         camera: {
           kind: "webpage",
@@ -34,6 +39,7 @@ export class RecallProvider implements MeetingBotProvider {
           provider: { recallai_streaming: {} },
           diarization: { use_separate_streams_when_available: true },
         },
+        include_bot_in_recording: { audio: true },
         realtime_endpoints: [
           {
             type: "webhook",
