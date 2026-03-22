@@ -36,12 +36,38 @@ export async function POST(request: Request) {
   const botId = data.bot.id;
   console.log(`[Webhook:status] Event: ${event}, botId: ${botId}`);
 
-  // Handle transcript.done — trigger summary generation after transcripts are delivered
-  if (event === "transcript.done") {
-    console.log(
-      `[Webhook:status] transcript.done for bot ${botId}, generating summary`
-    );
+  // bot.call_ended — set processing + endedAt (summary comes later on transcript.done)
+  if (event === "bot.call_ended") {
+    const [meeting] = await db
+      .select()
+      .from(meetings)
+      .where(sql`${meetings.metadata}->>'botId' = ${botId}`);
 
+    if (
+      !meeting ||
+      meeting.status === "completed" ||
+      meeting.status === "failed"
+    ) {
+      return NextResponse.json({ skipped: true });
+    }
+
+    console.log(
+      `[Webhook:status] bot.call_ended: setting meeting ${meeting.id} to processing`
+    );
+    await db
+      .update(meetings)
+      .set({
+        status: "processing",
+        endedAt: meeting.endedAt ?? new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(meetings.id, meeting.id));
+
+    return NextResponse.json({ success: true });
+  }
+
+  // transcript.done — generate summary (transcripts should be in Qdrant by now)
+  if (event === "transcript.done") {
     const [meeting] = await db
       .select()
       .from(meetings)
@@ -50,6 +76,10 @@ export async function POST(request: Request) {
     if (!meeting || meeting.status === "failed") {
       return NextResponse.json({ skipped: true });
     }
+
+    console.log(
+      `[Webhook:status] transcript.done for bot ${botId}, generating summary`
+    );
 
     try {
       const segments = await scrollTranscript(meeting.qdrantCollectionName);
@@ -64,6 +94,7 @@ export async function POST(request: Request) {
         .update(meetings)
         .set({
           status: "completed",
+          endedAt: meeting.endedAt ?? new Date(),
           metadata: { ...existingMetadata, summary },
           updatedAt: new Date(),
         })
@@ -76,43 +107,16 @@ export async function POST(request: Request) {
       console.error("Summary generation failed on transcript.done:", error);
       await db
         .update(meetings)
-        .set({ status: "completed", updatedAt: new Date() })
+        .set({
+          status: "completed",
+          endedAt: meeting.endedAt ?? new Date(),
+          updatedAt: new Date(),
+        })
         .where(eq(meetings.id, meeting.id));
     }
 
     return NextResponse.json({ success: true });
   }
 
-  // Only handle call ended events for status transitions
-  if (event !== "bot.call_ended") {
-    return NextResponse.json({ skipped: true });
-  }
-
-  const [meeting] = await db
-    .select()
-    .from(meetings)
-    .where(sql`${meetings.metadata}->>'botId' = ${botId}`);
-
-  if (!meeting) {
-    return NextResponse.json({ skipped: true });
-  }
-
-  if (!["active", "joining"].includes(meeting.status)) {
-    return NextResponse.json({ skipped: true });
-  }
-
-  // Set to processing — summary will be generated when transcript.done arrives
-  console.log(
-    `[Webhook:status] bot.call_ended: setting meeting ${meeting.id} to processing`
-  );
-  await db
-    .update(meetings)
-    .set({
-      status: "processing",
-      endedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(meetings.id, meeting.id));
-
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ skipped: true });
 }
