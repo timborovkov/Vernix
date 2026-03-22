@@ -51,9 +51,10 @@ export class RecallProvider implements MeetingBotProvider {
       metadata: { meetingId },
     };
 
+    const logSafe = { ...botConfig, output_media: "[redacted]" };
     console.log(
       "[RecallProvider] Creating bot with config:",
-      JSON.stringify(botConfig, null, 2)
+      JSON.stringify(logSafe, null, 2)
     );
 
     const response = await fetch(`${this.apiUrl}/bot`, {
