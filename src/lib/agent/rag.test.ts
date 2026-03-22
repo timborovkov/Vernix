@@ -30,6 +30,10 @@ vi.mock("@/lib/vector/client", () => ({
 vi.mock("@/lib/openai/embeddings", () => ({
   createEmbedding: mockCreateEmbedding,
 }));
+vi.mock("@/lib/vector/knowledge", () => ({
+  knowledgeCollectionName: (userId: string) =>
+    `knowledge_${userId.replace(/-/g, "")}`,
+}));
 
 import {
   getRAGContext,
@@ -159,7 +163,8 @@ describe("getRAGContext", () => {
 
     await getRAGContext("test", { userId: TEST_USER_ID });
 
-    expect(mockQdrantClient.search).toHaveBeenCalledTimes(2);
+    // 2 meeting collections + 1 knowledge collection = 3 searches
+    expect(mockQdrantClient.search).toHaveBeenCalledTimes(3);
   });
 
   it("throws MeetingNotFoundError when meeting not found", async () => {
@@ -272,15 +277,31 @@ describe("formatContextForPrompt", () => {
     const result = formatContextForPrompt([
       {
         text: "Hello world",
+        score: 0.9,
+        source: "transcript",
         speaker: "Alice",
         timestampMs: 1500,
-        score: 0.9,
         meetingId: "m1",
       },
     ]);
 
     expect(result).toContain("## Relevant meeting context");
     expect(result).toContain("[Alice] (1500ms): Hello world");
+  });
+
+  it("formats document results separately", () => {
+    const result = formatContextForPrompt([
+      {
+        text: "Project spec",
+        score: 0.85,
+        source: "document",
+        fileName: "spec.pdf",
+        documentId: "d1",
+      },
+    ]);
+
+    expect(result).toContain("## Relevant knowledge base context");
+    expect(result).toContain("[spec.pdf]: Project spec");
   });
 
   it("returns empty string for empty results", () => {

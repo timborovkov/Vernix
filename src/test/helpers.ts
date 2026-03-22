@@ -1,4 +1,4 @@
-import type { Meeting } from "@/lib/db/schema";
+import type { Meeting, Document } from "@/lib/db/schema";
 
 export function createJsonRequest(
   url: string,
@@ -30,6 +30,24 @@ export function fakeMeeting(overrides: Partial<Meeting> = {}): Meeting {
     metadata: {},
     startedAt: null,
     endedAt: null,
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
+export function fakeDocument(overrides: Partial<Document> = {}): Document {
+  return {
+    id: "c2aadd11-2b3c-4ef8-bb6d-8dd1df602c33",
+    userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    fileName: "test-doc.pdf",
+    fileType: "pdf",
+    fileSize: 1024,
+    s3Key:
+      "knowledge/b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22/c2aadd11-2b3c-4ef8-bb6d-8dd1df602c33/test-doc.pdf",
+    status: "ready",
+    chunkCount: 5,
+    error: null,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
     ...overrides,

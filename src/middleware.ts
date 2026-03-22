@@ -27,5 +27,6 @@ export const config = {
     "/api/meetings/:path*",
     "/api/agent/:path*",
     "/api/search/:path*",
+    "/api/knowledge/:path*",
   ],
 };

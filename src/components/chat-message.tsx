@@ -4,13 +4,15 @@ import type { UIMessage } from "ai";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatTime, renderMarkdown } from "@/lib/format";
-import { ChevronDown, ChevronUp, Search, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, Clock, FileText } from "lucide-react";
 
 interface Source {
   text: string;
-  speaker: string;
-  timestampMs: number;
   score: number;
+  source: "transcript" | "document";
+  speaker?: string;
+  timestampMs?: number;
+  fileName?: string;
 }
 
 function SourcesList({ sources }: { sources: Source[] }) {
@@ -39,11 +41,22 @@ function SourcesList({ sources }: { sources: Source[] }) {
           {sources.map((source, i) => (
             <div key={i} className="bg-muted/50 rounded px-2 py-1.5 text-xs">
               <div className="text-muted-foreground flex items-center gap-2">
-                <span className="font-medium">{source.speaker}</span>
-                <span className="flex items-center gap-0.5">
-                  <Clock className="h-2.5 w-2.5" />
-                  {formatTime(source.timestampMs)}
-                </span>
+                {source.source === "document" ? (
+                  <span className="flex items-center gap-0.5 font-medium">
+                    <FileText className="h-2.5 w-2.5" />
+                    {source.fileName}
+                  </span>
+                ) : (
+                  <>
+                    <span className="font-medium">{source.speaker}</span>
+                    {source.timestampMs != null && (
+                      <span className="flex items-center gap-0.5">
+                        <Clock className="h-2.5 w-2.5" />
+                        {formatTime(source.timestampMs)}
+                      </span>
+                    )}
+                  </>
+                )}
                 <span className="ml-auto opacity-60">
                   {(source.score * 100).toFixed(0)}%
                 </span>

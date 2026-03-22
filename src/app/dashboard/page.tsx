@@ -8,7 +8,8 @@ import { CreateMeetingDialog } from "@/components/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
-import { LogOut, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import { LogOut, MessageSquare, BookOpen } from "lucide-react";
 
 const STATUS_FILTERS = [
   "all",
@@ -52,6 +53,14 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/dashboard/knowledge" />}
+          >
+            <BookOpen className="mr-1 h-4 w-4" />
+            Knowledge
+          </Button>
           <Button
             variant={showChat ? "default" : "outline"}
             size="sm"

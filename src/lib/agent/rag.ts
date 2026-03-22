@@ -3,6 +3,7 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { getQdrantClient } from "@/lib/vector/client";
 import { createEmbedding } from "@/lib/openai/embeddings";
+import { knowledgeCollectionName } from "@/lib/vector/knowledge";
 
 const MAX_CONCURRENT = 5;
 
@@ -31,10 +32,15 @@ export class AllSearchesFailedError extends Error {
 
 export interface RAGResult {
   text: string;
-  speaker: string;
-  timestampMs: number;
   score: number;
-  meetingId: string;
+  source: "transcript" | "document";
+  // Transcript-specific
+  speaker?: string;
+  timestampMs?: number;
+  meetingId?: string;
+  // Document-specific
+  fileName?: string;
+  documentId?: string;
 }
 
 export interface RAGOptions {
@@ -47,10 +53,12 @@ export interface RAGOptions {
   boostMeetingId?: string;
   /** Multiplier applied to boosted meeting scores (default 1.15). */
   boostFactor?: number;
+  /** Search knowledge base in addition to meetings. Default: true. */
+  includeKnowledge?: boolean;
 }
 
 /**
- * Search Qdrant for relevant transcript context.
+ * Search Qdrant for relevant transcript and knowledge context.
  *
  * Throws MeetingNotFoundError, EmbeddingError, or AllSearchesFailedError.
  * Callers that want graceful degradation should catch these.
@@ -95,10 +103,6 @@ export async function getRAGContext(
     }));
   }
 
-  if (collectionsToSearch.length === 0) {
-    return [];
-  }
-
   let queryVector: number[];
   try {
     queryVector = await createEmbedding(query);
@@ -111,6 +115,7 @@ export async function getRAGContext(
   let totalSearched = 0;
   let totalFailed = 0;
 
+  // Search meeting collections
   for (let i = 0; i < collectionsToSearch.length; i += MAX_CONCURRENT) {
     const batch = collectionsToSearch.slice(i, i + MAX_CONCURRENT);
     const outcomes = await Promise.all(
@@ -127,9 +132,10 @@ export async function getRAGContext(
               const payload = hit.payload as Record<string, unknown>;
               return {
                 text: payload.text as string,
+                score: hit.score,
+                source: "transcript" as const,
                 speaker: payload.speaker as string,
                 timestampMs: payload.timestamp_ms as number,
-                score: hit.score,
                 meetingId: mId,
               };
             }),
@@ -148,13 +154,45 @@ export async function getRAGContext(
     }
   }
 
-  if (totalSearched > 0 && totalFailed === totalSearched) {
+  // Search knowledge base collection
+  if (options.includeKnowledge !== false) {
+    const knowledgeCollection = knowledgeCollectionName(options.userId);
+    try {
+      const results = await client.search(knowledgeCollection, {
+        vector: queryVector,
+        limit,
+        with_payload: true,
+      });
+
+      for (const hit of results) {
+        const payload = hit.payload as Record<string, unknown>;
+        allHits.push({
+          text: payload.text as string,
+          score: hit.score,
+          source: "document",
+          fileName: payload.file_name as string,
+          documentId: payload.document_id as string,
+        });
+      }
+    } catch {
+      // Knowledge collection may not exist yet — not a failure
+    }
+  }
+
+  if (
+    totalSearched > 0 &&
+    totalFailed === totalSearched &&
+    allHits.length === 0
+  ) {
     throw new AllSearchesFailedError();
   }
 
   const boostId = options.boostMeetingId;
   const boostFactor = options.boostFactor ?? 1.15;
 
+  // Sort by score, boosting the current meeting's transcripts.
+  // Knowledge base results (source: "document") compete at raw score — this is
+  // intentional so highly relevant docs still surface alongside boosted transcripts.
   return allHits
     .filter((h) => h.score >= scoreThreshold)
     .sort((a, b) => {
@@ -172,9 +210,23 @@ export function formatContextForPrompt(results: RAGResult[]): string {
     return "";
   }
 
-  const lines = results.map(
-    (r) => `[${r.speaker}] (${r.timestampMs}ms): ${r.text}`
-  );
+  const sections: string[] = [];
 
-  return `## Relevant meeting context\n\n${lines.join("\n")}`;
+  const transcriptResults = results.filter((r) => r.source === "transcript");
+  if (transcriptResults.length > 0) {
+    const lines = transcriptResults.map((r) => {
+      const speaker = r.speaker ?? "Unknown";
+      const time = r.timestampMs != null ? ` (${r.timestampMs}ms)` : "";
+      return `[${speaker}]${time}: ${r.text}`;
+    });
+    sections.push(`## Relevant meeting context\n\n${lines.join("\n")}`);
+  }
+
+  const documentResults = results.filter((r) => r.source === "document");
+  if (documentResults.length > 0) {
+    const lines = documentResults.map((r) => `[${r.fileName}]: ${r.text}`);
+    sections.push(`## Relevant knowledge base context\n\n${lines.join("\n")}`);
+  }
+
+  return sections.join("\n\n");
 }
