@@ -7,7 +7,8 @@ export class RecallProvider implements MeetingBotProvider {
 
   constructor() {
     this.apiKey = process.env.RECALL_API_KEY ?? "";
-    this.apiUrl = process.env.RECALL_API_URL ?? "https://api.recall.ai/api/v1";
+    this.apiUrl =
+      process.env.RECALL_API_URL ?? "https://eu-central-1.recall.ai/api/v1";
   }
 
   async joinMeeting(
@@ -17,51 +18,65 @@ export class RecallProvider implements MeetingBotProvider {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
     const voiceSecret = randomUUID();
 
+    const botConfig = {
+      meeting_url: joinLink,
+      bot_name: "KiviKova Agent",
+      output_media: {
+        camera: {
+          kind: "webpage",
+          config: {
+            url: `${appUrl}/voice-agent.html?meetingId=${meetingId}&botSecret=${voiceSecret}&appUrl=${encodeURIComponent(appUrl)}`,
+          },
+        },
+      },
+      recording_config: {
+        transcript: {
+          provider: { recallai_streaming: {} },
+          diarization: { use_separate_streams_when_available: true },
+        },
+        realtime_endpoints: [
+          {
+            type: "webhook",
+            url: `${appUrl}/api/webhooks/recall/transcript`,
+            events: ["transcript.data"],
+          },
+        ],
+      },
+      metadata: { meetingId },
+    };
+
+    console.log(
+      "[RecallProvider] Creating bot with config:",
+      JSON.stringify(botConfig, null, 2)
+    );
+
     const response = await fetch(`${this.apiUrl}/bot`, {
       method: "POST",
       headers: {
         Authorization: `Token ${this.apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        meeting_url: joinLink,
-        bot_name: "KiviKova Agent",
-        output_media: {
-          camera: {
-            kind: "webpage",
-            config: {
-              url: `${appUrl}/voice-agent.html?meetingId=${meetingId}&botSecret=${voiceSecret}&appUrl=${encodeURIComponent(appUrl)}`,
-            },
-          },
-        },
-        recording_config: {
-          transcript: {
-            provider: { recallai_streaming: {} },
-            diarization: { use_separate_streams_when_available: true },
-          },
-          realtime_endpoints: [
-            {
-              type: "webhook",
-              url: `${appUrl}/api/webhooks/recall/transcript`,
-              events: ["transcript.data"],
-            },
-          ],
-        },
-        metadata: { meetingId },
-      }),
+      body: JSON.stringify(botConfig),
     });
 
+    const responseText = await response.text();
+    console.log(
+      `[RecallProvider] Recall API response (${response.status}):`,
+      responseText
+    );
+
     if (!response.ok) {
-      throw new Error(
-        `Recall API error: ${response.status} ${await response.text()}`
-      );
+      throw new Error(`Recall API error: ${response.status} ${responseText}`);
     }
 
-    const data = (await response.json()) as { id: string };
+    const data = JSON.parse(responseText) as { id: string };
+    console.log(`[RecallProvider] Bot created: ${data.id}`);
     return { botId: data.id, voiceSecret };
   }
 
   async leaveMeeting(botId: string): Promise<void> {
+    console.log(`[RecallProvider] Leaving meeting, botId: ${botId}`);
+
     const response = await fetch(`${this.apiUrl}/bot/${botId}/leave_call`, {
       method: "POST",
       headers: {
