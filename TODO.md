@@ -35,17 +35,17 @@
 - ~~**Data scoping** — All meeting queries filtered by userId, ownership checks on all endpoints~~
 - ~~**Sign in / Sign up pages** — Login, register pages with auto-redirect~~
 
-## P5 — Chat with Meeting Notes
-
-- **Chat UI** — Add a chat panel on the meeting detail page (`/dashboard/[id]`) to ask questions about the meeting
-- **Conversational RAG** — Use the existing `/api/agent/respond` endpoint with multi-turn message history
-- **Citation highlights** — Link chat responses back to specific transcript segments
-
-## P6 — Live Voice Agent
+## P5 — Live Voice Agent
 
 - **Audio bridging** — Connect Recall.ai bot audio stream to OpenAI Realtime API bidirectionally
 - **In-call RAG** — Agent listens, gets asked questions, searches transcript context, and responds via voice
 - **Turn detection** — Handle when to inject agent responses vs. let humans talk
+
+## P6 — Chat with Meeting Notes
+
+- **Chat UI** — Add a chat panel on the meeting detail page (`/dashboard/[id]`) to ask questions about the meeting
+- **Conversational RAG** — Use the existing `/api/agent/respond` endpoint with multi-turn message history
+- **Citation highlights** — Link chat responses back to specific transcript segments
 
 ## P7 — Knowledge Base (file uploads + RAG)
 
