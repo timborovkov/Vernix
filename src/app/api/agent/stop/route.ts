@@ -75,7 +75,11 @@ export async function POST(request: Request) {
   // Generate summary (best-effort)
   try {
     const segments = await scrollTranscript(meeting.qdrantCollectionName);
-    const summary = await generateMeetingSummary(segments);
+    const summary = await generateMeetingSummary(segments, {
+      title: meeting.title,
+      startedAt: meeting.startedAt,
+      participants: meeting.participants as string[],
+    });
     const existingMetadata =
       (meeting.metadata as Record<string, unknown>) ?? {};
 

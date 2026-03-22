@@ -86,7 +86,11 @@ export async function POST(request: Request) {
       console.log(
         `[Webhook:status] Found ${segments.length} segments for summary`
       );
-      const summary = await generateMeetingSummary(segments);
+      const summary = await generateMeetingSummary(segments, {
+        title: meeting.title,
+        startedAt: meeting.startedAt,
+        participants: meeting.participants as string[],
+      });
       const existingMetadata =
         (meeting.metadata as Record<string, unknown>) ?? {};
 

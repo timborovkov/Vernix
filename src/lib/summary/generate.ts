@@ -1,8 +1,15 @@
 import { getOpenAIClient } from "@/lib/openai/client";
 import type { TranscriptPoint } from "@/lib/vector/scroll";
 
+export interface SummaryOptions {
+  title?: string;
+  startedAt?: Date | null;
+  participants?: string[];
+}
+
 export async function generateMeetingSummary(
-  segments: TranscriptPoint[]
+  segments: TranscriptPoint[],
+  options?: SummaryOptions
 ): Promise<string> {
   if (segments.length === 0) {
     return "No transcript content available.";
@@ -13,6 +20,14 @@ export async function generateMeetingSummary(
     .map((s) => `[${s.speaker}]: ${s.text}`)
     .join("\n");
 
+  // Build context header with meeting metadata
+  let context = "";
+  if (options?.title) context += `Meeting title: ${options.title}\n`;
+  if (options?.startedAt)
+    context += `Date: ${options.startedAt.toISOString()}\n`;
+  if (options?.participants?.length)
+    context += `Participants: ${options.participants.join(", ")}\n`;
+
   const client = getOpenAIClient();
   const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
@@ -20,9 +35,14 @@ export async function generateMeetingSummary(
       {
         role: "system",
         content:
-          "You are a meeting assistant. Summarize the following meeting transcript concisely. Include key decisions, action items, and main discussion points. Keep it under 500 words.",
+          "You are a meeting assistant. Summarize the following meeting transcript concisely. Include key decisions, action items, and main discussion points. Keep it under 500 words. Use the provided meeting metadata (title, date, participants) in your summary.",
       },
-      { role: "user", content: transcriptText },
+      {
+        role: "user",
+        content: context
+          ? `${context}\n---\n\n${transcriptText}`
+          : transcriptText,
+      },
     ],
     temperature: 0.3,
     max_tokens: 1000,
