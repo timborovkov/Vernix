@@ -16,6 +16,15 @@ export async function POST(
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
+  if (meeting.status !== "completed" && meeting.status !== "processing") {
+    return NextResponse.json(
+      {
+        error: `Cannot summarize meeting with status: ${meeting.status}`,
+      },
+      { status: 400 }
+    );
+  }
+
   try {
     const segments = await scrollTranscript(meeting.qdrantCollectionName);
     const summary = await generateMeetingSummary(segments);
@@ -25,7 +34,6 @@ export async function POST(
     const [updated] = await db
       .update(meetings)
       .set({
-        status: "completed",
         metadata: { ...existingMetadata, summary },
         updatedAt: new Date(),
       })
