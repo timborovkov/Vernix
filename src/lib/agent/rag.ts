@@ -214,9 +214,11 @@ export function formatContextForPrompt(results: RAGResult[]): string {
 
   const transcriptResults = results.filter((r) => r.source === "transcript");
   if (transcriptResults.length > 0) {
-    const lines = transcriptResults.map(
-      (r) => `[${r.speaker}] (${r.timestampMs}ms): ${r.text}`
-    );
+    const lines = transcriptResults.map((r) => {
+      const speaker = r.speaker ?? "Unknown";
+      const time = r.timestampMs != null ? ` (${r.timestampMs}ms)` : "";
+      return `[${speaker}]${time}: ${r.text}`;
+    });
     sections.push(`## Relevant meeting context\n\n${lines.join("\n")}`);
   }
 
