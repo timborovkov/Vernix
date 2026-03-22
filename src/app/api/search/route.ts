@@ -43,10 +43,13 @@ export async function GET(request: Request) {
 
     const results = ragResults.map((r) => ({
       text: r.text,
+      score: r.score,
+      source: r.source,
       speaker: r.speaker,
       timestamp_ms: r.timestampMs,
-      score: r.score,
       meetingId: r.meetingId,
+      fileName: r.fileName,
+      documentId: r.documentId,
     }));
 
     return NextResponse.json({ results });

@@ -30,6 +30,10 @@ vi.mock("@/lib/vector/client", () => ({
 vi.mock("@/lib/openai/embeddings", () => ({
   createEmbedding: mockCreateEmbedding,
 }));
+vi.mock("@/lib/vector/knowledge", () => ({
+  knowledgeCollectionName: (userId: string) =>
+    `knowledge_${userId.replace(/-/g, "")}`,
+}));
 
 import { GET } from "./route";
 import { parseJsonResponse, fakeMeeting } from "@/test/helpers";
@@ -126,7 +130,8 @@ describe("GET /api/search", () => {
       await GET(searchRequest("?q=test"))
     );
 
-    expect(mockQdrantClient.search).toHaveBeenCalledTimes(2);
+    // 2 meeting collections + 1 knowledge collection
+    expect(mockQdrantClient.search).toHaveBeenCalledTimes(3);
     expect(data.results).toHaveLength(2);
   });
 
@@ -202,7 +207,8 @@ describe("GET /api/search", () => {
     mockDb.where.mockResolvedValueOnce([m1, m2]);
     mockQdrantClient.search
       .mockRejectedValueOnce(new Error("Qdrant down"))
-      .mockRejectedValueOnce(new Error("Qdrant down"));
+      .mockRejectedValueOnce(new Error("Qdrant down"))
+      .mockRejectedValueOnce(new Error("Qdrant down")); // knowledge collection
 
     const { status, data } = await parseJsonResponse(
       await GET(searchRequest("?q=test"))
