@@ -134,7 +134,17 @@
 - **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
 - **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
 
-## P18 — Billing with Polar
+## P18 — Silent Agent Mode (Text Agent)
+
+- **Silent mode toggle** — Per-meeting toggle (in create dialog and meeting detail). This is a fundamentally different agent type: text agent instead of voice agent
+- **Recall without Output Media** — Omit `output_media` and `include_bot_in_recording: { audio: false }` so the bot joins as a passive listener with no voice/screen presence
+- **Text agent** — Instead of OpenAI Realtime API (audio in/out via voice-agent.html), the agent monitors the transcript stream server-side. Same RAG pipeline and tools, but no audio bridging, no WebSocket, no voice session
+- **Chat-based replies** — When addressed in the transcript (by name or direct question), use Recall's chat API (`POST /api/v1/bot/{id}/send_chat_message`) to respond as a text message in the meeting chat
+- **Transcript monitoring** — Server-side: watch incoming `transcript.data` webhooks for mentions/questions, run through LLM with RAG context, send response via chat API
+- **UI indicator** — Show "Silent" badge on meeting card and detail page
+- **Storage** — `metadata.silent: boolean` on the meeting row
+
+## P19 — Billing with Polar
 
 - **Polar integration** — Connect Polar.sh for subscription management
 - **Pricing tiers** — Free (limited meetings/month), Pro (unlimited), Enterprise (team features)
