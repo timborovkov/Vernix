@@ -3,7 +3,6 @@ import { z } from "zod/v4";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
 const registerSchema = z.object({
   email: z.email(),
@@ -29,19 +28,6 @@ export async function POST(request: Request) {
 
   const { email, password, name } = parsed.data;
 
-  // Check if user already exists
-  const [existing] = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, email));
-
-  if (existing) {
-    return NextResponse.json(
-      { error: "Email already registered" },
-      { status: 409 }
-    );
-  }
-
   const passwordHash = await hash(password, 12);
 
   try {
@@ -55,8 +41,8 @@ export async function POST(request: Request) {
     // Handle unique constraint violation (concurrent registration)
     if (error instanceof Error && error.message.includes("unique")) {
       return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 409 }
+        { error: "Registration failed" },
+        { status: 400 }
       );
     }
     throw error;
