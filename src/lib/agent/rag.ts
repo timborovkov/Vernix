@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { getQdrantClient } from "@/lib/vector/client";
 import { createEmbedding } from "@/lib/openai/embeddings";
 
@@ -39,6 +39,8 @@ export interface RAGResult {
 
 export interface RAGOptions {
   meetingId?: string;
+  /** Filter to only this user's meetings (required for multi-user). */
+  userId: string;
   limit?: number;
   scoreThreshold?: number;
   /** Boost results from this meeting so they rank higher. */
@@ -55,18 +57,21 @@ export interface RAGOptions {
  */
 export async function getRAGContext(
   query: string,
-  options?: RAGOptions
+  options: RAGOptions
 ): Promise<RAGResult[]> {
-  const limit = options?.limit ?? 10;
-  const scoreThreshold = options?.scoreThreshold ?? 0;
+  const limit = options.limit ?? 10;
+  const scoreThreshold = options.scoreThreshold ?? 0;
 
   let collectionsToSearch: { collectionName: string; meetingId: string }[];
 
-  if (options?.meetingId) {
+  if (options.meetingId) {
+    const conditions = [eq(meetings.id, options.meetingId)];
+    conditions.push(eq(meetings.userId, options.userId));
+
     const [meeting] = await db
       .select()
       .from(meetings)
-      .where(eq(meetings.id, options.meetingId));
+      .where(and(...conditions));
 
     if (!meeting) {
       throw new MeetingNotFoundError(options.meetingId);
@@ -76,10 +81,13 @@ export async function getRAGContext(
       { collectionName: meeting.qdrantCollectionName, meetingId: meeting.id },
     ];
   } else {
+    const conditions = [inArray(meetings.status, ["active", "completed"])];
+    conditions.push(eq(meetings.userId, options.userId));
+
     const searchable = await db
       .select()
       .from(meetings)
-      .where(inArray(meetings.status, ["active", "completed"]));
+      .where(and(...conditions));
 
     collectionsToSearch = searchable.map((m) => ({
       collectionName: m.qdrantCollectionName,
@@ -144,8 +152,8 @@ export async function getRAGContext(
     throw new AllSearchesFailedError();
   }
 
-  const boostId = options?.boostMeetingId;
-  const boostFactor = options?.boostFactor ?? 1.15;
+  const boostId = options.boostMeetingId;
+  const boostFactor = options.boostFactor ?? 1.15;
 
   return allHits
     .filter((h) => h.score >= scoreThreshold)

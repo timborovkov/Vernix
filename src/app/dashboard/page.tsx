@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { signOut } from "next-auth/react";
 import { useMeetings } from "@/hooks/use-meetings";
 import { MeetingList } from "@/components/meeting-list";
 import { CreateMeetingDialog } from "@/components/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LogOut } from "lucide-react";
 
 const STATUS_FILTERS = [
   "all",
@@ -45,11 +47,20 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">KiviKova</h1>
           <p className="text-muted-foreground">AI Video Call Agent</p>
         </div>
-        <CreateMeetingDialog
-          onCreate={async (title, joinLink) => {
-            await createMeeting(title, joinLink);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <CreateMeetingDialog
+            onCreate={async (title, joinLink) => {
+              await createMeeting(title, joinLink);
+            }}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {!loading && meetings.length > 0 && (

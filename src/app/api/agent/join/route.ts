@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
+import { requireSessionUser } from "@/lib/auth/session";
 import { z } from "zod/v4";
 
 const joinSchema = z.object({
@@ -26,12 +27,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const user = await requireSessionUser();
+  if (user instanceof NextResponse) return user;
+
   const { meetingId } = parsed.data;
 
   const [meeting] = await db
     .select()
     .from(meetings)
-    .where(eq(meetings.id, meetingId));
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   if (!meeting) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
@@ -47,7 +51,7 @@ export async function POST(request: Request) {
   await db
     .update(meetings)
     .set({ status: "joining", updatedAt: new Date() })
-    .where(eq(meetings.id, meetingId));
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   const provider = getMeetingBotProvider();
 
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
         metadata: { ...meeting.metadata, botId },
         updatedAt: new Date(),
       })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
     return NextResponse.json({ success: true, botId });
   } catch (error) {
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
     await db
       .update(meetings)
       .set({ status: "failed", updatedAt: new Date() })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
     return NextResponse.json(
       {

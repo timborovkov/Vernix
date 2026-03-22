@@ -125,7 +125,10 @@ describe("POST /api/agent/respond", () => {
     });
     await POST(req);
 
-    expect(mockGetRAGContext).toHaveBeenCalledWith("test", { meetingId });
+    expect(mockGetRAGContext).toHaveBeenCalledWith("test", {
+      meetingId,
+      userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    });
   });
 
   it("includes RAG context in system prompt", async () => {

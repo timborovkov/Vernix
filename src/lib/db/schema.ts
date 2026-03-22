@@ -16,8 +16,24 @@ export const meetingStatusEnum = pgEnum("meeting_status", [
   "failed",
 ]);
 
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type User = typeof users.$inferSelect;
+
 export const meetings = pgTable("meetings", {
   id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id").references(() => users.id),
   title: text("title").notNull(),
   joinLink: text("join_link").notNull(),
   status: meetingStatusEnum("status").default("pending").notNull(),

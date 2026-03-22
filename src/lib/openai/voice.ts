@@ -5,6 +5,7 @@ import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
 
 export interface VoiceSessionConfig {
   meetingId: string;
+  userId: string;
   model?: string;
 }
 
@@ -94,6 +95,7 @@ export class VoiceSession {
       try {
         const args = JSON.parse(event.arguments) as { query: string };
         const results = await getRAGContext(args.query, {
+          userId: this.config.userId,
           boostMeetingId: this.config.meetingId,
         });
         output =

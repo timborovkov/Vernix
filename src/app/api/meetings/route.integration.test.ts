@@ -10,10 +10,17 @@ vi.mock("@/lib/vector/collections", () => ({
   createMeetingCollection: vi.fn().mockResolvedValue(undefined),
   deleteMeetingCollection: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("@/lib/auth/session", () => ({
+  requireSessionUser: vi.fn().mockResolvedValue({
+    id: "00000000-0000-0000-0000-000000000001",
+    email: "integration-test@example.com",
+  }),
+}));
 
 // Use the test database URL set by setup.integration.ts
 let testDb: ReturnType<typeof drizzle>;
 let pool: pg.Pool;
+const testUserId = "00000000-0000-0000-0000-000000000001";
 
 beforeEach(async () => {
   pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
@@ -29,8 +36,6 @@ afterEach(async () => {
 
 // Dynamic import so the module picks up the test DATABASE_URL
 async function getRoutes() {
-  // Reset module cache so db module re-initializes with test URL
-  vi.resetModules();
   return await import("./route");
 }
 
@@ -64,6 +69,7 @@ describe("Integration: /api/meetings", () => {
   it("GET returns meetings ordered by createdAt desc", async () => {
     // Insert directly
     await testDb.insert(schema.meetings).values({
+      userId: testUserId,
       title: "First",
       joinLink: "https://a.com",
       qdrantCollectionName: "c1",
@@ -73,6 +79,7 @@ describe("Integration: /api/meetings", () => {
     await new Promise((r) => setTimeout(r, 10));
 
     await testDb.insert(schema.meetings).values({
+      userId: testUserId,
       title: "Second",
       joinLink: "https://b.com",
       qdrantCollectionName: "c2",

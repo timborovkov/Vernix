@@ -43,6 +43,8 @@ vi.mock("@/lib/agent/rag", () => ({
 import { VoiceSession } from "./voice";
 
 describe("VoiceSession", () => {
+  const userId = "00000000-0000-0000-0000-000000000001";
+
   beforeEach(() => {
     mockRt._resetHandlers();
     mockRt.send.mockClear();
@@ -55,6 +57,7 @@ describe("VoiceSession", () => {
   it("connect() calls create with correct model", async () => {
     const session = new VoiceSession({
       meetingId: "m1",
+      userId,
       model: "gpt-4o-mini-realtime-preview",
     });
     await session.connect();
@@ -66,7 +69,7 @@ describe("VoiceSession", () => {
   });
 
   it("connect() sends session.update on session.created", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     await session.connect();
 
     mockRt._trigger("session.created");
@@ -85,7 +88,7 @@ describe("VoiceSession", () => {
   });
 
   it("emits connected on session.updated", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
@@ -96,7 +99,7 @@ describe("VoiceSession", () => {
   });
 
   it("sendAudio() sends input_audio_buffer.append", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     await session.connect();
 
     session.sendAudio("base64data");
@@ -108,7 +111,7 @@ describe("VoiceSession", () => {
   });
 
   it("sendText() sends conversation.item.create and response.create", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     await session.connect();
 
     session.sendText("Hello");
@@ -127,7 +130,7 @@ describe("VoiceSession", () => {
   });
 
   it("handles function call by calling getRAGContext and submitting output", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     await session.connect();
     mockFormatContext.mockReturnValueOnce("## Context\nSome text");
 
@@ -140,6 +143,7 @@ describe("VoiceSession", () => {
     // Wait for async handler
     await vi.waitFor(() => {
       expect(mockGetRAGContext).toHaveBeenCalledWith("test query", {
+        userId,
         boostMeetingId: "m1",
       });
     });
@@ -158,7 +162,7 @@ describe("VoiceSession", () => {
   });
 
   it("emits audio_delta on response.output_audio.delta", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
@@ -169,7 +173,7 @@ describe("VoiceSession", () => {
   });
 
   it("emits text_done on response.output_text.done", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
@@ -180,7 +184,7 @@ describe("VoiceSession", () => {
   });
 
   it("emits error on realtime error", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
@@ -194,7 +198,7 @@ describe("VoiceSession", () => {
   });
 
   it("close() closes WebSocket and emits closed", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
@@ -206,7 +210,7 @@ describe("VoiceSession", () => {
   });
 
   it("connect() closes existing WebSocket before creating new one", async () => {
-    const session = new VoiceSession({ meetingId: "m1" });
+    const session = new VoiceSession({ meetingId: "m1", userId });
     await session.connect();
 
     // Connect again — should close the previous connection first

@@ -24,6 +24,7 @@ export function fakeMeeting(overrides: Partial<Meeting> = {}): Meeting {
     title: "Test Meeting",
     joinLink: "https://meet.google.com/abc-defg-hij",
     status: "pending",
+    userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
     qdrantCollectionName: "meeting_test123",
     participants: [],
     metadata: {},

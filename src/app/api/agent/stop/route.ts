@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
+import { requireSessionUser } from "@/lib/auth/session";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
 import { z } from "zod/v4";
@@ -22,12 +23,15 @@ export async function POST(request: Request) {
     );
   }
 
+  const user = await requireSessionUser();
+  if (user instanceof NextResponse) return user;
+
   const { meetingId } = parsed.data;
 
   const [meeting] = await db
     .select()
     .from(meetings)
-    .where(eq(meetings.id, meetingId));
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   if (!meeting) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
       endedAt: meeting.endedAt ?? new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(meetings.id, meetingId));
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   // Generate summary (best-effort)
   try {
@@ -82,14 +86,14 @@ export async function POST(request: Request) {
         metadata: { ...existingMetadata, summary },
         updatedAt: new Date(),
       })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
   } catch (error) {
     console.error("Post-processing failed:", error);
     // Still complete on failure, just without summary
     await db
       .update(meetings)
       .set({ status: "completed", updatedAt: new Date() })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
   }
 
   return NextResponse.json({ success: true });

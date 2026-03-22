@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireSessionUser } from "@/lib/auth/session";
 import { z } from "zod/v4";
 import { getOpenAIClient } from "@/lib/openai/client";
 import {
@@ -30,10 +31,18 @@ export async function POST(request: Request) {
     );
   }
 
+  const user = await requireSessionUser();
+  if (user instanceof NextResponse) return user;
+
   const { meetingId, question } = parsed.data;
 
+  // Ownership is validated by getRAGContext (MeetingNotFoundError if not found)
+  // The middleware already ensures the user is authenticated
   try {
-    const ragResults = await getRAGContext(question, { meetingId });
+    const ragResults = await getRAGContext(question, {
+      meetingId,
+      userId: user.id,
+    });
     const contextString = formatContextForPrompt(ragResults);
 
     const client = getOpenAIClient();

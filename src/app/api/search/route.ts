@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireSessionUser } from "@/lib/auth/session";
 import { z } from "zod/v4";
 import {
   getRAGContext,
@@ -14,6 +15,9 @@ const searchSchema = z.object({
 });
 
 export async function GET(request: Request) {
+  const user = await requireSessionUser();
+  if (user instanceof NextResponse) return user;
+
   const { searchParams } = new URL(request.url);
   const parsed = searchSchema.safeParse({
     q: searchParams.get("q") ?? undefined,
@@ -31,7 +35,11 @@ export async function GET(request: Request) {
   const { q, meetingId, limit } = parsed.data;
 
   try {
-    const ragResults = await getRAGContext(q, { meetingId, limit });
+    const ragResults = await getRAGContext(q, {
+      meetingId,
+      limit,
+      userId: user.id,
+    });
 
     const results = ragResults.map((r) => ({
       text: r.text,
