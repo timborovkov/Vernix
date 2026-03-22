@@ -40,6 +40,7 @@ export function fakeDocument(overrides: Partial<Document> = {}): Document {
   return {
     id: "c2aadd11-2b3c-4ef8-bb6d-8dd1df602c33",
     userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    meetingId: null,
     fileName: "test-doc.pdf",
     fileType: "pdf",
     fileSize: 1024,
