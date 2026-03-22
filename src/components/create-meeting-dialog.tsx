@@ -73,6 +73,11 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               required
             />
           </div>
+          <p className="text-muted-foreground text-xs">
+            Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex. The AI
+            agent will join and respond when called by name (KiviKova, Agent, or
+            Assistant).
+          </p>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creating..." : "Create Meeting"}
           </Button>

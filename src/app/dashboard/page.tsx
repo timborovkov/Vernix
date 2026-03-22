@@ -45,7 +45,9 @@ export default function DashboardPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">KiviKova</h1>
-          <p className="text-muted-foreground">AI Video Call Agent</p>
+          <p className="text-muted-foreground">
+            AI Video Call Agent — Zoom, Meet, Teams, Webex
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <CreateMeetingDialog

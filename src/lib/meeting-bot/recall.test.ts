@@ -3,7 +3,7 @@ import { RecallProvider } from "./recall";
 describe("RecallProvider", () => {
   beforeEach(() => {
     vi.stubEnv("RECALL_API_KEY", "test-key");
-    vi.stubEnv("RECALL_API_URL", "https://api.recall.ai/api/v1");
+    vi.stubEnv("RECALL_API_URL", "https://eu-central-1.recall.ai/api/v1");
     vi.stubGlobal("fetch", vi.fn());
   });
 
@@ -21,7 +21,7 @@ describe("RecallProvider", () => {
 
     expect(result.botId).toBe("recall-bot-42");
     expect(mockFetch).toHaveBeenCalledWith(
-      "https://api.recall.ai/api/v1/bot",
+      "https://eu-central-1.recall.ai/api/v1/bot",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -44,7 +44,7 @@ describe("RecallProvider", () => {
     await provider.leaveMeeting("bot-42");
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://api.recall.ai/api/v1/bot/bot-42/leave_call",
+      "https://eu-central-1.recall.ai/api/v1/bot/bot-42/leave_call",
       expect.objectContaining({ method: "POST" })
     );
   });

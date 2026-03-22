@@ -75,6 +75,11 @@ export function MeetingCard({
               Ended: {new Date(meeting.endedAt).toLocaleString()}
             </p>
           )}
+          {meeting.status === "active" && (
+            <p className="mt-2 text-xs text-green-600">
+              Voice agent responds to: KiviKova, Agent, Assistant
+            </p>
+          )}
         </CardContent>
         <CardFooter className="gap-2">
           {canJoin && (

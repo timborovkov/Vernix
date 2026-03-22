@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 export async function getSessionUser() {
   const session = await auth();
   if (!session?.user?.id) return null;
-  return { id: session.user.id, email: session.user.email! };
+  return {
+    id: session.user.id,
+    email: session.user.email!,
+    name: session.user.name ?? undefined,
+  };
 }
 
 export async function requireSessionUser() {
