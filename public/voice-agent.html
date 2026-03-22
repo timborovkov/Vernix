@@ -230,7 +230,7 @@
           "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview";
         ws = new WebSocket(url, [
           "realtime",
-          `openai-insecure-api-key.${token}`,
+          `openai-ephemeral-key.${token}`,
         ]);
 
         ws.onopen = () => {
