@@ -16,24 +16,17 @@
 
   <style>
     :root {
-      /* Surface hierarchy */
       --surface:                #f7f9fc;
       --surface-container-low:  #f2f4f7;
       --surface-container-lowest: #ffffff;
       --surface-container-high: #e8eaed;
       --surface-container-highest: #e0e3e6;
-
-      /* Text */
       --on-surface:       #191c1e;
       --on-surface-muted: #5f6368;
       --outline-variant:  #c5c6ca;
-
-      /* Primary */
       --primary:           #000101;
       --primary-container:  #1a1c1e;
       --on-primary:        #ffffff;
-
-      /* AI accent — used sparingly */
       --tertiary:          #200060;
       --tertiary-fixed:    #e8deff;
       --surface-tint:      rgba(32, 0, 96, .06);
@@ -48,7 +41,6 @@
     }
     .reveal .slides section { background: transparent; }
 
-    /* ── Typography — Manrope headlines, Inter body ── */
     .reveal h1 {
       font-family: 'Manrope', sans-serif;
       font-size: 5.5rem; font-weight: 800; line-height: 1.05;
@@ -73,19 +65,14 @@
       background: var(--outline-variant);
     }
 
-    /* ── Card — "Soft Lift" via tonal shift, no borders ── */
     .card {
       background: var(--surface-container-lowest);
       border-radius: 0.75rem; padding: 2rem;
     }
-
-    /* ── AI Insight card — subtle tertiary tint ── */
     .card-ai {
       background: rgba(232, 222, 255, .08);
       border-radius: 0.75rem; padding: 2rem;
     }
-
-    /* ── Badges — understated ── */
     .badge {
       display: inline-block; padding: .4rem 1rem; border-radius: 999px;
       font-size: 1.1rem; font-weight: 500; letter-spacing: .04em;
@@ -93,7 +80,6 @@
       background: var(--surface-container-low); color: var(--on-surface-muted);
     }
 
-    /* ── Layout ─────────────────────────────────── */
     .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8rem; align-items: start; }
     .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6rem; }
     .split   { display: grid; grid-template-columns: 2fr 3fr; gap: 3rem; align-items: center; }
@@ -101,7 +87,6 @@
     .center  { text-align: center; }
     .left    { text-align: left; }
 
-    /* ── Screenshot — ambient shadow ── */
     .shot-crop {
       border-radius: 0.75rem;
       overflow: hidden;
@@ -116,12 +101,10 @@
       background: linear-gradient(transparent, var(--surface));
       pointer-events: none;
     }
-    /* Fade matches alt background */
     [data-bg-low] .shot-crop::after {
       background: linear-gradient(transparent, var(--surface-container-low));
     }
 
-    /* ── Stats ──────────────────────────────────── */
     .stat { text-align: center; }
     .stat-val {
       font-family: 'Manrope', sans-serif;
@@ -133,7 +116,6 @@
       margin-top: .5rem; text-transform: uppercase; letter-spacing: .08em;
     }
 
-    /* ── Callout — subtle surface shift ── */
     .callout {
       background: var(--surface-container-low);
       border-radius: 0.75rem;
@@ -141,7 +123,6 @@
     }
     .callout p { color: var(--on-surface); font-size: 1.8rem; line-height: 1.6; margin: 0; }
 
-    /* ── Accent line — primary gradient ── */
     .accent-line {
       width: 60px; height: 5px; border-radius: 4px;
       background: linear-gradient(135deg, var(--primary), var(--primary-container));
@@ -150,11 +131,8 @@
     .accent-line.c { margin-left: auto; margin-right: auto; }
 
     .subtitle { font-size: 1.7rem; color: var(--on-surface-muted); margin-bottom: 1.2rem; }
-
-    /* ── Emphasis ── */
     .em { color: var(--primary); font-weight: 600; }
 
-    /* ── Material icons ── */
     .icon-lg {
       font-family: 'Material Symbols Outlined';
       font-size: 3.2rem; line-height: 1;
@@ -164,7 +142,6 @@
       -webkit-font-feature-settings: 'liga';
     }
 
-    /* ── Cover & closing overlays — glassmorphism ── */
     .glass-panel {
       background: rgba(255, 255, 255, .70);
       backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
@@ -172,16 +149,12 @@
       max-width: 900px; margin: 0 auto;
     }
 
-    /* ── Reveal overrides ──────────────────────── */
     .reveal .progress { background: var(--surface-container-high); height: 4px; }
     .reveal .progress span { background: linear-gradient(90deg, var(--primary), var(--primary-container)); }
     .reveal .controls { color: var(--on-surface-muted); }
     .reveal .slide-number { font-family: 'Inter', sans-serif; font-size: .9rem; color: var(--on-surface-muted); }
-
-    /* ── Slide backgrounds — alternating tonal depth ── */
     .reveal .slides section[data-bg-low] { background: var(--surface-container-low); }
 
-    /* ── Custom fragment: gentle fade-up ──────── */
     .reveal .slides section .fragment.up {
       opacity: 0; transform: translateY(18px);
       transition: all .5s cubic-bezier(.4,0,.2,1);
@@ -202,18 +175,18 @@
         <div class="accent-line"></div>
         <h1>KiviKova</h1>
         <p style="font-family:'Manrope',sans-serif; font-size:2.4rem; color:var(--on-surface); margin-bottom:.6rem; font-weight:500; letter-spacing:-.01em;">Be in meetings cool,<br/>calm and collected.</p>
-        <p style="font-size:1.6rem; color:var(--on-surface-muted); margin-bottom:1.8rem; font-weight:300;">Your AI meeting agent</p>
+        <p style="font-size:1.6rem; color:var(--on-surface-muted); margin-bottom:1.8rem; font-weight:300;">Your AI meeting agent &mdash; Zoom, Meet, Teams, Webex</p>
         <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
-          <span class="badge">Next.js 16</span>
-          <span class="badge">Qdrant</span>
-          <span class="badge">OpenAI</span>
-          <span class="badge">Voice RAG</span>
+          <span class="badge">Live Voice Agent</span>
+          <span class="badge">RAG Search</span>
+          <span class="badge">Auto Summaries</span>
+          <span class="badge">Transcripts</span>
         </div>
         <p style="margin-top:2rem; color:var(--on-surface-muted); font-size:1.4rem; font-weight:400;">
+          Built by
           <a href="https://github.com/timborovkov" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Tim Borovkov</a> &amp;
           <a href="https://github.com/mankin3n" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Pauli Mankinen</a>
         </p>
-        <p style="margin-top:.5rem; color:var(--on-surface-muted); font-size:1.1rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
       </div>
     </section>
 
@@ -231,69 +204,60 @@
       <div class="callout fragment up">
         <p>Decisions and action items <strong class="em">disappear</strong> when the call ends.<br/>What if every meeting built a <strong class="em">searchable knowledge base</strong>?</p>
       </div>
-      <aside class="notes">
-        Think about your last week of meetings. How many had proper notes? How many action items were actually tracked? Most teams rely on someone volunteering to take notes, and usually nobody does. The context just vanishes.
-      </aside>
     </section>
 
     <!-- ═══ 3. HOW IT WORKS ═══ -->
     <section>
       <h2>How It Works</h2>
-      <p class="subtitle">Three steps to autonomous productivity.</p>
+      <p class="subtitle">Three steps. Zero manual work.</p>
 
       <div class="grid-3" style="margin-top:1.5rem;">
         <div class="card center">
-          <span class="icon-lg">hub</span>
-          <h3>1. Connect Tools</h3>
-          <p style="font-size:1.5rem;">Authorise KiviKova to interact with your calendar, task manager, and CRM via MCP.</p>
+          <span class="icon-lg">person_add</span>
+          <h3>1. Invite the Agent</h3>
+          <p style="font-size:1.5rem;">Paste your meeting link. KiviKova joins Zoom, Meet, Teams, or Webex automatically.</p>
         </div>
         <div class="card center">
-          <span class="icon-lg">person_add</span>
-          <h3>2. Invite Agent</h3>
-          <p style="font-size:1.5rem;">Add KiviKova to your calendar. It joins Zoom, Meet, or Teams automatically.</p>
+          <span class="icon-lg">record_voice_over</span>
+          <h3>2. It Listens &amp; Responds</h3>
+          <p style="font-size:1.5rem;">Live voice agent transcribes everything. Ask it questions &mdash; it answers using context from all your meetings.</p>
         </div>
         <div class="card center">
           <span class="icon-lg">auto_fix_high</span>
-          <h3>3. Scale Actions</h3>
-          <p style="font-size:1.5rem;">Receive <strong class="em">AI-driven action items</strong> and watch your workflow automate in real time.</p>
+          <h3>3. Get Results</h3>
+          <p style="font-size:1.5rem;">AI summary, full transcript, participant tracking, and cross-meeting search &mdash; all automatic.</p>
         </div>
       </div>
 
       <div class="callout" style="margin-top:1.5rem; max-width:1200px; margin-left:auto; margin-right:auto;">
-        <p>After each meeting: <strong class="em">notes</strong>, <strong class="em">action items</strong>, and a <strong class="em">searchable transcript</strong> &mdash; automatically.</p>
+        <p>Say <strong class="em">"KiviKova, what did we decide last week?"</strong> &mdash; get an answer grounded in your actual meetings.</p>
       </div>
-      <aside class="notes">
-        The path to autonomous productivity is three steps. First, connect your tools: task managers, calendars, and CRM via the MCP protocol. Second, invite the agent to your calendar so it joins meetings automatically. Third, sit back and receive AI-driven action items that flow directly into your workflow. After every meeting you get notes, action items, and a fully searchable transcript without anyone having to write anything down.
-      </aside>
     </section>
 
-    <!-- ═══ 4. ACTION ITEMS ═══ -->
+    <!-- ═══ 4. LIVE VOICE AGENT ═══ -->
     <section data-bg-low>
-      <h2>Action Items</h2>
-      <p class="subtitle">Every commitment captured, nothing forgotten.</p>
+      <h2>Live Voice Agent</h2>
+      <p class="subtitle">An AI participant that actually helps during the call.</p>
 
       <div style="max-width:1300px; margin:1.5rem auto 0;">
         <div class="card-ai" style="padding:2.5rem; margin-bottom:1.5rem;">
-          <h3 style="font-size:2.2rem;">What is an action item?</h3>
-          <p style="font-size:1.7rem; color:var(--on-surface); margin-top:.5rem;">When someone says <em>"I'll send the report by Friday"</em> or <em>"Let's schedule a follow-up"</em> &mdash; that's an action item. A task someone committed to during the meeting.</p>
+          <h3 style="font-size:2.2rem;">How does it work?</h3>
+          <p style="font-size:1.7rem; color:var(--on-surface); margin-top:.5rem;">KiviKova joins your call with a live voice agent powered by OpenAI's Realtime API. It listens to the conversation and responds when you say <em>"KiviKova"</em>, <em>"Agent"</em>, or <em>"Assistant"</em>. It searches across all your past meetings to find relevant context.</p>
         </div>
 
         <div class="grid-2">
           <div class="card center">
-            <span class="icon-lg">neurology</span>
-            <h3>AI Detects Them</h3>
-            <p style="font-size:1.5rem;">KiviKova listens for commitments and extracts them automatically.</p>
+            <span class="icon-lg">search</span>
+            <h3>Cross-Meeting RAG</h3>
+            <p style="font-size:1.5rem;">Searches transcripts from current and past meetings to give accurate, grounded answers.</p>
           </div>
           <div class="card center">
-            <span class="icon-lg">task_alt</span>
-            <h3>Nothing Gets Lost</h3>
-            <p style="font-size:1.5rem;">Every task gets a person, a deadline, and a status &mdash; no manual work.</p>
+            <span class="icon-lg">graphic_eq</span>
+            <h3>Semantic Turn Detection</h3>
+            <p style="font-size:1.5rem;">Only speaks when addressed. Low-eagerness VAD ensures it never interrupts humans.</p>
           </div>
         </div>
       </div>
-      <aside class="notes">
-        Action items are the most important output of any meeting. They are the things people committed to doing. But in most meetings, these commitments are spoken and then forgotten. KiviKova catches them automatically: who said they would do what, and by when. After the meeting, you see a clean list with names, deadlines, and status, without anyone having to write anything down.
-      </aside>
     </section>
 
     <!-- ═══ 5. THE PRODUCT ═══ -->
@@ -305,11 +269,11 @@
           <p style="margin-bottom:1.2rem;">Your AI agent for smarter meetings.</p>
           <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
             <h3 style="margin:0;">Intelligent Workspace</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Built on the intelligent layer &mdash; AI and precision design converge.</p>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Dashboard with meeting history, status filters, search, and real-time polling.</p>
           </div>
           <div class="card" style="padding:1.8rem;">
-            <h3 style="margin:0;">Connect Your World</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Integrations with your favourite tools, ready from day one.</p>
+            <h3 style="margin:0;">Multi-Platform Support</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Works with Zoom, Google Meet, Microsoft Teams, and Cisco Webex.</p>
           </div>
         </div>
         <div>
@@ -318,9 +282,6 @@
           </div>
         </div>
       </div>
-      <aside class="notes">
-        This is our landing page. The value proposition is simple: "Your AI agent for smarter meetings." The design follows our Intelligent Layer system, with layered surfaces and no borders. We showcase integrations and a clear path to getting started. Free tier, Pro at 29 dollars per month for teams, and Enterprise for larger organisations.
-      </aside>
     </section>
 
     <!-- ═══ 6. DASHBOARD ═══ -->
@@ -334,36 +295,57 @@
         <div class="left">
           <div class="accent-line"></div>
           <h2>Dashboard</h2>
-          <p style="margin-bottom:1.2rem;">The architecture of your collective intelligence.</p>
+          <p style="margin-bottom:1.2rem;">Your meeting command centre.</p>
           <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
-            <h3 style="margin:0;">Intelligence Pulse</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">124 hours analysed, 42 action items extracted this week.</p>
+            <h3 style="margin:0;">Filter &amp; Search</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Find meetings by status, title, or content. Real-time status updates every 5 seconds.</p>
           </div>
           <div class="card" style="padding:1.8rem;">
-            <h3 style="margin:0;">Pending Action Items</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Critical tasks surfaced automatically, ready to assign.</p>
+            <h3 style="margin:0;">One-Click Actions</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Join agent, stop recording, delete &mdash; with confirmation dialogs and loading states.</p>
           </div>
         </div>
       </div>
-      <aside class="notes">
-        The dashboard is your command centre. The Intelligence Pulse shows 124 hours of meetings analysed and 42 action items extracted. Pending action items are surfaced at the top so nothing falls through. You can also generate weekly summary reports and see smart recommendations based on meeting patterns.
-      </aside>
     </section>
 
-    <!-- ═══ 7. MEETING DETAIL ═══ -->
+    <!-- ═══ 7. LOGIN & AUTH ═══ -->
     <section>
       <div class="split">
         <div class="left">
           <div class="accent-line"></div>
-          <h2>Meeting Intelligence</h2>
-          <p style="margin-bottom:1.2rem;">Every meeting becomes actionable.</p>
+          <h2>Secure Access</h2>
+          <p style="margin-bottom:1.2rem;">Sign in to your personal workspace.</p>
           <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
-            <h3 style="margin:0;">AI Executive Summary</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Key decisions, discussion topics, and a 94% collaboration score.</p>
+            <h3 style="margin:0;">Multi-Provider Auth</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Email/password, Google, or GitHub. Powered by NextAuth v5 with JWT sessions.</p>
           </div>
           <div class="card" style="padding:1.8rem;">
-            <h3 style="margin:0;">AI-Generated Action Items</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Tasks with assignees, deadlines, and priority &mdash; extracted automatically.</p>
+            <h3 style="margin:0;">Data Isolation</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Every user sees only their own meetings, transcripts, and summaries. Full ownership checks on all endpoints.</p>
+          </div>
+        </div>
+        <div>
+          <div class="shot-crop">
+            <img src="screen-login.png" alt="Login" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 8. MEETING DETAIL ═══ -->
+    <section>
+      <div class="split">
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2>Meeting Notes</h2>
+          <p style="margin-bottom:1.2rem;">Every meeting becomes searchable.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">AI Summary</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Key decisions, discussion points, and action items &mdash; generated automatically after the call.</p>
+          </div>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">Full Transcript &amp; Search</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Speaker-labelled timeline with vector search across the entire transcript.</p>
           </div>
         </div>
         <div>
@@ -372,62 +354,105 @@
           </div>
         </div>
       </div>
-      <aside class="notes">
-        When you open a specific meeting, you get a full executive summary with key discussion topics, a collaboration score, and AI-generated action items with assignees and deadlines. Below that is the full meeting transcript with speaker labels, so you always know who said what. You can also ask any question about the meeting and get an answer grounded in the actual transcript.
-      </aside>
     </section>
 
-    <!-- ═══ 8. KNOWLEDGE BASE ═══ -->
+    <!-- ═══ 9. KNOWLEDGE BASE & MCP ═══ -->
     <section data-bg-low>
       <div class="split-r">
         <div>
           <div class="shot-crop">
-            <img src="screen-knowledge.png" alt="Knowledge Base" />
+            <img src="screen-mcp.png" alt="Knowledge Base & MCP" />
           </div>
         </div>
         <div class="left">
           <div class="accent-line"></div>
-          <h2>Knowledge Base</h2>
-          <p style="margin-bottom:1.2rem;">Your centralised intelligence repository.</p>
+          <h2>Knowledge &amp; Tools</h2>
+          <p style="margin-bottom:1.2rem;">Extend the agent's intelligence.</p>
           <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
-            <h3 style="margin:0;">Upload Documents</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">Marketing, product specs, research &mdash; organised and indexed.</p>
+            <h3 style="margin:0;">Knowledge Base</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Upload docs, specs, and research. Indexed and searchable by the AI alongside meeting context.</p>
           </div>
           <div class="card" style="padding:1.8rem;">
-            <h3 style="margin:0;">Semantic Coverage Analysis</h3>
-            <p style="font-size:1.5rem; margin:.3rem 0 0;">See where the AI has deep knowledge and where gaps remain.</p>
+            <h3 style="margin:0;">MCP Tool Connections</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Connect external tools via MCP &mdash; Jira, Calendar, Slack, and more. Configure like Claude Desktop.</p>
           </div>
         </div>
       </div>
-      <aside class="notes">
-        The Knowledge Base is your centralised intelligence repository. Upload documents across categories like marketing, product specs, and user research. Each file shows its AI readiness status. The Semantic Coverage Analysis shows where the AI has deep content and where it lacks sufficient data, like marketing operations or technical infrastructure. This way answers are grounded in everything your team knows.
-      </aside>
+    </section>
+
+    <!-- ═══ 10. SETTINGS ═══ -->
+    <section>
+      <div class="split">
+        <div class="left">
+          <div class="accent-line"></div>
+          <h2>Your Workspace</h2>
+          <p style="margin-bottom:1.2rem;">Personalise the AI to work the way you do.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">AI Personality</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Choose between concise and professional or collaborative mentor. Adjust voice and speed.</p>
+          </div>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">Ecosystem</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Connected to Zoom, Meet, Teams, and Webex. Notifications via email or Slack digest.</p>
+          </div>
+        </div>
+        <div>
+          <div class="shot-crop">
+            <img src="screen-settings.png" alt="Settings" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ 11. TECH STACK ═══ -->
+    <section data-bg-low>
+      <h2>Under the Hood</h2>
+      <p class="subtitle">Production-grade architecture.</p>
+
+      <div class="grid-3" style="margin-top:1.5rem;">
+        <div class="card center">
+          <span class="icon-lg">code</span>
+          <h3>Next.js 16</h3>
+          <p style="font-size:1.5rem;">App Router, TypeScript, Drizzle ORM, PostgreSQL. 140+ tests, full type safety.</p>
+        </div>
+        <div class="card center">
+          <span class="icon-lg">hub</span>
+          <h3>Vector RAG Pipeline</h3>
+          <p style="font-size:1.5rem;">OpenAI embeddings → Qdrant vector DB. Per-meeting collections with cross-meeting search and score boosting.</p>
+        </div>
+        <div class="card center">
+          <span class="icon-lg">smart_toy</span>
+          <h3>OpenAI Realtime API</h3>
+          <p style="font-size:1.5rem;">Live bidirectional audio via Recall.ai Output Media. Ephemeral tokens, semantic VAD, function calling.</p>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:1.5rem;">
+        <p>Auth with NextAuth v5 &bull; Sonner toasts &bull; Polling &bull; Confirmation dialogs &bull; 140+ unit &amp; integration tests</p>
+      </div>
     </section>
 
     <!-- ═══ 9. ROADMAP ═══ -->
     <section>
       <h2>What's Next</h2>
-      <p class="subtitle">From hackathon to product.</p>
+      <p class="subtitle">Built and shipping. Here's what's coming.</p>
       <div class="grid-3" style="margin-top:1.2rem;">
         <div class="card">
-          <h3>Soon</h3>
-          <ul><li>Know who said what</li><li>Auto meeting summaries</li><li>Export to Slack and Notion</li></ul>
+          <h3>Next Up</h3>
+          <ul><li>Chat with meeting notes</li><li>Knowledge base uploads</li><li>Meeting agenda &amp; prep</li></ul>
         </div>
         <div class="card">
           <h3>Growth</h3>
-          <ul><li>Team workspaces</li><li>Enterprise login (SSO)</li><li>Integrations API</li></ul>
+          <ul><li>Action item extraction</li><li>MCP tool connections</li><li>Data export (ZIP/PDF)</li></ul>
         </div>
         <div class="card">
-          <h3>Smarter AI</h3>
-          <ul><li>Auto follow-up reminders</li><li>Insights across meetings</li><li>Proactive suggestions</li></ul>
+          <h3>Scale</h3>
+          <ul><li>Team workspaces</li><li>Calendar integration</li><li>Enterprise SSO</li></ul>
         </div>
       </div>
       <div class="callout" style="margin-top:1.2rem;">
         <p>KiviKova becomes your team's <strong class="em">collective memory</strong> &mdash; every decision searchable, forever.</p>
       </div>
-      <aside class="notes">
-        For next steps, we are adding speaker identification so you know who said what, auto-generated summaries you can export to Slack or Notion, and team workspaces for organisations. The long-term vision is that KiviKova becomes your team's collective memory: every decision, every commitment, permanently searchable.
-      </aside>
     </section>
 
     <!-- ═══ 10. CLOSING ═══ -->
@@ -438,14 +463,13 @@
         <p style="font-family:'Manrope',sans-serif; font-size:2.4rem; color:var(--on-surface); margin-bottom:.4rem; font-weight:500;">Be in meetings cool,<br/>calm and collected.</p>
         <p style="color:var(--on-surface-muted); font-size:1.7rem; margin-bottom:2rem; font-weight:300;">Every meeting. Remembered. Searchable. Actionable.</p>
         <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.5rem;">
-          <span class="badge">Next.js 16</span><span class="badge">Qdrant</span><span class="badge">OpenAI</span><span class="badge">TypeScript</span>
+          <span class="badge">Live Voice Agent</span><span class="badge">RAG Search</span><span class="badge">Auto Summaries</span><span class="badge">Multi-Platform</span>
         </div>
         <p style="color:var(--on-surface-muted); font-size:1.4rem; margin-bottom:.5rem;">
           Built by
           <a href="https://github.com/timborovkov" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Tim Borovkov</a> &amp;
           <a href="https://github.com/mankin3n" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Pauli Mankinen</a>
         </p>
-        <p style="color:var(--on-surface-muted); font-size:1.1rem; margin:0; font-weight:600; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
       </div>
     </section>
 
