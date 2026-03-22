@@ -68,12 +68,12 @@ export class RecallProvider implements MeetingBotProvider {
     });
 
     const responseText = await response.text();
-    console.log(
-      `[RecallProvider] Recall API response (${response.status}):`,
-      responseText
-    );
 
     if (!response.ok) {
+      console.log(
+        `[RecallProvider] Recall API error (${response.status}):`,
+        responseText
+      );
       throw new Error(`Recall API error: ${response.status} ${responseText}`);
     }
 
