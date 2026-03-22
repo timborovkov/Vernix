@@ -26,7 +26,10 @@ async function parsePDF(buffer: Buffer): Promise<string> {
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    const text = content.items.map((item) => item.str).join(" ");
+    const text = content.items
+      .filter((item): item is { str: string } => "str" in item)
+      .map((item) => item.str)
+      .join(" ");
     pages.push(text);
   }
 
