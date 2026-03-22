@@ -163,8 +163,8 @@ describe("POST /api/webhooks/recall/transcript", () => {
     expect(data.error).toMatch(/not found/i);
   });
 
-  it("returns 400 when meeting is not active", async () => {
-    mockDb.where.mockResolvedValueOnce([fakeMeeting({ status: "completed" })]);
+  it("returns 400 when meeting is not in acceptable status", async () => {
+    mockDb.where.mockResolvedValueOnce([fakeMeeting({ status: "pending" })]);
 
     const req = createJsonRequest(
       "http://localhost/api/webhooks/recall/transcript",
@@ -175,7 +175,7 @@ describe("POST /api/webhooks/recall/transcript", () => {
     );
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
-    expect(data.error).toMatch(/not active/i);
+    expect(data.error).toMatch(/does not accept/i);
   });
 
   it("calls upsertTranscriptChunk with correct args", async () => {

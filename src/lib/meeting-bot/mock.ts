@@ -1,12 +1,13 @@
+import { randomUUID } from "crypto";
 import type { MeetingBotProvider } from "./types";
 
 export class MockProvider implements MeetingBotProvider {
   async joinMeeting(
     _joinLink: string,
     meetingId: string
-  ): Promise<{ botId: string }> {
+  ): Promise<{ botId: string; voiceSecret: string }> {
     console.log(`[MockBot] Joining meeting ${meetingId}`);
-    return { botId: `mock-bot-${meetingId}` };
+    return { botId: `mock-bot-${meetingId}`, voiceSecret: randomUUID() };
   }
 
   async leaveMeeting(botId: string): Promise<void> {

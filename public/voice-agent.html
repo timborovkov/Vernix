@@ -1,0 +1,322 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>KiviKova Voice Agent</title>
+    <style>
+      body {
+        margin: 0;
+        background: #111;
+        color: #fff;
+        font-family: system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        flex-direction: column;
+      }
+      #status {
+        font-size: 18px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+      }
+      #indicator {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #333;
+        transition: background 0.3s;
+      }
+      #indicator.listening {
+        background: #22c55e;
+      }
+      #indicator.thinking {
+        background: #eab308;
+      }
+      #indicator.speaking {
+        background: #3b82f6;
+        animation: pulse 0.8s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.15);
+        }
+      }
+      #log {
+        margin-top: 16px;
+        font-size: 12px;
+        opacity: 0.5;
+        max-width: 600px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">Initializing...</div>
+    <div id="indicator"></div>
+    <div id="log"></div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const meetingId = params.get("meetingId");
+      const botSecret = params.get("botSecret");
+      const appUrl = params.get("appUrl") || window.location.origin;
+
+      const statusEl = document.getElementById("status");
+      const indicatorEl = document.getElementById("indicator");
+      const logEl = document.getElementById("log");
+
+      let ws = null;
+      let audioContext = null;
+      let audioDone = true; // true when no more audio chunks expected
+
+      function setStatus(text, state) {
+        statusEl.textContent = text;
+        indicatorEl.className = state || "";
+      }
+
+      function log(msg) {
+        logEl.textContent = msg;
+        console.log("[VoiceAgent]", msg);
+      }
+
+      // --- Audio playback ---
+      const audioQueue = [];
+      let isPlaying = false;
+
+      function queueAudio(base64Pcm) {
+        audioDone = false;
+        // Decode base64 to Int16Array
+        const binary = atob(base64Pcm);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const int16 = new Int16Array(bytes.buffer);
+
+        // Convert to Float32
+        const float32 = new Float32Array(int16.length);
+        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+
+        audioQueue.push(float32);
+        if (!isPlaying) playNext();
+      }
+
+      function playNext() {
+        if (audioQueue.length === 0) {
+          isPlaying = false;
+          if (audioDone) setStatus("Listening...", "listening");
+          return;
+        }
+        isPlaying = true;
+        setStatus("Speaking...", "speaking");
+
+        const samples = audioQueue.shift();
+        const buffer = audioContext.createBuffer(1, samples.length, 24000);
+        buffer.getChannelData(0).set(samples);
+
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.onended = playNext;
+        source.start();
+      }
+
+      // --- Audio capture ---
+      async function startCapture() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        audioContext = new AudioContext({ sampleRate: 24000 });
+
+        const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+        processor.onaudioprocess = (e) => {
+          if (!ws || ws.readyState !== WebSocket.OPEN) return;
+
+          const float32 = e.inputBuffer.getChannelData(0);
+          // Convert Float32 to Int16
+          const int16 = new Int16Array(float32.length);
+          for (let i = 0; i < float32.length; i++) {
+            const s = Math.max(-1, Math.min(1, float32[i]));
+            int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+          }
+
+          // Encode to base64
+          const bytes = new Uint8Array(int16.buffer);
+          let binary = "";
+          for (let i = 0; i < bytes.length; i++)
+            binary += String.fromCharCode(bytes[i]);
+          const base64 = btoa(binary);
+
+          ws.send(
+            JSON.stringify({
+              type: "input_audio_buffer.append",
+              audio: base64,
+            })
+          );
+        };
+
+        source.connect(processor);
+        // Connect through a silent gain node to keep ScriptProcessor active
+        // without echoing meeting audio back to participants
+        const silentGain = audioContext.createGain();
+        silentGain.gain.value = 0;
+        processor.connect(silentGain);
+        silentGain.connect(audioContext.destination);
+      }
+
+      // --- RAG tool handler ---
+      async function handleToolCall(callId, name, args) {
+        if (name !== "search_meeting_context") {
+          sendToolOutput(callId, "Unknown tool.");
+          return;
+        }
+
+        setStatus("Searching context...", "thinking");
+        try {
+          const res = await fetch(`${appUrl}/api/agent/rag`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret, query: args.query }),
+          });
+          const data = await res.json();
+          sendToolOutput(callId, data.context || "No context found.");
+        } catch (err) {
+          log("RAG error: " + err.message);
+          sendToolOutput(callId, "Error searching context.");
+        }
+      }
+
+      function sendToolOutput(callId, output) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        ws.send(
+          JSON.stringify({
+            type: "conversation.item.create",
+            item: {
+              type: "function_call_output",
+              call_id: callId,
+              output: output,
+            },
+          })
+        );
+        ws.send(JSON.stringify({ type: "response.create" }));
+      }
+
+      // --- OpenAI WebSocket ---
+      async function connect() {
+        setStatus("Getting token...", "");
+
+        let tokenRes;
+        try {
+          tokenRes = await fetch(
+            `${appUrl}/api/agent/voice-token?meetingId=${meetingId}&botSecret=${botSecret}`
+          );
+        } catch (err) {
+          log("Token fetch failed: " + err.message);
+          setStatus("Retrying in 5s...", "");
+          setTimeout(connect, 5000);
+          return;
+        }
+        if (!tokenRes.ok) {
+          log("Token error: " + tokenRes.status);
+          setStatus("Retrying in 5s...", "");
+          setTimeout(connect, 5000);
+          return;
+        }
+        const { token } = await tokenRes.json();
+
+        setStatus("Connecting to AI...", "");
+
+        const url =
+          "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview";
+        ws = new WebSocket(url, [
+          "realtime",
+          `openai-insecure-api-key.${token}`,
+        ]);
+
+        ws.onopen = () => {
+          log("WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+
+          switch (msg.type) {
+            case "session.created":
+            case "session.updated":
+              setStatus("Listening...", "listening");
+              log("Session ready");
+              break;
+
+            case "response.output_audio.delta":
+              queueAudio(msg.delta);
+              break;
+
+            case "response.output_audio.done":
+              audioDone = true;
+              if (!isPlaying) setStatus("Listening...", "listening");
+              break;
+
+            case "response.function_call_arguments.done":
+              try {
+                const args = JSON.parse(msg.arguments);
+                handleToolCall(msg.call_id, msg.name, args);
+              } catch (err) {
+                log("Tool parse error: " + err.message);
+              }
+              break;
+
+            case "input_audio_buffer.speech_started":
+              // Stop any playing audio (barge-in)
+              audioQueue.length = 0;
+              isPlaying = false;
+              audioDone = true;
+              setStatus("Hearing speech...", "listening");
+              break;
+
+            case "input_audio_buffer.speech_stopped":
+              setStatus("Processing...", "thinking");
+              break;
+
+            case "error":
+              log("Error: " + (msg.error?.message || JSON.stringify(msg)));
+              break;
+          }
+        };
+
+        ws.onerror = (err) => {
+          log("WebSocket error");
+          console.error(err);
+        };
+
+        ws.onclose = () => {
+          setStatus("Disconnected", "");
+          log("WebSocket closed, reconnecting in 5s...");
+          setTimeout(connect, 5000);
+        };
+      }
+
+      // --- Init ---
+      async function init() {
+        if (!meetingId || !botSecret) {
+          setStatus("Error: missing meetingId or botSecret", "");
+          return;
+        }
+
+        try {
+          await startCapture();
+          await connect();
+        } catch (err) {
+          setStatus("Error: " + err.message, "");
+          console.error(err);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
