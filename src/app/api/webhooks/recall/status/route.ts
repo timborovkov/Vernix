@@ -24,10 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  console.log(
-    "[Webhook:status] Received:",
-    JSON.stringify(body).slice(0, 300)
-  );
+  console.log("[Webhook:status] Received:", JSON.stringify(body).slice(0, 300));
 
   const parsed = statusEventSchema.safeParse(body);
   if (!parsed.success) {
