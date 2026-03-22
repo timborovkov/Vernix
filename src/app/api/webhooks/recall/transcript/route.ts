@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { upsertTranscriptChunk } from "@/lib/vector/upsert";
 
 const recallTranscriptSchema = z.object({
@@ -74,8 +74,6 @@ export async function POST(request: Request) {
       speaker: transcript.speaker,
       timestampMs,
     });
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       {
@@ -85,4 +83,25 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  // Atomically add speaker to participants (best-effort, don't fail the request)
+  try {
+    await db
+      .update(meetings)
+      .set({
+        participants: sql`
+          CASE
+            WHEN NOT (COALESCE(${meetings.participants}, '[]'::jsonb) @> ${JSON.stringify([transcript.speaker])}::jsonb)
+            THEN (COALESCE(${meetings.participants}, '[]'::jsonb) || ${JSON.stringify([transcript.speaker])}::jsonb)
+            ELSE COALESCE(${meetings.participants}, '[]'::jsonb)
+          END
+        `,
+        updatedAt: new Date(),
+      })
+      .where(eq(meetings.id, meeting.id));
+  } catch (error) {
+    console.error("Failed to update participants:", error);
+  }
+
+  return NextResponse.json({ success: true });
 }

@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
+import { scrollTranscript } from "@/lib/vector/scroll";
+import { generateMeetingSummary } from "@/lib/summary/generate";
 import { z } from "zod/v4";
 
 const stopSchema = z.object({
@@ -31,30 +33,59 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
-  if (meeting.status !== "active" && meeting.status !== "joining") {
+  const stoppable = ["active", "joining", "processing"];
+  if (!stoppable.includes(meeting.status)) {
     return NextResponse.json(
       { error: `Cannot stop meeting with status: ${meeting.status}` },
       { status: 400 }
     );
   }
 
-  const provider = getMeetingBotProvider();
-  const botId = (meeting.metadata as Record<string, unknown>)?.botId as
-    | string
-    | undefined;
+  // Only call leaveMeeting for active/joining (not for stuck processing recovery)
+  if (meeting.status !== "processing") {
+    const provider = getMeetingBotProvider();
+    const botId = (meeting.metadata as Record<string, unknown>)?.botId as
+      | string
+      | undefined;
 
-  if (botId) {
-    await provider.leaveMeeting(botId);
+    if (botId) {
+      await provider.leaveMeeting(botId);
+    }
   }
 
+  // Set processing status while generating summary
   await db
     .update(meetings)
     .set({
-      status: "completed",
-      endedAt: new Date(),
+      status: "processing",
+      endedAt: meeting.endedAt ?? new Date(),
       updatedAt: new Date(),
     })
     .where(eq(meetings.id, meetingId));
+
+  // Generate summary (best-effort)
+  try {
+    const segments = await scrollTranscript(meeting.qdrantCollectionName);
+    const summary = await generateMeetingSummary(segments);
+    const existingMetadata =
+      (meeting.metadata as Record<string, unknown>) ?? {};
+
+    await db
+      .update(meetings)
+      .set({
+        status: "completed",
+        metadata: { ...existingMetadata, summary },
+        updatedAt: new Date(),
+      })
+      .where(eq(meetings.id, meetingId));
+  } catch (error) {
+    console.error("Post-processing failed:", error);
+    // Still complete on failure, just without summary
+    await db
+      .update(meetings)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(meetings.id, meetingId));
+  }
 
   return NextResponse.json({ success: true });
 }

@@ -171,6 +171,34 @@ describe("POST /api/webhooks/recall/transcript", () => {
     });
   });
 
+  it("updates participants atomically after upsert", async () => {
+    const meeting = fakeMeeting({
+      status: "active",
+      participants: [],
+    });
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest(
+      "http://localhost/api/webhooks/recall/transcript",
+      {
+        method: "POST",
+        body: fakePayload(),
+      }
+    );
+    const { status } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    // Atomic SQL update is called (CASE with @> containment check)
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        updatedAt: expect.any(Date),
+      })
+    );
+  });
+
   it("returns 500 when upsert fails", async () => {
     mockDb.where.mockResolvedValueOnce([fakeMeeting({ status: "active" })]);
     mockUpsert.mockRejectedValueOnce(new Error("Qdrant down"));
