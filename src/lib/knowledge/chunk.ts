@@ -39,9 +39,9 @@ export function chunkText(text: string, options: ChunkOptions = {}): Chunk[] {
       }
     }
 
-    const chunkText = trimmed.slice(start, end).trim();
-    if (chunkText.length > 0) {
-      chunks.push({ text: chunkText, index: chunks.length });
+    const segment = trimmed.slice(start, end).trim();
+    if (segment.length > 0) {
+      chunks.push({ text: segment, index: chunks.length });
     }
 
     // Move forward by chunk minus overlap
