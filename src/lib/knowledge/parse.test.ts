@@ -1,6 +1,7 @@
 const { MockPDFParse, mockMammoth } = vi.hoisted(() => {
   class MockPDFParse {
     getText = vi.fn().mockResolvedValue({ text: "PDF content here" });
+    static setWorker = vi.fn();
   }
   return {
     MockPDFParse,
