@@ -44,6 +44,7 @@
 ## P6 — Chat with Meeting Notes
 
 - **Chat UI** — Add a chat panel on the meeting detail page (`/dashboard/[id]`) to ask questions about the meeting
+- **General Chat UI** - Add a chat panel to the dashboard to chat about all the context available and all the meetings
 - **Conversational RAG** — Use the existing `/api/agent/respond` endpoint with multi-turn message history
 - **Citation highlights** — Link chat responses back to specific transcript segments
 
@@ -67,22 +68,30 @@
 
 - **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
 - **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
-- **Tasks UI** — Display action items on meeting detail page, allow marking complete
+- **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
 - **Cross-meeting task view** — Dashboard widget showing all open tasks across meetings
 
-## P10 — MCP & Integrations
+## P10 — MCP Tool Connections
 
-- **MCP server** — Expose meeting data (transcripts, summaries, action items) as MCP tools for Claude Desktop and other AI assistants
-- **Calendar integration** — Auto-create meetings from Google Calendar / Outlook events
-- **Data connectors** — Let agent access external tools (Slack, Linear, Notion) for richer context during calls
+- **KiviKova MCP server** — Expose meeting data (transcripts, summaries, search, action items) as an MCP server so users can give Claude Desktop or other AI assistants access to their meeting context
+- **MCP config UI** — Settings page where users paste MCP server configs (like Claude Desktop's config format)
+- **MCP client runtime** — Agent connects to user-defined MCP servers at session start, discovers available tools
+- **Tool routing** — Expose discovered MCP tools to the voice agent and chat agent as callable functions
+- **Config storage** — Store MCP server configs per user in DB (url, auth, enabled/disabled)
 
-## P11 — Production Hardening
+## P11 — Data Export
+
+- **Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown
+- **Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)
+- **Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints
+
+## P13 — Production Hardening
 
 - **Rate limiting** — Protect webhook and public API endpoints
 - **Env validation** — Validate required env vars at startup with Zod
 - **Webhook signature verification** — Verify Recall webhook payloads using signing secret
 
-## P12 — Design System
+## P14 — Design System
 
 - **Component library** — Consistent design tokens, spacing, typography across all pages
 - **Dark mode** — Theme toggle with proper CSS variable support
