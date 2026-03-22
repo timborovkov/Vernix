@@ -157,24 +157,24 @@ describe("VoiceSession", () => {
     expect(mockRt.send).toHaveBeenCalledWith({ type: "response.create" });
   });
 
-  it("emits audio_delta on response.audio.delta", async () => {
+  it("emits audio_delta on response.output_audio.delta", async () => {
     const session = new VoiceSession({ meetingId: "m1" });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
 
-    mockRt._trigger("response.audio.delta", { delta: "audiodata" });
+    mockRt._trigger("response.output_audio.delta", { delta: "audiodata" });
 
     expect(events).toContainEqual({ type: "audio_delta", delta: "audiodata" });
   });
 
-  it("emits text_done on response.text.done", async () => {
+  it("emits text_done on response.output_text.done", async () => {
     const session = new VoiceSession({ meetingId: "m1" });
     const events: unknown[] = [];
     session.on((e) => events.push(e));
     await session.connect();
 
-    mockRt._trigger("response.text.done", { text: "Full text" });
+    mockRt._trigger("response.output_text.done", { text: "Full text" });
 
     expect(events).toContainEqual({ type: "text_done", text: "Full text" });
   });
