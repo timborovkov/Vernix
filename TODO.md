@@ -18,13 +18,14 @@
 - ~~**Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting~~
 - ~~**Participants tracking** — Populate `participants` JSONB from bot transcript speaker data~~
 
-## P3 — UX Polish
+## P3 — UX Polish ~~DONE~~
 
-- **Real-time status updates** — Poll or SSE so dashboard reflects meeting status changes without manual refresh
-- **Error toasts** — Surface API errors to the user (e.g. shadcn sonner/toast component)
-- **Meeting filters/search** — Filter dashboard by status, search by title
-- **Confirmation dialogs** — Confirm before delete and before stopping an active agent
-- **SEO metadata**
+- ~~**Real-time status updates** — Poll every 5s when meetings are in transient states (joining/active/processing)~~
+- ~~**Error toasts** — Sonner toasts for all API errors and success feedback~~
+- ~~**Meeting filters/search** — Filter dashboard by status, search by title~~
+- ~~**Confirmation dialogs** — Confirm before delete and before stopping an active agent~~
+- ~~**Button loading states** — Disable buttons and show loading text during async operations~~
+- ~~**SEO metadata** — Updated title and description in layout~~
 
 ## P4 — Production Readiness
 
@@ -39,4 +40,3 @@
 - Minio / S3 storage
 
 ## P7 — Implement proper design system
-
