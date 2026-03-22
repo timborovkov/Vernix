@@ -73,14 +73,14 @@
 - **Agent context** — Include agenda in the system prompt for voice agent and chat agent so they know what the call is about
 - **Summary awareness** — Pass agenda to the summary generation prompt so the LLM can compare what was planned vs. what was discussed
 
-## P9 — Action Items & Tasks
+## P10 — Action Items & Tasks
 
 - **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
 - **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
 - **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
 - **Cross-meeting task view** — Dashboard widget showing all open tasks and action items across meetings
 
-## P10 — MCP Tool Connections
+## P11 — MCP Tool Connections
 
 - **KiviKova MCP server** — Expose meeting data (transcripts, summaries, search, action items) as an MCP server so users can give Claude Desktop or other AI assistants access to their meeting context
 - **MCP config UI** — Settings page where users paste MCP server configs (like Claude Desktop's config format)
@@ -88,7 +88,7 @@
 - **Tool routing** — Expose discovered MCP tools to the voice agent and chat agent as callable functions
 - **Config storage** — Store MCP server configs per user in DB (url, auth, enabled/disabled)
 
-## P11 — Data Export
+## P12 — Data Export
 
 - **Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown
 - **Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)
