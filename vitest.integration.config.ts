@@ -14,9 +14,9 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.integration.ts"],
     testTimeout: 30_000,
     hookTimeout: 30_000,
-    pool: "forks",
-    poolOptions: {
-      forks: { singleFork: true },
+    sequence: {
+      concurrent: false,
     },
+    fileParallelism: false,
   },
 });
