@@ -91,9 +91,19 @@
 - **Env validation** — Validate required env vars at startup with Zod
 - **Webhook signature verification** — Verify Recall webhook payloads using signing secret
 
-## P14 — Design System
+## P14 — Rebrand to Vernix.AI
+
+- **Rename everywhere** — Package name, repo, README, CLAUDE.md, presentation, UI text, bot name, prompts, SEO metadata
+- **Rename GitHub repository**
+- **Register the domain and social media**
+- **Domain** — Point vernix.ai to the deployment
+- **Update Recall** — Bot name from "KiviKova Agent" to "Vernix Agent", webhook URLs
+- **Voice agent wake words** — Change from "KiviKova" to "Vernix" in system prompt and UI hints
+- **Logos** — Create proper logo set (icon, wordmark, favicon, OG image) for Vernix.AI
+- **Google Stitch** — Update design system screens and branding on Stitch
+
+## P15 — Design System
 
 - **Component library** — Consistent design tokens, spacing, typography across all pages
-- **Dark mode** — Theme toggle with proper CSS variable support
 - **Responsive polish** — Mobile-optimized dashboard and meeting detail views
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
