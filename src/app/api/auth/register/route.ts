@@ -10,6 +10,14 @@ const registerSchema = z.object({
   name: z.string().min(1, "Name is required"),
 });
 
+function isUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  return "code" in error && (error as { code?: string }).code === "23505";
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, user });
   } catch (error) {
     // Handle unique constraint violation (concurrent registration)
-    if (error instanceof Error && error.message.includes("unique")) {
+    if (isUniqueViolation(error)) {
       return NextResponse.json(
         { error: "Registration failed" },
         { status: 400 }
