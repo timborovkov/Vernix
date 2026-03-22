@@ -24,9 +24,19 @@
 - **Error toasts** — Surface API errors to the user (e.g. shadcn sonner/toast component)
 - **Meeting filters/search** — Filter dashboard by status, search by title
 - **Confirmation dialogs** — Confirm before delete and before stopping an active agent
+- **SEO metadata**
 
 ## P4 — Production Readiness
 
-- **Authentication** — Add auth (e.g. NextAuth / Clerk) to protect dashboard and API routes
+- **Authentication** — Add auth (e.g. NextAuth) to protect dashboard and API routes
 - **Rate limiting** — Protect webhook and public API endpoints
 - **Env validation** — Validate required env vars at startup with Zod
+
+## P5 — Agent should actually participate in the calls as a voice agent
+
+## P6 — Agent context (file uploads, vectorization of uploaded files, RAG)
+
+- Minio / S3 storage
+
+## P7 — Implement proper design system
+
