@@ -75,17 +75,20 @@ export async function POST(request: Request) {
       timestampMs,
     });
 
-    // Add speaker to participants if not already present
-    const currentParticipants = (meeting.participants as string[]) ?? [];
-    if (!currentParticipants.includes(transcript.speaker)) {
-      await db
-        .update(meetings)
-        .set({
-          participants: [...currentParticipants, transcript.speaker],
-          updatedAt: new Date(),
-        })
-        .where(eq(meetings.id, meeting.id));
-    }
+    // Atomically add speaker to participants if not already present
+    await db
+      .update(meetings)
+      .set({
+        participants: sql`
+          CASE
+            WHEN NOT (${meetings.participants} @> ${JSON.stringify([transcript.speaker])}::jsonb)
+            THEN (${meetings.participants} || ${JSON.stringify([transcript.speaker])}::jsonb)
+            ELSE ${meetings.participants}
+          END
+        `,
+        updatedAt: new Date(),
+      })
+      .where(eq(meetings.id, meeting.id));
 
     return NextResponse.json({ success: true });
   } catch (error) {
