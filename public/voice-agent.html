@@ -161,7 +161,12 @@
         };
 
         source.connect(processor);
-        processor.connect(audioContext.destination);
+        // Connect through a silent gain node to keep ScriptProcessor active
+        // without echoing meeting audio back to participants
+        const silentGain = audioContext.createGain();
+        silentGain.gain.value = 0;
+        processor.connect(silentGain);
+        silentGain.connect(audioContext.destination);
       }
 
       // --- RAG tool handler ---
