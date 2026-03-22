@@ -11,6 +11,20 @@ import { Input } from "@/components/ui/input";
 import { statusVariant } from "@/lib/meetings/constants";
 import { ArrowLeft, Search, Clock, Users } from "lucide-react";
 
+function renderMarkdown(md: string): string {
+  return md
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^- (.+)$/gm, "<li>$1</li>")
+    .replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`)
+    .replace(/\n{2,}/g, "</p><p>")
+    .replace(/\n/g, "<br>")
+    .replace(/^/, "<p>")
+    .replace(/$/, "</p>");
+}
+
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -93,7 +107,10 @@ export default function MeetingDetailPage() {
               Generating summary...
             </p>
           ) : summary ? (
-            <p className="whitespace-pre-wrap">{summary}</p>
+            <div
+              className="space-y-2 text-sm [&_li]:mt-1 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(summary) }}
+            />
           ) : (
             <p className="text-muted-foreground italic">No summary available</p>
           )}
