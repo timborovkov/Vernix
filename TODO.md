@@ -12,11 +12,11 @@
 - ~~**RAG-powered responses** — `src/lib/agent/rag.ts` builds context from Qdrant, `src/app/api/agent/respond/route.ts` provides text-based RAG endpoint~~
 - ~~**Cross-meeting search** — Implemented in `/api/search` via fan-out across per-meeting collections~~
 
-## P2 — Post-Meeting Processing
+## P2 — Post-Meeting Processing ~~DONE~~
 
-- **Meeting summary generation** — After meeting ends (status → `processing`), generate a summary from all embedded segments using an LLM, store in `metadata.summary`
-- **Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting
-- **Participants tracking** — Populate `participants` JSONB from bot transcript speaker data
+- ~~**Meeting summary generation** — After meeting ends (status → `processing`), generate a summary from all embedded segments using an LLM, store in `metadata.summary`~~
+- ~~**Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting~~
+- ~~**Participants tracking** — Populate `participants` JSONB from bot transcript speaker data~~
 
 ## P3 — UX Polish
 
@@ -24,9 +24,18 @@
 - **Error toasts** — Surface API errors to the user (e.g. shadcn sonner/toast component)
 - **Meeting filters/search** — Filter dashboard by status, search by title
 - **Confirmation dialogs** — Confirm before delete and before stopping an active agent
+- **SEO metadata**
 
 ## P4 — Production Readiness
 
-- **Authentication** — Add auth (e.g. NextAuth / Clerk) to protect dashboard and API routes
+- **Authentication** — Add auth (e.g. NextAuth) to protect dashboard and API routes
 - **Rate limiting** — Protect webhook and public API endpoints
 - **Env validation** — Validate required env vars at startup with Zod
+
+## P5 — Agent should actually participate in the calls as a voice agent
+
+## P6 — Agent context (file uploads, vectorization of uploaded files, RAG)
+
+- Minio / S3 storage
+
+## P7 — Implement proper design system
