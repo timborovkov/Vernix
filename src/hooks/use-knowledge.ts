@@ -56,15 +56,19 @@ export function useKnowledge() {
   };
 
   const deleteDocument = async (id: string) => {
-    const res = await fetch(`/api/knowledge/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/knowledge/${id}`, { method: "DELETE" });
 
-    if (!res.ok) {
+      if (!res.ok) {
+        toast.error("Failed to delete document");
+        return;
+      }
+
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      toast.success("Document deleted");
+    } catch {
       toast.error("Failed to delete document");
-      return;
     }
-
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
-    toast.success("Document deleted");
   };
 
   return {
