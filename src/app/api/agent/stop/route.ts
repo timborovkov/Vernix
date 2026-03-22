@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       endedAt: meeting.endedAt ?? new Date(),
       updatedAt: new Date(),
     })
-    .where(eq(meetings.id, meetingId));
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   // Generate summary (best-effort)
   try {
@@ -86,14 +86,14 @@ export async function POST(request: Request) {
         metadata: { ...existingMetadata, summary },
         updatedAt: new Date(),
       })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
   } catch (error) {
     console.error("Post-processing failed:", error);
     // Still complete on failure, just without summary
     await db
       .update(meetings)
       .set({ status: "completed", updatedAt: new Date() })
-      .where(eq(meetings.id, meetingId));
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
   }
 
   return NextResponse.json({ success: true });
