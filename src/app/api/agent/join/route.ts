@@ -58,7 +58,8 @@ export async function POST(request: Request) {
   try {
     const { botId, voiceSecret } = await provider.joinMeeting(
       meeting.joinLink,
-      meetingId
+      meetingId,
+      user.name
     );
 
     await db
