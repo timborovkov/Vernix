@@ -14,7 +14,7 @@ export function useMeetings() {
       const data = await res.json();
       setMeetings(data);
     } catch {
-      toast.error("Failed to load meetings");
+      toast.error("Failed to load meetings", { id: "fetch-meetings-error" });
     } finally {
       setLoading(false);
     }
