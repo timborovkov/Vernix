@@ -67,7 +67,7 @@ function parsePayload(body: unknown): NormalizedTranscript | "skip" | null {
 
     return {
       botId: bot.id,
-      speaker: data.participant.name ?? `Speaker ${data.participant.id}`,
+      speaker: data.participant.name ?? "KiviKova Agent",
       text: data.words.map((w) => w.text).join(" "),
       timestampMs: Math.round(data.words[0].start_timestamp.relative * 1000),
     };
