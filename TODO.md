@@ -70,7 +70,7 @@
 - **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
 - **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
 - **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
-- **Cross-meeting task view** — Dashboard widget showing all open tasks across meetings
+- **Cross-meeting task view** — Dashboard widget showing all open tasks and action items across meetings
 
 ## P10 — MCP Tool Connections
 
