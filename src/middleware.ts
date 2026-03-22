@@ -6,7 +6,7 @@ const PUBLIC_AGENT_PATHS = ["/api/agent/voice-token", "/api/agent/rag"];
 
 export default auth((req) => {
   // Skip auth for public agent endpoints
-  if (PUBLIC_AGENT_PATHS.some((p) => req.nextUrl.pathname.startsWith(p))) {
+  if (PUBLIC_AGENT_PATHS.some((p) => req.nextUrl.pathname === p)) {
     return NextResponse.next();
   }
 
