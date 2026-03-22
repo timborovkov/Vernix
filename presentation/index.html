@@ -7,145 +7,179 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet" />
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" />
 
   <style>
     :root {
-      --purple: #8b5cf6;
-      --cyan: #22d3ee;
-      --green: #34d399;
-      --amber: #fbbf24;
-      --pink: #f472b6;
-      --bg: #09090b;
-      --text: #e4e4e7;
-      --muted: #71717a;
-      --surface: rgba(255,255,255,.04);
-      --border: rgba(255,255,255,.08);
+      /* Surface hierarchy */
+      --surface:                #f7f9fc;
+      --surface-container-low:  #f2f4f7;
+      --surface-container-lowest: #ffffff;
+      --surface-container-high: #e8eaed;
+      --surface-container-highest: #e0e3e6;
+
+      /* Text */
+      --on-surface:       #191c1e;
+      --on-surface-muted: #5f6368;
+      --outline-variant:  #c5c6ca;
+
+      /* Primary */
+      --primary:           #000101;
+      --primary-container:  #1a1c1e;
+      --on-primary:        #ffffff;
+
+      /* AI accent — used sparingly */
+      --tertiary:          #200060;
+      --tertiary-fixed:    #e8deff;
+      --surface-tint:      rgba(32, 0, 96, .06);
     }
 
     * { box-sizing: border-box; }
-    body { background: var(--bg); overflow: hidden; }
+    body { background: var(--surface); overflow: hidden; }
 
     .reveal {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      color: var(--text);
+      color: var(--on-surface);
     }
     .reveal .slides section { background: transparent; }
 
-    /* ── Canvas ─────────────────────────────────── */
-    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .4; }
-
-    /* ── Typography ────────────────────────────── */
-    .reveal h1 { font-size: 4.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -.03em; }
-    .reveal h2 { font-size: 2.8rem; font-weight: 700; line-height: 1.15; letter-spacing: -.02em; margin-bottom: .5rem; }
-    .reveal h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: .3rem; }
-    .reveal p  { font-size: 1.15rem; line-height: 1.7; color: #a1a1aa; }
-    .reveal li { font-size: 1.1rem; line-height: 1.7; color: #a1a1aa; }
+    /* ── Typography — Manrope headlines, Inter body ── */
+    .reveal h1 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 5.5rem; font-weight: 800; line-height: 1.05;
+      letter-spacing: -.02em; color: var(--primary);
+    }
+    .reveal h2 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 4rem; font-weight: 700; line-height: 1.1;
+      letter-spacing: -.02em; margin-bottom: .6rem; color: var(--primary);
+    }
+    .reveal h3 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 2rem; font-weight: 600; margin-bottom: .4rem; color: var(--primary);
+    }
+    .reveal p  { font-size: 1.7rem; line-height: 1.6; color: var(--on-surface-muted); }
+    .reveal li { font-size: 1.6rem; line-height: 1.6; color: var(--on-surface-muted); }
     .reveal ul { list-style: none; padding: 0; margin: 0; }
-    .reveal ul li { padding-left: 1.4rem; position: relative; margin-bottom: .3rem; }
+    .reveal ul li { padding-left: 1.6rem; position: relative; margin-bottom: .5rem; }
     .reveal ul li::before {
-      content: ''; position: absolute; left: 0; top: .6rem;
-      width: 7px; height: 7px; border-radius: 50%; background: var(--purple);
+      content: ''; position: absolute; left: 0; top: .55em;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--outline-variant);
     }
-    .reveal pre { font-size: .82rem; border-radius: 12px; box-shadow: 0 6px 30px rgba(0,0,0,.5); }
 
-    /* ── Gradients ──────────────────────────────── */
-    .grad      { background: linear-gradient(135deg, #c084fc, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .grad-warm { background: linear-gradient(135deg, #fbbf24, #f87171); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-    /* ── Card ───────────────────────────────────── */
+    /* ── Card — "Soft Lift" via tonal shift, no borders ── */
     .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 1.5rem;
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      background: var(--surface-container-lowest);
+      border-radius: 0.75rem; padding: 2rem;
     }
 
-    /* ── Badges ─────────────────────────────────── */
-    .badge {
-      display: inline-block; padding: .25rem .8rem; border-radius: 999px;
-      font-size: .78rem; font-weight: 600; letter-spacing: .05em;
-      text-transform: uppercase; border: 1px solid; margin: .15rem;
+    /* ── AI Insight card — subtle tertiary tint ── */
+    .card-ai {
+      background: rgba(232, 222, 255, .08);
+      border-radius: 0.75rem; padding: 2rem;
     }
-    .b-purple { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: #c4b5fd; }
-    .b-cyan   { background: rgba(34,211,238,.1);  border-color: rgba(34,211,238,.3); color: #67e8f9; }
-    .b-green  { background: rgba(52,211,153,.1);  border-color: rgba(52,211,153,.3); color: #6ee7b7; }
-    .b-amber  { background: rgba(251,191,36,.1);  border-color: rgba(251,191,36,.3); color: #fde68a; }
-    .b-pink   { background: rgba(244,114,182,.1); border-color: rgba(244,114,182,.3); color: #f9a8d4; }
+
+    /* ── Badges — understated ── */
+    .badge {
+      display: inline-block; padding: .4rem 1rem; border-radius: 999px;
+      font-size: 1.1rem; font-weight: 500; letter-spacing: .04em;
+      text-transform: uppercase; margin: .2rem;
+      background: var(--surface-container-low); color: var(--on-surface-muted);
+    }
 
     /* ── Layout ─────────────────────────────────── */
-    .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; align-items: start; }
-    .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem; }
-    .split   { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center; }
+    .grid-2  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8rem; align-items: start; }
+    .grid-3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.6rem; }
+    .split   { display: grid; grid-template-columns: 2fr 3fr; gap: 3rem; align-items: center; }
+    .split-r { display: grid; grid-template-columns: 3fr 2fr; gap: 3rem; align-items: center; }
     .center  { text-align: center; }
     .left    { text-align: left; }
 
-    /* ── Screenshot ─────────────────────────────── */
-    .shot {
-      border-radius: 10px;
-      overflow: hidden;
-      box-shadow: 0 16px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
-    }
-    .shot img { width: 100%; display: block; }
-    /* For tall screenshots: show top portion only */
+    /* ── Screenshot — ambient shadow ── */
     .shot-crop {
-      border-radius: 12px;
+      border-radius: 0.75rem;
       overflow: hidden;
-      box-shadow: 0 16px 50px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.06);
-      max-height: 620px;
+      box-shadow: 0 20px 50px rgba(25, 28, 30, .06);
+      max-height: 700px;
+      position: relative;
     }
     .shot-crop img { width: 100%; display: block; object-fit: cover; object-position: top; }
-    /* Fade-out at bottom for cropped screenshots */
     .shot-crop::after {
       content: '';
-      position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
-      background: linear-gradient(transparent, var(--bg));
+      position: absolute; bottom: 0; left: 0; right: 0; height: 80px;
+      background: linear-gradient(transparent, var(--surface));
       pointer-events: none;
     }
-    .shot-crop { position: relative; }
-
-    /* ── Pipeline ───────────────────────────────── */
-    .pipeline { display: flex; align-items: center; justify-content: center; gap: .3rem; flex-wrap: wrap; }
-    .pipe-step {
-      background: rgba(139,92,246,.12); border: 1px solid rgba(139,92,246,.25);
-      border-radius: 12px; padding: .6rem 1rem; text-align: center;
-      font-size: .95rem; font-weight: 500; color: #d4d4d8; min-width: 100px;
+    /* Fade matches alt background */
+    [data-bg-low] .shot-crop::after {
+      background: linear-gradient(transparent, var(--surface-container-low));
     }
-    .pipe-step .icon { font-size: 1.6rem; display: block; margin-bottom: .15rem; }
-    .pipe-arrow { color: rgba(139,92,246,.4); font-size: 1.2rem; }
 
     /* ── Stats ──────────────────────────────────── */
     .stat { text-align: center; }
-    .stat-val { font-size: 3.8rem; font-weight: 900; line-height: 1; }
-    .stat-label { font-size: .9rem; color: var(--muted); margin-top: .3rem; text-transform: uppercase; letter-spacing: .08em; }
-
-    /* ── Callout ────────────────────────────────── */
-    .callout {
-      background: linear-gradient(135deg, rgba(139,92,246,.06), rgba(34,211,238,.04));
-      border: 1px solid rgba(139,92,246,.15); border-radius: 14px;
-      padding: 1.2rem 1.8rem; text-align: center;
+    .stat-val {
+      font-family: 'Manrope', sans-serif;
+      font-size: 5.5rem; font-weight: 800; line-height: 1;
+      color: var(--primary); letter-spacing: -.02em;
     }
-    .callout p { color: #d4d4d8; font-size: 1.2rem; line-height: 1.7; margin: 0; }
+    .stat-label {
+      font-size: 1.4rem; color: var(--on-surface-muted);
+      margin-top: .5rem; text-transform: uppercase; letter-spacing: .08em;
+    }
 
-    /* ── Accent line ───────────────────────────── */
+    /* ── Callout — subtle surface shift ── */
+    .callout {
+      background: var(--surface-container-low);
+      border-radius: 0.75rem;
+      padding: 1.8rem 2.5rem; text-align: center;
+    }
+    .callout p { color: var(--on-surface); font-size: 1.8rem; line-height: 1.6; margin: 0; }
+
+    /* ── Accent line — primary gradient ── */
     .accent-line {
-      width: 50px; height: 4px; border-radius: 4px;
-      background: linear-gradient(90deg, var(--purple), var(--cyan));
-      margin-bottom: 1rem;
+      width: 60px; height: 5px; border-radius: 4px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-container));
+      margin-bottom: 1.2rem;
     }
     .accent-line.c { margin-left: auto; margin-right: auto; }
 
-    .subtitle { font-size: 1.1rem; color: var(--muted); margin-bottom: 1.2rem; }
+    .subtitle { font-size: 1.7rem; color: var(--on-surface-muted); margin-bottom: 1.2rem; }
+
+    /* ── Emphasis ── */
+    .em { color: var(--primary); font-weight: 600; }
+
+    /* ── Material icons ── */
+    .icon-lg {
+      font-family: 'Material Symbols Outlined';
+      font-size: 3.2rem; line-height: 1;
+      display: block; margin-bottom: .5rem;
+      color: var(--on-surface-muted);
+      font-weight: normal; font-style: normal;
+      -webkit-font-feature-settings: 'liga';
+    }
+
+    /* ── Cover & closing overlays — glassmorphism ── */
+    .glass-panel {
+      background: rgba(255, 255, 255, .70);
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      border-radius: 1.25rem; padding: 4rem 5rem;
+      max-width: 900px; margin: 0 auto;
+    }
 
     /* ── Reveal overrides ──────────────────────── */
-    .reveal .progress { background: rgba(139,92,246,.12); height: 3px; }
-    .reveal .progress span { background: linear-gradient(90deg, #8b5cf6, #22d3ee); }
-    .reveal .controls { color: #8b5cf6; }
-    .reveal .slide-number { font-family: 'Inter', sans-serif; font-size: .75rem; color: var(--muted); }
+    .reveal .progress { background: var(--surface-container-high); height: 4px; }
+    .reveal .progress span { background: linear-gradient(90deg, var(--primary), var(--primary-container)); }
+    .reveal .controls { color: var(--on-surface-muted); }
+    .reveal .slide-number { font-family: 'Inter', sans-serif; font-size: .9rem; color: var(--on-surface-muted); }
+
+    /* ── Slide backgrounds — alternating tonal depth ── */
+    .reveal .slides section[data-bg-low] { background: var(--surface-container-low); }
 
     /* ── Custom fragment: gentle fade-up ──────── */
     .reveal .slides section .fragment.up {
@@ -159,117 +193,123 @@
 </head>
 <body>
 
-<canvas id="particles"></canvas>
-
 <div class="reveal">
   <div class="slides">
 
     <!-- ═══ 1. COVER ═══ -->
-    <section data-background-image="cover.jpeg" data-background-size="cover" data-background-position="center">
-      <div style="background:rgba(0,0,0,.55); border-radius:20px; padding:3rem 4rem; max-width:800px; margin:0 auto; backdrop-filter:blur(6px);">
-        <div class="accent-line c"></div>
-        <h1><span class="grad">KiviKova</span></h1>
-        <p style="font-size:1.5rem; color:#e4e4e7; margin-bottom:1.5rem; font-weight:300;">AI Meeting Agent</p>
-        <div style="display:flex; gap:.35rem; justify-content:center; flex-wrap:wrap;">
-          <span class="badge b-purple">Next.js 16</span>
-          <span class="badge b-cyan">Qdrant</span>
-          <span class="badge b-green">Recall.ai</span>
-          <span class="badge b-amber">OpenAI</span>
-          <span class="badge b-pink">Voice RAG</span>
+    <section data-background-image="cover-new.png" data-background-size="cover" data-background-position="center right">
+      <div class="glass-panel" style="text-align:left; max-width:750px; margin:0 0 0 4%;">
+        <div class="accent-line"></div>
+        <h1>KiviKova</h1>
+        <p style="font-family:'Manrope',sans-serif; font-size:2.4rem; color:var(--on-surface); margin-bottom:.6rem; font-weight:500; letter-spacing:-.01em;">Be in meetings cool,<br/>calm and collected.</p>
+        <p style="font-size:1.6rem; color:var(--on-surface-muted); margin-bottom:1.8rem; font-weight:300;">Your AI meeting agent</p>
+        <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+          <span class="badge">Next.js 16</span>
+          <span class="badge">Qdrant</span>
+          <span class="badge">OpenAI</span>
+          <span class="badge">Voice RAG</span>
         </div>
-        <p style="margin-top:1.5rem; color:#a1a1aa; font-size:.95rem; font-weight:400;">
-          <a href="https://github.com/timborovkov" target="_blank" style="color:#c084fc; text-decoration:none;">Tim Borovkov</a> &amp;
-          <a href="https://github.com/mankin3n" target="_blank" style="color:#67e8f9; text-decoration:none;">Pauli Mankinen</a>
+        <p style="margin-top:2rem; color:var(--on-surface-muted); font-size:1.4rem; font-weight:400;">
+          <a href="https://github.com/timborovkov" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Tim Borovkov</a> &amp;
+          <a href="https://github.com/mankin3n" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Pauli Mankinen</a>
         </p>
-        <p style="margin-top:.4rem; color:#52525b; font-size:.85rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
+        <p style="margin-top:.5rem; color:var(--on-surface-muted); font-size:1.1rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
       </div>
     </section>
 
     <!-- ═══ 2. PROBLEM ═══ -->
-    <section>
-      <h2><span class="grad-warm">The Problem</span></h2>
-      <p class="subtitle">Meetings are the biggest time sink in modern work</p>
+    <section data-bg-low>
+      <h2>The Problem</h2>
+      <p class="subtitle">Meetings are the biggest time sink in modern work.</p>
 
-      <div class="grid-3" style="margin-bottom:1rem;">
-        <div class="stat"><div class="stat-val grad-warm">23h</div><div class="stat-label">per week in meetings</div></div>
-        <div class="stat"><div class="stat-val grad-warm">86%</div><div class="stat-label">of insights never actioned</div></div>
-        <div class="stat"><div class="stat-val grad-warm">0</div><div class="stat-label">searchable records left</div></div>
+      <div class="grid-3" style="margin-bottom:1.5rem;">
+        <div class="stat"><div class="stat-val">23 h</div><div class="stat-label">per week in meetings</div></div>
+        <div class="stat"><div class="stat-val">86%</div><div class="stat-label">of insights never acted on</div></div>
+        <div class="stat"><div class="stat-val">0</div><div class="stat-label">searchable records left</div></div>
       </div>
-
-      <p style="font-size:.75rem; color:#52525b; margin-bottom:.8rem;">Sources: Atlassian State of Teams 2024, Harvard Business Review</p>
 
       <div class="callout fragment up">
-        <p>Decisions, context, and action items <strong style="color:#f87171;">disappear</strong> the moment the call ends.<br/>What if every meeting automatically built a <strong style="color:#c084fc;">searchable knowledge base</strong>?</p>
+        <p>Decisions and action items <strong class="em">disappear</strong> when the call ends.<br/>What if every meeting built a <strong class="em">searchable knowledge base</strong>?</p>
       </div>
+      <aside class="notes">
+        Think about your last week of meetings. How many had proper notes? How many action items were actually tracked? Most teams rely on someone volunteering to take notes, and usually nobody does. The context just vanishes.
+      </aside>
     </section>
 
-    <!-- ═══ 3. SOLUTION ═══ -->
+    <!-- ═══ 3. HOW IT WORKS ═══ -->
     <section>
-      <h2><span class="grad">The Solution</span></h2>
-      <p class="subtitle">An AI agent that joins your calls and remembers everything</p>
+      <h2>How It Works</h2>
+      <p class="subtitle">Three steps to autonomous productivity.</p>
 
-      <div class="grid-3" style="margin-top:.8rem;">
+      <div class="grid-3" style="margin-top:1.5rem;">
         <div class="card center">
-          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F916;</div>
-          <h3 style="color:#c084fc;">Joins Automatically</h3>
-          <p style="font-size:1rem;">Paste a link &mdash; bot joins Meet, Zoom, or Teams.</p>
+          <span class="icon-lg">hub</span>
+          <h3>1. Connect Tools</h3>
+          <p style="font-size:1.5rem;">Authorise KiviKova to interact with your calendar, task manager, and CRM via MCP.</p>
         </div>
         <div class="card center">
-          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F9E0;</div>
-          <h3 style="color:#67e8f9;">Understands Context</h3>
-          <p style="font-size:1rem;">Transcribes and understands what's being said &mdash; in real time.</p>
+          <span class="icon-lg">person_add</span>
+          <h3>2. Invite Agent</h3>
+          <p style="font-size:1.5rem;">Add KiviKova to your calendar. It joins Zoom, Meet, or Teams automatically.</p>
         </div>
         <div class="card center">
-          <div style="font-size:2.2rem; margin-bottom:.4rem;">&#x1F399;&#xFE0F;</div>
-          <h3 style="color:#6ee7b7;">Answers Questions</h3>
-          <p style="font-size:1rem;">Ask by voice or text &mdash; answers from meeting history.</p>
+          <span class="icon-lg">auto_fix_high</span>
+          <h3>3. Scale Actions</h3>
+          <p style="font-size:1.5rem;">Receive <strong class="em">AI-driven action items</strong> and watch your workflow automate in real time.</p>
         </div>
       </div>
+
+      <div class="callout" style="margin-top:1.5rem; max-width:1200px; margin-left:auto; margin-right:auto;">
+        <p>After each meeting: <strong class="em">notes</strong>, <strong class="em">action items</strong>, and a <strong class="em">searchable transcript</strong> &mdash; automatically.</p>
+      </div>
+      <aside class="notes">
+        The path to autonomous productivity is three steps. First, connect your tools: task managers, calendars, and CRM via the MCP protocol. Second, invite the agent to your calendar so it joins meetings automatically. Third, sit back and receive AI-driven action items that flow directly into your workflow. After every meeting you get notes, action items, and a fully searchable transcript without anyone having to write anything down.
+      </aside>
     </section>
 
-    <!-- ═══ 4. HOW IT WORKS ═══ -->
-    <section>
-      <h2><span class="grad">How It Works</span></h2>
-      <p class="subtitle">From meeting link to searchable intelligence in real-time</p>
+    <!-- ═══ 4. ACTION ITEMS ═══ -->
+    <section data-bg-low>
+      <h2>Action Items</h2>
+      <p class="subtitle">Every commitment captured, nothing forgotten.</p>
 
-      <div class="pipeline" style="margin:1.2rem 0;">
-        <div class="pipe-step"><span class="icon">&#x1F517;</span>Paste Link</div>
-        <span class="pipe-arrow">&rarr;</span>
-        <div class="pipe-step" style="border-color:rgba(34,211,238,.3); background:rgba(34,211,238,.06);"><span class="icon">&#x1F916;</span>Bot Joins</div>
-        <span class="pipe-arrow">&rarr;</span>
-        <div class="pipe-step" style="border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.06);"><span class="icon">&#x1F3A4;</span>Transcribe</div>
-        <span class="pipe-arrow">&rarr;</span>
-        <div class="pipe-step" style="border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.06);"><span class="icon">&#x1F522;</span>Embed</div>
-        <span class="pipe-arrow">&rarr;</span>
-        <div class="pipe-step" style="border-color:rgba(244,114,182,.3); background:rgba(244,114,182,.06);"><span class="icon">&#x1F4BE;</span>Store</div>
-        <span class="pipe-arrow">&rarr;</span>
-        <div class="pipe-step" style="border-color:rgba(139,92,246,.4); background:rgba(139,92,246,.12);"><span class="icon">&#x2728;</span>Query</div>
-      </div>
+      <div style="max-width:1300px; margin:1.5rem auto 0;">
+        <div class="card-ai" style="padding:2.5rem; margin-bottom:1.5rem;">
+          <h3 style="font-size:2.2rem;">What is an action item?</h3>
+          <p style="font-size:1.7rem; color:var(--on-surface); margin-top:.5rem;">When someone says <em>"I'll send the report by Friday"</em> or <em>"Let's schedule a follow-up"</em> &mdash; that's an action item. A task someone committed to during the meeting.</p>
+        </div>
 
-      <div class="grid-2">
-        <div class="card"><h3 style="color:#67e8f9;">Webhook Pipeline</h3><p style="font-size:1rem;">Recall.ai sends transcript chunks via webhooks. Each chunk is embedded with OpenAI and upserted into Qdrant.</p></div>
-        <div class="card"><h3 style="color:#c084fc;">Per-Meeting Memory</h3><p style="font-size:1rem;">Every meeting gets its own vector collection. Search one meeting or across your entire history.</p></div>
+        <div class="grid-2">
+          <div class="card center">
+            <span class="icon-lg">neurology</span>
+            <h3>AI Detects Them</h3>
+            <p style="font-size:1.5rem;">KiviKova listens for commitments and extracts them automatically.</p>
+          </div>
+          <div class="card center">
+            <span class="icon-lg">task_alt</span>
+            <h3>Nothing Gets Lost</h3>
+            <p style="font-size:1.5rem;">Every task gets a person, a deadline, and a status &mdash; no manual work.</p>
+          </div>
+        </div>
       </div>
+      <aside class="notes">
+        Action items are the most important output of any meeting. They are the things people committed to doing. But in most meetings, these commitments are spoken and then forgotten. KiviKova catches them automatically: who said they would do what, and by when. After the meeting, you see a clean list with names, deadlines, and status, without anyone having to write anything down.
+      </aside>
     </section>
 
-    <!-- ═══ 5. LANDING PAGE ═══ -->
+    <!-- ═══ 5. THE PRODUCT ═══ -->
     <section>
       <div class="split">
         <div class="left">
           <div class="accent-line"></div>
-          <h2><span class="grad">The Product</span></h2>
-          <p style="margin-bottom:1rem;">One link to invite the agent. One dashboard to see everything.</p>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#c084fc; margin:0;">Clear Value Prop</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">"Your AI agent for smarter meetings" &mdash; one line that explains everything.</p>
+          <h2>The Product</h2>
+          <p style="margin-bottom:1.2rem;">Your AI agent for smarter meetings.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">Intelligent Workspace</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Built on the intelligent layer &mdash; AI and precision design converge.</p>
           </div>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#67e8f9; margin:0;">Instant Onboarding</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Invite KiviKova to your next call with a single click.</p>
-          </div>
-          <div class="card" style="padding:1.3rem;">
-            <h3 style="color:#6ee7b7; margin:0;">Pricing Built In</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Free tier, Pro at $29/mo, and Enterprise custom plans.</p>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">Connect Your World</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Integrations with your favourite tools, ready from day one.</p>
           </div>
         </div>
         <div>
@@ -278,12 +318,14 @@
           </div>
         </div>
       </div>
+      <aside class="notes">
+        This is our landing page. The value proposition is simple: "Your AI agent for smarter meetings." The design follows our Intelligent Layer system, with layered surfaces and no borders. We showcase integrations and a clear path to getting started. Free tier, Pro at 29 dollars per month for teams, and Enterprise for larger organisations.
+      </aside>
     </section>
 
-
-    <!-- ═══ 7. DASHBOARD ═══ -->
-    <section>
-      <div class="split">
+    <!-- ═══ 6. DASHBOARD ═══ -->
+    <section data-bg-low>
+      <div class="split-r">
         <div>
           <div class="shot-crop">
             <img src="screen-dashboard.png" alt="Dashboard" />
@@ -291,42 +333,37 @@
         </div>
         <div class="left">
           <div class="accent-line"></div>
-          <h2><span class="grad">Dashboard</span></h2>
-          <p style="margin-bottom:1rem;">Command center for meeting intelligence.</p>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#c084fc; margin:0;">Intelligence Pulse</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">124 hours analyzed, 42 action items extracted.</p>
+          <h2>Dashboard</h2>
+          <p style="margin-bottom:1.2rem;">The architecture of your collective intelligence.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">Intelligence Pulse</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">124 hours analysed, 42 action items extracted this week.</p>
           </div>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#67e8f9; margin:0;">Quick Join</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Paste a link, KiviKova joins instantly.</p>
-          </div>
-          <div class="card" style="padding:1.3rem;">
-            <h3 style="color:#6ee7b7; margin:0;">Smart Recommendations</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">AI suggests follow-ups from meeting patterns.</p>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">Pending Action Items</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Critical tasks surfaced automatically, ready to assign.</p>
           </div>
         </div>
       </div>
+      <aside class="notes">
+        The dashboard is your command centre. The Intelligence Pulse shows 124 hours of meetings analysed and 42 action items extracted. Pending action items are surfaced at the top so nothing falls through. You can also generate weekly summary reports and see smart recommendations based on meeting patterns.
+      </aside>
     </section>
 
-    <!-- ═══ 8. MEETING DETAIL ═══ -->
+    <!-- ═══ 7. MEETING DETAIL ═══ -->
     <section>
       <div class="split">
         <div class="left">
           <div class="accent-line"></div>
-          <h2><span class="grad">Meeting Intelligence</span></h2>
-          <p style="margin-bottom:1rem;">Every meeting becomes actionable.</p>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#c084fc; margin:0;">AI Summary + Sentiment</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Executive digest with 94% collaboration score.</p>
+          <h2>Meeting Intelligence</h2>
+          <p style="margin-bottom:1.2rem;">Every meeting becomes actionable.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">AI Executive Summary</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Key decisions, discussion topics, and a 94% collaboration score.</p>
           </div>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#fde68a; margin:0;">Auto Action Items</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Tasks with assignees and deadlines, extracted automatically.</p>
-          </div>
-          <div class="card" style="padding:1.3rem;">
-            <h3 style="color:#67e8f9; margin:0;">Ask Anything</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">"What were Marcus's concerns?" &mdash; grounded in transcript.</p>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">AI-Generated Action Items</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Tasks with assignees, deadlines, and priority &mdash; extracted automatically.</p>
           </div>
         </div>
         <div>
@@ -335,11 +372,14 @@
           </div>
         </div>
       </div>
+      <aside class="notes">
+        When you open a specific meeting, you get a full executive summary with key discussion topics, a collaboration score, and AI-generated action items with assignees and deadlines. Below that is the full meeting transcript with speaker labels, so you always know who said what. You can also ask any question about the meeting and get an answer grounded in the actual transcript.
+      </aside>
     </section>
 
-    <!-- ═══ 9. KNOWLEDGE BASE ═══ -->
-    <section>
-      <div class="split">
+    <!-- ═══ 8. KNOWLEDGE BASE ═══ -->
+    <section data-bg-low>
+      <div class="split-r">
         <div>
           <div class="shot-crop">
             <img src="screen-knowledge.png" alt="Knowledge Base" />
@@ -347,174 +387,65 @@
         </div>
         <div class="left">
           <div class="accent-line"></div>
-          <h2><span class="grad">Knowledge Base</span></h2>
-          <p style="margin-bottom:1rem;">Upload docs, specs, and notes &mdash; so the AI knows your business.</p>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#c084fc; margin:0;">Upload Documents</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">PDFs, docs, notes &mdash; everything indexed for the AI.</p>
+          <h2>Knowledge Base</h2>
+          <p style="margin-bottom:1.2rem;">Your centralised intelligence repository.</p>
+          <div class="card" style="padding:1.8rem; margin-bottom:.8rem;">
+            <h3 style="margin:0;">Upload Documents</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">Marketing, product specs, research &mdash; organised and indexed.</p>
           </div>
-          <div class="card" style="padding:1.3rem; margin-bottom:.5rem;">
-            <h3 style="color:#6ee7b7; margin:0;">Semantic Coverage</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">See where AI has deep knowledge vs. needs more data.</p>
-          </div>
-          <div class="card" style="padding:1.3rem;">
-            <h3 style="color:#67e8f9; margin:0;">AI Ready Status</h3>
-            <p style="font-size:1rem; margin:.2rem 0 0;">Each file shows indexing state with full transparency.</p>
+          <div class="card" style="padding:1.8rem;">
+            <h3 style="margin:0;">Semantic Coverage Analysis</h3>
+            <p style="font-size:1.5rem; margin:.3rem 0 0;">See where the AI has deep knowledge and where gaps remain.</p>
           </div>
         </div>
       </div>
+      <aside class="notes">
+        The Knowledge Base is your centralised intelligence repository. Upload documents across categories like marketing, product specs, and user research. Each file shows its AI readiness status. The Semantic Coverage Analysis shows where the AI has deep content and where it lacks sufficient data, like marketing operations or technical infrastructure. This way answers are grounded in everything your team knows.
+      </aside>
     </section>
 
-    <!-- ═══ 10. TECH STACK ═══ -->
+    <!-- ═══ 9. ROADMAP ═══ -->
     <section>
-      <h2><span class="grad">Tech Stack</span></h2>
-      <p class="subtitle">Modern, scalable, fully open</p>
-      <div class="grid-2" style="margin-top:.6rem;">
+      <h2>What's Next</h2>
+      <p class="subtitle">From hackathon to product.</p>
+      <div class="grid-3" style="margin-top:1.2rem;">
         <div class="card">
-          <h3 style="color:#c084fc;">Frontend</h3>
-          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
-            <span class="badge b-purple">Next.js 16</span><span class="badge b-purple">App Router</span><span class="badge b-purple">Turbopack</span><span class="badge b-purple">TypeScript</span><span class="badge b-purple">Tailwind v4</span><span class="badge b-purple">Shadcn/ui</span>
-          </div>
-          <p style="font-size:.95rem;">Server components, streaming UI, dark-mode design system.</p>
+          <h3>Soon</h3>
+          <ul><li>Know who said what</li><li>Auto meeting summaries</li><li>Export to Slack and Notion</li></ul>
         </div>
         <div class="card">
-          <h3 style="color:#67e8f9;">Backend &amp; Data</h3>
-          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
-            <span class="badge b-cyan">PostgreSQL</span><span class="badge b-cyan">Drizzle ORM</span><span class="badge b-cyan">Qdrant</span><span class="badge b-cyan">Docker Compose</span>
-          </div>
-          <p style="font-size:.95rem;">Relational metadata in Postgres, semantic vectors in Qdrant.</p>
+          <h3>Growth</h3>
+          <ul><li>Team workspaces</li><li>Enterprise login (SSO)</li><li>Integrations API</li></ul>
         </div>
         <div class="card">
-          <h3 style="color:#6ee7b7;">AI Layer</h3>
-          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
-            <span class="badge b-green">OpenAI Embeddings</span><span class="badge b-green">text-embedding-3-small</span><span class="badge b-green">OpenAI TTS</span><span class="badge b-green">RAG Pipeline</span>
-          </div>
-          <p style="font-size:.95rem;">1536-dim embeddings, cosine similarity, voice synthesis.</p>
-        </div>
-        <div class="card">
-          <h3 style="color:#fde68a;">Meeting Infrastructure</h3>
-          <div style="display:flex; flex-wrap:wrap; gap:.3rem; margin:.4rem 0;">
-            <span class="badge b-amber">Recall.ai</span><span class="badge b-amber">Webhooks</span><span class="badge b-amber">Real-time Transcripts</span>
-          </div>
-          <p style="font-size:.95rem;">Bot joins Meet/Zoom/Teams, delivers transcript chunks via webhooks.</p>
+          <h3>Smarter AI</h3>
+          <ul><li>Auto follow-up reminders</li><li>Insights across meetings</li><li>Proactive suggestions</li></ul>
         </div>
       </div>
+      <div class="callout" style="margin-top:1.2rem;">
+        <p>KiviKova becomes your team's <strong class="em">collective memory</strong> &mdash; every decision searchable, forever.</p>
+      </div>
+      <aside class="notes">
+        For next steps, we are adding speaker identification so you know who said what, auto-generated summaries you can export to Slack or Notion, and team workspaces for organisations. The long-term vision is that KiviKova becomes your team's collective memory: every decision, every commitment, permanently searchable.
+      </aside>
     </section>
 
-    <!-- ═══ 11. ARCHITECTURE ═══ -->
-    <section>
-      <h2><span class="grad">Architecture</span></h2>
-      <p class="subtitle">Clean layers, clear responsibilities</p>
-      <div class="grid-2" style="margin-top:.5rem; align-items:start;">
-        <div>
-          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #c084fc;">
-            <h3 style="color:#c084fc; margin:0;">Dashboard</h3>
-            <p style="font-size:.95rem; margin:.15rem 0 0;">Next.js App Router &mdash; meeting list, join flow, search</p>
-          </div>
-          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #67e8f9;">
-            <h3 style="color:#67e8f9; margin:0;">API Routes</h3>
-            <p style="font-size:.95rem; margin:.15rem 0 0;">/api/meetings &middot; /api/agent/join &middot; /api/agent/stop &middot; /api/search</p>
-          </div>
-          <div class="card" style="margin-bottom:.4rem; padding:.9rem; border-left:3px solid #6ee7b7;">
-            <h3 style="color:#6ee7b7; margin:0;">Webhook Handler</h3>
-            <p style="font-size:.95rem; margin:.15rem 0 0;">/api/webhooks/recall/transcript &rarr; embed &rarr; upsert</p>
-          </div>
-          <div class="card" style="padding:.9rem; border-left:3px solid #fde68a;">
-            <h3 style="color:#fde68a; margin:0;">Dual Storage</h3>
-            <p style="font-size:.95rem; margin:.15rem 0 0;">PostgreSQL (metadata) + Qdrant (1536-dim vectors)</p>
-          </div>
+    <!-- ═══ 10. CLOSING ═══ -->
+    <section data-background-image="cover-new.png" data-background-size="cover" data-background-position="center right">
+      <div class="glass-panel" style="text-align:left; max-width:750px; margin:0 0 0 4%;">
+        <div class="accent-line"></div>
+        <h1>KiviKova</h1>
+        <p style="font-family:'Manrope',sans-serif; font-size:2.4rem; color:var(--on-surface); margin-bottom:.4rem; font-weight:500;">Be in meetings cool,<br/>calm and collected.</p>
+        <p style="color:var(--on-surface-muted); font-size:1.7rem; margin-bottom:2rem; font-weight:300;">Every meeting. Remembered. Searchable. Actionable.</p>
+        <div style="display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+          <span class="badge">Next.js 16</span><span class="badge">Qdrant</span><span class="badge">OpenAI</span><span class="badge">TypeScript</span>
         </div>
-        <div>
-          <div class="card" style="font-family:'SF Mono','Fira Code',monospace; font-size:.9rem; line-height:1.9; color:#a1a1aa; padding:1.1rem 1.3rem; border:1px solid rgba(139,92,246,.2);">
-            <div style="color:#fde68a; font-weight:600;">src/</div>
-            <div style="padding-left:1rem; color:#c084fc;">app/</div>
-            <div style="padding-left:2rem;">dashboard/page.tsx</div>
-            <div style="padding-left:2rem; color:#67e8f9;">api/meetings/</div>
-            <div style="padding-left:2rem; color:#67e8f9;">api/agent/join | stop/</div>
-            <div style="padding-left:2rem; color:#6ee7b7;">api/webhooks/recall/</div>
-            <div style="padding-left:2rem; color:#67e8f9;">api/search/</div>
-            <div style="padding-left:1rem; color:#c084fc;">lib/</div>
-            <div style="padding-left:2rem;">db/ <span style="color:#52525b;">&mdash; Drizzle</span></div>
-            <div style="padding-left:2rem;">vector/ <span style="color:#52525b;">&mdash; Qdrant</span></div>
-            <div style="padding-left:2rem;">openai/ <span style="color:#52525b;">&mdash; embeddings</span></div>
-            <div style="padding-left:2rem;">meeting-bot/ <span style="color:#52525b;">&mdash; Recall.ai</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══ 12. API ═══ -->
-    <section>
-      <h2><span class="grad">API at a Glance</span></h2>
-      <p class="subtitle">Clean, typed, Zod-validated endpoints</p>
-      <div class="grid-2" style="margin-top:.5rem;">
-        <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/agent/join
-const provider = getMeetingBotProvider();
-const { botId } = await provider.joinMeeting(
-  meeting.joinLink, meetingId
-);
-
-await db.update(meetings).set({
-  status: "active",
-  startedAt: new Date(),
-  metadata: { ...meeting.metadata, botId },
-}).where(eq(meetings.id, meetingId));
-
-return NextResponse.json({ success: true, botId });</code></pre>
-        <pre><code class="language-typescript" style="font-size:.78rem;">// POST /api/webhooks/recall/transcript
-const text = transcript.words
-  .map((w) => w.text).join(" ");
-const timestampMs = Math.round(
-  transcript.words[0].start_time * 1000
-);
-
-await upsertTranscriptChunk(
-  meeting.qdrantCollectionName,
-  { text, speaker: transcript.speaker, timestampMs }
-);
-
-return NextResponse.json({ success: true });</code></pre>
-      </div>
-    </section>
-
-    <!-- ═══ 13. ROADMAP ═══ -->
-    <section>
-      <h2><span class="grad">What's Next</span></h2>
-      <p class="subtitle">From hackathon to platform</p>
-      <div class="grid-3" style="margin-top:.8rem;">
-        <div class="card" style="border-top:3px solid #c084fc;">
-          <h3 style="color:#c084fc;">Near-term</h3>
-          <ul><li>Speaker diarization</li><li>Auto meeting summaries</li><li>Action item extraction</li><li>Slack / Notion export</li></ul>
-        </div>
-        <div class="card" style="border-top:3px solid #67e8f9;">
-          <h3 style="color:#67e8f9;">Platform</h3>
-          <ul><li>Multi-tenant orgs</li><li>SSO + RBAC</li><li>Custom embedding models</li><li>API for integrations</li></ul>
-        </div>
-        <div class="card" style="border-top:3px solid #6ee7b7;">
-          <h3 style="color:#6ee7b7;">AI Layer</h3>
-          <ul><li>Agentic follow-ups</li><li>Cross-meeting synthesis</li><li>Proactive knowledge surfacing</li><li>Fine-tuned domain models</li></ul>
-        </div>
-      </div>
-      <div class="callout" style="margin-top:.8rem;">
-        <p style="font-size:.88rem;">Vision: KiviKova becomes your org's <strong style="color:#c084fc;">collective brain</strong> &mdash; every decision permanently searchable.</p>
-      </div>
-    </section>
-
-    <!-- ═══ 14. CLOSING ═══ -->
-    <section data-background-image="cover.jpeg" data-background-size="cover" data-background-position="center">
-      <div style="background:rgba(0,0,0,.6); border-radius:20px; padding:3rem 4rem; max-width:750px; margin:0 auto; backdrop-filter:blur(8px); text-align:center;">
-        <div class="accent-line c"></div>
-        <h1 style="font-size:3.8rem;"><span class="grad">KiviKova</span></h1>
-        <p style="color:#d4d4d8; font-size:1.4rem; margin-bottom:1.5rem; font-weight:300;">Every meeting. Remembered.<br/>Searchable. Actionable.</p>
-        <div style="display:flex; gap:.35rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.2rem;">
-          <span class="badge b-purple">Next.js 16</span><span class="badge b-cyan">Qdrant</span><span class="badge b-green">Recall.ai</span><span class="badge b-amber">OpenAI</span><span class="badge b-pink">TypeScript</span><span class="badge b-purple">Drizzle</span><span class="badge b-cyan">PostgreSQL</span>
-        </div>
-        <p style="color:#a1a1aa; font-size:.95rem; margin-bottom:.4rem;">
+        <p style="color:var(--on-surface-muted); font-size:1.4rem; margin-bottom:.5rem;">
           Built by
-          <a href="https://github.com/timborovkov" target="_blank" style="color:#c084fc; text-decoration:none;">Tim Borovkov</a> &amp;
-          <a href="https://github.com/mankin3n" target="_blank" style="color:#67e8f9; text-decoration:none;">Pauli Mankinen</a>
+          <a href="https://github.com/timborovkov" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Tim Borovkov</a> &amp;
+          <a href="https://github.com/mankin3n" target="_blank" style="color:var(--primary); text-decoration:none; font-weight:600;">Pauli Mankinen</a>
         </p>
-        <p style="color:#52525b; font-size:.8rem; margin:0; font-weight:500; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
+        <p style="color:var(--on-surface-muted); font-size:1.1rem; margin:0; font-weight:600; letter-spacing:.1em; text-transform:uppercase;">LotusHack 2026</p>
       </div>
     </section>
 
@@ -522,7 +453,6 @@ return NextResponse.json({ success: true });</code></pre>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
 
 <script>
@@ -534,58 +464,13 @@ return NextResponse.json({ success: true });</code></pre>
     controls: true,
     progress: true,
     slideNumber: 'c/t',
-    plugins: [RevealHighlight, RevealNotes],
+    plugins: [RevealNotes],
     width: 1920,
     height: 1080,
     margin: 0.04,
     autoAnimateEasing: 'cubic-bezier(.4,0,.2,1)',
     autoAnimateDuration: 0.7,
   });
-
-  // Subtle particle background
-  const canvas = document.getElementById('particles');
-  const ctx = canvas.getContext('2d');
-  let W, H, dots = [];
-
-  function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
-
-  class Dot {
-    constructor(init) {
-      this.x = Math.random() * W;
-      this.y = init ? Math.random() * H : H + 10;
-      this.r = Math.random() * 1 + .3;
-      this.vy = -(Math.random() * .2 + .06);
-      this.vx = (Math.random() - .5) * .12;
-      this.o = Math.random() * .25 + .04;
-      this.c = ['#8b5cf6','#22d3ee','#34d399'][Math.floor(Math.random() * 3)];
-    }
-    update() { this.x += this.vx; this.y += this.vy; if (this.y < -10) Object.assign(this, new Dot(false)); }
-    draw() {
-      ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-      ctx.fillStyle = this.c; ctx.globalAlpha = this.o; ctx.fill(); ctx.globalAlpha = 1;
-    }
-  }
-
-  function init() { dots = Array.from({ length: 60 }, () => new Dot(true)); }
-
-  function loop() {
-    ctx.clearRect(0, 0, W, H);
-    dots.forEach(d => { d.update(); d.draw(); });
-    for (let i = 0; i < dots.length; i++)
-      for (let j = i + 1; j < dots.length; j++) {
-        const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d < 90) {
-          ctx.beginPath(); ctx.moveTo(dots[i].x, dots[i].y); ctx.lineTo(dots[j].x, dots[j].y);
-          ctx.strokeStyle = '#8b5cf6'; ctx.globalAlpha = (1 - d/90) * .03;
-          ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
-        }
-      }
-    requestAnimationFrame(loop);
-  }
-
-  resize(); init(); loop();
-  addEventListener('resize', () => { resize(); init(); });
 </script>
 </body>
 </html>
