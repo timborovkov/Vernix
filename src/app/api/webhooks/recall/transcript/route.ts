@@ -74,8 +74,18 @@ export async function POST(request: Request) {
       speaker: transcript.speaker,
       timestampMs,
     });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Failed to process transcript",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
+  }
 
-    // Atomically add speaker to participants if not already present
+  // Atomically add speaker to participants (best-effort, don't fail the request)
+  try {
     await db
       .update(meetings)
       .set({
@@ -89,15 +99,9 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       })
       .where(eq(meetings.id, meeting.id));
-
-    return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error: "Failed to process transcript",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    console.error("Failed to update participants:", error);
   }
+
+  return NextResponse.json({ success: true });
 }
