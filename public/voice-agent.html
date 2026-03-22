@@ -228,7 +228,10 @@
 
         const url =
           "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview";
-        ws = new WebSocket(url, ["realtime", `openai-ephemeral-key.${token}`]);
+        ws = new WebSocket(url, [
+          "realtime",
+          `openai-insecure-api-key.${token}`,
+        ]);
 
         ws.onopen = () => {
           log("WebSocket connected");
