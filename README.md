@@ -17,7 +17,7 @@ AI that joins your video calls, creates embeddings from the meeting content, and
 
 ### Prerequisites
 
-- Node.js 20.9+
+- Node.js 24+
 - pnpm
 - Docker
 
