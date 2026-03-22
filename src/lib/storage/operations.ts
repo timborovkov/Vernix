@@ -13,7 +13,12 @@ export async function ensureBucket(): Promise<void> {
   try {
     await client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
   } catch {
-    await client.send(new CreateBucketCommand({ Bucket: S3_BUCKET }));
+    try {
+      await client.send(new CreateBucketCommand({ Bucket: S3_BUCKET }));
+    } catch {
+      // Another request may have created it concurrently — verify it exists
+      await client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
+    }
   }
 }
 
