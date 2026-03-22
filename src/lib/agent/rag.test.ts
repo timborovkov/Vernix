@@ -267,7 +267,7 @@ describe("getRAGContext", () => {
       .mockRejectedValueOnce(new Error("Qdrant down"));
 
     await expect(
-      getRAGContext("test", { userId: TEST_USER_ID, includeKnowledge: false })
+      getRAGContext("test", { userId: TEST_USER_ID })
     ).rejects.toThrow(AllSearchesFailedError);
   });
 });
