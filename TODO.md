@@ -41,12 +41,13 @@
 - ~~**In-call RAG** — Agent uses search_meeting_context tool via `/api/agent/rag` endpoint~~
 - ~~**Turn detection** — Semantic VAD with low eagerness; agent only responds when addressed as KiviKova/Agent/Assistant~~
 
-## P6 — Chat with Meeting Notes
+## P6 — Chat with Meeting Notes ~~DONE~~
 
-- **Chat UI** — Add a chat panel on the meeting detail page (`/dashboard/[id]`) to ask questions about the meeting
-- **General Chat UI** - Add a chat panel to the dashboard to chat about all the context available and all the meetings
-- **Conversational RAG** — Use the existing `/api/agent/respond` endpoint with multi-turn message history
-- **Citation highlights** — Link chat responses back to specific transcript segments
+- ~~**Chat UI** — Chat panel on meeting detail page with streaming responses via Vercel AI SDK~~
+- ~~**General Chat UI** — Collapsible chat on dashboard for cross-meeting questions~~
+- ~~**Streaming RAG** — `POST /api/agent/chat` with `streamText()`, tool-based RAG search, multi-step responses~~
+- ~~**Source citations** — Expandable source list with speaker, timestamp, and relevance score~~
+- ~~**Tool call visualization** — "Searching meeting context..." indicator during RAG lookup~~
 
 ## P7 — Knowledge Base (file uploads + RAG)
 
@@ -69,7 +70,7 @@
 - **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
 - **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
 - **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
-- **Cross-meeting task view** — Dashboard widget showing all open tasks across meetings
+- **Cross-meeting task view** — Dashboard widget showing all open tasks and action items across meetings
 
 ## P10 — MCP Tool Connections
 
@@ -102,8 +103,26 @@
 - **Logos** — Create proper logo set (icon, wordmark, favicon, OG image) for Vernix.AI
 - **Google Stitch** — Update design system screens and branding on Stitch
 
-## P15 — Design System
+## P15 — Design System and pages
 
+- **Copy UI from the design system** – Create all the pages and components like in the design system
+- **Build the landing page** – Build a proper landing page like in the design system
 - **Component library** — Consistent design tokens, spacing, typography across all pages
 - **Responsive polish** — Mobile-optimized dashboard and meeting detail views
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
+
+## P16 — User Profiles & SSO
+
+- **Profile page** — `/settings/profile` page where users can edit name, email, company, and avatar
+- **Change password** — Current password verification + new password form
+- **SSO providers** — Add Google, GitHub, and X (Twitter) OAuth providers to NextAuth config
+- **Account linking** — Allow users to link multiple auth providers to one account
+- **Profile API** — `PATCH /api/user/profile` endpoint for updating user details
+
+## P17 — Billing with Polar
+
+- **Polar integration** — Connect Polar.sh for subscription management
+- **Pricing tiers** — Free (limited meetings/month), Pro (unlimited), Enterprise (team features)
+- **Usage tracking** — Track meeting minutes, API calls, and storage per user
+- **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
+- **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events

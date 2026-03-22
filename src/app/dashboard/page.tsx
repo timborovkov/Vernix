@@ -7,7 +7,8 @@ import { MeetingList } from "@/components/meeting-list";
 import { CreateMeetingDialog } from "@/components/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut } from "lucide-react";
+import { ChatPanel } from "@/components/chat-panel";
+import { LogOut, MessageSquare } from "lucide-react";
 
 const STATUS_FILTERS = [
   "all",
@@ -29,6 +30,7 @@ export default function DashboardPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showChat, setShowChat] = useState(false);
 
   const filtered = meetings.filter((m) => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
@@ -50,6 +52,14 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant={showChat ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowChat(!showChat)}
+          >
+            <MessageSquare className="mr-1 h-4 w-4" />
+            Chat
+          </Button>
           <CreateMeetingDialog
             onCreate={async (title, joinLink) => {
               await createMeeting(title, joinLink);
@@ -85,6 +95,12 @@ export default function DashboardPage() {
               </Button>
             ))}
           </div>
+        </div>
+      )}
+
+      {showChat && (
+        <div className="mb-6">
+          <ChatPanel placeholder="Ask about any of your meetings..." />
         </div>
       )}
 

@@ -26,8 +26,11 @@
     "validate": "pnpm format && pnpm lint --fix && pnpm typecheck && pnpm test"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.47",
+    "@ai-sdk/react": "^3.0.136",
     "@base-ui/react": "^1.3.0",
     "@qdrant/js-client-rest": "^1.17.0",
+    "ai": "^6.0.134",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
