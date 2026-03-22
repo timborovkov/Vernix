@@ -207,8 +207,7 @@ describe("GET /api/search", () => {
     mockDb.where.mockResolvedValueOnce([m1, m2]);
     mockQdrantClient.search
       .mockRejectedValueOnce(new Error("Qdrant down"))
-      .mockRejectedValueOnce(new Error("Qdrant down"))
-      .mockRejectedValueOnce(new Error("Qdrant down")); // knowledge collection
+      .mockRejectedValueOnce(new Error("Qdrant down"));
 
     const { status, data } = await parseJsonResponse(
       await GET(searchRequest("?q=test"))
