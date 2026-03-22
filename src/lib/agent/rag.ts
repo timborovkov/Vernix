@@ -174,7 +174,6 @@ export async function getRAGContext(
           documentId: payload.document_id as string,
         });
       }
-      totalSearched++;
     } catch {
       // Knowledge collection may not exist yet — not a failure
     }
