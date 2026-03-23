@@ -53,6 +53,16 @@ export function invalidateMcpCache(userId: string): void {
   }
 }
 
+/** Ensure object schemas have a `properties` field — OpenAI rejects them without it. */
+function normalizeSchema(
+  schema: Record<string, unknown>
+): Record<string, unknown> {
+  if (schema.type === "object" && !schema.properties) {
+    return { ...schema, properties: {} };
+  }
+  return schema;
+}
+
 export class McpClientManager {
   private clients: Map<string, Client> = new Map();
   private tools: DiscoveredTool[] = [];
@@ -129,7 +139,9 @@ export class McpClientManager {
         serverName: server.name,
         name: tool.name,
         description: tool.description ?? "",
-        inputSchema: (tool.inputSchema ?? {}) as Record<string, unknown>,
+        inputSchema: normalizeSchema(
+          (tool.inputSchema ?? {}) as Record<string, unknown>
+        ),
       });
       this.toolMap.set(namespacedName, {
         serverId: server.id,
