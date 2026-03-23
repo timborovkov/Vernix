@@ -56,13 +56,17 @@ export async function PATCH(
 
   // Handle agenda update
   if (typeof agenda === "string" && agenda.length <= 10000) {
+    const trimmedAgenda = agenda.trim();
     const existingMetadata =
       (meeting.metadata as Record<string, unknown>) ?? {};
-    updates.metadata = { ...existingMetadata, agenda: agenda.trim() || null };
+    updates.metadata = {
+      ...existingMetadata,
+      agenda: trimmedAgenda || null,
+    };
 
     // Re-embed agenda into Qdrant
     try {
-      await upsertAgenda(meeting.qdrantCollectionName, agenda);
+      await upsertAgenda(meeting.qdrantCollectionName, trimmedAgenda);
     } catch (error) {
       console.error("Agenda embedding failed:", error);
     }
