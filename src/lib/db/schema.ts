@@ -6,6 +6,7 @@ import {
   jsonb,
   pgEnum,
   integer,
+  boolean,
 } from "drizzle-orm/pg-core";
 
 export const meetingStatusEnum = pgEnum("meeting_status", [
@@ -98,7 +99,7 @@ export const tasks = pgTable("tasks", {
     .notNull(),
   title: text("title").notNull(),
   assignee: text("assignee"),
-  autoExtracted: integer("auto_extracted").default(0).notNull(),
+  autoExtracted: boolean("auto_extracted").default(false).notNull(),
   dueDate: timestamp("due_date", { withTimezone: true }),
   status: taskStatusEnum("status").default("open").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
