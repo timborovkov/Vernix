@@ -55,7 +55,13 @@ export async function PATCH(
   if (typeof joinLink === "string") updates.joinLink = joinLink;
 
   // Handle agenda update
-  if (typeof agenda === "string" && agenda.length <= 10000) {
+  if (typeof agenda === "string" && agenda.length > 10000) {
+    return NextResponse.json(
+      { error: "Agenda must be under 10,000 characters" },
+      { status: 400 }
+    );
+  }
+  if (typeof agenda === "string") {
     const trimmedAgenda = agenda.trim();
     const existingMetadata =
       (meeting.metadata as Record<string, unknown>) ?? {};
