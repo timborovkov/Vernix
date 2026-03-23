@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { jsonSchema } from "ai";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
@@ -146,23 +147,12 @@ export class McpClientManager {
 
   /**
    * Get all discovered tools formatted for Vercel AI SDK.
+   * Wraps raw JSON Schema from MCP with jsonSchema() as required by AI SDK.
    */
-  getVercelTools(): Record<
-    string,
-    {
-      description: string;
-      inputSchema: Record<string, unknown>;
-      execute: (args: unknown) => Promise<unknown>;
-    }
-  > {
-    const result: Record<
-      string,
-      {
-        description: string;
-        inputSchema: Record<string, unknown>;
-        execute: (args: unknown) => Promise<unknown>;
-      }
-    > = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getVercelTools(): Record<string, any> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result: Record<string, any> = {};
 
     for (const tool of this.tools) {
       const namespacedName = this.makeToolName(tool.serverId, tool.name);
@@ -171,7 +161,7 @@ export class McpClientManager {
 
       result[namespacedName] = {
         description: `[${tool.serverName}] ${tool.description}`,
-        inputSchema: tool.inputSchema,
+        inputSchema: jsonSchema(tool.inputSchema),
         execute: async (args: unknown) => {
           return client.callTool({
             name: tool.name,
