@@ -11,6 +11,7 @@ const { mockDb } = vi.hoisted(() => {
     "update",
     "set",
     "delete",
+    "execute",
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
