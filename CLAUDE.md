@@ -32,7 +32,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, and `tasks` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, and `tasks` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface with `RecallProvider` and `MockProvider`. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.

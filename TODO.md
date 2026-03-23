@@ -59,7 +59,7 @@
 
 ## P8 — Meeting-Scoped Knowledge ~~DONE~~
 
-- ~~`**meetingId` on documents\*\* — Optional FK on `documents` table linking uploads to a specific meeting~~
+- ~~**`meetingId` on documents** — Optional FK on `documents` table linking uploads to a specific meeting~~
 - ~~**Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting, chunks go into meeting's Qdrant collection~~
 - ~~**Scoped RAG boost** — Meeting-scoped documents in the meeting collection get boosted automatically alongside transcripts~~
 - ~~**Knowledge list integration** — Meeting detail shows only that meeting's docs; global page shows all docs~~
