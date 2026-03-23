@@ -25,6 +25,7 @@ import {
   FileText,
   Save,
   ListChecks,
+  Download,
 } from "lucide-react";
 
 export default function MeetingDetailPage() {
@@ -133,11 +134,29 @@ export default function MeetingDetailPage() {
         </Button>
       </Link>
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">{meeting.title}</h1>
-        <Badge variant={statusVariant[meeting.status] ?? "outline"}>
-          {meeting.status}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            render={<a href={`/api/meetings/${id}/export?format=md`} />}
+          >
+            <Download className="mr-1 h-3.5 w-3.5" />
+            Export MD
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            render={<a href={`/api/meetings/${id}/export?format=pdf`} />}
+          >
+            <Download className="mr-1 h-3.5 w-3.5" />
+            Export PDF
+          </Button>
+          <Badge variant={statusVariant[meeting.status] ?? "outline"}>
+            {meeting.status}
+          </Badge>
+        </div>
       </div>
 
       {/* Timestamps */}

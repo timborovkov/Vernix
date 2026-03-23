@@ -81,14 +81,26 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   return transport.handleRequest(request);
 }
 
+async function safeMcpRequest(request: Request): Promise<Response> {
+  try {
+    return await handleMcpRequest(request);
+  } catch (error) {
+    console.error("[MCP] Request failed:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 export async function GET(request: Request) {
-  return handleMcpRequest(request);
+  return safeMcpRequest(request);
 }
 
 export async function POST(request: Request) {
-  return handleMcpRequest(request);
+  return safeMcpRequest(request);
 }
 
 export async function DELETE(request: Request) {
-  return handleMcpRequest(request);
+  return safeMcpRequest(request);
 }

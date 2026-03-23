@@ -18,6 +18,7 @@ import {
   ListChecks,
   CheckCircle2,
   Settings,
+  Download,
 } from "lucide-react";
 
 const STATUS_FILTERS = [
@@ -79,6 +80,10 @@ export default function DashboardPage() {
           >
             <MessageSquare className="mr-1 h-4 w-4" />
             Chat
+          </Button>
+          <Button variant="outline" size="sm" render={<a href="/api/export" />}>
+            <Download className="mr-1 h-4 w-4" />
+            Export All
           </Button>
           <CreateMeetingDialog
             onCreate={async (title, joinLink, agenda) => {
