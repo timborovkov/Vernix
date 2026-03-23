@@ -17,6 +17,7 @@ import {
   BookOpen,
   ListChecks,
   CheckCircle2,
+  Settings,
 } from "lucide-react";
 
 const STATUS_FILTERS = [
@@ -84,6 +85,13 @@ export default function DashboardPage() {
               await createMeeting(title, joinLink, agenda);
             }}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/dashboard/settings" />}
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
