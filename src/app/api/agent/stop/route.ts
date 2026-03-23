@@ -98,9 +98,7 @@ export async function POST(request: Request) {
     // Extract action items (non-critical)
     try {
       const items = await extractActionItems(segments);
-      if (items.length > 0) {
-        await storeExtractedTasks(meetingId, user.id, items);
-      }
+      await storeExtractedTasks(meetingId, user.id, items);
     } catch (err) {
       console.error("Action item extraction failed:", err);
     }
