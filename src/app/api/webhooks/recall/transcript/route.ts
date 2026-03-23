@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { upsertTranscriptChunk } from "@/lib/vector/upsert";
+import { verifyRecallSignature } from "@/lib/webhooks/verify";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 // New format (recording_config / realtime_endpoints)
 const newTranscriptSchema = z.object({
@@ -92,11 +94,39 @@ function parsePayload(body: unknown): NormalizedTranscript | "skip" | null {
 }
 
 export async function POST(request: Request) {
+  const rl = rateLimitByIp(request, "webhook:transcript", {
+    interval: 60_000,
+    limit: 100,
+  });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const webhookSecret = process.env.RECALL_WEBHOOK_SECRET;
   let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+  if (webhookSecret) {
+    const { valid, body: rawBody } = await verifyRecallSignature(
+      request,
+      webhookSecret
+    );
+    if (!valid) {
+      return NextResponse.json(
+        { error: "Invalid webhook signature" },
+        { status: 401 }
+      );
+    }
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+  } else {
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
   }
 
   console.log(
