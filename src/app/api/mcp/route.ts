@@ -87,10 +87,7 @@ async function safeMcpRequest(request: Request): Promise<Response> {
   } catch (error) {
     console.error("[MCP] Request failed:", error);
     return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
