@@ -1,11 +1,11 @@
 import { randomUUID } from "crypto";
 import { getQdrantClient } from "./client";
-import { createEmbedding } from "@/lib/openai/embeddings";
+import { createEmbeddings } from "@/lib/openai/embeddings";
 import { chunkText } from "@/lib/knowledge/chunk";
 
 /**
  * Upsert agenda text into a meeting's Qdrant collection.
- * Deletes any existing agenda points first, then embeds and upserts new ones.
+ * Deletes any existing agenda points first, then batch embeds and upserts new ones.
  */
 export async function upsertAgenda(
   collectionName: string,
@@ -24,24 +24,19 @@ export async function upsertAgenda(
   const trimmed = agendaText.trim();
   if (!trimmed) return;
 
-  // Chunk if long, otherwise single chunk
   const chunks = chunkText(trimmed);
+  const vectors = await createEmbeddings(chunks.map((c) => c.text));
 
-  for (const chunk of chunks) {
-    const vector = await createEmbedding(chunk.text);
-    await client.upsert(collectionName, {
-      points: [
-        {
-          id: randomUUID(),
-          vector,
-          payload: {
-            text: chunk.text,
-            type: "agenda",
-            speaker: "Agenda",
-            timestamp_ms: 0,
-          },
-        },
-      ],
-    });
-  }
+  const points = chunks.map((chunk, i) => ({
+    id: randomUUID(),
+    vector: vectors[i],
+    payload: {
+      text: chunk.text,
+      type: "agenda",
+      speaker: "Agenda",
+      timestamp_ms: 0,
+    },
+  }));
+
+  await client.upsert(collectionName, { points });
 }
