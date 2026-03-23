@@ -59,10 +59,12 @@ export default function MeetingDetailPage() {
     downloadDocument: downloadMeetingDoc,
   } = useKnowledge(id);
 
-  // Agenda is only editable before the meeting starts — once active, the
-  // voice agent already has its instructions and won't pick up changes.
+  // Agenda is editable until the meeting becomes active — the voice agent
+  // only receives its instructions when the token is issued (status: "active").
   const isEditable =
-    meeting?.status === "pending" || meeting?.status === "failed";
+    meeting?.status === "pending" ||
+    meeting?.status === "joining" ||
+    meeting?.status === "failed";
 
   const {
     tasks: meetingTasks,
