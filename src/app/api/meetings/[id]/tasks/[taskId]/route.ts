@@ -17,8 +17,10 @@ export async function PATCH(
   // Allowlisted fields only
   const { title, assignee, status, dueDate } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
-  if (typeof title === "string" && title.length > 0) updates.title = title;
-  if (typeof assignee === "string") updates.assignee = assignee || null;
+  if (typeof title === "string" && title.length > 0 && title.length <= 500)
+    updates.title = title;
+  if (typeof assignee === "string" && assignee.length <= 200)
+    updates.assignee = assignee || null;
   if (status === "open" || status === "completed") updates.status = status;
   if (typeof dueDate === "string") updates.dueDate = new Date(dueDate);
   if (dueDate === null) updates.dueDate = null;
