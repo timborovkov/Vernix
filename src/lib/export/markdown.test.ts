@@ -58,6 +58,10 @@ describe("slugify", () => {
   it("returns empty string for non-Latin titles", () => {
     expect(slugify("日本語")).toBe("");
   });
+
+  it("does not end with hyphen after truncation", () => {
+    expect(slugify("word ".repeat(20).trim()).endsWith("-")).toBe(false);
+  });
 });
 
 describe("formatMeetingMarkdown", () => {
