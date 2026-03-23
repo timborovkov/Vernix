@@ -59,7 +59,7 @@
 
 ## P8 — Meeting-Scoped Knowledge ~~DONE~~
 
-- ~~**`meetingId` on documents** — Optional FK on `documents` table linking uploads to a specific meeting~~
+- ~~`**meetingId` on documents\*\* — Optional FK on `documents` table linking uploads to a specific meeting~~
 - ~~**Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting, chunks go into meeting's Qdrant collection~~
 - ~~**Scoped RAG boost** — Meeting-scoped documents in the meeting collection get boosted automatically alongside transcripts~~
 - ~~**Knowledge list integration** — Meeting detail shows only that meeting's docs; global page shows all docs~~
@@ -90,11 +90,11 @@
 - ~~**Config Storage** — `mcpServers` table for per-user server configs (name, url, apiKey, enabled)~~
 - ~~**Settings UI** — `/dashboard/settings` page with API key management + MCP server config CRUD~~
 
-## P12 — Data Export
+## P12 — Data Export ~~DONE~~
 
-- **Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown
-- **Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)
-- **Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints
+- ~~**Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown~~
+- ~~**Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)~~
+- ~~**Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints~~
 
 ## P13 — Production Hardening
 
