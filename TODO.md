@@ -150,9 +150,10 @@
 
 - **Replace custom hooks** — Migrate `useMeetings`, `useMeetingDetail`, `useKnowledge`, `useTasks`, `useAllTasks`, `useApiKeys`, `useMcpServers` from manual `useState`/`useEffect`/`fetch` to TanStack Query (`@tanstack/react-query`)
 - **Query client setup** — Add `QueryClientProvider` in root layout
-- **Cache & revalidation** — Leverage built-in caching, stale-while-revalidate, and automatic refetch on focus
-- **Mutations** — Use `useMutation` for create/update/delete operations with optimistic updates and cache invalidation
-- **Remove polling** — Replace manual `setInterval` polling with TanStack Query's `refetchInterval` option
+- **Caching policies** — Define proper `staleTime` and `gcTime` per query type (e.g., meeting list short stale time, meeting detail longer). Use stale-while-revalidate and automatic refetch on window focus
+- **Cache invalidation** — Invalidate related queries after mutations (e.g., invalidate meeting list after create/delete, invalidate tasks after toggle). Use query key factories for consistent invalidation
+- **Mutations** — Use `useMutation` for create/update/delete operations with optimistic updates where appropriate (e.g., task checkbox toggle, meeting delete)
+- **Remove polling** — Replace manual `setInterval` polling with TanStack Query's `refetchInterval` for transient meeting states (joining/active/processing)
 
 ## P20 — Billing with Polar
 
