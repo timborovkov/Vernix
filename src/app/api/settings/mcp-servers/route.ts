@@ -53,7 +53,14 @@ export async function POST(request: Request) {
       url: parsed.data.url,
       apiKey: parsed.data.apiKey ?? null,
     })
-    .returning();
+    .returning({
+      id: mcpServers.id,
+      name: mcpServers.name,
+      url: mcpServers.url,
+      enabled: mcpServers.enabled,
+      createdAt: mcpServers.createdAt,
+      updatedAt: mcpServers.updatedAt,
+    });
 
   invalidateMcpCache(user.id);
 
