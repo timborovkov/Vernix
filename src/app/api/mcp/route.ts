@@ -86,10 +86,10 @@ async function safeMcpRequest(request: Request): Promise<Response> {
     return await handleMcpRequest(request);
   } catch (error) {
     console.error("[MCP] Request failed:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
