@@ -22,7 +22,13 @@ export async function PATCH(
   if (typeof assignee === "string" && assignee.length <= 200)
     updates.assignee = assignee || null;
   if (status === "open" || status === "completed") updates.status = status;
-  if (typeof dueDate === "string") updates.dueDate = new Date(dueDate);
+  if (typeof dueDate === "string") {
+    const parsed = new Date(dueDate);
+    if (isNaN(parsed.getTime())) {
+      return NextResponse.json({ error: "Invalid due date" }, { status: 400 });
+    }
+    updates.dueDate = parsed;
+  }
   if (dueDate === null) updates.dueDate = null;
 
   const [updated] = await db
