@@ -130,6 +130,20 @@ export async function getRAGContext(
           return {
             hits: results.map((hit) => {
               const payload = hit.payload as Record<string, unknown>;
+              const type = payload.type as string;
+
+              if (type === "document") {
+                return {
+                  text: payload.text as string,
+                  score: hit.score,
+                  source: "document" as const,
+                  fileName: payload.file_name as string,
+                  documentId: payload.document_id as string,
+                  meetingId: mId,
+                };
+              }
+
+              // transcript and agenda both map as transcript context
               return {
                 text: payload.text as string,
                 score: hit.score,

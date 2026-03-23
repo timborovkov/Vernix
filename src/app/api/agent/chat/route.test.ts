@@ -1,7 +1,16 @@
-const { mockGetRAGContext, mockFormatContext } = vi.hoisted(() => ({
-  mockGetRAGContext: vi.fn().mockResolvedValue([]),
-  mockFormatContext: vi.fn().mockReturnValue(""),
-}));
+const { mockGetRAGContext, mockFormatContext, mockDb } = vi.hoisted(() => {
+  const db: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const m of ["select", "from", "where"]) {
+    db[m] = vi.fn().mockImplementation(() => db);
+  }
+  // Default: return meeting with no agenda
+  db.where.mockResolvedValue([{ metadata: {} }]);
+  return {
+    mockGetRAGContext: vi.fn().mockResolvedValue([]),
+    mockFormatContext: vi.fn().mockReturnValue(""),
+    mockDb: db,
+  };
+});
 
 vi.mock("@/lib/agent/rag", () => ({
   getRAGContext: mockGetRAGContext,
@@ -27,6 +36,8 @@ vi.mock("ai", () => ({
 vi.mock("@ai-sdk/openai", () => ({
   openai: vi.fn().mockReturnValue("mock-model"),
 }));
+
+vi.mock("@/lib/db", () => ({ db: mockDb }));
 
 import { POST } from "./route";
 import { createJsonRequest } from "@/test/helpers";

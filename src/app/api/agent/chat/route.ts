@@ -4,7 +4,10 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/auth/session";
 import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
-import { AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
+import { getAgentSystemPrompt } from "@/lib/agent/prompts";
+import { db } from "@/lib/db";
+import { meetings } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(request: Request) {
   const user = await requireSessionUser();
@@ -12,11 +15,23 @@ export async function POST(request: Request) {
 
   const { messages, meetingId } = await request.json();
 
+  // Fetch agenda if scoped to a meeting
+  let agenda: string | null = null;
+  if (meetingId) {
+    const [meeting] = await db
+      .select({ metadata: meetings.metadata })
+      .from(meetings)
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
+    agenda =
+      ((meeting?.metadata as Record<string, unknown>)?.agenda as string) ??
+      null;
+  }
+
   const modelMessages = await convertToModelMessages(messages);
 
   const result = streamText({
     model: openai("gpt-4o"),
-    system: AGENT_SYSTEM_PROMPT,
+    system: getAgentSystemPrompt(agenda),
     messages: modelMessages,
     tools: {
       searchMeetingContext: {

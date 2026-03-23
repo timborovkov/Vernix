@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { createMeetingCollection } from "@/lib/vector/collections";
+import { upsertAgenda } from "@/lib/vector/agenda";
 import { desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { randomUUID } from "crypto";
@@ -10,6 +11,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 const createMeetingSchema = z.object({
   title: z.string().min(1, "Title is required"),
   joinLink: z.url("Must be a valid URL"),
+  agenda: z.string().max(10000).optional(),
 });
 
 export async function GET() {
@@ -39,10 +41,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const { title, joinLink } = parsed.data;
+  const { title, joinLink, agenda } = parsed.data;
   const collectionName = `meeting_${randomUUID().replace(/-/g, "")}`;
 
   await createMeetingCollection(collectionName);
+
+  const metadata: Record<string, unknown> = {};
+  if (agenda?.trim()) {
+    metadata.agenda = agenda.trim();
+  }
 
   const [meeting] = await db
     .insert(meetings)
@@ -51,8 +58,18 @@ export async function POST(request: Request) {
       joinLink,
       userId: user.id,
       qdrantCollectionName: collectionName,
+      metadata,
     })
     .returning();
+
+  // Embed agenda into Qdrant if provided
+  if (metadata.agenda) {
+    try {
+      await upsertAgenda(collectionName, metadata.agenda as string);
+    } catch (error) {
+      console.error("Agenda embedding failed:", error);
+    }
+  }
 
   return NextResponse.json(meeting, { status: 201 });
 }

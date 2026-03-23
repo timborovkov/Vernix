@@ -3,15 +3,19 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useMeetingDetail } from "@/hooks/use-meeting-detail";
+import { useKnowledge } from "@/hooks/use-knowledge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { statusVariant } from "@/lib/meetings/constants";
 import { ChatPanel } from "@/components/chat-panel";
+import { KnowledgeList } from "@/components/knowledge-list";
+import { UploadDocumentDialog } from "@/components/upload-document-dialog";
 import { formatTime, renderMarkdown } from "@/lib/format";
-import { ArrowLeft, Search, Clock, Users } from "lucide-react";
+import { ArrowLeft, Search, Clock, Users, FileText, Save } from "lucide-react";
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +29,49 @@ export default function MeetingDetailPage() {
     search,
   } = useMeetingDetail(id);
   const [query, setQuery] = useState("");
+
+  const meetingMetadata = meeting?.metadata as Record<string, unknown>;
+  const [agenda, setAgenda] = useState("");
+  const [agendaSaving, setAgendaSaving] = useState(false);
+  const [agendaLoaded, setAgendaLoaded] = useState(false);
+
+  // Sync agenda from meeting metadata on load
+  if (meeting && !agendaLoaded) {
+    setAgenda((meetingMetadata?.agenda as string) ?? "");
+    setAgendaLoaded(true);
+  }
+
+  const {
+    documents: meetingDocs,
+    uploading: docsUploading,
+    uploadDocument: uploadMeetingDoc,
+    deleteDocument: deleteMeetingDoc,
+    downloadDocument: downloadMeetingDoc,
+  } = useKnowledge(id);
+
+  // Agenda is editable until the meeting becomes active — the voice agent
+  // only receives its instructions when the token is issued (status: "active").
+  const isEditable =
+    meeting?.status === "pending" ||
+    meeting?.status === "joining" ||
+    meeting?.status === "failed";
+
+  const saveAgenda = async () => {
+    setAgendaSaving(true);
+    try {
+      const res = await fetch(`/api/meetings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agenda }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Agenda saved");
+    } catch {
+      toast.error("Failed to save agenda");
+    } finally {
+      setAgendaSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -76,6 +123,34 @@ export default function MeetingDetailPage() {
           <span>Ended: {new Date(meeting.endedAt).toLocaleString()}</span>
         )}
       </div>
+
+      {/* Agenda */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg">Agenda</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <textarea
+            value={agenda}
+            onChange={(e) => setAgenda(e.target.value)}
+            placeholder="Meeting goals, topics to discuss, prep notes..."
+            rows={3}
+            disabled={!isEditable}
+            className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
+          />
+          {isEditable && (
+            <Button
+              size="sm"
+              className="mt-2"
+              onClick={saveAgenda}
+              disabled={agendaSaving}
+            >
+              <Save className="mr-1 h-3 w-3" />
+              {agendaSaving ? "Saving..." : "Save Agenda"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Summary */}
       <Card className="mt-6">
@@ -153,6 +228,25 @@ export default function MeetingDetailPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Meeting Documents */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <FileText className="h-4 w-4" />
+            Documents
+          </h2>
+          <UploadDocumentDialog
+            onUpload={uploadMeetingDoc}
+            uploading={docsUploading}
+          />
+        </div>
+        <KnowledgeList
+          documents={meetingDocs}
+          onDelete={deleteMeetingDoc}
+          onDownload={downloadMeetingDoc}
+        />
       </div>
 
       {/* Chat */}

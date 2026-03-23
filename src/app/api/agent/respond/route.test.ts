@@ -1,12 +1,19 @@
-const { mockGetRAGContext, mockFormatContext, mockChatCreate } = vi.hoisted(
-  () => ({
-    mockGetRAGContext: vi.fn().mockResolvedValue([]),
-    mockFormatContext: vi.fn().mockReturnValue(""),
-    mockChatCreate: vi.fn().mockResolvedValue({
-      choices: [{ message: { content: "Test answer" } }],
-    }),
-  })
-);
+const { mockGetRAGContext, mockFormatContext, mockChatCreate, mockDb } =
+  vi.hoisted(() => {
+    const db: Record<string, ReturnType<typeof vi.fn>> = {};
+    for (const m of ["select", "from", "where"]) {
+      db[m] = vi.fn().mockImplementation(() => db);
+    }
+    db.where.mockResolvedValue([{ metadata: {} }]);
+    return {
+      mockGetRAGContext: vi.fn().mockResolvedValue([]),
+      mockFormatContext: vi.fn().mockReturnValue(""),
+      mockChatCreate: vi.fn().mockResolvedValue({
+        choices: [{ message: { content: "Test answer" } }],
+      }),
+      mockDb: db,
+    };
+  });
 
 vi.mock("@/lib/agent/rag", () => ({
   getRAGContext: mockGetRAGContext,
@@ -18,6 +25,7 @@ vi.mock("@/lib/agent/rag", () => ({
     }
   },
 }));
+vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/openai/client", () => ({
   getOpenAIClient: () => ({
     chat: { completions: { create: mockChatCreate } },

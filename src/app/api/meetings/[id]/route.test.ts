@@ -27,6 +27,12 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/vector/collections", () => ({
   deleteMeetingCollection: vi.fn().mockResolvedValue(undefined),
 }));
+vi.mock("@/lib/vector/agenda", () => ({
+  upsertAgenda: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/storage/operations", () => ({
+  deleteFile: vi.fn().mockResolvedValue(undefined),
+}));
 
 import { GET, PATCH, DELETE } from "./route";
 
@@ -55,6 +61,10 @@ describe("GET /api/meetings/[id]", () => {
 
 describe("PATCH /api/meetings/[id]", () => {
   it("updates and returns meeting", async () => {
+    // SELECT returns meeting, then UPDATE chain is fully chainable
+    mockDb.where
+      .mockResolvedValueOnce([fakeMeeting()]) // SELECT
+      .mockReturnValueOnce(mockDb); // UPDATE .where() returns chainable
     mockDb.returning.mockResolvedValueOnce([fakeMeeting({ title: "Updated" })]);
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
@@ -69,7 +79,7 @@ describe("PATCH /api/meetings/[id]", () => {
   });
 
   it("returns 404 when meeting not found", async () => {
-    mockDb.returning.mockResolvedValueOnce([]);
+    mockDb.where.mockResolvedValueOnce([]); // SELECT returns nothing
 
     const req = createJsonRequest("http://localhost/api/meetings/999", {
       method: "PATCH",
@@ -83,8 +93,9 @@ describe("PATCH /api/meetings/[id]", () => {
 describe("DELETE /api/meetings/[id]", () => {
   it("deletes meeting and qdrant collection", async () => {
     mockDb.where
-      .mockResolvedValueOnce([fakeMeeting()])
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce([fakeMeeting()]) // SELECT meeting
+      .mockResolvedValueOnce([]) // SELECT meeting-scoped docs
+      .mockResolvedValueOnce(undefined); // DELETE meetings
 
     const req = new Request("http://localhost/api/meetings/1", {
       method: "DELETE",

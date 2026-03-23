@@ -19,6 +19,9 @@ export async function scrollTranscript(
       with_payload: true,
       with_vector: false,
       offset,
+      filter: {
+        must: [{ key: "type", match: { value: "transcript" } }],
+      },
     });
 
     for (const point of result.points) {

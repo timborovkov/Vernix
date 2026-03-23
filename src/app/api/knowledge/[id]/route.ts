@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { documents } from "@/lib/db/schema";
+import { documents, meetings } from "@/lib/db/schema";
 import { deleteFile, getDownloadUrl } from "@/lib/storage/operations";
 import {
   deleteDocumentChunks,
@@ -50,10 +50,24 @@ export async function DELETE(
     return NextResponse.json({ error: "Document not found" }, { status: 404 });
   }
 
-  // Delete chunks from Qdrant
+  // Delete chunks from the correct Qdrant collection
   try {
-    const collectionName = knowledgeCollectionName(user.id);
-    await deleteDocumentChunks(collectionName, id);
+    let collectionName: string | null = null;
+    if (doc.meetingId) {
+      const [meeting] = await db
+        .select({ qdrantCollectionName: meetings.qdrantCollectionName })
+        .from(meetings)
+        .where(
+          and(eq(meetings.id, doc.meetingId), eq(meetings.userId, user.id))
+        );
+      // If meeting is gone, its collection was already deleted — skip cleanup
+      collectionName = meeting?.qdrantCollectionName ?? null;
+    } else {
+      collectionName = knowledgeCollectionName(user.id);
+    }
+    if (collectionName) {
+      await deleteDocumentChunks(collectionName, id);
+    }
   } catch {
     // Collection may not exist if processing failed
   }

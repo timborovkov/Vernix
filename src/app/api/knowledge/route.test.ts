@@ -47,7 +47,8 @@ describe("GET /api/knowledge", () => {
     ];
     mockDb.orderBy.mockResolvedValueOnce(docs);
 
-    const { status, data } = await parseJsonResponse(await GET());
+    const req = new Request("http://localhost/api/knowledge");
+    const { status, data } = await parseJsonResponse(await GET(req));
 
     expect(status).toBe(200);
     expect(data.documents).toHaveLength(2);

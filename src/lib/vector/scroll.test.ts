@@ -29,6 +29,9 @@ describe("scrollTranscript", () => {
       with_payload: true,
       with_vector: false,
       offset: undefined,
+      filter: {
+        must: [{ key: "type", match: { value: "transcript" } }],
+      },
     });
   });
 

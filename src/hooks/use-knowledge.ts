@@ -4,14 +4,17 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { Document } from "@/lib/db/schema";
 
-export function useKnowledge() {
+export function useKnowledge(meetingId?: string) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
   const fetchDocuments = useCallback(async () => {
     try {
-      const res = await fetch("/api/knowledge");
+      const url = meetingId
+        ? `/api/knowledge?meetingId=${meetingId}`
+        : "/api/knowledge";
+      const res = await fetch(url);
       if (!res.ok) {
         toast.error("Failed to load documents", { id: "fetch-docs-error" });
         return;
@@ -23,7 +26,7 @@ export function useKnowledge() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [meetingId]);
 
   useEffect(() => {
     fetchDocuments();
@@ -34,6 +37,7 @@ export function useKnowledge() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      if (meetingId) formData.append("meetingId", meetingId);
 
       const res = await fetch("/api/knowledge", {
         method: "POST",

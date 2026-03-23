@@ -70,8 +70,8 @@ export default function DashboardPage() {
             Chat
           </Button>
           <CreateMeetingDialog
-            onCreate={async (title, joinLink) => {
-              await createMeeting(title, joinLink);
+            onCreate={async (title, joinLink, agenda) => {
+              await createMeeting(title, joinLink, agenda);
             }}
           />
           <Button

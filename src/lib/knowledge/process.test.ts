@@ -119,16 +119,18 @@ describe("processDocument", () => {
     );
   });
 
-  it("sets status to ready with 0 chunks for empty text", async () => {
+  it("throws and sets status to failed for empty text", async () => {
     const doc = fakeDocument();
     mockDb.where.mockResolvedValueOnce([doc]);
     mockParseDocument.mockResolvedValueOnce("   ");
 
-    await processDocument(DOC_ID, USER_ID);
+    await expect(processDocument(DOC_ID, USER_ID)).rejects.toThrow(
+      "no extractable text"
+    );
 
     expect(mockChunkText).not.toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "ready", chunkCount: 0 })
+      expect.objectContaining({ status: "failed" })
     );
   });
 
