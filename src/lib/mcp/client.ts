@@ -6,15 +6,16 @@ import { mcpServers } from "@/lib/db/schema";
 import type { McpServer } from "@/lib/db/schema";
 
 interface DiscoveredTool {
+  serverId: string;
   serverName: string;
   name: string;
   description: string;
   inputSchema: Record<string, unknown>;
 }
 
-// Reverse lookup: namespaced tool name → { serverName, originalToolName }
+// Reverse lookup: namespaced tool name → { serverId, originalToolName }
 interface ToolMapping {
-  serverName: string;
+  serverId: string;
   originalName: string;
 }
 
@@ -23,6 +24,8 @@ const cache = new Map<
   string,
   { manager: McpClientManager; lastUsed: number }
 >();
+// Prevent concurrent connectForUser calls from creating duplicate managers
+const pending = new Map<string, Promise<McpClientManager>>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Cleanup stale connections periodically
@@ -61,6 +64,21 @@ export class McpClientManager {
       return cached.manager;
     }
 
+    // Deduplicate concurrent calls for the same user
+    const inflight = pending.get(userId);
+    if (inflight) return inflight;
+
+    const promise = McpClientManager.doConnect(userId);
+    pending.set(userId, promise);
+    try {
+      return await promise;
+    } finally {
+      // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+      pending.delete(userId);
+    }
+  }
+
+  private static async doConnect(userId: string): Promise<McpClientManager> {
     const manager = new McpClientManager();
 
     const servers = await db
@@ -104,25 +122,26 @@ export class McpClientManager {
 
     const { tools } = await client.listTools();
     for (const tool of tools) {
-      const namespacedName = this.makeToolName(server.name, tool.name);
+      const namespacedName = this.makeToolName(server.id, tool.name);
       this.tools.push({
+        serverId: server.id,
         serverName: server.name,
         name: tool.name,
         description: tool.description ?? "",
         inputSchema: (tool.inputSchema ?? {}) as Record<string, unknown>,
       });
       this.toolMap.set(namespacedName, {
-        serverName: server.name,
+        serverId: server.id,
         originalName: tool.name,
       });
     }
 
-    this.clients.set(server.name, client);
+    this.clients.set(server.id, client);
   }
 
-  /** Create a safe namespaced tool name using double-underscore separator. */
-  private makeToolName(serverName: string, toolName: string): string {
-    return `mcp__${serverName.replace(/\W/g, "_")}__${toolName}`;
+  /** Create a safe namespaced tool name using server ID to avoid collisions. */
+  private makeToolName(serverId: string, toolName: string): string {
+    return `mcp__${serverId.replace(/-/g, "")}__${toolName}`;
   }
 
   /**
@@ -146,8 +165,8 @@ export class McpClientManager {
     > = {};
 
     for (const tool of this.tools) {
-      const namespacedName = this.makeToolName(tool.serverName, tool.name);
-      const client = this.clients.get(tool.serverName);
+      const namespacedName = this.makeToolName(tool.serverId, tool.name);
+      const client = this.clients.get(tool.serverId);
       if (!client) continue;
 
       result[namespacedName] = {
@@ -176,7 +195,7 @@ export class McpClientManager {
   }> {
     return this.tools.map((tool) => ({
       type: "function" as const,
-      name: this.makeToolName(tool.serverName, tool.name),
+      name: this.makeToolName(tool.serverId, tool.name),
       description: `[${tool.serverName}] ${tool.description}`,
       parameters: tool.inputSchema,
     }));
@@ -192,9 +211,9 @@ export class McpClientManager {
     const mapping = this.toolMap.get(namespacedName);
     if (!mapping) throw new Error(`Unknown MCP tool: ${namespacedName}`);
 
-    const client = this.clients.get(mapping.serverName);
+    const client = this.clients.get(mapping.serverId);
     if (!client)
-      throw new Error(`MCP server not connected: ${mapping.serverName}`);
+      throw new Error(`MCP server not connected: ${mapping.serverId}`);
 
     return client.callTool({ name: mapping.originalName, arguments: args });
   }
