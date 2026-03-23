@@ -40,7 +40,6 @@ export default function MeetingDetailPage() {
   } = useMeetingDetail(id);
   const [query, setQuery] = useState("");
 
-  const meetingMetadata = (meeting?.metadata ?? {}) as Record<string, unknown>;
   const [agenda, setAgenda] = useState("");
   const [agendaSaving, setAgendaSaving] = useState(false);
 
