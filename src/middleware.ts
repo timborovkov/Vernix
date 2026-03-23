@@ -2,8 +2,12 @@ import NextAuth from "next-auth";
 import { authConfig } from "@/lib/auth/config";
 import { NextResponse } from "next/server";
 
-// Endpoints called by the Recall bot's browser (no user session, verified by botSecret)
-const PUBLIC_AGENT_PATHS = ["/api/agent/voice-token", "/api/agent/rag"];
+// Endpoints using non-session auth (botSecret or API key)
+const PUBLIC_AGENT_PATHS = [
+  "/api/agent/voice-token",
+  "/api/agent/rag",
+  "/api/mcp",
+];
 
 const { auth } = NextAuth(authConfig);
 
@@ -29,5 +33,7 @@ export const config = {
     "/api/search/:path*",
     "/api/knowledge/:path*",
     "/api/tasks/:path*",
+    "/api/settings/:path*",
+    "/api/mcp",
   ],
 };

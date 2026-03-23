@@ -111,3 +111,38 @@ export const tasks = pgTable("tasks", {
 });
 
 export type Task = typeof tasks.$inferSelect;
+
+export const apiKeys = pgTable("api_keys", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  keyPrefix: text("key_prefix").notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+
+export const mcpServers = pgTable("mcp_servers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  apiKey: text("api_key"),
+  enabled: boolean("enabled").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type McpServer = typeof mcpServers.$inferSelect;

@@ -81,13 +81,14 @@
 - ~~**Tasks API** — `GET/POST /api/meetings/[id]/tasks`, `PATCH/DELETE /api/meetings/[id]/tasks/[taskId]`, `GET /api/tasks` (cross-meeting)~~
 - ~~**Tasks UI** — Action Items card on meeting detail with checkbox toggle, delete, add; dashboard widget showing pending tasks across meetings~~
 
-## P11 — MCP Tool Connections
+## P11 — MCP Tool Connections ~~DONE~~
 
-- **KiviKova MCP server** — Expose meeting data (transcripts, summaries, search, action items) as an MCP server so users can give Claude Desktop or other AI assistants access to their meeting context
-- **MCP config UI** — Settings page where users paste MCP server configs (like Claude Desktop's config format)
-- **MCP client runtime** — Agent connects to user-defined MCP servers at session start, discovers available tools
-- **Tool routing** — Expose discovered MCP tools to the voice agent and chat agent as callable functions
-- **Config storage** — Store MCP server configs per user in DB (url, auth, enabled/disabled)
+- ~~**MCP Server** — `src/lib/mcp/server.ts` exposes tools: `search_meetings`, `list_meetings`, `get_meeting`, `get_transcript`, `list_tasks`, `create_task`. SSE endpoint at `/api/mcp` with API key auth~~
+- ~~**API Keys** — `apiKeys` table with bcrypt-hashed keys, shown once on creation. Routes at `/api/settings/api-keys`~~
+- ~~**MCP Client** — `src/lib/mcp/client.ts` with `McpClientManager` connects to user-configured SSE servers, discovers tools, namespaces as `mcp_<server>_<tool>`, connection cache with 5-min TTL~~
+- ~~**Agent Integration** — MCP client tools spread into chat agent's tool map alongside `searchMeetingContext`~~
+- ~~**Config Storage** — `mcpServers` table for per-user server configs (name, url, apiKey, enabled)~~
+- ~~**Settings UI** — `/dashboard/settings` page with API key management + MCP server config CRUD~~
 
 ## P12 — Data Export
 

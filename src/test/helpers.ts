@@ -1,4 +1,10 @@
-import type { Meeting, Document, Task } from "@/lib/db/schema";
+import type {
+  Meeting,
+  Document,
+  Task,
+  ApiKey,
+  McpServer,
+} from "@/lib/db/schema";
 
 export function createJsonRequest(
   url: string,
@@ -65,6 +71,33 @@ export function fakeTask(overrides: Partial<Task> = {}): Task {
     autoExtracted: false,
     dueDate: null,
     status: "open",
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
+export function fakeApiKey(overrides: Partial<ApiKey> = {}): ApiKey {
+  return {
+    id: "e4ccff33-4d5e-4ef8-bb6d-aff3fg824e55",
+    userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    name: "Test Key",
+    keyHash: "$2a$10$fakehash",
+    keyPrefix: "kk_test",
+    lastUsedAt: null,
+    createdAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
+export function fakeMcpServer(overrides: Partial<McpServer> = {}): McpServer {
+  return {
+    id: "f5ddgg44-5e6f-4ef8-bb6d-bgg4gh935f66",
+    userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    name: "Test MCP Server",
+    url: "https://mcp.example.com/sse",
+    apiKey: null,
+    enabled: true,
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
     ...overrides,
