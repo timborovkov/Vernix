@@ -59,7 +59,7 @@
 
 ## P8 — Meeting-Scoped Knowledge ~~DONE~~
 
-- ~~**`meetingId` on documents** — Optional FK on `documents` table linking uploads to a specific meeting~~
+- ~~`**meetingId` on documents\*\* — Optional FK on `documents` table linking uploads to a specific meeting~~
 - ~~**Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting, chunks go into meeting's Qdrant collection~~
 - ~~**Scoped RAG boost** — Meeting-scoped documents in the meeting collection get boosted automatically alongside transcripts~~
 - ~~**Knowledge list integration** — Meeting detail shows only that meeting's docs; global page shows all docs~~
@@ -148,7 +148,8 @@
 ## P19 — Billing with Polar
 
 - **Polar integration** — Connect Polar.sh for subscription management
-- **Pricing tiers** — Free (limited meetings/month), Pro (unlimited), Enterprise (team features)
+- **Pricing tiers** — Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
+- **Hard caps** – Fair use hard caps on uploaded context, meeting duration, token usage, embeddings creation etc for each plan
 - **Usage tracking** — Track meeting minutes, API calls, and storage per user
 - **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
 - **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
