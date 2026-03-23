@@ -62,7 +62,7 @@ export function fakeTask(overrides: Partial<Task> = {}): Task {
     userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
     title: "Follow up with client",
     assignee: "Alice",
-    autoExtracted: 0,
+    autoExtracted: false,
     dueDate: null,
     status: "open",
     createdAt: new Date("2026-01-01"),
