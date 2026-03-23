@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { McpServer } from "@/lib/db/schema";
+interface McpServerInfo {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+}
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Server, Trash2, Plus } from "lucide-react";
 
 interface McpServerListProps {
-  servers: McpServer[];
+  servers: McpServerInfo[];
   onAdd: (name: string, url: string, apiKey?: string) => void;
   onToggle: (id: string, enabled: boolean) => void;
   onDelete: (id: string) => void;
