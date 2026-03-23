@@ -25,6 +25,11 @@ async function handleMcpRequest(request: Request): Promise<Response> {
     if (entry && entry.userId === user.id) {
       return entry.transport.handleRequest(request);
     }
+    // MCP spec requires 404 for unrecognized/unauthorized session IDs
+    return new Response(JSON.stringify({ error: "Session not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // New session — create transport and server
