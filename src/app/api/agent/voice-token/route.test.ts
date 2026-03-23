@@ -1,4 +1,4 @@
-const { mockDb, mockOpenAIClient } = vi.hoisted(() => {
+const { mockDb, mockOpenAIClient, mockConnectForUser } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -25,12 +25,22 @@ const { mockDb, mockOpenAIClient } = vi.hoisted(() => {
       },
     },
   };
-  return { mockDb: db, mockOpenAIClient: client };
+  const connectForUser = vi.fn().mockResolvedValue({
+    getOpenAITools: () => [],
+  });
+  return {
+    mockDb: db,
+    mockOpenAIClient: client,
+    mockConnectForUser: connectForUser,
+  };
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/openai/client", () => ({
   getOpenAIClient: () => mockOpenAIClient,
+}));
+vi.mock("@/lib/mcp/client", () => ({
+  McpClientManager: { connectForUser: mockConnectForUser },
 }));
 
 import { GET } from "./route";
@@ -46,6 +56,9 @@ describe("GET /api/agent/voice-token", () => {
         expires_at: 9999999999,
         session: {},
       });
+    mockConnectForUser.mockReset().mockResolvedValue({
+      getOpenAITools: () => [],
+    });
   });
 
   it("returns 400 without meetingId", async () => {
@@ -87,7 +100,7 @@ describe("GET /api/agent/voice-token", () => {
     expect(status).toBe(403);
   });
 
-  it("returns token on valid request", async () => {
+  it("returns token with MCP tool info on valid request", async () => {
     mockDb.where.mockResolvedValueOnce([
       fakeMeeting({
         status: "active",
@@ -103,5 +116,62 @@ describe("GET /api/agent/voice-token", () => {
     expect(status).toBe(200);
     expect(data.token).toBe("ek_test_token");
     expect(data.meetingId).toBe("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+    expect(data.mcpToolUrl).toContain("/api/agent/mcp-tool");
+    expect(data.mcpToolNames).toEqual([]);
+  });
+
+  it("includes MCP tools in session when available", async () => {
+    const mcpTools = [
+      {
+        type: "function" as const,
+        name: "mcp__abc__lookup",
+        description: "Look up data",
+        parameters: { type: "object", properties: {} },
+      },
+    ];
+    mockConnectForUser.mockResolvedValueOnce({
+      getOpenAITools: () => mcpTools,
+    });
+    mockDb.where.mockResolvedValueOnce([
+      fakeMeeting({
+        status: "active",
+        metadata: { voiceSecret: "valid-secret" },
+      }),
+    ]);
+
+    const req = new Request(
+      "http://localhost/api/agent/voice-token?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=valid-secret"
+    );
+    const { status, data } = await parseJsonResponse(await GET(req));
+
+    expect(status).toBe(200);
+    expect(data.mcpToolNames).toEqual(["mcp__abc__lookup"]);
+
+    // Verify MCP tools were included in the session config
+    const createCall =
+      mockOpenAIClient.realtime.clientSecrets.create.mock.calls[0][0];
+    const toolNames = createCall.session.tools.map(
+      (t: { name: string }) => t.name
+    );
+    expect(toolNames).toContain("search_meeting_context");
+    expect(toolNames).toContain("mcp__abc__lookup");
+  });
+
+  it("continues without MCP tools when connection fails", async () => {
+    mockConnectForUser.mockRejectedValueOnce(new Error("MCP unavailable"));
+    mockDb.where.mockResolvedValueOnce([
+      fakeMeeting({
+        status: "active",
+        metadata: { voiceSecret: "valid-secret" },
+      }),
+    ]);
+
+    const req = new Request(
+      "http://localhost/api/agent/voice-token?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=valid-secret"
+    );
+    const { status, data } = await parseJsonResponse(await GET(req));
+
+    expect(status).toBe(200);
+    expect(data.mcpToolNames).toEqual([]);
   });
 });
