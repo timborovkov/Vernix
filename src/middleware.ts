@@ -34,6 +34,7 @@ export const config = {
     "/api/knowledge/:path*",
     "/api/tasks/:path*",
     "/api/settings/:path*",
+    "/api/export",
     "/api/mcp",
   ],
 };
