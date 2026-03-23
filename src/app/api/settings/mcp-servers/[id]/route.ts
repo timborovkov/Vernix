@@ -18,7 +18,14 @@ export async function PATCH(
   const { name, url, apiKey, enabled } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof name === "string" && name.length > 0) updates.name = name;
-  if (typeof url === "string" && url.length > 0) updates.url = url;
+  if (typeof url === "string" && url.length > 0) {
+    try {
+      new URL(url);
+      updates.url = url;
+    } catch {
+      return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+    }
+  }
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
   if (typeof enabled === "boolean") updates.enabled = enabled;
 
@@ -26,7 +33,14 @@ export async function PATCH(
     .update(mcpServers)
     .set(updates)
     .where(and(eq(mcpServers.id, id), eq(mcpServers.userId, user.id)))
-    .returning();
+    .returning({
+      id: mcpServers.id,
+      name: mcpServers.name,
+      url: mcpServers.url,
+      enabled: mcpServers.enabled,
+      createdAt: mcpServers.createdAt,
+      updatedAt: mcpServers.updatedAt,
+    });
 
   if (!updated) {
     return NextResponse.json(
