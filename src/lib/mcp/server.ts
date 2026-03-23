@@ -187,8 +187,8 @@ export function createMcpServer(userId: string): McpServer {
     "Create a new task / action item for a meeting",
     {
       meetingId: z.string(),
-      title: z.string(),
-      assignee: z.string().optional(),
+      title: z.string().min(1).max(500),
+      assignee: z.string().max(200).optional(),
     },
     async ({ meetingId, title, assignee }) => {
       // Verify meeting ownership

@@ -18,6 +18,9 @@ const { mockDb } = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/lib/mcp/client", () => ({
+  invalidateMcpCache: vi.fn(),
+}));
 
 import { GET, POST } from "./route";
 import {

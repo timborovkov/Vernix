@@ -33,8 +33,8 @@ export async function POST(request: Request) {
   try {
     const mcpManager = await McpClientManager.connectForUser(user.id);
     mcpTools = mcpManager.getVercelTools();
-  } catch {
-    // MCP client connection failures shouldn't block chat
+  } catch (error) {
+    console.error("MCP client connection failed:", error);
   }
 
   const modelMessages = await convertToModelMessages(messages);

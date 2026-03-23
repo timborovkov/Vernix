@@ -51,7 +51,10 @@ export function useMcpServers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error("Failed to update server");
+        return;
+      }
       const updated = await res.json();
       setServers((prev) => prev.map((s) => (s.id === id ? updated : s)));
     } catch {

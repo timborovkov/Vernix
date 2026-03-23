@@ -12,6 +12,12 @@ interface DiscoveredTool {
   inputSchema: Record<string, unknown>;
 }
 
+// Reverse lookup: namespaced tool name → { serverName, originalToolName }
+interface ToolMapping {
+  serverName: string;
+  originalName: string;
+}
+
 // Connection cache with TTL
 const cache = new Map<
   string,
@@ -20,22 +26,35 @@ const cache = new Map<
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Cleanup stale connections periodically
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of cache) {
-    if (now - entry.lastUsed > CACHE_TTL) {
-      entry.manager.disconnect().catch(() => {});
-      cache.delete(key); // eslint-disable-line drizzle/enforce-delete-with-where -- Map.delete, not Drizzle
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of cache) {
+      if (now - entry.lastUsed > CACHE_TTL) {
+        entry.manager.disconnect().catch(() => {});
+        // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+        cache.delete(key);
+      }
     }
+  }, 60_000);
+}
+
+/** Invalidate cached manager for a user (call when MCP config changes). */
+export function invalidateMcpCache(userId: string): void {
+  const entry = cache.get(userId);
+  if (entry) {
+    entry.manager.disconnect().catch(() => {});
+    // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+    cache.delete(userId);
   }
-}, 60_000);
+}
 
 export class McpClientManager {
   private clients: Map<string, Client> = new Map();
   private tools: DiscoveredTool[] = [];
+  private toolMap: Map<string, ToolMapping> = new Map();
 
   static async connectForUser(userId: string): Promise<McpClientManager> {
-    // Check cache
     const cached = cache.get(userId);
     if (cached) {
       cached.lastUsed = Date.now();
@@ -83,23 +102,31 @@ export class McpClientManager {
 
     await client.connect(transport);
 
-    // Discover tools
     const { tools } = await client.listTools();
     for (const tool of tools) {
+      const namespacedName = this.makeToolName(server.name, tool.name);
       this.tools.push({
         serverName: server.name,
         name: tool.name,
         description: tool.description ?? "",
         inputSchema: (tool.inputSchema ?? {}) as Record<string, unknown>,
       });
+      this.toolMap.set(namespacedName, {
+        serverName: server.name,
+        originalName: tool.name,
+      });
     }
 
     this.clients.set(server.name, client);
   }
 
+  /** Create a safe namespaced tool name using double-underscore separator. */
+  private makeToolName(serverName: string, toolName: string): string {
+    return `mcp__${serverName.replace(/\W/g, "_")}__${toolName}`;
+  }
+
   /**
    * Get all discovered tools formatted for Vercel AI SDK.
-   * Tools are namespaced as mcp_<serverName>_<toolName>.
    */
   getVercelTools(): Record<
     string,
@@ -119,19 +146,18 @@ export class McpClientManager {
     > = {};
 
     for (const tool of this.tools) {
-      const safeName = `mcp_${tool.serverName.replace(/\W/g, "_")}_${tool.name}`;
+      const namespacedName = this.makeToolName(tool.serverName, tool.name);
       const client = this.clients.get(tool.serverName);
       if (!client) continue;
 
-      result[safeName] = {
+      result[namespacedName] = {
         description: `[${tool.serverName}] ${tool.description}`,
         parameters: tool.inputSchema,
         execute: async (args: unknown) => {
-          const response = await client.callTool({
+          return client.callTool({
             name: tool.name,
             arguments: (args ?? {}) as Record<string, unknown>,
           });
-          return response;
         },
       };
     }
@@ -150,41 +176,27 @@ export class McpClientManager {
   }> {
     return this.tools.map((tool) => ({
       type: "function" as const,
-      name: `mcp_${tool.serverName.replace(/\W/g, "_")}_${tool.name}`,
+      name: this.makeToolName(tool.serverName, tool.name),
       description: `[${tool.serverName}] ${tool.description}`,
       parameters: tool.inputSchema,
     }));
   }
 
   /**
-   * Call a tool by its namespaced name.
+   * Call a tool by its namespaced name using the stored mapping.
    */
   async callTool(
     namespacedName: string,
     args: Record<string, unknown>
   ): Promise<unknown> {
-    // Parse mcp_<serverName>_<toolName>
-    const match = namespacedName.match(/^mcp_(.+?)_([^_]+)$/);
-    if (!match) throw new Error(`Invalid MCP tool name: ${namespacedName}`);
+    const mapping = this.toolMap.get(namespacedName);
+    if (!mapping) throw new Error(`Unknown MCP tool: ${namespacedName}`);
 
-    const [, serverNameRaw, toolName] = match;
-    const serverName = serverNameRaw.replace(/_/g, " ");
+    const client = this.clients.get(mapping.serverName);
+    if (!client)
+      throw new Error(`MCP server not connected: ${mapping.serverName}`);
 
-    // Try exact match first, then fuzzy
-    let client = this.clients.get(serverName);
-    if (!client) {
-      // Try matching with underscores
-      for (const [name, c] of this.clients) {
-        if (name.replace(/\W/g, "_") === serverNameRaw) {
-          client = c;
-          break;
-        }
-      }
-    }
-
-    if (!client) throw new Error(`MCP server not found: ${serverName}`);
-
-    return client.callTool({ name: toolName, arguments: args });
+    return client.callTool({ name: mapping.originalName, arguments: args });
   }
 
   async disconnect(): Promise<void> {
@@ -197,5 +209,6 @@ export class McpClientManager {
     }
     this.clients.clear();
     this.tools = [];
+    this.toolMap.clear();
   }
 }

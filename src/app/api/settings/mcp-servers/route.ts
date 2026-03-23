@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
+import { invalidateMcpCache } from "@/lib/mcp/client";
 
 const createServerSchema = z.object({
   name: z.string().min(1).max(100),
@@ -46,6 +47,8 @@ export async function POST(request: Request) {
       apiKey: parsed.data.apiKey ?? null,
     })
     .returning();
+
+  invalidateMcpCache(user.id);
 
   return NextResponse.json(server, { status: 201 });
 }

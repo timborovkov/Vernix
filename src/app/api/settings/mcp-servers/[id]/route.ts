@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
+import { invalidateMcpCache } from "@/lib/mcp/client";
 
 export async function PATCH(
   request: Request,
@@ -34,6 +35,7 @@ export async function PATCH(
     );
   }
 
+  invalidateMcpCache(user.id);
   return NextResponse.json(updated);
 }
 
@@ -58,5 +60,6 @@ export async function DELETE(
     );
   }
 
+  invalidateMcpCache(user.id);
   return NextResponse.json({ success: true });
 }
