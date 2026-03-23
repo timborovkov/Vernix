@@ -262,8 +262,7 @@
 
         setStatus("Connecting to AI...", "");
 
-        const url =
-          "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
+        const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
           "realtime",
           `openai-insecure-api-key.${token}`,
