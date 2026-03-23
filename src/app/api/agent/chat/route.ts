@@ -8,6 +8,7 @@ import { getAgentSystemPrompt } from "@/lib/agent/prompts";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
+import { McpClientManager } from "@/lib/mcp/client";
 
 export async function POST(request: Request) {
   const user = await requireSessionUser();
@@ -27,6 +28,15 @@ export async function POST(request: Request) {
       null;
   }
 
+  // Connect to user's external MCP servers (cached, non-blocking on failure)
+  let mcpTools: Record<string, unknown> = {};
+  try {
+    const mcpManager = await McpClientManager.connectForUser(user.id);
+    mcpTools = mcpManager.getVercelTools();
+  } catch (error) {
+    console.error("MCP client connection failed:", error);
+  }
+
   const modelMessages = await convertToModelMessages(messages);
 
   const result = streamText({
@@ -34,6 +44,7 @@ export async function POST(request: Request) {
     system: getAgentSystemPrompt(agenda),
     messages: modelMessages,
     tools: {
+      ...mcpTools,
       searchMeetingContext: {
         description:
           "Search current and past meeting transcripts for relevant context to answer questions about meetings.",
