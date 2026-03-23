@@ -1,11 +1,12 @@
 import { OpenAIRealtimeWebSocket } from "openai/realtime/websocket";
 import { getOpenAIClient } from "./client";
 import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
-import { VOICE_AGENT_SYSTEM_PROMPT } from "@/lib/agent/prompts";
+import { getVoiceAgentSystemPrompt } from "@/lib/agent/prompts";
 
 export interface VoiceSessionConfig {
   meetingId: string;
   userId: string;
+  agenda?: string;
   model?: string;
 }
 
@@ -48,7 +49,7 @@ export class VoiceSession {
         type: "session.update",
         session: {
           type: "realtime",
-          instructions: VOICE_AGENT_SYSTEM_PROMPT,
+          instructions: getVoiceAgentSystemPrompt(this.config.agenda),
           tools: [
             {
               type: "function",
