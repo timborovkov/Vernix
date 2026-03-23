@@ -6,6 +6,8 @@ import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { requireSessionUser } from "@/lib/auth/session";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
+import { extractActionItems } from "@/lib/tasks/extract";
+import { storeExtractedTasks } from "@/lib/tasks/store";
 import { z } from "zod/v4";
 
 const stopSchema = z.object({
@@ -92,6 +94,14 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
+
+    // Extract action items (non-critical)
+    try {
+      const items = await extractActionItems(segments);
+      await storeExtractedTasks(meetingId, user.id, items);
+    } catch (err) {
+      console.error("Action item extraction failed:", err);
+    }
   } catch (error) {
     console.error("Post-processing failed:", error);
     // Still complete on failure, just without summary

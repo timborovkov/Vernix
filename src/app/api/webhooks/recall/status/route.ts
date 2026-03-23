@@ -5,6 +5,8 @@ import { meetings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
+import { extractActionItems } from "@/lib/tasks/extract";
+import { storeExtractedTasks } from "@/lib/tasks/store";
 
 const statusEventSchema = z.object({
   event: z.string(),
@@ -104,6 +106,16 @@ export async function POST(request: Request) {
           updatedAt: new Date(),
         })
         .where(eq(meetings.id, meeting.id));
+
+      // Extract action items (non-critical)
+      try {
+        if (meeting.userId) {
+          const items = await extractActionItems(segments);
+          await storeExtractedTasks(meeting.id, meeting.userId, items);
+        }
+      } catch (error) {
+        console.error("Action item extraction failed:", error);
+      }
 
       console.log(
         `[Webhook:status] Summary generated for meeting ${meeting.id}`

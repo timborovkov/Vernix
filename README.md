@@ -104,5 +104,6 @@ Go to **Recall Dashboard → Webhooks → Add Endpoint** and configure:
 - The **RAG agent** searches current and past meeting transcripts to answer questions
 - The **knowledge base** lets users upload PDF, DOCX, TXT, and MD files — parsed, chunked, embedded, and searchable alongside meeting transcripts via unified RAG. Documents can be scoped to specific meetings for context-aware boosting
 - **Meeting agenda** field embedded into Qdrant for RAG, injected into agent prompts and summary generation
+- **Action items** are auto-extracted from transcripts via LLM and stored as discrete tasks — viewable per-meeting and across all meetings on the dashboard
 - **Streaming chat** on meeting detail and dashboard pages with tool-call visualization and source citations
 - The dashboard provides **meeting notes**, transcript timeline, search, and filtering

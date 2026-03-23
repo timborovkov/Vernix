@@ -1,4 +1,4 @@
-import type { Meeting, Document } from "@/lib/db/schema";
+import type { Meeting, Document, Task } from "@/lib/db/schema";
 
 export function createJsonRequest(
   url: string,
@@ -49,6 +49,22 @@ export function fakeDocument(overrides: Partial<Document> = {}): Document {
     status: "ready",
     chunkCount: 5,
     error: null,
+    createdAt: new Date("2026-01-01"),
+    updatedAt: new Date("2026-01-01"),
+    ...overrides,
+  };
+}
+
+export function fakeTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: "d3bbee22-3c4d-4ef8-bb6d-9ee2ef713d44",
+    meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+    userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+    title: "Follow up with client",
+    assignee: "Alice",
+    autoExtracted: false,
+    dueDate: null,
+    status: "open",
     createdAt: new Date("2026-01-01"),
     updatedAt: new Date("2026-01-01"),
     ...overrides,

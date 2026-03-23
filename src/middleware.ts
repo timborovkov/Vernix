@@ -28,5 +28,6 @@ export const config = {
     "/api/agent/:path*",
     "/api/search/:path*",
     "/api/knowledge/:path*",
+    "/api/tasks/:path*",
   ],
 };

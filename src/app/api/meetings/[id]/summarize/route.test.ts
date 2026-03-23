@@ -28,6 +28,12 @@ vi.mock("@/lib/vector/scroll", () => ({
 vi.mock("@/lib/summary/generate", () => ({
   generateMeetingSummary: mockGenerateSummary,
 }));
+vi.mock("@/lib/tasks/extract", () => ({
+  extractActionItems: vi.fn().mockResolvedValue([]),
+}));
+vi.mock("@/lib/tasks/store", () => ({
+  storeExtractedTasks: vi.fn().mockResolvedValue(undefined),
+}));
 
 import { POST } from "./route";
 import { parseJsonResponse, fakeMeeting } from "@/test/helpers";

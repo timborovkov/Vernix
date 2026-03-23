@@ -2,10 +2,11 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useMeetingDetail } from "@/hooks/use-meeting-detail";
 import { useKnowledge } from "@/hooks/use-knowledge";
+import { useMeetingTasks } from "@/hooks/use-tasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +15,17 @@ import { statusVariant } from "@/lib/meetings/constants";
 import { ChatPanel } from "@/components/chat-panel";
 import { KnowledgeList } from "@/components/knowledge-list";
 import { UploadDocumentDialog } from "@/components/upload-document-dialog";
+import { TaskList } from "@/components/task-list";
 import { formatTime, renderMarkdown } from "@/lib/format";
-import { ArrowLeft, Search, Clock, Users, FileText, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Search,
+  Clock,
+  Users,
+  FileText,
+  Save,
+  ListChecks,
+} from "lucide-react";
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -30,16 +40,24 @@ export default function MeetingDetailPage() {
   } = useMeetingDetail(id);
   const [query, setQuery] = useState("");
 
-  const meetingMetadata = meeting?.metadata as Record<string, unknown>;
   const [agenda, setAgenda] = useState("");
   const [agendaSaving, setAgendaSaving] = useState(false);
-  const [agendaLoaded, setAgendaLoaded] = useState(false);
+  const syncedMeetingId = useRef<string | null>(null);
 
-  // Sync agenda from meeting metadata on load
-  if (meeting && !agendaLoaded) {
-    setAgenda((meetingMetadata?.agenda as string) ?? "");
-    setAgendaLoaded(true);
-  }
+  // Sync agenda from meeting metadata once per meeting load
+  const meetingId = meeting?.id;
+  const meetingAgenda = meeting
+    ? ((((meeting.metadata ?? {}) as Record<string, unknown>).agenda as
+        | string
+        | undefined) ?? "")
+    : "";
+
+  useEffect(() => {
+    if (meetingId && meetingId !== syncedMeetingId.current) {
+      syncedMeetingId.current = meetingId;
+      setAgenda(meetingAgenda);
+    }
+  }, [meetingId, meetingAgenda]);
 
   const {
     documents: meetingDocs,
@@ -55,6 +73,14 @@ export default function MeetingDetailPage() {
     meeting?.status === "pending" ||
     meeting?.status === "joining" ||
     meeting?.status === "failed";
+
+  const {
+    tasks: meetingTasks,
+    loading: tasksLoading,
+    addTask,
+    updateTask,
+    deleteTask,
+  } = useMeetingTasks(id);
 
   const saveAgenda = async () => {
     setAgendaSaving(true);
@@ -189,6 +215,32 @@ export default function MeetingDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Action Items */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <ListChecks className="h-4 w-4" />
+            Action Items
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {tasksLoading ? (
+            <p className="text-muted-foreground italic">Loading...</p>
+          ) : meeting.status === "processing" && meetingTasks.length === 0 ? (
+            <p className="text-muted-foreground italic">
+              Extracting action items...
+            </p>
+          ) : (
+            <TaskList
+              tasks={meetingTasks}
+              onToggle={(taskId, status) => updateTask(taskId, { status })}
+              onDelete={deleteTask}
+              onAdd={(title) => addTask(title)}
+            />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <div className="mt-6">

@@ -4,6 +4,8 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
+import { extractActionItems } from "@/lib/tasks/extract";
+import { storeExtractedTasks } from "@/lib/tasks/store";
 import { requireSessionUser } from "@/lib/auth/session";
 
 export async function POST(
@@ -51,6 +53,14 @@ export async function POST(
       })
       .where(and(eq(meetings.id, id), eq(meetings.userId, user.id)))
       .returning();
+
+    // Re-extract action items
+    try {
+      const items = await extractActionItems(segments);
+      await storeExtractedTasks(id, user.id, items);
+    } catch (err) {
+      console.error("Action item extraction failed:", err);
+    }
 
     return NextResponse.json({ success: true, summary: updated.metadata });
   } catch (error) {
