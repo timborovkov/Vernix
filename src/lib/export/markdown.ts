@@ -1,5 +1,6 @@
 import type { Meeting, Task } from "@/lib/db/schema";
 import type { TranscriptPoint } from "@/lib/vector/scroll";
+import { formatTime } from "@/lib/format";
 
 export interface MeetingExportData {
   meeting: Meeting;
@@ -10,16 +11,14 @@ export interface MeetingExportData {
 export function formatTimestamp(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  const mm = String(minutes).padStart(2, "0");
-  const ss = String(seconds).padStart(2, "0");
+  const mmss = formatTime(ms % 3_600_000);
+  const [minutes, seconds] = mmss.split(":");
+  const paddedMmss = `${(minutes ?? "0").padStart(2, "0")}:${seconds ?? "00"}`;
 
   if (hours > 0) {
-    return `${String(hours).padStart(2, "0")}:${mm}:${ss}`;
+    return `${String(hours).padStart(2, "0")}:${paddedMmss}`;
   }
-  return `${mm}:${ss}`;
+  return paddedMmss;
 }
 
 export function slugify(title: string): string {
@@ -27,7 +26,8 @@ export function slugify(title: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 60);
+    .slice(0, 60)
+    .replace(/^-|-$/g, "");
 }
 
 function escapeTableCell(value: string): string {
