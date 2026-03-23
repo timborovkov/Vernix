@@ -3,7 +3,11 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getOpenAIClient } from "@/lib/openai/client";
-import { getVoiceAgentSystemPrompt } from "@/lib/agent/prompts";
+import {
+  getVoiceAgentSystemPrompt,
+  type ToolDescription,
+} from "@/lib/agent/prompts";
+import { McpClientManager } from "@/lib/mcp/client";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -37,17 +41,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
+  // Load MCP tools for the meeting owner
+  let mcpOpenAITools: Array<{
+    type: "function";
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  }> = [];
+  let mcpToolDescriptions: ToolDescription[] = [];
+  try {
+    const mcpManager = await McpClientManager.connectForUser(meeting.userId!);
+    mcpOpenAITools = mcpManager.getOpenAITools();
+    mcpToolDescriptions = mcpOpenAITools.map((t) => ({
+      name: t.name,
+      description: t.description,
+    }));
+  } catch (error) {
+    console.error("MCP client connection failed:", error);
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const agenda = (meeting.metadata as Record<string, unknown>)
+    ?.agenda as string;
 
   try {
     const client = getOpenAIClient();
     const secret = await client.realtime.clientSecrets.create({
       session: {
         type: "realtime",
-        model: "gpt-4o-realtime-preview",
-        instructions: getVoiceAgentSystemPrompt(
-          (meeting.metadata as Record<string, unknown>)?.agenda as string
-        ),
+        model: "gpt-realtime-1.5",
+        instructions: getVoiceAgentSystemPrompt(agenda, mcpToolDescriptions),
         tools: [
           {
             type: "function",
@@ -65,6 +88,7 @@ export async function GET(request: Request) {
               required: ["query"],
             },
           },
+          ...mcpOpenAITools,
         ],
         tool_choice: "auto",
         audio: {
@@ -90,6 +114,7 @@ export async function GET(request: Request) {
       token: secret.value,
       expiresAt: secret.expires_at,
       ragUrl: `${appUrl}/api/agent/rag`,
+      mcpToolNames: mcpOpenAITools.map((t) => t.name),
       meetingId,
     });
   } catch (error) {

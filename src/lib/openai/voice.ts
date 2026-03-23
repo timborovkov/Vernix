@@ -41,7 +41,7 @@ export class VoiceSession {
 
     const client = getOpenAIClient();
     this.rt = await OpenAIRealtimeWebSocket.create(client, {
-      model: this.config.model ?? "gpt-4o-realtime-preview",
+      model: this.config.model ?? "gpt-realtime-1.5",
     });
 
     this.rt.on("session.created", () => {

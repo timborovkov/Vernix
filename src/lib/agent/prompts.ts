@@ -1,4 +1,9 @@
-const AGENT_SYSTEM_PROMPT_BASE = `You are KiviKova, an AI meeting assistant. You have access to transcript context from current and past meetings via the search_meeting_context tool. Answer questions accurately based on the provided context. If the context doesn't contain relevant information, say so. Be concise and helpful.`;
+export interface ToolDescription {
+  name: string;
+  description: string;
+}
+
+const AGENT_SYSTEM_PROMPT_BASE = `You are KiviKova, an AI meeting assistant. You have access to transcript context from current and past meetings via the searchMeetingContext tool. Answer questions accurately based on the provided context. If the context doesn't contain relevant information, say so. Be concise and helpful.`;
 
 const VOICE_AGENT_SYSTEM_PROMPT_BASE = `You are KiviKova, an AI meeting assistant participating in a video call.
 You respond when addressed as "KiviKova", "Agent", or "Assistant".
@@ -7,14 +12,38 @@ Answer questions accurately based on the provided context. If the context doesn'
 Be concise and conversational — you're speaking in a live meeting. Keep responses brief (2-3 sentences) unless asked to elaborate.
 Do not interrupt or speak unless directly addressed.`;
 
-export function getAgentSystemPrompt(agenda?: string | null): string {
-  if (agenda)
-    return `${AGENT_SYSTEM_PROMPT_BASE}\n\nMeeting Agenda:\n${agenda}`;
-  return AGENT_SYSTEM_PROMPT_BASE;
+const POST_MEETING_SECTION = `
+
+After the meeting ends, the following will be automatically generated:
+- A summary of the meeting discussion
+- A full searchable transcript
+- Action items and to-dos extracted from the conversation
+Let participants know about these features if asked about follow-up or documentation.`;
+
+function formatToolsSection(mcpTools?: ToolDescription[]): string {
+  if (!mcpTools || mcpTools.length === 0) return "";
+  const toolLines = mcpTools
+    .map((t) => `- ${t.name}: ${t.description}`)
+    .join("\n");
+  return `\n\nYou also have access to the following external tools:\n${toolLines}\nUse these tools when they are relevant to the user's question.`;
 }
 
-export function getVoiceAgentSystemPrompt(agenda?: string | null): string {
-  if (agenda)
-    return `${VOICE_AGENT_SYSTEM_PROMPT_BASE}\n\nMeeting Agenda:\n${agenda}`;
-  return VOICE_AGENT_SYSTEM_PROMPT_BASE;
+export function getAgentSystemPrompt(
+  agenda?: string | null,
+  mcpTools?: ToolDescription[]
+): string {
+  let prompt = AGENT_SYSTEM_PROMPT_BASE + POST_MEETING_SECTION;
+  prompt += formatToolsSection(mcpTools);
+  if (agenda) prompt += `\n\nMeeting Agenda:\n${agenda}`;
+  return prompt;
+}
+
+export function getVoiceAgentSystemPrompt(
+  agenda?: string | null,
+  mcpTools?: ToolDescription[]
+): string {
+  let prompt = VOICE_AGENT_SYSTEM_PROMPT_BASE + POST_MEETING_SECTION;
+  prompt += formatToolsSection(mcpTools);
+  if (agenda) prompt += `\n\nMeeting Agenda:\n${agenda}`;
+  return prompt;
 }
