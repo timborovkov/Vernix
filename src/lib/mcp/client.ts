@@ -132,7 +132,7 @@ export class McpClientManager {
     string,
     {
       description: string;
-      parameters: Record<string, unknown>;
+      inputSchema: Record<string, unknown>;
       execute: (args: unknown) => Promise<unknown>;
     }
   > {
@@ -140,7 +140,7 @@ export class McpClientManager {
       string,
       {
         description: string;
-        parameters: Record<string, unknown>;
+        inputSchema: Record<string, unknown>;
         execute: (args: unknown) => Promise<unknown>;
       }
     > = {};
@@ -152,7 +152,7 @@ export class McpClientManager {
 
       result[namespacedName] = {
         description: `[${tool.serverName}] ${tool.description}`,
-        parameters: tool.inputSchema,
+        inputSchema: tool.inputSchema,
         execute: async (args: unknown) => {
           return client.callTool({
             name: tool.name,
