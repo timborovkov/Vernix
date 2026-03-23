@@ -40,7 +40,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)` and `getVoiceAgentSystemPrompt(agenda?)` which inject agenda context when available.
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
-- **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-4o-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
+- **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-5.4-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
 - **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, and presigned download URLs.
 - **`src/lib/mcp/`** — `server.ts` creates per-connection MCP servers exposing meeting data tools. `client.ts` manages connections to user-configured external MCP servers with connection caching.
 - **`src/lib/auth/api-key.ts`** — API key generation (bcrypt-hashed) and authentication for MCP server endpoint.
