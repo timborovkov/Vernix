@@ -114,7 +114,6 @@ export async function GET(request: Request) {
       token: secret.value,
       expiresAt: secret.expires_at,
       ragUrl: `${appUrl}/api/agent/rag`,
-      mcpToolUrl: `${appUrl}/api/agent/mcp-tool`,
       mcpToolNames: mcpOpenAITools.map((t) => t.name),
       meetingId,
     });
