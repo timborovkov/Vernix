@@ -122,9 +122,15 @@ export function useMeetings() {
     meetings,
     loading,
     createMeeting,
-    joinAgent: (meetingId: string) => joinMutation.mutateAsync(meetingId),
-    stopAgent: (meetingId: string) => stopMutation.mutateAsync(meetingId),
-    deleteMeeting: (meetingId: string) => deleteMutation.mutateAsync(meetingId),
+    joinAgent: async (meetingId: string) => {
+      await joinMutation.mutateAsync(meetingId).catch(() => {});
+    },
+    stopAgent: async (meetingId: string) => {
+      await stopMutation.mutateAsync(meetingId).catch(() => {});
+    },
+    deleteMeeting: async (meetingId: string) => {
+      await deleteMutation.mutateAsync(meetingId).catch(() => {});
+    },
     refresh: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all }),
   };

@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export async function verifyRecallSignature(
   request: Request,
@@ -12,7 +12,12 @@ export async function verifyRecallSignature(
   }
 
   const expected = createHmac("sha256", secret).update(body).digest("hex");
-  const valid = signature === expected;
+
+  if (signature.length !== expected.length) {
+    return { valid: false, body };
+  }
+
+  const valid = timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 
   return { valid, body };
 }

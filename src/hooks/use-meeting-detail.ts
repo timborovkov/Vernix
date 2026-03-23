@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import type { Meeting } from "@/lib/db/schema";
 import { queryKeys } from "@/lib/query-keys";
@@ -69,18 +69,15 @@ export function useMeetingDetail(meetingId: string) {
     onError: () => toast.error("Search failed"),
   });
 
-  const search = useCallback(
-    (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        return;
-      }
-      searchMutation.mutate(query);
-    },
-    [searchMutation]
-  );
+  const search = (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    searchMutation.mutate(query);
+  };
 
-  const clearSearch = useCallback(() => setSearchResults([]), []);
+  const clearSearch = () => setSearchResults([]);
 
   return {
     meeting: meetingQuery.data ?? null,
