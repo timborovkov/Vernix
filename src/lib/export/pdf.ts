@@ -1,5 +1,9 @@
 import PDFDocument from "pdfkit";
-import { formatTimestamp, type MeetingExportData } from "./markdown";
+import {
+  formatDate,
+  formatTimestamp,
+  type MeetingExportData,
+} from "./markdown";
 
 function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -8,11 +12,6 @@ function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
   });
-}
-
-function formatDate(date: Date | null): string {
-  if (!date) return "N/A";
-  return date.toISOString().split("T")[0]!;
 }
 
 export async function generateMeetingPdf(
