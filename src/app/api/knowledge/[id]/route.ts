@@ -52,7 +52,7 @@ export async function DELETE(
 
   // Delete chunks from the correct Qdrant collection
   try {
-    let collectionName: string;
+    let collectionName: string | null = null;
     if (doc.meetingId) {
       const [meeting] = await db
         .select({ qdrantCollectionName: meetings.qdrantCollectionName })
@@ -60,12 +60,14 @@ export async function DELETE(
         .where(
           and(eq(meetings.id, doc.meetingId), eq(meetings.userId, user.id))
         );
-      collectionName =
-        meeting?.qdrantCollectionName ?? knowledgeCollectionName(user.id);
+      // If meeting is gone, its collection was already deleted — skip cleanup
+      collectionName = meeting?.qdrantCollectionName ?? null;
     } else {
       collectionName = knowledgeCollectionName(user.id);
     }
-    await deleteDocumentChunks(collectionName, id);
+    if (collectionName) {
+      await deleteDocumentChunks(collectionName, id);
+    }
   } catch {
     // Collection may not exist if processing failed
   }
