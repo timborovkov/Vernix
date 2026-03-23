@@ -30,6 +30,10 @@ export function slugify(title: string): string {
     .slice(0, 60);
 }
 
+function escapeTableCell(value: string): string {
+  return value.replace(/\|/g, "\\|").replace(/\n/g, " ");
+}
+
 function formatDate(date: Date | null): string {
   if (!date) return "N/A";
   return date.toISOString().split("T")[0]!;
@@ -81,11 +85,10 @@ export function formatMeetingMarkdown(data: MeetingExportData): string {
     lines.push("| Task | Assignee | Due Date | Status |");
     lines.push("|------|----------|----------|--------|");
     for (const task of tasks) {
-      const assignee = task.assignee ?? "-";
+      const title = escapeTableCell(task.title);
+      const assignee = escapeTableCell(task.assignee ?? "-");
       const dueDate = task.dueDate ? formatDate(task.dueDate) : "-";
-      lines.push(
-        `| ${task.title} | ${assignee} | ${dueDate} | ${task.status} |`
-      );
+      lines.push(`| ${title} | ${assignee} | ${dueDate} | ${task.status} |`);
     }
   }
   lines.push("");
