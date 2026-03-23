@@ -32,7 +32,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, and `tasks` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, `tasks`, `apiKeys`, and `mcpServers` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface with `RecallProvider` and `MockProvider`. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.
@@ -42,6 +42,8 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
 - **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-4o-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
 - **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, and presigned download URLs.
+- **`src/lib/mcp/`** — `server.ts` creates per-connection MCP servers exposing meeting data tools. `client.ts` manages connections to user-configured external MCP servers with connection caching.
+- **`src/lib/auth/api-key.ts`** — API key generation (bcrypt-hashed) and authentication for MCP server endpoint.
 
 ### API Routes
 
@@ -67,11 +69,16 @@ All under `src/app/api/`:
 - `meetings/[id]/tasks/route.ts` — GET list tasks, POST create task
 - `meetings/[id]/tasks/[taskId]/route.ts` — PATCH update task, DELETE task
 - `tasks/route.ts` — GET cross-meeting tasks (with meeting title join)
+- `mcp/route.ts` — MCP server endpoint (Streamable HTTP transport, API key auth)
+- `settings/api-keys/route.ts` — GET list, POST create API keys
+- `settings/api-keys/[id]/route.ts` — DELETE API key
+- `settings/mcp-servers/route.ts` — GET list, POST create MCP server configs
+- `settings/mcp-servers/[id]/route.ts` — PATCH update, DELETE MCP server config
 
 ### Auth & Middleware
 
-- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`
-- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag` (verified by botSecret instead)
+- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`, `/api/settings/*`
+- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag` (verified by botSecret), `/api/mcp` (API key auth)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
 
