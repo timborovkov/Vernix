@@ -73,12 +73,13 @@
 - ~~**Agent context** — `getAgentSystemPrompt(agenda)` and `getVoiceAgentSystemPrompt(agenda)` inject agenda into all agent prompts~~
 - ~~**Summary awareness** — Agenda passed to summary generation; LLM compares planned vs discussed~~
 
-## P10 — Action Items & Tasks
+## P10 — Action Items & Tasks ~~DONE~~
 
-- **Auto-extract action items** — Post-meeting LLM pass to identify action items, decisions, and follow-ups from transcript
-- **Task storage** — New `tasks` table linked to meetings (title, assignee, status, due date)
-- **Tasks UI** — Display action items on meeting detail page, allow marking complete, removing or modifying
-- **Cross-meeting task view** — Dashboard widget showing all open tasks and action items across meetings
+- ~~**Auto-extract action items** — `src/lib/tasks/extract.ts` uses gpt-4o-mini JSON mode to extract action items from transcript segments~~
+- ~~**Task storage** — `tasks` table with cascade delete from meetings; `src/lib/tasks/store.ts` for batch insert/replace~~
+- ~~**Extraction triggers** — Auto-extracts after summary in webhook `transcript.done`, manual `agent/stop`, and re-summarize endpoints~~
+- ~~**Tasks API** — `GET/POST /api/meetings/[id]/tasks`, `PATCH/DELETE /api/meetings/[id]/tasks/[taskId]`, `GET /api/tasks` (cross-meeting)~~
+- ~~**Tasks UI** — Action Items card on meeting detail with checkbox toggle, delete, add; dashboard widget showing pending tasks across meetings~~
 
 ## P11 — MCP Tool Connections
 
