@@ -205,9 +205,11 @@
             });
             const data = await res.json();
             const output =
-              typeof data.result === "string"
-                ? data.result
-                : JSON.stringify(data.result);
+              data.result != null
+                ? typeof data.result === "string"
+                  ? data.result
+                  : JSON.stringify(data.result)
+                : data.error || "Tool returned no result.";
             sendToolOutput(callId, output);
           } catch (err) {
             log("MCP tool error: " + err.message);
