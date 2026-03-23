@@ -8,8 +8,17 @@ import {
   type ToolDescription,
 } from "@/lib/agent/prompts";
 import { McpClientManager } from "@/lib/mcp/client";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
+  const rl = rateLimitByIp(request, "agent:voice-token", {
+    interval: 60_000,
+    limit: 10,
+  });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { searchParams } = new URL(request.url);
   const meetingId = searchParams.get("meetingId");
 

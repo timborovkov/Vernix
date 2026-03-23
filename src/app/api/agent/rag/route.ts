@@ -9,6 +9,7 @@ import {
   MeetingNotFoundError,
   EmbeddingError,
 } from "@/lib/agent/rag";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 const ragSchema = z.object({
   meetingId: z.uuid(),
@@ -17,6 +18,14 @@ const ragSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rl = rateLimitByIp(request, "agent:rag", {
+    interval: 60_000,
+    limit: 60,
+  });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();

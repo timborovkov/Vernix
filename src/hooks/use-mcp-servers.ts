@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/query-keys";
+
 interface McpServerInfo {
   id: string;
   name: string;
@@ -11,79 +13,79 @@ interface McpServerInfo {
   updatedAt: string;
 }
 
+async function fetchServers(): Promise<McpServerInfo[]> {
+  const res = await fetch("/api/settings/mcp-servers");
+  if (!res.ok) throw new Error("Failed to load MCP servers");
+  const data = await res.json();
+  return data.servers;
+}
+
 export function useMcpServers() {
-  const [servers, setServers] = useState<McpServerInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchServers = useCallback(async () => {
-    try {
-      const res = await fetch("/api/settings/mcp-servers");
-      if (!res.ok) return;
-      const data = await res.json();
-      setServers(data.servers);
-    } catch {
-      toast.error("Failed to load MCP servers");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: servers = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.mcpServers.all,
+    queryFn: fetchServers,
+  });
 
-  useEffect(() => {
-    fetchServers();
-  }, [fetchServers]);
-
-  const addServer = async (name: string, url: string, apiKey?: string) => {
-    try {
+  const addMutation = useMutation({
+    mutationFn: async (params: {
+      name: string;
+      url: string;
+      apiKey?: string;
+    }) => {
       const res = await fetch("/api/settings/mcp-servers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, url, apiKey }),
+        body: JSON.stringify(params),
       });
-      if (!res.ok) {
-        toast.error("Failed to add MCP server");
-        return;
-      }
-      const server = await res.json();
-      setServers((prev) => [server, ...prev]);
+      if (!res.ok) throw new Error("Failed to add MCP server");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
       toast.success("MCP server added");
-    } catch {
-      toast.error("Failed to add MCP server");
-    }
-  };
+    },
+    onError: () => toast.error("Failed to add MCP server"),
+  });
 
-  const toggleServer = async (id: string, enabled: boolean) => {
-    try {
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
       const res = await fetch(`/api/settings/mcp-servers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) {
-        toast.error("Failed to update server");
-        return;
-      }
-      const updated = await res.json();
-      setServers((prev) => prev.map((s) => (s.id === id ? updated : s)));
-    } catch {
-      toast.error("Failed to update server");
-    }
-  };
+      if (!res.ok) throw new Error("Failed to update server");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
+    },
+    onError: () => toast.error("Failed to update server"),
+  });
 
-  const deleteServer = async (id: string) => {
-    try {
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
       const res = await fetch(`/api/settings/mcp-servers/${id}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        toast.error("Failed to delete server");
-        return;
-      }
-      setServers((prev) => prev.filter((s) => s.id !== id));
+      if (!res.ok) throw new Error("Failed to delete server");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
       toast.success("MCP server removed");
-    } catch {
-      toast.error("Failed to delete server");
-    }
-  };
+    },
+    onError: () => toast.error("Failed to delete server"),
+  });
 
-  return { servers, loading, addServer, toggleServer, deleteServer };
+  return {
+    servers,
+    loading,
+    addServer: (name: string, url: string, apiKey?: string) =>
+      addMutation.mutate({ name, url, apiKey }),
+    toggleServer: (id: string, enabled: boolean) =>
+      toggleMutation.mutate({ id, enabled }),
+    deleteServer: (id: string) => deleteMutation.mutate(id),
+  };
 }

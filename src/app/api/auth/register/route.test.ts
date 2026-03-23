@@ -21,6 +21,9 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("bcryptjs", () => ({
   hash: vi.fn().mockResolvedValue("hashed-password"),
 }));
+vi.mock("@/lib/rate-limit", () => ({
+  rateLimitByIp: () => ({ success: true, remaining: 99 }),
+}));
 
 import { POST } from "./route";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";

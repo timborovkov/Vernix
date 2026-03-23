@@ -1,111 +1,131 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Meeting } from "@/lib/db/schema";
+import { queryKeys } from "@/lib/query-keys";
+
+const TRANSIENT_STATUSES = ["joining", "active", "processing"];
+
+async function fetchMeetings(): Promise<Meeting[]> {
+  const res = await fetch("/api/meetings");
+  if (!res.ok) throw new Error("Failed to load meetings");
+  return res.json();
+}
 
 export function useMeetings() {
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchMeetings = useCallback(async () => {
-    try {
-      const res = await fetch("/api/meetings");
-      const data = await res.json();
-      setMeetings(data);
-    } catch {
-      toast.error("Failed to load meetings", { id: "fetch-meetings-error" });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: meetings = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.meetings.all,
+    queryFn: fetchMeetings,
+    staleTime: 10_000,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (
+        Array.isArray(data) &&
+        data.some((m: Meeting) => TRANSIENT_STATUSES.includes(m.status))
+      ) {
+        return 5000;
+      }
+      return false;
+    },
+  });
 
-  useEffect(() => {
-    fetchMeetings();
-  }, [fetchMeetings]);
+  const createMutation = useMutation({
+    mutationFn: async (params: {
+      title: string;
+      joinLink: string;
+      agenda?: string;
+    }) => {
+      const res = await fetch("/api/meetings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error("Failed to create meeting");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+      toast.success("Meeting created");
+    },
+  });
 
-  // Poll when any meeting is in a transient status
-  useEffect(() => {
-    const hasTransient = meetings.some((m) =>
-      ["joining", "active", "processing"].includes(m.status)
-    );
-    if (!hasTransient) return;
+  const joinMutation = useMutation({
+    mutationFn: async (meetingId: string) => {
+      const res = await fetch("/api/agent/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingId }),
+      });
+      if (!res.ok) throw new Error("Failed to join meeting");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+    },
+    onError: () => toast.error("Failed to join meeting"),
+  });
 
-    const interval = setInterval(fetchMeetings, 5000);
-    return () => clearInterval(interval);
-  }, [meetings, fetchMeetings]);
+  const stopMutation = useMutation({
+    mutationFn: async (meetingId: string) => {
+      const res = await fetch("/api/agent/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingId }),
+      });
+      if (!res.ok) throw new Error("Failed to stop agent");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+    },
+    onError: () => toast.error("Failed to stop agent"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (meetingId: string) => {
+      const res = await fetch(`/api/meetings/${meetingId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete meeting");
+    },
+    onMutate: async (meetingId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.meetings.all });
+      const previous = queryClient.getQueryData<Meeting[]>(
+        queryKeys.meetings.all
+      );
+      queryClient.setQueryData<Meeting[]>(queryKeys.meetings.all, (old) =>
+        old?.filter((m) => m.id !== meetingId)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous)
+        queryClient.setQueryData(queryKeys.meetings.all, context.previous);
+      toast.error("Failed to delete meeting");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+  });
 
   const createMeeting = async (
     title: string,
     joinLink: string,
     agenda?: string
   ) => {
-    const res = await fetch("/api/meetings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, joinLink, agenda }),
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to create meeting");
-    }
-
-    const meeting = await res.json();
-    setMeetings((prev) => [meeting, ...prev]);
-    toast.success("Meeting created");
-    return meeting;
-  };
-
-  const joinAgent = async (meetingId: string) => {
-    const res = await fetch("/api/agent/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ meetingId }),
-    });
-
-    if (!res.ok) {
-      toast.error("Failed to join meeting");
-      return;
-    }
-
-    await fetchMeetings();
-  };
-
-  const stopAgent = async (meetingId: string) => {
-    const res = await fetch("/api/agent/stop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ meetingId }),
-    });
-
-    if (!res.ok) {
-      toast.error("Failed to stop agent");
-      return;
-    }
-
-    await fetchMeetings();
-  };
-
-  const deleteMeeting = async (meetingId: string) => {
-    const res = await fetch(`/api/meetings/${meetingId}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      toast.error("Failed to delete meeting");
-      return;
-    }
-
-    setMeetings((prev) => prev.filter((m) => m.id !== meetingId));
+    return createMutation.mutateAsync({ title, joinLink, agenda });
   };
 
   return {
     meetings,
     loading,
     createMeeting,
-    joinAgent,
-    stopAgent,
-    deleteMeeting,
-    refresh: fetchMeetings,
+    joinAgent: (meetingId: string) => joinMutation.mutateAsync(meetingId),
+    stopAgent: (meetingId: string) => stopMutation.mutateAsync(meetingId),
+    deleteMeeting: (meetingId: string) => deleteMutation.mutateAsync(meetingId),
+    refresh: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all }),
   };
 }

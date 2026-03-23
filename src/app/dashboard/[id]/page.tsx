@@ -253,7 +253,9 @@ export default function MeetingDetailPage() {
           ) : (
             <TaskList
               tasks={meetingTasks}
-              onToggle={(taskId, status) => updateTask(taskId, { status })}
+              onToggle={(taskId, status) =>
+                updateTask(taskId, { status: status as "open" | "completed" })
+              }
               onDelete={deleteTask}
               onAdd={(title) => addTask(title)}
             />

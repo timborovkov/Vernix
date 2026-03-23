@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 const registerSchema = z.object({
   email: z.email(),
@@ -19,6 +20,14 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 export async function POST(request: Request) {
+  const rl = rateLimitByIp(request, "auth:register", {
+    interval: 60_000,
+    limit: 5,
+  });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
