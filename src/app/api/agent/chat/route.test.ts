@@ -1,16 +1,20 @@
-const { mockGetRAGContext, mockFormatContext, mockDb } = vi.hoisted(() => {
-  const db: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const m of ["select", "from", "where"]) {
-    db[m] = vi.fn().mockImplementation(() => db);
-  }
-  // Default: return meeting with no agenda
-  db.where.mockResolvedValue([{ metadata: {} }]);
-  return {
-    mockGetRAGContext: vi.fn().mockResolvedValue([]),
-    mockFormatContext: vi.fn().mockReturnValue(""),
-    mockDb: db,
-  };
-});
+const { mockGetRAGContext, mockFormatContext, mockDb, mockConnectForUser } =
+  vi.hoisted(() => {
+    const db: Record<string, ReturnType<typeof vi.fn>> = {};
+    for (const m of ["select", "from", "where"]) {
+      db[m] = vi.fn().mockImplementation(() => db);
+    }
+    // Default: return meeting with no agenda
+    db.where.mockResolvedValue([{ metadata: {} }]);
+    return {
+      mockGetRAGContext: vi.fn().mockResolvedValue([]),
+      mockFormatContext: vi.fn().mockReturnValue(""),
+      mockDb: db,
+      mockConnectForUser: vi.fn().mockResolvedValue({
+        getVercelTools: () => ({}),
+      }),
+    };
+  });
 
 vi.mock("@/lib/agent/rag", () => ({
   getRAGContext: mockGetRAGContext,
@@ -38,6 +42,9 @@ vi.mock("@ai-sdk/openai", () => ({
 }));
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/lib/mcp/client", () => ({
+  McpClientManager: { connectForUser: mockConnectForUser },
+}));
 
 import { POST } from "./route";
 import { createJsonRequest } from "@/test/helpers";
@@ -49,6 +56,9 @@ describe("POST /api/agent/chat", () => {
     mockStreamText.mockClear();
     mockGetRAGContext.mockReset().mockResolvedValue([]);
     mockFormatContext.mockReset().mockReturnValue("");
+    mockConnectForUser.mockReset().mockResolvedValue({
+      getVercelTools: () => ({}),
+    });
   });
 
   it("calls streamText with correct model and system prompt", async () => {
@@ -126,6 +136,38 @@ describe("POST /api/agent/chat", () => {
     expect(mockGetRAGContext).toHaveBeenCalledWith("search all", {
       userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
     });
+  });
+
+  it("system prompt includes post-meeting features", async () => {
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { messages: [{ role: "user", content: "hi" }] },
+    });
+
+    await POST(req);
+
+    const call = mockStreamText.mock.calls[0][0];
+    expect(call.system).toContain("summary of the meeting");
+    expect(call.system).toContain("Action items");
+  });
+
+  it("system prompt includes MCP tool descriptions when available", async () => {
+    mockConnectForUser.mockResolvedValueOnce({
+      getVercelTools: () => ({
+        mcp__abc__lookup: { description: "Look up customer data" },
+      }),
+    });
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { messages: [{ role: "user", content: "hi" }] },
+    });
+
+    await POST(req);
+
+    const call = mockStreamText.mock.calls[0][0];
+    expect(call.system).toContain("external tools");
+    expect(call.system).toContain("Look up customer data");
   });
 
   it("returns streaming response", async () => {

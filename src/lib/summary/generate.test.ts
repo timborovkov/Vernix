@@ -43,7 +43,7 @@ describe("generateMeetingSummary", () => {
     expect(result).toBe("Meeting summary here.");
     expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gpt-4o-mini",
+        model: "gpt-5.4-mini",
         messages: expect.arrayContaining([
           expect.objectContaining({
             role: "user",

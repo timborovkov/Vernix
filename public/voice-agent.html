@@ -73,6 +73,7 @@
       let ws = null;
       let audioContext = null;
       let audioDone = true; // true when no more audio chunks expected
+      let mcpToolNames = new Set();
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -169,26 +170,54 @@
         silentGain.connect(audioContext.destination);
       }
 
-      // --- RAG tool handler ---
+      // --- Tool handlers ---
       async function handleToolCall(callId, name, args) {
-        if (name !== "search_meeting_context") {
-          sendToolOutput(callId, "Unknown tool.");
+        if (name === "search_meeting_context") {
+          setStatus("Searching context...", "thinking");
+          try {
+            const res = await fetch(`${appUrl}/api/agent/rag`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ meetingId, botSecret, query: args.query }),
+            });
+            const data = await res.json();
+            sendToolOutput(callId, data.context || "No context found.");
+          } catch (err) {
+            log("RAG error: " + err.message);
+            sendToolOutput(callId, "Error searching context.");
+          }
           return;
         }
 
-        setStatus("Searching context...", "thinking");
-        try {
-          const res = await fetch(`${appUrl}/api/agent/rag`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ meetingId, botSecret, query: args.query }),
-          });
-          const data = await res.json();
-          sendToolOutput(callId, data.context || "No context found.");
-        } catch (err) {
-          log("RAG error: " + err.message);
-          sendToolOutput(callId, "Error searching context.");
+        if (mcpToolNames.has(name)) {
+          setStatus("Using tool...", "thinking");
+          try {
+            const res = await fetch(`${appUrl}/api/agent/mcp-tool`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                meetingId,
+                botSecret,
+                toolName: name,
+                arguments: args,
+              }),
+            });
+            const data = await res.json();
+            const output =
+              data.result != null
+                ? typeof data.result === "string"
+                  ? data.result
+                  : JSON.stringify(data.result)
+                : data.error || "Tool returned no result.";
+            sendToolOutput(callId, output);
+          } catch (err) {
+            log("MCP tool error: " + err.message);
+            sendToolOutput(callId, "Error calling tool: " + name);
+          }
+          return;
         }
+
+        sendToolOutput(callId, "Unknown tool.");
       }
 
       function sendToolOutput(callId, output) {
@@ -227,12 +256,13 @@
           setTimeout(connect, 5000);
           return;
         }
-        const { token } = await tokenRes.json();
+        const tokenData = await tokenRes.json();
+        const token = tokenData.token;
+        mcpToolNames = new Set(tokenData.mcpToolNames || []);
 
         setStatus("Connecting to AI...", "");
 
-        const url =
-          "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview";
+        const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
           "realtime",
           `openai-insecure-api-key.${token}`,

@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 const PUBLIC_AGENT_PATHS = [
   "/api/agent/voice-token",
   "/api/agent/rag",
+  "/api/agent/mcp-tool",
   "/api/mcp",
 ];
 

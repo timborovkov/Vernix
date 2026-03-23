@@ -58,13 +58,13 @@ describe("VoiceSession", () => {
     const session = new VoiceSession({
       meetingId: "m1",
       userId,
-      model: "gpt-4o-mini-realtime-preview",
+      model: "gpt-realtime-mini",
     });
     await session.connect();
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.any(Object),
-      expect.objectContaining({ model: "gpt-4o-mini-realtime-preview" })
+      expect.objectContaining({ model: "gpt-realtime-mini" })
     );
   });
 

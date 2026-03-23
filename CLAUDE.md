@@ -40,7 +40,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)` and `getVoiceAgentSystemPrompt(agenda?)` which inject agenda context when available.
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
-- **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-4o-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
+- **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-5.4-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
 - **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, and presigned download URLs.
 - **`src/lib/mcp/`** — `server.ts` creates per-connection MCP servers exposing meeting data tools. `client.ts` manages connections to user-configured external MCP servers with connection caching.
 - **`src/lib/auth/api-key.ts`** — API key generation (bcrypt-hashed) and authentication for MCP server endpoint.
@@ -58,6 +58,7 @@ All under `src/app/api/`:
 - `agent/respond/route.ts` — POST text-based RAG chat
 - `agent/voice-token/route.ts` — GET ephemeral OpenAI Realtime token (public, verified by botSecret)
 - `agent/rag/route.ts` — POST RAG search for voice agent (public, verified by botSecret)
+- `agent/mcp-tool/route.ts` — POST MCP tool execution for voice agent (public, verified by botSecret)
 - `webhooks/recall/transcript/route.ts` — Receives realtime transcript data from Recall
 - `webhooks/recall/status/route.ts` — Receives bot lifecycle events (call_ended, transcript.done)
 - `auth/[...nextauth]/route.ts` — NextAuth handlers
@@ -80,7 +81,7 @@ All under `src/app/api/`:
 ### Auth & Middleware
 
 - `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`, `/api/settings/*`, `/api/export`
-- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag` (verified by botSecret), `/api/mcp` (API key auth)
+- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool` (verified by botSecret), `/api/mcp` (API key auth)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
 

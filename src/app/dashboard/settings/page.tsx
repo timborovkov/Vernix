@@ -36,7 +36,15 @@ export default function SettingsPage() {
               MCP clients.
             </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                Server URL
+              </p>
+              <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
+                {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/mcp`}
+              </code>
+            </div>
             <ApiKeyList keys={keys} onCreate={createKey} onDelete={deleteKey} />
           </CardContent>
         </Card>
