@@ -4,7 +4,10 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/auth/session";
 import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
-import { getAgentSystemPrompt } from "@/lib/agent/prompts";
+import {
+  getAgentSystemPrompt,
+  type ToolDescription,
+} from "@/lib/agent/prompts";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
@@ -30,9 +33,14 @@ export async function POST(request: Request) {
 
   // Connect to user's external MCP servers (cached, non-blocking on failure)
   let mcpTools: Record<string, unknown> = {};
+  let mcpToolDescriptions: ToolDescription[] = [];
   try {
     const mcpManager = await McpClientManager.connectForUser(user.id);
     mcpTools = mcpManager.getVercelTools();
+    mcpToolDescriptions = Object.entries(mcpTools).map(([name, tool]) => ({
+      name,
+      description: (tool as { description: string }).description,
+    }));
   } catch (error) {
     console.error("MCP client connection failed:", error);
   }
@@ -41,7 +49,7 @@ export async function POST(request: Request) {
 
   const result = streamText({
     model: openai("gpt-4o"),
-    system: getAgentSystemPrompt(agenda),
+    system: getAgentSystemPrompt(agenda, mcpToolDescriptions),
     messages: modelMessages,
     tools: {
       ...mcpTools,
