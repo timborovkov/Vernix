@@ -32,7 +32,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, and `documents` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, and `tasks` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface with `RecallProvider` and `MockProvider`. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.
@@ -40,6 +40,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)` and `getVoiceAgentSystemPrompt(agenda?)` which inject agenda context when available.
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
+- **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-4o-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
 - **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, and presigned download URLs.
 
 ### API Routes
@@ -63,10 +64,13 @@ All under `src/app/api/`:
 - `search/route.ts` — Vector search across meetings and knowledge base
 - `knowledge/route.ts` — GET list documents (optional `?meetingId` filter), POST upload (multipart form-data, optional `meetingId` field for meeting-scoped docs)
 - `knowledge/[id]/route.ts` — GET document + download URL, DELETE document (from correct collection based on meetingId)
+- `meetings/[id]/tasks/route.ts` — GET list tasks, POST create task
+- `meetings/[id]/tasks/[taskId]/route.ts` — PATCH update task, DELETE task
+- `tasks/route.ts` — GET cross-meeting tasks (with meeting title join)
 
 ### Auth & Middleware
 
-- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`
+- `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`
 - Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag` (verified by botSecret instead)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
@@ -99,7 +103,7 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 - Mock pattern: `vi.hoisted()` for mock setup, chainable DB mock, `vi.mock()` for modules
 - Auth is globally mocked in `src/test/setup.ts` — `requireSessionUser` returns a test user
 - Test helpers: `createJsonRequest`, `parseJsonResponse`, `fakeMeeting`, `fakeDocument` in `src/test/helpers.ts`
-- `fakeMeeting()` and `fakeDocument()` include `userId` field matching the test user
+- `fakeMeeting()`, `fakeDocument()`, and `fakeTask()` include `userId` field matching the test user
 
 ## Checklist for Changes
 
