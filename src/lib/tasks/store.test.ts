@@ -40,12 +40,14 @@ describe("storeExtractedTasks", () => {
         userId: USER_ID,
         title: "Task A",
         assignee: "Alice",
+        autoExtracted: 1,
       },
       {
         meetingId: MEETING_ID,
         userId: USER_ID,
         title: "Task B",
         assignee: null,
+        autoExtracted: 1,
       },
     ]);
   });
