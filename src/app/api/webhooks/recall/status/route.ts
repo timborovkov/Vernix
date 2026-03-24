@@ -7,6 +7,8 @@ import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
 import { extractActionItems } from "@/lib/tasks/extract";
 import { storeExtractedTasks } from "@/lib/tasks/store";
+import { verifyRecallSignature } from "@/lib/webhooks/verify";
+import { rateLimitByIp } from "@/lib/rate-limit";
 
 const statusEventSchema = z.object({
   event: z.string(),
@@ -19,11 +21,39 @@ const statusEventSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const rl = rateLimitByIp(request, "webhook:status", {
+    interval: 60_000,
+    limit: 100,
+  });
+  if (!rl.success) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  const webhookSecret = process.env.RECALL_WEBHOOK_SECRET;
   let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+
+  if (webhookSecret) {
+    const { valid, body: rawBody } = await verifyRecallSignature(
+      request,
+      webhookSecret
+    );
+    if (!valid) {
+      return NextResponse.json(
+        { error: "Invalid webhook signature" },
+        { status: 401 }
+      );
+    }
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+  } else {
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
   }
 
   console.log("[Webhook:status] Received:", JSON.stringify(body).slice(0, 300));
