@@ -79,6 +79,7 @@ async function flushBuffer(
 
   const chunks = [...buffer.chunks];
   // Remove the entry entirely — chunks are consumed and timer has already fired
+  // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete, not Drizzle
   buffers.delete(meetingId);
 
   const fullText = chunks.map((c) => `${c.speaker}: ${c.text}`).join("\n");
