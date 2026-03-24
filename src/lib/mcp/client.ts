@@ -1,5 +1,8 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import {
+  StreamableHTTPClientTransport,
+  StreamableHTTPError,
+} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { jsonSchema } from "ai";
 import { eq } from "drizzle-orm";
@@ -126,21 +129,30 @@ export class McpClientManager {
       version: "1.0.0",
     });
 
-    // Try Streamable HTTP first (MCP spec 2025-03-26+), fall back to SSE
-    // for servers still on the older transport
+    // Try Streamable HTTP first (MCP spec 2025-03-26+).
+    // Fall back to SSE only when the server returns 404/405 — indicating it
+    // doesn't speak the Streamable HTTP protocol. Any other error (auth, network,
+    // etc.) is re-thrown immediately so it isn't masked by a redundant SSE attempt.
     try {
       const transport = new StreamableHTTPClientTransport(new URL(server.url), {
         requestInit: { headers },
       });
       await client.connect(transport);
-    } catch {
-      const sseTransport = new SSEClientTransport(new URL(server.url), {
-        requestInit: { headers },
-        eventSourceInit: {
-          fetch: (url, init) => fetch(url, { ...init, headers }),
-        },
-      });
-      await client.connect(sseTransport);
+    } catch (err) {
+      if (
+        err instanceof StreamableHTTPError &&
+        (err.code === 404 || err.code === 405)
+      ) {
+        const sseTransport = new SSEClientTransport(new URL(server.url), {
+          requestInit: { headers },
+          eventSourceInit: {
+            fetch: (url, init) => fetch(url, { ...init, headers }),
+          },
+        });
+        await client.connect(sseTransport);
+      } else {
+        throw err;
+      }
     }
 
     const { tools } = await client.listTools();
