@@ -5,11 +5,7 @@ import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import {
-  StreamableHTTPClientTransport,
-  StreamableHTTPError,
-} from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
+import { connectMcpClient } from "@/lib/mcp/transport";
 
 // Accept either an existing server ID (apiKey looked up server-side)
 // or a raw url+apiKey pair (for testing before saving)
@@ -19,8 +15,11 @@ const testSchema = z.union([
 ]);
 
 // Reject private/loopback/link-local IPs to prevent SSRF.
+// Covers: loopback (127.x, ::1), private ranges (10.x, 172.16-31.x, 192.168.x),
+// link-local incl. cloud metadata endpoint (169.254.x.x), unspecified (0.0.0.0),
+// IPv6 ULA (fc00::/7), and .local mDNS hostnames.
 const PRIVATE_IP_RE =
-  /^(localhost|.*\.local|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
+  /^(localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
 
 function isSsrfUrl(rawUrl: string): boolean {
   try {
@@ -44,37 +43,7 @@ async function probe(
   }
 
   const client = new Client({ name: "KiviKova", version: "1.0.0" });
-
-  // Try Streamable HTTP first (MCP spec 2025-03-26+).
-  // Fall back to SSE only on 404/405 — server doesn't support the protocol.
-  try {
-    const transport = new StreamableHTTPClientTransport(new URL(url), {
-      requestInit: { headers },
-    });
-    await client.connect(transport);
-  } catch (err) {
-    if (
-      err instanceof StreamableHTTPError &&
-      (err.code === 404 || err.code === 405)
-    ) {
-      const sseTransport = new SSEClientTransport(new URL(url), {
-        requestInit: { headers },
-        eventSourceInit: {
-          fetch: (u, init) =>
-            fetch(u, {
-              ...init,
-              headers: {
-                ...(init?.headers as Record<string, string>),
-                ...headers,
-              },
-            }),
-        },
-      });
-      await client.connect(sseTransport);
-    } else {
-      throw err;
-    }
-  }
+  await connectMcpClient(client, url, headers);
 
   try {
     const { tools } = await client.listTools();
