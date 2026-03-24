@@ -63,8 +63,12 @@ export function useKnowledge(meetingId?: string) {
   });
 
   const uploadDocument = async (file: File) => {
-    const doc = await uploadMutation.mutateAsync(file);
-    return doc;
+    try {
+      return await uploadMutation.mutateAsync(file);
+    } catch {
+      // onError already shows toast
+      return null;
+    }
   };
 
   const deleteDocument = (id: string) => deleteMutation.mutate(id);
