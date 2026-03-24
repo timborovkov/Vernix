@@ -46,8 +46,15 @@ export async function GET(request: Request) {
   // Verify the bot secret matches the stored voiceSecret
   const storedSecret = (meeting.metadata as Record<string, unknown>)
     ?.voiceSecret;
-  if (!storedSecret || storedSecret !== botSecret) {
+  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
+  }
+
+  if (!meeting.userId) {
+    return NextResponse.json(
+      { error: "Meeting not found or not active" },
+      { status: 404 }
+    );
   }
 
   // Load MCP tools for the meeting owner
@@ -59,7 +66,7 @@ export async function GET(request: Request) {
   }> = [];
   let mcpToolDescriptions: ToolDescription[] = [];
   try {
-    const mcpManager = await McpClientManager.connectForUser(meeting.userId!);
+    const mcpManager = await McpClientManager.connectForUser(meeting.userId);
     mcpOpenAITools = mcpManager.getOpenAITools();
     mcpToolDescriptions = mcpOpenAITools.map((t) => ({
       name: t.name,
@@ -70,8 +77,8 @@ export async function GET(request: Request) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const agenda = (meeting.metadata as Record<string, unknown>)
-    ?.agenda as string;
+  const agendaRaw = (meeting.metadata as Record<string, unknown>)?.agenda;
+  const agenda = typeof agendaRaw === "string" ? agendaRaw : undefined;
 
   try {
     const client = getOpenAIClient();

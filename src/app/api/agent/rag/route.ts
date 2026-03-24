@@ -55,13 +55,17 @@ export async function POST(request: Request) {
 
   const storedSecret = (meeting.metadata as Record<string, unknown>)
     ?.voiceSecret;
-  if (!storedSecret || storedSecret !== botSecret) {
+  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
+  }
+
+  if (!meeting.userId) {
+    return NextResponse.json({ context: "Meeting not found." });
   }
 
   try {
     const results = await getRAGContext(query, {
-      userId: meeting.userId!,
+      userId: meeting.userId,
       boostMeetingId: meetingId,
     });
     const context =

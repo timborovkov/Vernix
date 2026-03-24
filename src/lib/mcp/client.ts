@@ -1,6 +1,6 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { jsonSchema } from "ai";
+import { connectMcpClient } from "./transport";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
@@ -120,16 +120,7 @@ export class McpClientManager {
       headers["Authorization"] = `Bearer ${server.apiKey}`;
     }
 
-    const transport = new StreamableHTTPClientTransport(new URL(server.url), {
-      requestInit: { headers },
-    });
-
-    const client = new Client({
-      name: "KiviKova",
-      version: "1.0.0",
-    });
-
-    await client.connect(transport);
+    const client = await connectMcpClient(server.url, headers);
 
     const { tools } = await client.listTools();
     for (const tool of tools) {
