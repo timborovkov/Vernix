@@ -18,6 +18,19 @@ const testSchema = z.union([
   z.object({ url: z.url(), apiKey: z.string().optional() }),
 ]);
 
+// Reject private/loopback/link-local IPs to prevent SSRF.
+const PRIVATE_IP_RE =
+  /^(localhost|.*\.local|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
+
+function isSsrfUrl(rawUrl: string): boolean {
+  try {
+    const { hostname } = new URL(rawUrl);
+    return PRIVATE_IP_RE.test(hostname);
+  } catch {
+    return true;
+  }
+}
+
 async function probe(
   url: string,
   apiKey?: string | null
@@ -46,7 +59,16 @@ async function probe(
     ) {
       const sseTransport = new SSEClientTransport(new URL(url), {
         requestInit: { headers },
-        eventSourceInit: { fetch: (u, init) => fetch(u, { ...init, headers }) },
+        eventSourceInit: {
+          fetch: (u, init) =>
+            fetch(u, {
+              ...init,
+              headers: {
+                ...(init?.headers as Record<string, string>),
+                ...headers,
+              },
+            }),
+        },
       });
       await client.connect(sseTransport);
     } else {
@@ -107,6 +129,16 @@ export async function POST(request: Request) {
   } else {
     url = parsed.data.url;
     apiKey = parsed.data.apiKey;
+  }
+
+  if (isSsrfUrl(url)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "URL resolves to a private or restricted address",
+      },
+      { status: 400 }
+    );
   }
 
   let timeoutId: ReturnType<typeof setTimeout>;
