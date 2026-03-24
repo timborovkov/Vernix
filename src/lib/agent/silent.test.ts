@@ -30,6 +30,15 @@ vi.mock("@/lib/meeting-bot", () => ({
   }),
 }));
 
+vi.mock("@/lib/mcp/client", () => ({
+  McpClientManager: {
+    connectForUser: vi.fn().mockResolvedValue({
+      getOpenAITools: vi.fn().mockReturnValue([]),
+      callTool: vi.fn().mockResolvedValue({}),
+    }),
+  },
+}));
+
 describe("containsMention", () => {
   it("returns true for 'KiviKova' (case-insensitive)", () => {
     expect(containsMention("Hey KiviKova, what was discussed?")).toBe(true);
