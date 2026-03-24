@@ -4,7 +4,6 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { connectMcpClient } from "@/lib/mcp/transport";
 
 // Accept either an existing server ID (apiKey looked up server-side)
@@ -21,10 +20,39 @@ const testSchema = z.union([
 const PRIVATE_IP_RE =
   /^(localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
 
+/**
+ * Unwrap IPv6-mapped IPv4 addresses to their dotted-decimal form so that
+ * PRIVATE_IP_RE can block them. `new URL()` normalises the brackets away but
+ * keeps the address as-is, e.g.:
+ *   http://[::ffff:127.0.0.1]/  →  hostname = "::ffff:127.0.0.1"
+ *   http://[::ffff:7f00:1]/     →  hostname = "::ffff:7f00:1"
+ */
+function unwrapMappedIpv4(hostname: string): string | null {
+  // Dotted-decimal form: ::ffff:a.b.c.d
+  const dotted = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/i.exec(
+    hostname
+  );
+  if (dotted) return dotted[1];
+
+  // Hex-group form: ::ffff:aabb:ccdd
+  const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/i.exec(hostname);
+  if (hex) {
+    const hi = parseInt(hex[1], 16);
+    const lo = parseInt(hex[2], 16);
+    return `${(hi >> 8) & 0xff}.${hi & 0xff}.${(lo >> 8) & 0xff}.${lo & 0xff}`;
+  }
+
+  return null;
+}
+
 function isSsrfUrl(rawUrl: string): boolean {
   try {
     const { hostname } = new URL(rawUrl);
-    return PRIVATE_IP_RE.test(hostname);
+    if (PRIVATE_IP_RE.test(hostname)) return true;
+    // Also block IPv6-mapped IPv4 private addresses (e.g. ::ffff:169.254.169.254)
+    const mapped = unwrapMappedIpv4(hostname);
+    if (mapped !== null && PRIVATE_IP_RE.test(mapped)) return true;
+    return false;
   } catch {
     return true;
   }
@@ -42,8 +70,7 @@ async function probe(
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
-  const client = new Client({ name: "KiviKova", version: "1.0.0" });
-  await connectMcpClient(client, url, headers);
+  const client = await connectMcpClient(url, headers);
 
   try {
     const { tools } = await client.listTools();
