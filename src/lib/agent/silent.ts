@@ -81,7 +81,7 @@ async function flushBuffer(
   buffer.chunks = [];
   buffer.timer = null;
 
-  const fullText = chunks.map((c) => `${c.speaker}: ${c.text}`).join(" ");
+  const fullText = chunks.map((c) => `${c.speaker}: ${c.text}`).join("\n");
 
   if (!containsMention(fullText)) return;
 
