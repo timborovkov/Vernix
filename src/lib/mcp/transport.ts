@@ -52,10 +52,13 @@ export async function connectMcpClient(
       fetch: (u, init) =>
         fetch(u, {
           ...init,
-          headers: {
-            ...(init?.headers as Record<string, string>),
-            ...headers,
-          },
+          // Normalize init.headers to a plain object regardless of whether the
+          // SDK passes a Headers instance or a plain record — spreading a Headers
+          // instance directly yields {} and silently drops all SDK-set headers.
+          headers: Object.fromEntries([
+            ...new Headers(init?.headers ?? {}),
+            ...Object.entries(headers),
+          ]),
         }),
     },
   });
