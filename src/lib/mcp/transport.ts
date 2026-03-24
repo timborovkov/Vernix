@@ -40,6 +40,8 @@ export async function connectMcpClient(
       throw err;
     }
     // 404/405 → server doesn't support Streamable HTTP, fall through to SSE.
+    // Close the abandoned client to release any internal listeners/timers.
+    await streamableClient.close().catch(() => {});
   }
 
   // --- SSE fallback (fresh Client) ---
