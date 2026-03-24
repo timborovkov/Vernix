@@ -121,7 +121,14 @@
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
 - **Remove old assets** — Delete the `presentation/` and design system folders once the landing page is live
 
-## P16 — User Profiles & SSO
+## P16 — Dark Mode & Theme Selector
+
+- **System default** — Detect `prefers-color-scheme` on first load and apply light or dark accordingly
+- **Theme selector** — Dropdown or toggle in the dashboard nav/settings sidebar with three options: Light, Dark, System; persist choice to `localStorage`
+- **CSS variables** — Ensure all Tailwind v4 `@theme` tokens have correct dark-mode counterparts in `globals.css`
+- **Component audit** — Check every page and component renders correctly in both themes (hardcoded colours, shadow mismatches, etc.)
+
+## P16b — User Profiles & SSO
 
 - **Profile page** — `/settings/profile` page where users can edit name, email, company, and avatar
 - **Change password** — Current password verification + new password form
