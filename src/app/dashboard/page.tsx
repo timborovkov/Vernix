@@ -86,8 +86,8 @@ export default function DashboardPage() {
             Export All
           </Button>
           <CreateMeetingDialog
-            onCreate={async (title, joinLink, agenda) => {
-              await createMeeting(title, joinLink, agenda);
+            onCreate={async (title, joinLink, agenda, silent) => {
+              await createMeeting(title, joinLink, agenda, silent);
             }}
           />
           <Button

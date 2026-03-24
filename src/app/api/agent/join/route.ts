@@ -54,12 +54,15 @@ export async function POST(request: Request) {
     .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
   const provider = getMeetingBotProvider();
+  const existingMetadata = (meeting.metadata as Record<string, unknown>) ?? {};
+  const silent = Boolean(existingMetadata.silent);
 
   try {
     const { botId, voiceSecret } = await provider.joinMeeting(
       meeting.joinLink,
       meetingId,
-      user.name
+      user.name,
+      { silent }
     );
 
     await db
@@ -67,7 +70,12 @@ export async function POST(request: Request) {
       .set({
         status: "active",
         startedAt: new Date(),
-        metadata: { ...meeting.metadata, botId, voiceSecret },
+        metadata: {
+          ...existingMetadata,
+          botId,
+          silent,
+          ...(voiceSecret !== undefined ? { voiceSecret } : {}),
+        },
         updatedAt: new Date(),
       })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));

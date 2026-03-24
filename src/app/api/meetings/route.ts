@@ -12,6 +12,7 @@ const createMeetingSchema = z.object({
   title: z.string().min(1, "Title is required"),
   joinLink: z.url("Must be a valid URL"),
   agenda: z.string().max(10000).optional(),
+  silent: z.boolean().optional().default(false),
 });
 
 export async function GET() {
@@ -41,7 +42,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { title, joinLink, agenda } = parsed.data;
+  const { title, joinLink, agenda, silent } = parsed.data;
   const collectionName = `meeting_${randomUUID().replace(/-/g, "")}`;
 
   await createMeetingCollection(collectionName);
@@ -49,6 +50,9 @@ export async function POST(request: Request) {
   const metadata: Record<string, unknown> = {};
   if (agenda?.trim()) {
     metadata.agenda = agenda.trim();
+  }
+  if (silent) {
+    metadata.silent = true;
   }
 
   const [meeting] = await db

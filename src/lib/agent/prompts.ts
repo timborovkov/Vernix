@@ -12,6 +12,12 @@ Answer questions accurately based on the provided context. If the context doesn'
 Be concise and conversational — you're speaking in a live meeting. Keep responses brief (2-3 sentences) unless asked to elaborate.
 Do not interrupt or speak unless directly addressed.`;
 
+const SILENT_AGENT_SYSTEM_PROMPT_BASE = `You are KiviKova, an AI meeting assistant. You are passively listening to a meeting and responding via the meeting's text chat when addressed.
+You respond when addressed as "KiviKova" or "Kivi Kova".
+Relevant transcript context from current and past meetings is provided directly in the user message — use it to answer accurately. If the context doesn't contain relevant information, say so.
+Keep responses concise (2-3 sentences max) — you are responding via meeting chat, not voice.
+Do not reference audio, speaking, or voice capabilities.`;
+
 const POST_MEETING_SECTION = `
 
 After the meeting ends, the following will be automatically generated:
@@ -43,6 +49,16 @@ export function getVoiceAgentSystemPrompt(
   mcpTools?: ToolDescription[]
 ): string {
   let prompt = VOICE_AGENT_SYSTEM_PROMPT_BASE + POST_MEETING_SECTION;
+  prompt += formatToolsSection(mcpTools);
+  if (agenda) prompt += `\n\nMeeting Agenda:\n${agenda}`;
+  return prompt;
+}
+
+export function getSilentAgentSystemPrompt(
+  agenda?: string | null,
+  mcpTools?: ToolDescription[]
+): string {
+  let prompt = SILENT_AGENT_SYSTEM_PROMPT_BASE + POST_MEETING_SECTION;
   prompt += formatToolsSection(mcpTools);
   if (agenda) prompt += `\n\nMeeting Agenda:\n${agenda}`;
   return prompt;

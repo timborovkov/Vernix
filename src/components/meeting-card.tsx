@@ -48,6 +48,10 @@ export function MeetingCard({
     }
   }
 
+  const isSilent = Boolean(
+    (meeting.metadata as Record<string, unknown>)?.silent
+  );
+
   return (
     <>
       <Card>
@@ -57,9 +61,12 @@ export function MeetingCard({
               {meeting.title}
             </Link>
           </CardTitle>
-          <Badge variant={statusVariant[meeting.status] ?? "outline"}>
-            {meeting.status}
-          </Badge>
+          <div className="flex items-center gap-1">
+            {isSilent && <Badge variant="secondary">Silent</Badge>}
+            <Badge variant={statusVariant[meeting.status] ?? "outline"}>
+              {meeting.status}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground truncate text-sm">
@@ -77,7 +84,9 @@ export function MeetingCard({
           )}
           {meeting.status === "active" && (
             <p className="mt-2 text-xs text-green-600">
-              Voice agent responds to: KiviKova, Agent, Assistant
+              {isSilent
+                ? "Text agent responds via meeting chat when called: KiviKova"
+                : "Voice agent responds to: KiviKova, Agent, Assistant"}
             </p>
           )}
         </CardContent>

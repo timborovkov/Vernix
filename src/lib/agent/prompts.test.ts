@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   getAgentSystemPrompt,
   getVoiceAgentSystemPrompt,
+  getSilentAgentSystemPrompt,
   type ToolDescription,
 } from "./prompts";
 
@@ -67,5 +68,41 @@ describe("getVoiceAgentSystemPrompt", () => {
     const prompt = getVoiceAgentSystemPrompt(null, sampleTools);
     expect(prompt).toContain("external tools");
     expect(prompt).toContain("mcp__abc__lookup: Look up customer data");
+  });
+});
+
+describe("getSilentAgentSystemPrompt", () => {
+  it("includes silent-specific instructions and post-meeting features", () => {
+    const prompt = getSilentAgentSystemPrompt();
+    expect(prompt).toContain("KiviKova");
+    expect(prompt).toContain("meeting chat");
+    expect(prompt).toContain("summary of the meeting");
+    expect(prompt).toContain("Action items");
+  });
+
+  it("does not reference voice or audio", () => {
+    const prompt = getSilentAgentSystemPrompt();
+    expect(prompt).toContain("Do not reference audio");
+  });
+
+  it("appends agenda when provided", () => {
+    const prompt = getSilentAgentSystemPrompt("Q4 planning session");
+    expect(prompt).toContain("Meeting Agenda:");
+    expect(prompt).toContain("Q4 planning session");
+  });
+
+  it("appends MCP tool descriptions when provided", () => {
+    const prompt = getSilentAgentSystemPrompt(null, sampleTools);
+    expect(prompt).toContain("external tools");
+    expect(prompt).toContain("mcp__abc__lookup: Look up customer data");
+  });
+
+  it("includes both agenda and tools", () => {
+    const prompt = getSilentAgentSystemPrompt("Sprint review", sampleTools);
+    expect(prompt).toContain("Sprint review");
+    expect(prompt).toContain("mcp__abc__lookup");
+    const toolsIdx = prompt.indexOf("external tools");
+    const agendaIdx = prompt.indexOf("Meeting Agenda:");
+    expect(toolsIdx).toBeLessThan(agendaIdx);
   });
 });
