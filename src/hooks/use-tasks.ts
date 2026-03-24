@@ -7,7 +7,7 @@ import { queryKeys } from "@/lib/query-keys";
 
 async function fetchTasks(meetingId: string): Promise<Task[]> {
   const res = await fetch(`/api/meetings/${meetingId}/tasks`);
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error("Failed to load tasks");
   const data = await res.json();
   return data.tasks;
 }
