@@ -106,6 +106,6 @@ export function useMeetingTasks(meetingId: string) {
       updates: Partial<Pick<Task, "title" | "status" | "assignee">>
     ) => updateMutation.mutate({ taskId, updates }),
     deleteTask: (taskId: string) => deleteMutation.mutate(taskId),
-    refresh: () => queryClient.invalidateQueries({ queryKey: qk }),
+    refresh: invalidateTasks,
   };
 }
