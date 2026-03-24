@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { jsonSchema } from "ai";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -120,16 +121,27 @@ export class McpClientManager {
       headers["Authorization"] = `Bearer ${server.apiKey}`;
     }
 
-    const transport = new StreamableHTTPClientTransport(new URL(server.url), {
-      requestInit: { headers },
-    });
-
     const client = new Client({
       name: "KiviKova",
       version: "1.0.0",
     });
 
-    await client.connect(transport);
+    // Try Streamable HTTP first (MCP spec 2025-03-26+), fall back to SSE
+    // for servers still on the older transport
+    try {
+      const transport = new StreamableHTTPClientTransport(new URL(server.url), {
+        requestInit: { headers },
+      });
+      await client.connect(transport);
+    } catch {
+      const sseTransport = new SSEClientTransport(new URL(server.url), {
+        requestInit: { headers },
+        eventSourceInit: {
+          fetch: (url, init) => fetch(url, { ...init, headers }),
+        },
+      });
+      await client.connect(sseTransport);
+    }
 
     const { tools } = await client.listTools();
     for (const tool of tools) {
