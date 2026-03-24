@@ -110,18 +110,27 @@
 - **Domain** — Point vernix.app to the deployment
 - **Update Recall** — Bot name from "KiviKova Agent" to "Vernix Agent", webhook URLs
 - **Voice agent wake words** — Change from "KiviKova" to "Vernix" in system prompt and UI hints
+- **Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site
+- **Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent
 
 ## P15 — UI Polish & Launch Prep
 
-- **Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site
-- **Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent
+- **Implement the logo set**
+- **Loading skeletons** – Structurally correct loading skeletons; general, page, and component specific loading components
 - **Landing page** — Build a clean marketing landing page matching the existing site style, with clear CTAs and value props
 - **Mobile responsiveness** — Audit and fix all pages for mobile; dashboard, meeting detail, settings, knowledge base
 - **UI cleanup** — Fix visual inconsistencies, improve empty states, sharpen CTAs, remove clutter
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
 - **Remove old assets** — Delete the `presentation/` and design system folders once the landing page is live
 
-## P16 — User Profiles & SSO
+## P16 — Dark Mode & Theme Selector
+
+- **System default** — Detect `prefers-color-scheme` on first load and apply light or dark accordingly
+- **Theme selector** — Dropdown or toggle in the dashboard nav/settings sidebar with three options: Light, Dark, System; persist choice to `localStorage`
+- **CSS variables** — Ensure all Tailwind v4 `@theme` tokens have correct dark-mode counterparts in `globals.css`
+- **Component audit** — Check every page and component renders correctly in both themes (hardcoded colours, shadow mismatches, etc.)
+
+## P16b — User Profiles & SSO
 
 - **Profile page** — `/settings/profile` page where users can edit name, email, company, and avatar
 - **Change password** — Current password verification + new password form

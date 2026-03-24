@@ -50,12 +50,16 @@ export async function POST(request: Request) {
 
   const storedSecret = (meeting.metadata as Record<string, unknown>)
     ?.voiceSecret;
-  if (!storedSecret || storedSecret !== botSecret) {
+  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
+  if (!meeting.userId) {
+    return NextResponse.json({ result: "Meeting not found." });
+  }
+
   try {
-    const manager = await McpClientManager.connectForUser(meeting.userId!);
+    const manager = await McpClientManager.connectForUser(meeting.userId);
     const result = await manager.callTool(toolName, args);
     return NextResponse.json({ result });
   } catch (error) {

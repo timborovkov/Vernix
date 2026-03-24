@@ -4,8 +4,7 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { connectMcpClient, isSsrfUrl } from "@/lib/mcp/transport";
 
 // Accept either an existing server ID (apiKey looked up server-side)
 // or a raw url+apiKey pair (for testing before saving)
@@ -26,12 +25,7 @@ async function probe(
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
-  const transport = new StreamableHTTPClientTransport(new URL(url), {
-    requestInit: { headers },
-  });
-
-  const client = new Client({ name: "KiviKova", version: "1.0.0" });
-  await client.connect(transport);
+  const client = await connectMcpClient(url, headers);
 
   try {
     const { tools } = await client.listTools();
@@ -86,6 +80,16 @@ export async function POST(request: Request) {
   } else {
     url = parsed.data.url;
     apiKey = parsed.data.apiKey;
+  }
+
+  if (isSsrfUrl(url)) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "URL resolves to a private or restricted address",
+      },
+      { status: 400 }
+    );
   }
 
   let timeoutId: ReturnType<typeof setTimeout>;
