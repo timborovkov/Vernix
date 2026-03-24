@@ -62,7 +62,7 @@ describe("GET /api/export", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/zip");
     expect(res.headers.get("content-disposition")).toContain(
-      "kivikova-export-"
+      "vernix-export-"
     );
     expect(res.headers.get("content-disposition")).toContain(".zip");
     expect(mockGenerateZip).toHaveBeenCalledWith([
