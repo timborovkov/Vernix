@@ -190,7 +190,9 @@
         }
 
         if (mcpToolNames.has(name)) {
-          setStatus("Using tool...", "thinking");
+          const displayName =
+            name.split("__").slice(2).join("__").replace(/_/g, " ") || name;
+          setStatus(`Using ${displayName}...`, "thinking");
           try {
             const res = await fetch(`${appUrl}/api/agent/mcp-tool`, {
               method: "POST",
