@@ -102,7 +102,11 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 - **Validation**: Zod v4 schemas on all API inputs (`import { z } from "zod/v4"`)
 - **IDs**: UUID v4 everywhere
 - **ORM**: Drizzle enforces WHERE on UPDATE/DELETE via ESLint plugin
-- **Singletons**: OpenAI, Qdrant, S3, and DB clients use module-level lazy singletons
+- **Singletons**: OpenAI, Qdrant, S3, and DB clients use module-level lazy singletons via `getEnv()`
+- **Env validation**: `src/lib/env.ts` validates all required env vars with Zod at first access. `RECALL_WEBHOOK_SECRET` is optional (skip verification in dev)
+- **Rate limiting**: `src/lib/rate-limit.ts` — in-memory per-IP rate limiter applied to public endpoints (webhooks, voice-token, rag, mcp-tool, register)
+- **Webhook verification**: `src/lib/webhooks/verify.ts` — HMAC-SHA256 signature verification for Recall webhooks (when `RECALL_WEBHOOK_SECRET` is set)
+- **Data fetching**: TanStack Query (`@tanstack/react-query`) with `QueryProvider` in root layout. Query key factory at `src/lib/query-keys.ts`. Hooks use `useQuery`/`useMutation` with proper cache invalidation and optimistic updates
 - **Path alias**: `@/*` maps to `src/*`
 - **Error handling**: API routes use try/catch with `NextResponse.json({ error }, { status })`. Toast notifications via sonner on the client.
 - **Status variant map**: `src/lib/meetings/constants.ts` — shared between meeting card and detail page

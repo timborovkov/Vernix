@@ -9,7 +9,7 @@ const { mockS3Client, mockGetSignedUrl } = vi.hoisted(() => ({
 
 vi.mock("./client", () => ({
   getS3Client: () => mockS3Client,
-  S3_BUCKET: "test-bucket",
+  getS3Bucket: () => "test-bucket",
 }));
 vi.mock("@aws-sdk/s3-request-presigner", () => ({
   getSignedUrl: mockGetSignedUrl,

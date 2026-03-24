@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 interface TaskWithMeeting {
   id: string;
@@ -13,26 +14,24 @@ interface TaskWithMeeting {
   meetingTitle: string | null;
 }
 
+async function fetchAllTasks(): Promise<TaskWithMeeting[]> {
+  const res = await fetch("/api/tasks?status=open");
+  if (!res.ok) throw new Error("Failed to load tasks");
+  const data = await res.json();
+  return data.tasks;
+}
+
 export function useAllTasks() {
-  const [tasks, setTasks] = useState<TaskWithMeeting[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { data: tasks = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.tasks.all,
+    queryFn: fetchAllTasks,
+  });
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      const res = await fetch("/api/tasks?status=open");
-      if (!res.ok) return;
-      const data = await res.json();
-      setTasks(data.tasks);
-    } catch {
-      // Silent
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
-
-  return { tasks, loading, refresh: fetchTasks };
+  return {
+    tasks,
+    loading,
+    refresh: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
+  };
 }

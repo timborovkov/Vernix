@@ -6,18 +6,18 @@ import {
   CreateBucketCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getS3Client, S3_BUCKET } from "./client";
+import { getS3Client, getS3Bucket } from "./client";
 
 export async function ensureBucket(): Promise<void> {
   const client = getS3Client();
   try {
-    await client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
+    await client.send(new HeadBucketCommand({ Bucket: getS3Bucket() }));
   } catch {
     try {
-      await client.send(new CreateBucketCommand({ Bucket: S3_BUCKET }));
+      await client.send(new CreateBucketCommand({ Bucket: getS3Bucket() }));
     } catch {
       // Another request may have created it concurrently — verify it exists
-      await client.send(new HeadBucketCommand({ Bucket: S3_BUCKET }));
+      await client.send(new HeadBucketCommand({ Bucket: getS3Bucket() }));
     }
   }
 }
@@ -30,7 +30,7 @@ export async function uploadFile(
   const client = getS3Client();
   await client.send(
     new PutObjectCommand({
-      Bucket: S3_BUCKET,
+      Bucket: getS3Bucket(),
       Key: key,
       Body: buffer,
       ContentType: contentType,
@@ -42,7 +42,7 @@ export async function deleteFile(key: string): Promise<void> {
   const client = getS3Client();
   await client.send(
     new DeleteObjectCommand({
-      Bucket: S3_BUCKET,
+      Bucket: getS3Bucket(),
       Key: key,
     })
   );
@@ -55,7 +55,7 @@ export async function getDownloadUrl(
   const client = getS3Client();
   return getSignedUrl(
     client,
-    new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }),
+    new GetObjectCommand({ Bucket: getS3Bucket(), Key: key }),
     { expiresIn }
   );
 }

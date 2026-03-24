@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/query-keys";
 
 interface ApiKeyInfo {
   id: string;
@@ -11,61 +12,67 @@ interface ApiKeyInfo {
   createdAt: string;
 }
 
+async function fetchKeys(): Promise<ApiKeyInfo[]> {
+  const res = await fetch("/api/settings/api-keys");
+  if (!res.ok) throw new Error("Failed to load API keys");
+  const data = await res.json();
+  return data.keys;
+}
+
 export function useApiKeys() {
-  const [keys, setKeys] = useState<ApiKeyInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchKeys = useCallback(async () => {
-    try {
-      const res = await fetch("/api/settings/api-keys");
-      if (!res.ok) return;
-      const data = await res.json();
-      setKeys(data.keys);
-    } catch {
-      toast.error("Failed to load API keys");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { data: keys = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.apiKeys.all,
+    queryFn: fetchKeys,
+    meta: { errorMessage: "Failed to load API keys" },
+  });
 
-  useEffect(() => {
-    fetchKeys();
-  }, [fetchKeys]);
-
-  const createKey = async (name: string): Promise<string | null> => {
-    try {
+  const createMutation = useMutation({
+    mutationFn: async (name: string) => {
       const res = await fetch("/api/settings/api-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-      if (!res.ok) {
-        toast.error("Failed to create API key");
-        return null;
-      }
-      const data = await res.json();
-      setKeys((prev) => [data, ...prev]);
+      if (!res.ok) throw new Error("Failed to create API key");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.apiKeys.all });
+    },
+    onError: () => {
+      toast.error("Failed to create API key");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/settings/api-keys/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete API key");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.apiKeys.all });
+      toast.success("API key deleted");
+    },
+    onError: () => {
+      toast.error("Failed to delete API key");
+    },
+  });
+
+  const createKey = async (name: string): Promise<string | null> => {
+    try {
+      const data = await createMutation.mutateAsync(name);
       return data.rawKey;
     } catch {
-      toast.error("Failed to create API key");
       return null;
     }
   };
 
   const deleteKey = async (id: string) => {
-    try {
-      const res = await fetch(`/api/settings/api-keys/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        toast.error("Failed to delete API key");
-        return;
-      }
-      setKeys((prev) => prev.filter((k) => k.id !== id));
-      toast.success("API key deleted");
-    } catch {
-      toast.error("Failed to delete API key");
-    }
+    deleteMutation.mutate(id);
   };
 
   return { keys, loading, createKey, deleteKey };

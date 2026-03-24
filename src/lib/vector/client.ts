@@ -1,10 +1,11 @@
 import { QdrantClient } from "@qdrant/js-client-rest";
+import { getEnv } from "@/lib/env";
 
 let client: QdrantClient | null = null;
 
 export function getQdrantClient(): QdrantClient {
   if (!client) {
-    const url = process.env.QDRANT_URL ?? "http://localhost:6333";
+    const url = getEnv().QDRANT_URL;
     const parsed = new URL(url);
     client = new QdrantClient({
       url,

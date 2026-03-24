@@ -59,7 +59,7 @@
 
 ## P8 — Meeting-Scoped Knowledge ~~DONE~~
 
-- ~~**`meetingId` on documents** — Optional FK on `documents` table linking uploads to a specific meeting~~
+- ~~`**meetingId` on documents — Optional FK on `documents` table linking uploads to a specific meeting~~
 - ~~**Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting, chunks go into meeting's Qdrant collection~~
 - ~~**Scoped RAG boost** — Meeting-scoped documents in the meeting collection get boosted automatically alongside transcripts~~
 - ~~**Knowledge list integration** — Meeting detail shows only that meeting's docs; global page shows all docs~~
@@ -90,27 +90,27 @@
 - ~~**Config Storage** — `mcpServers` table for per-user server configs (name, url, apiKey, enabled)~~
 - ~~**Settings UI** — `/dashboard/settings` page with API key management + MCP server config CRUD~~
 
-## P12 — Data Export
+## P12 — Data Export ~~DONE~~
 
-- **Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown
-- **Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)
-- **Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints
+- ~~**Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown~~
+- ~~**Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)~~
+- ~~**Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints~~
 
-## P13 — Production Hardening
+## P13 — Production Hardening ~~DONE~~
 
-- **Rate limiting** — Protect webhook and public API endpoints
-- **Env validation** — Validate required env vars at startup with Zod
-- **Webhook signature verification** — Verify Recall webhook payloads using signing secret
+- ~~**Rate limiting** — In-memory per-IP rate limiter on all public endpoints (webhooks, voice-token, rag, mcp-tool, register)~~
+- ~~**Env validation** — `src/lib/env.ts` validates all required env vars with Zod at first access; client singletons use `getEnv()`~~
+- ~~**Webhook signature verification** — HMAC-SHA256 verification of Recall webhook payloads via `RECALL_WEBHOOK_SECRET` (optional, skip in dev)~~
 
-## P14 — Rebrand to Vernix.AI
+## P14 — Rebrand to Vernix (vernix.app)
 
 - **Rename everywhere** — Package name, repo, README, CLAUDE.md, presentation, UI text, bot name, prompts, SEO metadata
 - **Rename GitHub repository**
 - **Register the domain and social media**
-- **Domain** — Point vernix.ai to the deployment
+- **Domain** — Point vernix.app to the deployment
 - **Update Recall** — Bot name from "KiviKova Agent" to "Vernix Agent", webhook URLs
 - **Voice agent wake words** — Change from "KiviKova" to "Vernix" in system prompt and UI hints
-- **Logos** — Create proper logo set (icon, wordmark, favicon, OG image) for Vernix.AI
+- **Logos** — Create proper logo set (icon, wordmark, favicon, OG image) for Vernix
 - **Google Stitch** — Update design system screens and branding on Stitch
 
 ## P15 — Design System and pages
@@ -146,14 +146,14 @@
 - **UI indicator** — Show "Silent" badge on meeting card and detail page
 - **Storage** — `metadata.silent: boolean` on the meeting row
 
-## P19 — Switch to TanStack Query
+## P19 — Switch to TanStack Query ~~DONE~~
 
-- **Replace custom hooks** — Migrate `useMeetings`, `useMeetingDetail`, `useKnowledge`, `useTasks`, `useAllTasks`, `useApiKeys`, `useMcpServers` from manual `useState`/`useEffect`/`fetch` to TanStack Query (`@tanstack/react-query`)
-- **Query client setup** — Add `QueryClientProvider` in root layout
-- **Caching policies** — Define proper `staleTime` and `gcTime` per query type (e.g., meeting list short stale time, meeting detail longer). Use stale-while-revalidate and automatic refetch on window focus
-- **Cache invalidation** — Invalidate related queries after mutations (e.g., invalidate meeting list after create/delete, invalidate tasks after toggle). Use query key factories for consistent invalidation
-- **Mutations** — Use `useMutation` for create/update/delete operations with optimistic updates where appropriate (e.g., task checkbox toggle, meeting delete)
-- **Remove polling** — Replace manual `setInterval` polling with TanStack Query's `refetchInterval` for transient meeting states (joining/active/processing)
+- ~~**Replace custom hooks** — All 7 hooks (`useMeetings`, `useMeetingDetail`, `useKnowledge`, `useTasks`, `useAllTasks`, `useApiKeys`, `useMcpServers`) migrated to `useQuery`/`useMutation`~~
+- ~~**Query client setup** — `QueryProvider` in root layout with 30s staleTime, 5min gcTime, refetch on focus~~
+- ~~**Caching policies** — Meeting list: 10s staleTime with conditional 5s polling for transient states. Query key factory at `src/lib/query-keys.ts`~~
+- ~~**Cache invalidation** — Cross-invalidation: meeting delete → meetings + tasks; task CRUD → meeting tasks + all tasks; knowledge CRUD → knowledge list~~
+- ~~**Mutations** — `useMutation` with optimistic updates for task toggle and meeting delete~~
+- ~~**Remove polling** — `setInterval` replaced with TanStack Query `refetchInterval` on both meetings list and meeting detail~~
 
 ## P20 — Billing with Polar
 
