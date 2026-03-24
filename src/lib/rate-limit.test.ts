@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { rateLimit, getClientIp } from "./rate-limit";
+import { rateLimit, getClientIp, resetRateLimits } from "./rate-limit";
 
 describe("rateLimit", () => {
   it("allows requests under the limit", () => {
@@ -17,6 +17,15 @@ describe("rateLimit", () => {
     const result = rateLimit(key, opts);
     expect(result.success).toBe(false);
     expect(result.remaining).toBe(0);
+  });
+
+  it("clears all buckets on resetRateLimits", () => {
+    const key = "test-clear";
+    const opts = { interval: 60_000, limit: 1 };
+    rateLimit(key, opts);
+    expect(rateLimit(key, opts).success).toBe(false);
+    resetRateLimits();
+    expect(rateLimit(key, opts).success).toBe(true);
   });
 
   it("resets after interval expires", () => {
