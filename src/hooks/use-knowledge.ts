@@ -22,6 +22,7 @@ export function useKnowledge(meetingId?: string) {
   const { data: documents = [], isLoading: loading } = useQuery({
     queryKey: qk,
     queryFn: () => fetchDocuments(meetingId),
+    meta: { errorMessage: "Failed to load documents" },
   });
 
   const uploadMutation = useMutation({
