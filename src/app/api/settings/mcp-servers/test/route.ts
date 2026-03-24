@@ -18,7 +18,7 @@ const testSchema = z.union([
 // link-local incl. cloud metadata endpoint (169.254.x.x), unspecified (0.0.0.0),
 // IPv6 ULA (fc00::/7), and .local mDNS hostnames.
 const PRIVATE_IP_RE =
-  /^(localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:|fd[0-9a-f]{2}:)/i;
+  /^(localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1|fc[0-9a-f]{2}:.*|fd[0-9a-f]{2}:.*)$/i;
 
 /**
  * Unwrap IPv6-mapped IPv4 addresses to their dotted-decimal form so that
