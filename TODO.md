@@ -104,22 +104,22 @@
 
 ## P14 — Rebrand to Vernix (vernix.app)
 
-- **Rename everywhere** — Package name, repo, README, CLAUDE.md, presentation, UI text, bot name, prompts, SEO metadata
+- **Rename everywhere** — Package name, repo, README, CLAUDE.md, UI text, bot name, prompts, SEO metadata
 - **Rename GitHub repository**
 - **Register the domain and social media**
 - **Domain** — Point vernix.app to the deployment
 - **Update Recall** — Bot name from "KiviKova Agent" to "Vernix Agent", webhook URLs
 - **Voice agent wake words** — Change from "KiviKova" to "Vernix" in system prompt and UI hints
-- **Logos** — Create proper logo set (icon, wordmark, favicon, OG image) for Vernix
-- **Google Stitch** — Update design system screens and branding on Stitch
 
-## P15 — Design System and pages
+## P15 — UI Polish & Launch Prep
 
-- **Copy UI from the design system** – Create all the pages and components like in the design system
-- **Build the landing page** – Build a proper landing page like in the design system
-- **Component library** — Consistent design tokens, spacing, typography across all pages
-- **Responsive polish** — Mobile-optimized dashboard and meeting detail views
+- **Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site
+- **Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent
+- **Landing page** — Build a clean marketing landing page matching the existing site style, with clear CTAs and value props
+- **Mobile responsiveness** — Audit and fix all pages for mobile; dashboard, meeting detail, settings, knowledge base
+- **UI cleanup** — Fix visual inconsistencies, improve empty states, sharpen CTAs, remove clutter
 - **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
+- **Remove old assets** — Delete the `presentation/` and design system folders once the landing page is live
 
 ## P16 — User Profiles & SSO
 
@@ -161,7 +161,15 @@
 - ~~**Test before save** — "Test Connection" button in the Add Server dialog; clears result when URL/API key changes~~
 - ~~**Test API** — `POST /api/settings/mcp-servers/test` accepts `{ id }` (DB lookup) or `{ url, apiKey? }` (pre-save); 10s timeout~~
 
-## P21 — Billing with Polar
+## P21 — Analytics & Monitoring
+
+- **Sentry** — Error tracking and performance monitoring; instrument Next.js app, API routes, and background jobs (webhook handlers, agent pipeline)
+- **PostHog / Plausible** — Product analytics: page views, feature usage (meetings created, agent joins, silent mode, chat, exports), funnel tracking
+- **Custom events** — Track key actions: meeting created, agent joined, transcript received, summary generated, chat message sent, MCP tool called
+- **Uptime monitoring** — External health check on `/api/health` (to be created); alert on downtime
+- **Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page
+
+## P22 — Billing with Polar
 
 - **Polar integration** — Connect Polar.sh for subscription management
 - **Pricing tiers** — Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
