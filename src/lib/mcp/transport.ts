@@ -12,10 +12,11 @@ import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 // Reject private/loopback/link-local IPs to prevent SSRF.
 // Covers: loopback (127.x, ::1, ::), unspecified (0.0.0.0),
 // private ranges (10.x, 172.16-31.x, 192.168.x),
-// link-local incl. cloud metadata endpoint (169.254.x.x),
+// IPv4 link-local incl. cloud metadata endpoint (169.254.x.x),
+// IPv6 link-local (fe80::/10 → fe80–febf),
 // IPv6 ULA (fc00::/7), and .local / .localhost mDNS/RFC-6761 hostnames.
 const PRIVATE_IP_RE =
-  /^((.*\.)?localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1?|fc[0-9a-f]{2}:.*|fd[0-9a-f]{2}:.*)$/i;
+  /^((.*\.)?localhost|.*\.local|0\.0\.0\.0|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+|192\.168\.\d+\.\d+|169\.254\.\d+\.\d+|127\.\d+\.\d+\.\d+|::1?|fe[89ab][0-9a-f]:.*|fc[0-9a-f]{2}:.*|fd[0-9a-f]{2}:.*)$/i;
 
 /**
  * Unwrap IPv6-mapped IPv4 addresses to their dotted-decimal form so that
