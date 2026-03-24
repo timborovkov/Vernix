@@ -16,7 +16,7 @@ interface TaskWithMeeting {
 
 async function fetchAllTasks(): Promise<TaskWithMeeting[]> {
   const res = await fetch("/api/tasks?status=open");
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error("Failed to load tasks");
   const data = await res.json();
   return data.tasks;
 }
