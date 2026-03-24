@@ -1,4 +1,4 @@
-# KiviKova — AI Video Call Agent
+# Vernix — AI Video Call Agent
 
 AI that joins your video calls, creates embeddings from the meeting content, and acts as a voice or text agent participant with RAG capabilities.
 
@@ -60,7 +60,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 | `S3_ENDPOINT`          | S3-compatible endpoint (e.g. `http://localhost:9002` for local Minio)                      |
 | `S3_ACCESS_KEY`        | S3 access key (Minio root user for local dev)                                              |
 | `S3_SECRET_KEY`        | S3 secret key (Minio root password for local dev)                                          |
-| `S3_BUCKET`            | S3 bucket name for knowledge base files (default: `kivikova-knowledge`)                    |
+| `S3_BUCKET`            | S3 bucket name for knowledge base files (default: `vernix-knowledge`)                    |
 | `S3_REGION`            | S3 region (default: `us-east-1`)                                                           |
 
 ## Recall.ai Webhook Configuration
@@ -109,4 +109,4 @@ Go to **Recall Dashboard → Webhooks → Add Endpoint** and configure:
 - **MCP Client** connects to user-configured external MCP servers, routing their tools to the chat and voice agents
 - **Streaming chat** on meeting detail and dashboard pages with tool-call visualization and source citations
 - The dashboard provides **meeting notes**, transcript timeline, search, and filtering
-- **Silent Mode** — a per-meeting toggle that changes the agent from a voice participant to a passive text listener. The bot joins without audio or screen presence, monitors the live transcript server-side, and responds via the meeting's built-in chat when addressed by name (KiviKova). Enable it in the "New Meeting" dialog or on the meeting detail page before the agent joins. Responses are rate-limited to 1 per 30 seconds to prevent chat spam.
+- **Silent Mode** — a per-meeting toggle that changes the agent from a voice participant to a passive text listener. The bot joins without audio or screen presence, monitors the live transcript server-side, and responds via the meeting's built-in chat when addressed by name (Vernix). Enable it in the "New Meeting" dialog or on the meeting detail page before the agent joins. Responses are rate-limited to 1 per 30 seconds to prevent chat spam.
