@@ -1,4 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { jsonSchema } from "ai";
 import { connectMcpClient } from "./transport";
 import { eq } from "drizzle-orm";
@@ -120,12 +120,7 @@ export class McpClientManager {
       headers["Authorization"] = `Bearer ${server.apiKey}`;
     }
 
-    const client = new Client({
-      name: "KiviKova",
-      version: "1.0.0",
-    });
-
-    await connectMcpClient(client, server.url, headers);
+    const client = await connectMcpClient(server.url, headers);
 
     const { tools } = await client.listTools();
     for (const tool of tools) {
