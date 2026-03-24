@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import type { MeetingBotProvider } from "./types";
+import type { JoinOptions, MeetingBotProvider } from "./types";
 
 export class RecallProvider implements MeetingBotProvider {
   private apiKey: string;
@@ -14,12 +14,14 @@ export class RecallProvider implements MeetingBotProvider {
   async joinMeeting(
     joinLink: string,
     meetingId: string,
-    userName?: string
-  ): Promise<{ botId: string; voiceSecret: string }> {
+    userName?: string,
+    options?: JoinOptions
+  ): Promise<{ botId: string; voiceSecret?: string }> {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const voiceSecret = randomUUID();
+    const silent = options?.silent ?? false;
+    const voiceSecret = silent ? undefined : randomUUID();
 
-    const botConfig = {
+    const botConfig: Record<string, unknown> = {
       meeting_url: joinLink,
       bot_name: userName ? `${userName}'s KiviKova Agent` : "KiviKova Agent",
       variant: {
@@ -27,20 +29,12 @@ export class RecallProvider implements MeetingBotProvider {
         google_meet: "web_4_core",
         microsoft_teams: "web_4_core",
       },
-      output_media: {
-        camera: {
-          kind: "webpage",
-          config: {
-            url: `${appUrl}/voice-agent.html?meetingId=${meetingId}&botSecret=${voiceSecret}&appUrl=${encodeURIComponent(appUrl)}`,
-          },
-        },
-      },
       recording_config: {
         transcript: {
           provider: { recallai_streaming: {} },
           diarization: { use_separate_streams_when_available: true },
         },
-        include_bot_in_recording: { audio: true },
+        include_bot_in_recording: { audio: !silent },
         realtime_endpoints: [
           {
             type: "webhook",
@@ -52,9 +46,23 @@ export class RecallProvider implements MeetingBotProvider {
       metadata: { meetingId },
     };
 
-    const logSafe = { ...botConfig, output_media: "[redacted]" };
+    if (!silent) {
+      botConfig.output_media = {
+        camera: {
+          kind: "webpage",
+          config: {
+            url: `${appUrl}/voice-agent.html?meetingId=${meetingId}&botSecret=${voiceSecret}&appUrl=${encodeURIComponent(appUrl)}`,
+          },
+        },
+      };
+    }
+
+    const logSafe = {
+      ...botConfig,
+      output_media: silent ? undefined : "[redacted]",
+    };
     console.log(
-      "[RecallProvider] Creating bot with config:",
+      `[RecallProvider] Creating ${silent ? "silent" : "voice"} bot with config:`,
       JSON.stringify(logSafe, null, 2)
     );
 
@@ -95,6 +103,28 @@ export class RecallProvider implements MeetingBotProvider {
     if (!response.ok) {
       throw new Error(
         `Recall API error: ${response.status} ${await response.text()}`
+      );
+    }
+  }
+
+  async sendChatMessage(botId: string, message: string): Promise<void> {
+    console.log(`[RecallProvider] Sending chat message, botId: ${botId}`);
+
+    const response = await fetch(
+      `${this.apiUrl}/bot/${botId}/send_chat_message`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Recall chat API error: ${response.status} ${await response.text()}`
       );
     }
   }

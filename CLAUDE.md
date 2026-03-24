@@ -24,20 +24,22 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Data Flow
 
-1. User creates a meeting → Postgres row + Qdrant collection
-2. `POST /api/agent/join` → Recall.ai bot joins the call with Output Media (voice agent webpage)
-3. During call: Recall streams `transcript.data` → webhook → embed → Qdrant upsert
+1. User creates a meeting → Postgres row + Qdrant collection. Optional `metadata.silent: true` for silent mode.
+2. `POST /api/agent/join` → Recall.ai bot joins the call:
+   - **Voice mode (default):** bot loads `voice-agent.html` via Output Media, captures audio, responds via OpenAI Realtime API
+   - **Silent mode:** bot joins without Output Media or audio recording; no `voiceSecret` generated
+3. During call: Recall streams `transcript.data` → webhook → embed → Qdrant upsert. In silent mode, also triggers `handleSilentTranscript()` which detects mentions and responds via Recall's chat API.
 4. Voice agent (runs in bot's browser): captures audio → OpenAI Realtime API → responds via voice, uses RAG tool
 5. Call ends: `bot.call_ended` → status `processing` → `transcript.done` → generates LLM summary → status `completed`
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, `tasks`, `apiKeys`, and `mcpServers` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. Agenda is stored in `meetings.metadata.agenda`. Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, `tasks`, `apiKeys`, and `mcpServers` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. `meetings.metadata` JSONB stores: `agenda?`, `botId?`, `voiceSecret?` (voice mode only), `summary?`, `silent?` (boolean, enables silent/text agent mode). Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
-- **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface with `RecallProvider` and `MockProvider`. Selected via `MEETING_BOT_PROVIDER` env var.
+- **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface (with `joinMeeting(link, id, name?, options?)`, `leaveMeeting()`, `sendChatMessage()`, `onTranscript()`) with `RecallProvider` and `MockProvider`. `joinMeeting` accepts `options.silent` to omit output_media. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.
 - **`src/lib/openai/`** — OpenAI client singleton. `embeddings.ts` for text embedding, `voice.ts` for server-side VoiceSession class (wraps OpenAI Realtime API).
-- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)` and `getVoiceAgentSystemPrompt(agenda?)` which inject agenda context when available.
+- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)`, `getVoiceAgentSystemPrompt(agenda?)`, and `getSilentAgentSystemPrompt(agenda?)`. `silent.ts` handles silent agent transcript monitoring: debounce buffering (3s), mention detection ("KiviKova"/"Kivi Kova"), rate limiting (1 response/30s), RAG-based response generation, and sending via Recall chat API.
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
 - **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-5.4-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.

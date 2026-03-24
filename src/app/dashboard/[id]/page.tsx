@@ -3,6 +3,8 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { toast } from "sonner";
 import { useMeetingDetail } from "@/hooks/use-meeting-detail";
 import { useKnowledge } from "@/hooks/use-knowledge";
@@ -11,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { statusVariant } from "@/lib/meetings/constants";
 import { ChatPanel } from "@/components/chat-panel";
 import { KnowledgeList } from "@/components/knowledge-list";
@@ -30,6 +33,7 @@ import {
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
   const {
     meeting,
     transcript,
@@ -43,6 +47,7 @@ export default function MeetingDetailPage() {
 
   const [agenda, setAgenda] = useState("");
   const [agendaSaving, setAgendaSaving] = useState(false);
+  const [silentSaving, setSilentSaving] = useState(false);
   const syncedMeetingId = useRef<string | null>(null);
 
   // Sync agenda from meeting metadata once per meeting load
@@ -117,6 +122,29 @@ export default function MeetingDetailPage() {
   const summary = (meeting.metadata as Record<string, unknown>)?.summary as
     | string
     | undefined;
+  const isSilent = Boolean(
+    (meeting.metadata as Record<string, unknown>)?.silent
+  );
+
+  const toggleSilent = async () => {
+    setSilentSaving(true);
+    try {
+      const res = await fetch(`/api/meetings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ silent: !isSilent }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(`Silent mode ${!isSilent ? "enabled" : "disabled"}`);
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.meetings.detail(id),
+      });
+    } catch {
+      toast.error("Failed to update silent mode");
+    } finally {
+      setSilentSaving(false);
+    }
+  };
   const participants = (meeting.participants as string[]) ?? [];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -153,6 +181,7 @@ export default function MeetingDetailPage() {
             <Download className="mr-1 h-3.5 w-3.5" />
             Export PDF
           </Button>
+          {isSilent && <Badge variant="secondary">Silent</Badge>}
           <Badge variant={statusVariant[meeting.status] ?? "outline"}>
             {meeting.status}
           </Badge>
@@ -184,15 +213,31 @@ export default function MeetingDetailPage() {
             className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
           />
           {isEditable && (
-            <Button
-              size="sm"
-              className="mt-2"
-              onClick={saveAgenda}
-              disabled={agendaSaving}
-            >
-              <Save className="mr-1 h-3 w-3" />
-              {agendaSaving ? "Saving..." : "Save Agenda"}
-            </Button>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <Button size="sm" onClick={saveAgenda} disabled={agendaSaving}>
+                <Save className="mr-1 h-3 w-3" />
+                {agendaSaving ? "Saving..." : "Save Agenda"}
+              </Button>
+              {(meeting.status === "pending" ||
+                meeting.status === "failed") && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="silent-mode"
+                    checked={isSilent}
+                    onChange={toggleSilent}
+                    disabled={silentSaving}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="silent-mode" className="cursor-pointer">
+                    Silent Mode
+                  </Label>
+                  <span className="text-muted-foreground text-xs">
+                    Text-only — responds via meeting chat, no voice
+                  </span>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

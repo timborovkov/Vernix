@@ -19,6 +19,12 @@ export function resetRateLimits(): void {
   buckets.clear();
 }
 
+/** Clear a single rate limit bucket by key. */
+export function resetRateLimitKey(key: string): void {
+  // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+  buckets.delete(key);
+}
+
 export interface RateLimitResult {
   success: boolean;
   remaining: number;

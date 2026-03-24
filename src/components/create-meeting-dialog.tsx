@@ -15,7 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 
 interface CreateMeetingDialogProps {
-  onCreate: (title: string, joinLink: string, agenda?: string) => Promise<void>;
+  onCreate: (
+    title: string,
+    joinLink: string,
+    agenda?: string,
+    silent?: boolean
+  ) => Promise<void>;
 }
 
 export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
@@ -23,6 +28,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
   const [title, setTitle] = useState("");
   const [joinLink, setJoinLink] = useState("");
   const [agenda, setAgenda] = useState("");
+  const [silent, setSilent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,10 +37,11 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
 
     setLoading(true);
     try {
-      await onCreate(title, joinLink, agenda || undefined);
+      await onCreate(title, joinLink, agenda || undefined, silent || undefined);
       setTitle("");
       setJoinLink("");
       setAgenda("");
+      setSilent(false);
       setOpen(false);
     } catch {
       toast.error("Failed to create meeting");
@@ -86,10 +93,24 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm"
             />
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="silent"
+              checked={silent}
+              onChange={(e) => setSilent(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="silent">Silent Mode</Label>
+            <span className="text-muted-foreground text-xs">
+              Text-only — responds via meeting chat, no voice
+            </span>
+          </div>
           <p className="text-muted-foreground text-xs">
-            Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex. The AI
-            agent will join and respond when called by name (KiviKova, Agent, or
-            Assistant).
+            Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}
+            {silent
+              ? "The agent will listen passively and respond via meeting chat when called by name (KiviKova)."
+              : "The AI agent will join and respond when called by name (KiviKova, Agent, or Assistant)."}
           </p>
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creating..." : "Create Meeting"}
