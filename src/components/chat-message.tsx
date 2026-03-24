@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage } from "ai";
+import { isToolUIPart, getToolName } from "ai";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatTime, renderMarkdown } from "@/lib/format";
@@ -21,26 +22,6 @@ interface Source {
   speaker?: string;
   timestampMs?: number;
   fileName?: string;
-}
-
-// AI SDK v6 tool invocation part shape
-interface ToolInvocationPart {
-  type: string;
-  state:
-    | "input-streaming"
-    | "input-available"
-    | "output-streaming"
-    | "output-available";
-  toolInvocation: {
-    toolCallId: string;
-    toolName: string;
-    args: Record<string, unknown>;
-    result?: unknown;
-  };
-}
-
-function isToolPart(part: { type: string }): part is ToolInvocationPart {
-  return part.type.startsWith("tool-") && "toolInvocation" in part;
 }
 
 /** Extract human-readable name from a tool name. */
@@ -180,10 +161,18 @@ export function ChatMessage({ message }: { message: UIMessage }) {
       continue;
     }
 
-    if (!isToolPart(part)) continue;
+    // isToolUIPart handles both static tools (type: "tool-{name}") and
+    // dynamic/MCP tools (type: "dynamic-tool") from AI SDK v6
+    if (!isToolUIPart(part)) continue;
 
-    const { toolCallId, toolName, result } = part.toolInvocation;
-    const { state } = part;
+    const toolName = getToolName(part);
+    // Both static and dynamic parts have toolCallId, state, output directly (flat)
+    const { toolCallId, state } = part as unknown as {
+      toolCallId: string;
+      state: string;
+      output?: unknown;
+    };
+    const output = (part as unknown as { output?: unknown }).output;
 
     if (state === "input-streaming" || state === "input-available") {
       activeTools.push({ toolCallId, toolName });
@@ -192,15 +181,15 @@ export function ChatMessage({ message }: { message: UIMessage }) {
     if (state === "output-available") {
       if (toolName === "searchMeetingContext") {
         if (
-          result &&
-          typeof result === "object" &&
-          "sources" in result &&
-          Array.isArray((result as { sources: unknown }).sources)
+          output &&
+          typeof output === "object" &&
+          "sources" in output &&
+          Array.isArray((output as { sources: unknown }).sources)
         ) {
-          sources.push(...(result as { sources: Source[] }).sources);
+          sources.push(...(output as { sources: Source[] }).sources);
         }
       } else {
-        completedMcpTools.push({ toolCallId, toolName, result });
+        completedMcpTools.push({ toolCallId, toolName, result: output });
       }
     }
   }
