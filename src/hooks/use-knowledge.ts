@@ -45,9 +45,6 @@ export function useKnowledge(meetingId?: string) {
       queryClient.invalidateQueries({ queryKey: qk });
       toast.success("Document uploaded");
     },
-    onError: (error: Error) => {
-      toast.error(error.message || "Failed to upload document");
-    },
   });
 
   const deleteMutation = useMutation({
@@ -65,9 +62,11 @@ export function useKnowledge(meetingId?: string) {
   const uploadDocument = async (file: File) => {
     try {
       return await uploadMutation.mutateAsync(file);
-    } catch {
-      // onError already shows toast
-      return null;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to upload document";
+      toast.error(message);
+      throw error;
     }
   };
 
