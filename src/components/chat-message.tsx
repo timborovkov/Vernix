@@ -167,8 +167,12 @@ export function ChatMessage({ message }: { message: UIMessage }) {
 
   let textContent = "";
   const sources: Source[] = [];
-  const activeTools: string[] = [];
-  const completedMcpTools: { toolName: string; result: unknown }[] = [];
+  const activeTools: { toolCallId: string; toolName: string }[] = [];
+  const completedMcpTools: {
+    toolCallId: string;
+    toolName: string;
+    result: unknown;
+  }[] = [];
 
   for (const part of message.parts) {
     if (part.type === "text") {
@@ -178,11 +182,11 @@ export function ChatMessage({ message }: { message: UIMessage }) {
 
     if (!isToolPart(part)) continue;
 
-    const { toolName, result } = part.toolInvocation;
+    const { toolCallId, toolName, result } = part.toolInvocation;
     const { state } = part;
 
     if (state === "input-streaming" || state === "input-available") {
-      activeTools.push(toolName);
+      activeTools.push({ toolCallId, toolName });
     }
 
     if (state === "output-available") {
@@ -196,8 +200,7 @@ export function ChatMessage({ message }: { message: UIMessage }) {
           sources.push(...(result as { sources: Source[] }).sources);
         }
       } else {
-        // MCP tool completed — show result
-        completedMcpTools.push({ toolName, result });
+        completedMcpTools.push({ toolCallId, toolName, result });
       }
     }
   }
@@ -209,12 +212,12 @@ export function ChatMessage({ message }: { message: UIMessage }) {
           isUser ? "bg-primary text-primary-foreground" : "bg-muted"
         }`}
       >
-        {activeTools.map((toolName) => (
-          <ActiveToolIndicator key={toolName} toolName={toolName} />
+        {activeTools.map(({ toolCallId, toolName }) => (
+          <ActiveToolIndicator key={toolCallId} toolName={toolName} />
         ))}
 
-        {completedMcpTools.map(({ toolName, result }) => (
-          <McpToolResult key={toolName} toolName={toolName} result={result} />
+        {completedMcpTools.map(({ toolCallId, toolName, result }) => (
+          <McpToolResult key={toolCallId} toolName={toolName} result={result} />
         ))}
 
         {textContent && (
