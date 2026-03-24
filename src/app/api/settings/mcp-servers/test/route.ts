@@ -6,6 +6,7 @@ import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 
 // Accept either an existing server ID (apiKey looked up server-side)
 // or a raw url+apiKey pair (for testing before saving)
@@ -26,12 +27,21 @@ async function probe(
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
-  const transport = new StreamableHTTPClientTransport(new URL(url), {
-    requestInit: { headers },
-  });
-
   const client = new Client({ name: "KiviKova", version: "1.0.0" });
-  await client.connect(transport);
+
+  // Try Streamable HTTP first (MCP spec 2025-03-26+), fall back to SSE
+  try {
+    const transport = new StreamableHTTPClientTransport(new URL(url), {
+      requestInit: { headers },
+    });
+    await client.connect(transport);
+  } catch {
+    const sseTransport = new SSEClientTransport(new URL(url), {
+      requestInit: { headers },
+      eventSourceInit: { fetch: (u, init) => fetch(u, { ...init, headers }) },
+    });
+    await client.connect(sseTransport);
+  }
 
   try {
     const { tools } = await client.listTools();
