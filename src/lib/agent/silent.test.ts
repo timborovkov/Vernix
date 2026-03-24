@@ -56,6 +56,39 @@ describe("containsMention", () => {
   });
 });
 
+describe("handleSilentTranscript — speaker name isolation", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    resetSilentBuffers();
+    resetRateLimits();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    resetSilentBuffers();
+    resetRateLimits();
+  });
+
+  it("does not respond when only the speaker name contains the trigger keyword", async () => {
+    const { getMeetingBotProvider } = await import("@/lib/meeting-bot");
+    const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
+
+    // Speaker display name contains "KiviKova" but the spoken text does not
+    handleSilentTranscript(
+      "meeting-speaker",
+      "user-1",
+      "bot-speaker",
+      "KiviKova Support",
+      "Let us review the agenda items",
+      1000
+    );
+
+    await vi.runAllTimersAsync();
+
+    expect(sendChatMessage).not.toHaveBeenCalled();
+  });
+});
+
 describe("handleSilentTranscript", () => {
   beforeEach(() => {
     vi.useFakeTimers();
