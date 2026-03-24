@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KiviKova — AI Video Call Agent",
+  title: "Vernix — AI Video Call Agent",
   description:
     "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions using context from current and past meetings.",
 };
