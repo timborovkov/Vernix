@@ -212,5 +212,27 @@ export async function POST(request: Request) {
     console.error("Failed to update participants:", error);
   }
 
+  // Silent agent: monitor transcript for mentions and respond via meeting chat
+  const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
+  if (
+    metadata.silent &&
+    meeting.status === "active" &&
+    speaker !== "KiviKova Agent"
+  ) {
+    import("@/lib/agent/silent")
+      .then(({ handleSilentTranscript }) =>
+        handleSilentTranscript(
+          meeting.id,
+          meeting.userId!,
+          metadata.botId as string,
+          speaker,
+          text,
+          timestampMs,
+          (metadata.agenda as string) ?? null
+        )
+      )
+      .catch((err) => console.error("[Silent Agent] Error:", err));
+  }
+
   return NextResponse.json({ success: true });
 }

@@ -49,7 +49,7 @@ export async function PATCH(
   }
 
   // Only allow updating safe fields
-  const { title, joinLink, agenda } = body as Record<string, unknown>;
+  const { title, joinLink, agenda, silent } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof title === "string") updates.title = title;
   if (typeof joinLink === "string") updates.joinLink = joinLink;
@@ -75,6 +75,19 @@ export async function PATCH(
       await upsertAgenda(meeting.qdrantCollectionName, trimmedAgenda);
     } catch (error) {
       console.error("Agenda embedding failed:", error);
+    }
+  }
+
+  // Allow toggling silent mode only when meeting hasn't started yet
+  if (typeof silent === "boolean") {
+    const canEditSilent = ["pending", "failed"].includes(meeting.status);
+    if (canEditSilent) {
+      const existingMetadata =
+        (meeting.metadata as Record<string, unknown>) ?? {};
+      updates.metadata = {
+        ...(updates.metadata ?? existingMetadata),
+        silent,
+      };
     }
   }
 
