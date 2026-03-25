@@ -16,7 +16,10 @@ export default function DashboardLayout({
       <div className="flex-1">{children}</div>
       <footer className="border-border text-muted-foreground border-t py-6">
         <div className="container mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-xs">
-          <span>&copy; {new Date().getFullYear()} Vernix</span>
+          <span>
+            &copy; {new Date().getFullYear()} Vernix &middot; Built with
+            &hearts; in Europe
+          </span>
           <div className="flex items-center gap-4">
             <Link
               href="/terms"
