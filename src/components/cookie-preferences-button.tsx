@@ -1,8 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-
-const OPEN_PREFERENCES_EVENT = "vernix:open-cookie-preferences";
+import { OPEN_PREFERENCES_EVENT } from "@/components/cookie-consent-banner";
 
 export function CookiePreferencesButton() {
   return (
