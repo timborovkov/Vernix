@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Vernix",
+  description:
+    "Vernix Privacy Policy — what data we collect, how we use it, third-party services, your rights, and cookies.",
 };
 
 export default function PrivacyPage() {
@@ -12,7 +14,7 @@ export default function PrivacyPage() {
         Last updated: March 2026
       </p>
 
-      <div className="prose-sm space-y-8">
+      <div className="space-y-8">
         <section>
           <h2 className="mb-2 text-lg font-semibold">
             1. Information We Collect
