@@ -8,7 +8,8 @@ type ConsentChoice = "accepted" | "rejected";
 
 const CONSENT_STORAGE_KEY = "vernix_cookie_consent_v1";
 const CONSENT_COOKIE_NAME = "vernix_cookie_consent";
-const OPEN_PREFERENCES_EVENT = "vernix:open-cookie-preferences";
+
+export const OPEN_PREFERENCES_EVENT = "vernix:open-cookie-preferences";
 
 declare global {
   interface Window {
