@@ -9,6 +9,7 @@ import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const isAnalyticsEnabled = Boolean(gaMeasurementId);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -79,7 +80,7 @@ export default function RootLayout({
           <QueryProvider>
             {children}
             <Toaster richColors position="bottom-right" />
-            <CookieConsentBanner />
+            <CookieConsentBanner analyticsEnabled={isAnalyticsEnabled} />
           </QueryProvider>
         </SessionProvider>
         {gaMeasurementId ? (
