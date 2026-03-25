@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X } from "lucide-react";
 
 const NAV_LINKS = [
@@ -23,18 +24,31 @@ export function SiteHeader() {
           <Image
             src="/brand/icon/icon.svg"
             alt=""
-            width={28}
-            height={28}
+            width={24}
+            height={24}
             className="dark:hidden"
           />
           <Image
             src="/brand/icon/icon-dark.png"
             alt=""
-            width={28}
-            height={28}
+            width={24}
+            height={24}
             className="hidden dark:block"
           />
-          <span className="text-lg font-bold">Vernix</span>
+          <Image
+            src="/brand/wordmark/wordmark-nobg.png"
+            alt="Vernix"
+            width={80}
+            height={24}
+            className="dark:hidden"
+          />
+          <Image
+            src="/brand/wordmark/wordmark-dark.png"
+            alt="Vernix"
+            width={80}
+            height={24}
+            className="hidden dark:block"
+          />
         </Link>
 
         <nav
@@ -53,6 +67,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Button variant="ghost" size="sm" render={<Link href="/login" />}>
             Sign In
           </Button>
