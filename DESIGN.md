@@ -8,7 +8,7 @@ This document captures the current visual language, component patterns, and conv
 
 ### Philosophy
 
-All colors are defined as CSS custom properties using the **OKLCH color space** (perceptually uniform, better for accessibility than HSL/HEX). Tailwind utilities map to these tokens via `@theme inline` in `globals.css`. The palette is **intentionally grayscale-first** — the only hued color in the default theme is destructive (red). Status colors (green, yellow, red) are hardcoded by convention since they carry semantic meaning independent of theme.
+All colors are defined as CSS custom properties using the **OKLCH color space** (perceptually uniform, better for accessibility than HSL/HEX). Tailwind utilities map to these tokens via `@theme inline` in `globals.css`. The palette is **grayscale-first with a warm violet accent** (hue 290°). The accent appears on focus rings, active states, and interactive highlights. Primary surfaces (buttons, dark panels) stay grayscale. Status colors (green, yellow, red) are hardcoded by convention since they carry semantic meaning independent of theme.
 
 ### Semantic Tokens
 
@@ -26,14 +26,14 @@ Use these tokens everywhere. Never hardcode a hex or rgb value for UI chrome.
 | `secondary-foreground` | `oklch(0.205 0 0)`             | `oklch(0.985 0 0)`              | Text on secondary                      |
 | `muted`                | `oklch(0.97 0 0)`              | `oklch(0.269 0 0)`              | Hover states, disabled backgrounds     |
 | `muted-foreground`     | `oklch(0.556 0 0)` — mid gray  | `oklch(0.708 0 0)`              | Secondary text, metadata, placeholders |
-| `accent`               | `oklch(0.97 0 0)`              | `oklch(0.269 0 0)`              | Focus highlights                       |
-| `accent-foreground`    | `oklch(0.205 0 0)`             | `oklch(0.985 0 0)`              | Text on accent                         |
+| `accent`               | `oklch(0.96 0.02 290)` — violet tint | `oklch(0.25 0.04 290)`     | Focus highlights, hover backgrounds    |
+| `accent-foreground`    | `oklch(0.37 0.15 290)` — dark violet | `oklch(0.85 0.12 290)`    | Text on accent                         |
 | `destructive`          | `oklch(0.577 0.245 27°)` — red | `oklch(0.704 0.191 22°)`        | Delete actions, errors                 |
 | `border`               | `oklch(0.922 0 0)`             | `oklch(1 0 0 / 10%)`            | Dividers, input borders                |
 | `input`                | `oklch(0.922 0 0)`             | `oklch(1 0 0 / 15%)`            | Input field borders                    |
-| `ring`                 | `oklch(0.708 0 0)`             | `oklch(0.556 0 0)`              | Focus rings                            |
+| `ring`                 | `oklch(0.55 0.15 290)` — violet | `oklch(0.65 0.18 290)`        | Focus rings                            |
 
-**Sidebar tokens** follow the same pattern with `sidebar-` prefix. In dark mode, `sidebar-primary` picks up a blue tint (`oklch(0.488 0.243 264°)`).
+**Sidebar tokens** follow the same pattern with `sidebar-` prefix. In dark mode, `sidebar-primary` uses violet (`oklch(0.65 0.18 290°)`).
 
 ### Base Radius
 
@@ -464,3 +464,69 @@ Common icons by category:
 | Query client setup                                  | `src/components/query-provider.tsx` |
 | Query key factory                                   | `src/lib/query-keys.ts`             |
 | Markdown renderer                                   | `src/lib/format.ts`                 |
+
+---
+
+## Brand Assets
+
+All brand assets live in `public/brand/`. Use `next/image` with light/dark mode switching (`dark:hidden` / `hidden dark:block`).
+
+### Icon Mark
+
+| File | Description |
+|------|-------------|
+| `brand/icon/icon.svg` | Vector icon (light mode) |
+| `brand/icon/icon-dark.png` | White icon for dark mode |
+| `brand/icon/icon-{32..1024}.png` | PNG at various sizes (transparent) |
+| `brand/icon/icon-dark-{128..512}.png` | White PNG at various sizes |
+| `brand/icon/icon-on-white.png` | Icon on white background |
+| `brand/icon/icon-on-dark.png` | White icon on dark background |
+
+### Wordmark
+
+| File | Description |
+|------|-------------|
+| `brand/wordmark/wordmark.svg` | Vector wordmark (light mode) |
+| `brand/wordmark/wordmark-nobg.png` | Black wordmark, transparent background |
+| `brand/wordmark/wordmark-dark.png` | White wordmark, transparent background |
+| `brand/wordmark/wordmark-h{64..256}.png` | Black wordmark at various heights |
+| `brand/wordmark/wordmark-dark-h{64..128}.png` | White wordmark at various heights |
+
+### Combo (Icon + Wordmark)
+
+| File | Description |
+|------|-------------|
+| `brand/combo/horizontal-nobg.png` | Side by side, transparent |
+| `brand/combo/horizontal-dark-nobg.png` | White version, transparent |
+| `brand/combo/horizontal-on-white.png` | On white background |
+| `brand/combo/horizontal-on-dark.png` | On dark background |
+| `brand/combo/vertical-*` | Stacked layout variants |
+
+### Favicon
+
+| File | Description |
+|------|-------------|
+| `brand/favicon/favicon.svg` | Vector favicon |
+| `brand/favicon/favicon-{16..512}.png` | PNG at standard sizes |
+| `brand/favicon/apple-touch-icon.png` | 180x180 Apple touch icon |
+
+### OG / Social Images
+
+| File | Description |
+|------|-------------|
+| `brand/og/og-with-subtitle.png` | Default OG image (dark, icon + wordmark + subtitle) |
+| `brand/og/og-horizontal.png` | Horizontal layout (dark) |
+| `brand/og/og-centered.png` | Stacked layout (dark) |
+| `brand/og/og-light.png` | Light variant |
+
+### Usage Pattern
+
+```tsx
+// Icon + Wordmark in headers/footers
+<Image src="/brand/icon/icon.svg" alt="" width={24} height={24} className="dark:hidden" />
+<Image src="/brand/icon/icon-dark.png" alt="" width={24} height={24} className="hidden dark:block" />
+<Image src="/brand/wordmark/wordmark-nobg.png" alt="Vernix" width={80} height={24} className="dark:hidden" />
+<Image src="/brand/wordmark/wordmark-dark.png" alt="Vernix" width={80} height={24} className="hidden dark:block" />
+```
+
+Use `alt=""` on icon when adjacent text/wordmark provides the label. Use `alt="Vernix"` on the wordmark.
