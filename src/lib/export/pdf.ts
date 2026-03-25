@@ -78,7 +78,7 @@ export async function generateMeetingPdf(
   doc.fontSize(10).font("Helvetica");
   doc.text(
     typeof meta.agenda === "string" && meta.agenda
-      ? meta.agenda
+      ? stripMarkdown(meta.agenda)
       : "No agenda set."
   );
   doc.moveDown();
