@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/components/query-provider";
+import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -64,7 +65,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <script src="/theme-init.js" />
+        <ThemeScript />
       </head>
       <body className="flex min-h-full flex-col">
         <SessionProvider>
