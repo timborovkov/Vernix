@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+  ),
   title: "Vernix — AI Video Call Agent",
   description:
     "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions using context from current and past meetings.",
