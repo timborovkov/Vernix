@@ -114,8 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const isGoogleVerified = account.provider === "google";
         // If user.id is already set by NextAuth, the user has an active session
         // (linking flow from settings). Allow linking for any provider.
-        const isLinkingFromSession =
-          user.id && user.id === existingUser.id;
+        const isLinkingFromSession = user.id && user.id === existingUser.id;
 
         if (isGoogleVerified || isLinkingFromSession) {
           await db.insert(accounts).values({
