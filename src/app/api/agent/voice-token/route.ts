@@ -57,7 +57,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Load MCP tools for the meeting owner
+  // Load MCP tools for the meeting owner (with timeout so voice agent isn't blocked)
+  const MCP_TIMEOUT_MS = 5_000;
   let mcpOpenAITools: Array<{
     type: "function";
     name: string;
@@ -66,7 +67,15 @@ export async function GET(request: Request) {
   }> = [];
   let mcpToolDescriptions: ToolDescription[] = [];
   try {
-    const mcpManager = await McpClientManager.connectForUser(meeting.userId);
+    const mcpManager = await Promise.race([
+      McpClientManager.connectForUser(meeting.userId),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("MCP connection timeout")),
+          MCP_TIMEOUT_MS
+        )
+      ),
+    ]);
     mcpOpenAITools = mcpManager.getOpenAITools();
     mcpToolDescriptions = mcpOpenAITools.map((t) => ({
       name: t.name,

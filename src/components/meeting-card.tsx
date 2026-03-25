@@ -54,7 +54,7 @@ export function MeetingCard({
 
   return (
     <>
-      <Card>
+      <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <CardTitle className="text-lg">
             <Link href={`/dashboard/${meeting.id}`} className="hover:underline">
@@ -90,7 +90,7 @@ export function MeetingCard({
             </p>
           )}
         </CardContent>
-        <CardFooter className="gap-2">
+        <CardFooter className="mt-auto gap-2">
           {canJoin && (
             <Button
               size="sm"
@@ -113,12 +113,13 @@ export function MeetingCard({
             </Button>
           )}
           <Button
-            size="sm"
-            variant="destructive"
+            size="icon-sm"
+            variant="ghost"
             disabled={!!actionLoading}
             onClick={() => setConfirmDelete(true)}
+            className="text-muted-foreground hover:text-destructive ml-auto"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </CardFooter>
       </Card>

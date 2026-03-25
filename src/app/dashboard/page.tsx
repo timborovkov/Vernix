@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signOut } from "next-auth/react";
 import { useMeetings } from "@/hooks/use-meetings";
 import { useAllTasks } from "@/hooks/use-all-tasks";
 import { MeetingList } from "@/components/meeting-list";
@@ -11,16 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { VernixLogo } from "@/components/ui/vernix-logo";
-import {
-  LogOut,
-  MessageSquare,
-  BookOpen,
-  ListChecks,
-  CheckCircle2,
-  Settings,
-  Download,
-} from "lucide-react";
+import { MessageSquare, ListChecks, CheckCircle2 } from "lucide-react";
 
 const STATUS_FILTERS = [
   "all",
@@ -58,59 +48,22 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <VernixLogo size={40} />
-          <div>
-            <h1 className="text-3xl font-bold">Vernix</h1>
-            <p className="text-muted-foreground">
-              AI Video Call Agent — Zoom, Meet, Teams, Webex
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href="/dashboard/knowledge" />}
-          >
-            <BookOpen className="mr-1 h-4 w-4" />
-            Knowledge
-          </Button>
-          <Button
-            variant={showChat ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowChat(!showChat)}
-          >
-            <MessageSquare className="mr-1 h-4 w-4" />
-            Chat
-          </Button>
-          <Button variant="outline" size="sm" render={<a href="/api/export" />}>
-            <Download className="mr-1 h-4 w-4" />
-            Export All
-          </Button>
-          <CreateMeetingDialog
-            onCreate={async (title, joinLink, agenda, silent) => {
-              await createMeeting(title, joinLink, agenda, silent);
-            }}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            render={<Link href="/dashboard/settings" />}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+      {/* Page-specific controls */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <Button
+          variant={showChat ? "default" : "outline"}
+          size="sm"
+          onClick={() => setShowChat(!showChat)}
+        >
+          <MessageSquare className="mr-1 h-4 w-4" />
+          <span className="hidden sm:inline">Chat</span>
+        </Button>
+        <CreateMeetingDialog
+          onCreate={async (title, joinLink, agenda, silent) => {
+            await createMeeting(title, joinLink, agenda, silent);
+          }}
+        />
       </div>
-
       {!loading && meetings.length > 0 && (
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
@@ -124,7 +77,7 @@ export default function DashboardPage() {
               <Button
                 key={status}
                 size="sm"
-                variant={statusFilter === status ? "default" : "outline"}
+                variant={statusFilter === status ? "accent" : "outline"}
                 onClick={() => setStatusFilter(status)}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -146,7 +99,7 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center gap-2 text-lg">
               <ListChecks className="h-4 w-4" />
               Pending Tasks
-              <span className="bg-primary text-primary-foreground ml-1 rounded-full px-2 py-0.5 text-xs">
+              <span className="bg-ring ml-1 rounded-full px-2 py-0.5 text-xs text-white">
                 {pendingTasks.length}
               </span>
             </CardTitle>
@@ -178,8 +131,21 @@ export default function DashboardPage() {
       )}
 
       {loading ? (
-        <div className="text-muted-foreground py-12 text-center">
-          Loading meetings...
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <div className="bg-muted h-5 w-40 animate-pulse rounded-md" />
+                <div className="bg-muted h-5 w-16 animate-pulse rounded-full" />
+              </div>
+              <div className="bg-muted mb-2 h-4 w-56 animate-pulse rounded-md" />
+              <div className="bg-muted mb-4 h-3 w-32 animate-pulse rounded-md" />
+              <div className="flex items-center justify-between">
+                <div className="bg-muted h-3 w-24 animate-pulse rounded-md" />
+                <div className="bg-muted h-7 w-20 animate-pulse rounded-md" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <MeetingList

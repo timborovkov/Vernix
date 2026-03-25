@@ -52,7 +52,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="accent" />}>
         <Plus className="mr-2 h-4 w-4" />
         New Meeting
       </DialogTrigger>
@@ -93,18 +93,20 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm"
             />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-start gap-2">
             <input
               type="checkbox"
               id="silent"
               checked={silent}
               onChange={(e) => setSilent(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
             />
-            <Label htmlFor="silent">Silent Mode</Label>
-            <span className="text-muted-foreground text-xs">
-              Text-only — responds via meeting chat, no voice
-            </span>
+            <div>
+              <Label htmlFor="silent">Silent Mode</Label>
+              <p className="text-muted-foreground text-xs">
+                Text-only — responds via meeting chat, no voice
+              </p>
+            </div>
           </div>
           <p className="text-muted-foreground text-xs">
             Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}

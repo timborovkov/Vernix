@@ -78,7 +78,7 @@ describe("POST /api/auth/register", () => {
     expect(data.user.email).toBe("new@example.com");
   });
 
-  it("returns 400 on duplicate email (unique constraint)", async () => {
+  it("returns 409 on duplicate email (unique constraint)", async () => {
     // Override the values mock to return an object whose returning() rejects
     const origValues = mockDb.values.getMockImplementation();
     // Postgres unique constraint errors have code "23505"
@@ -98,7 +98,7 @@ describe("POST /api/auth/register", () => {
       },
     });
     const { status } = await parseJsonResponse(await POST(req));
-    expect(status).toBe(400);
+    expect(status).toBe(409);
 
     // Restore
     if (origValues) mockDb.values.mockImplementation(origValues);

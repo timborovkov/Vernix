@@ -107,7 +107,23 @@ export default function MeetingDetailPage() {
 
   if (loading) {
     return (
-      <div className="text-muted-foreground py-12 text-center">Loading...</div>
+      <div className="container mx-auto max-w-4xl px-4 py-8">
+        <div className="bg-muted mb-4 h-7 w-16 animate-pulse rounded-md" />
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <div className="bg-muted h-8 w-64 animate-pulse rounded-md" />
+          <div className="bg-muted h-5 w-20 animate-pulse rounded-full" />
+        </div>
+        <div className="mb-6 rounded-xl border p-4">
+          <div className="bg-muted mb-3 h-5 w-20 animate-pulse rounded-md" />
+          <div className="bg-muted h-20 w-full animate-pulse rounded-md" />
+        </div>
+        <div className="mb-6 rounded-xl border p-4">
+          <div className="bg-muted mb-3 h-5 w-24 animate-pulse rounded-md" />
+          <div className="bg-muted mb-2 h-4 w-full animate-pulse rounded-md" />
+          <div className="bg-muted mb-2 h-4 w-full animate-pulse rounded-md" />
+          <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
+        </div>
+      </div>
     );
   }
 
@@ -290,7 +306,14 @@ export default function MeetingDetailPage() {
         </CardHeader>
         <CardContent>
           {tasksLoading ? (
-            <p className="text-muted-foreground italic">Loading...</p>
+            <div className="space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="bg-muted h-4 w-4 animate-pulse rounded" />
+                  <div className="bg-muted h-4 flex-1 animate-pulse rounded-md" />
+                </div>
+              ))}
+            </div>
           ) : meeting.status === "processing" && meetingTasks.length === 0 ? (
             <p className="text-muted-foreground italic">
               Extracting action items...

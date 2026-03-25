@@ -1,0 +1,300 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { HeroBg } from "@/components/hero-bg";
+import {
+  Mic,
+  FileText,
+  MessageSquare,
+  BookOpen,
+  ArrowRight,
+  ListChecks,
+  Search,
+  VolumeX,
+  Plug,
+  Video,
+} from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Vernix — AI Video Call Agent",
+  description:
+    "Vernix joins your video calls, transcribes conversations, generates AI summaries, extracts action items, and answers questions live. Works with Zoom, Meet, Teams, and Webex.",
+};
+
+const FEATURES = [
+  {
+    icon: Mic,
+    title: "Never miss a word",
+    description:
+      "Real-time, speaker-identified transcription. Every participant, every sentence — searchable the moment your call ends.",
+  },
+  {
+    icon: FileText,
+    title: "Summaries that write themselves",
+    description:
+      "Walk out of every meeting with a summary, key decisions, and action items — without writing a single note.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Ask your meetings anything",
+    description:
+      'A voice agent that listens live and answers questions on the spot. Say "Vernix, what did we decide about pricing?" and get an answer.',
+  },
+  {
+    icon: VolumeX,
+    title: "Silent when you need it",
+    description:
+      "Prefer text? Silent mode monitors the call and responds via meeting chat. No audio, no disruption — just answers when you need them.",
+  },
+  {
+    icon: BookOpen,
+    title: "Bring your own context",
+    description:
+      "Upload product docs, specs, or past reports. The agent uses them alongside your transcripts to give answers grounded in your actual data.",
+  },
+  {
+    icon: Search,
+    title: "Search across every meeting",
+    description:
+      '"Who mentioned the Q3 deadline?" Find what was said, when it was said, and who said it — across all your calls at once.',
+  },
+  {
+    icon: ListChecks,
+    title: "Action items, tracked",
+    description:
+      "Tasks are pulled directly from conversations and tracked per meeting. No more digging through notes to find who committed to what.",
+  },
+  {
+    icon: Plug,
+    title: "Plug into your tools",
+    description:
+      "Connect your meeting data to Claude Desktop, Cursor, or other AI tools. Your meetings become queryable from anywhere you work.",
+  },
+];
+
+const STEPS = [
+  {
+    step: "1",
+    title: "Paste your meeting link",
+    description:
+      "Drop a Zoom, Meet, Teams, or Webex link. Add an agenda or upload docs if you want — takes 10 seconds.",
+  },
+  {
+    step: "2",
+    title: "Vernix joins as a participant",
+    description:
+      "The agent enters your call, starts transcribing, and listens for questions. You run the meeting as usual.",
+  },
+  {
+    step: "3",
+    title: "Walk away with everything",
+    description:
+      "Summary, action items, and full transcript land in your dashboard immediately. Search, chat, or export as PDF.",
+  },
+];
+
+const PAIN_POINTS = [
+  "Writing meeting notes while trying to pay attention",
+  "Searching Slack for something someone definitely said on a call",
+  "Asking 'can you repeat that?' because you were typing",
+  "Spending 20 minutes after every meeting writing a recap no one reads",
+];
+
+const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
+
+export default function LandingPage() {
+  return (
+    <>
+      {/* Hero */}
+      <section className="relative mx-auto max-w-3xl px-4 py-24 text-center">
+        <HeroBg />
+        <div className="animate-fade-up mb-8 flex justify-center">
+          <Image
+            src="/brand/icon/icon.svg"
+            alt="Vernix logo"
+            width={72}
+            height={72}
+            className="dark:hidden"
+          />
+          <Image
+            src="/brand/icon/icon-dark.png"
+            alt="Vernix logo"
+            width={72}
+            height={72}
+            className="hidden dark:block"
+          />
+        </div>
+        <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
+          An AI agent that joins your calls and does the rest
+        </h1>
+        <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
+          Vernix transcribes your video calls, writes the summary, extracts
+          action items, and answers questions live — so you can actually focus
+          on the conversation.
+        </p>
+        <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
+          <Button variant="accent" size="lg" render={<Link href="/register" />}>
+            Try Vernix Free
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="lg" render={<a href="#how" />}>
+            See How It Works
+          </Button>
+        </div>
+        <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
+          No credit card required. 5 meetings free.
+        </p>
+        <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
+          <Video className="mr-1 h-4 w-4" />
+          {PLATFORMS.map((p, i) => (
+            <span key={p}>
+              {p}
+              {i < PLATFORMS.length - 1 && (
+                <span className="mx-1 opacity-30">/</span>
+              )}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* Pain points */}
+      <section className="border-border border-t py-20">
+        <div className="mx-auto max-w-3xl px-4 text-center">
+          <h2 className="mb-8 text-2xl font-bold">Sound familiar?</h2>
+          <ul className="space-y-3">
+            {PAIN_POINTS.map((point) => (
+              <li
+                key={point}
+                className="text-muted-foreground text-base italic"
+              >
+                &ldquo;{point}&rdquo;
+              </li>
+            ))}
+          </ul>
+          <p className="mt-8 text-sm font-medium">
+            Vernix handles all of this. You just show up and talk.
+          </p>
+        </div>
+      </section>
+
+      {/* Features — first row (core) */}
+      <section id="features" className="border-border border-t py-24">
+        <div className="mx-auto max-w-6xl px-4">
+          <h2 className="mb-4 text-center text-2xl font-bold">
+            Everything that happens after &ldquo;let&rsquo;s hop on a
+            call&rdquo;
+          </h2>
+          <p className="text-muted-foreground mx-auto mb-12 max-w-xl text-center">
+            Transcription, summaries, action items, a voice agent, document
+            search, and tool integrations — in one place.
+          </p>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.slice(0, 4).map((feature, i) => (
+              <ScrollReveal key={feature.title} delay={i * 75}>
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
+                    <h3 className="mb-1 font-medium">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* Second row with visual break */}
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.slice(4).map((feature, i) => (
+              <ScrollReveal key={feature.title} delay={i * 75}>
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
+                    <h3 className="mb-1 font-medium">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          {/* Mid-page CTA */}
+          <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button
+              variant="accent"
+              size="lg"
+              render={<Link href="/register" />}
+            >
+              Try Vernix Free
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+            >
+              See Pricing
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how" className="border-border border-t py-24">
+        <div className="mx-auto max-w-4xl px-4">
+          <h2 className="mb-4 text-center text-2xl font-bold">
+            Three steps. Under a minute.
+          </h2>
+          <p className="text-muted-foreground mx-auto mb-12 max-w-md text-center">
+            No integrations to configure, no browser extensions to install.
+          </p>
+          <div className="grid gap-8 sm:grid-cols-3">
+            {STEPS.map((item, i) => (
+              <ScrollReveal key={item.step} delay={i * 100}>
+                <div className="text-center">
+                  <div className="bg-ring mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white">
+                    {item.step}
+                  </div>
+                  <h3 className="mb-2 font-medium">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {item.description}
+                  </p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA — Loss aversion + Regret aversion + Present bias */}
+      <section className="bg-[oklch(0.145_0_0)] py-24 text-white">
+        <div className="mx-auto max-w-3xl px-4 text-center">
+          <h2 className="mb-4 text-2xl font-bold">
+            Your next meeting could be the first one you never have to
+            summarize.
+          </h2>
+          <p className="mb-8 opacity-80">
+            5 meetings free. No credit card. Cancel anytime.
+          </p>
+          <Button
+            size="lg"
+            variant="secondary"
+            render={<Link href="/register" />}
+          >
+            Try Vernix on Your Next Call
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+          <p className="mt-4 text-xs opacity-60">
+            Set up in under 60 seconds. Your data stays after the trial.
+          </p>
+        </div>
+      </section>
+    </>
+  );
+}

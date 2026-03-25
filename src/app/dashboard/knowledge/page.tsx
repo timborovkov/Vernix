@@ -19,7 +19,7 @@ export default function KnowledgePage() {
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" render={<Link href="/dashboard" />}>
             <ArrowLeft className="h-4 w-4" />
@@ -35,8 +35,21 @@ export default function KnowledgePage() {
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground py-12 text-center">
-          Loading documents...
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 rounded-xl border p-4"
+            >
+              <div className="bg-muted h-5 w-5 animate-pulse rounded" />
+              <div className="flex-1">
+                <div className="bg-muted mb-2 h-4 w-48 animate-pulse rounded-md" />
+                <div className="bg-muted h-3 w-32 animate-pulse rounded-md" />
+              </div>
+              <div className="bg-muted h-5 w-14 animate-pulse rounded-full" />
+              <div className="bg-muted h-7 w-7 animate-pulse rounded-md" />
+            </div>
+          ))}
         </div>
       ) : (
         <KnowledgeList

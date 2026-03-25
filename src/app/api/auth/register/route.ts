@@ -58,8 +58,8 @@ export async function POST(request: Request) {
     // Handle unique constraint violation (concurrent registration)
     if (isUniqueViolation(error)) {
       return NextResponse.json(
-        { error: "Registration failed" },
-        { status: 400 }
+        { error: "An account with this email already exists. Try signing in." },
+        { status: 409 }
       );
     }
     throw error;

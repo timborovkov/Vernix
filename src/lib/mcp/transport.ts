@@ -65,6 +65,7 @@ export function isSsrfUrl(rawUrl: string): boolean {
 // ---------------------------------------------------------------------------
 
 const CLIENT_INFO = { name: "Vernix", version: "1.0.0" } as const;
+const CONNECT_TIMEOUT_MS = 10_000;
 
 /**
  * Create a new MCP Client and connect it to the server at `url`.
@@ -92,7 +93,7 @@ export async function connectMcpClient(
   const streamableClient = new Client(CLIENT_INFO);
   try {
     const transport = new StreamableHTTPClientTransport(new URL(url), {
-      requestInit: { headers },
+      requestInit: { headers, signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) },
     });
     await streamableClient.connect(transport);
     return streamableClient;
@@ -113,11 +114,12 @@ export async function connectMcpClient(
   // --- SSE fallback (fresh Client) ---
   const sseClient = new Client(CLIENT_INFO);
   const sseTransport = new SSEClientTransport(new URL(url), {
-    requestInit: { headers },
+    requestInit: { headers, signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) },
     eventSourceInit: {
       fetch: (u, init) =>
         fetch(u, {
           ...init,
+          signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS),
           // Normalize init.headers to a plain object regardless of whether the
           // SDK passes a Headers instance or a plain record — spreading a Headers
           // instance directly yields {} and silently drops all SDK-set headers.

@@ -99,9 +99,23 @@ export class McpClientManager {
 
     const enabled = servers.filter((s) => s.enabled);
 
+    const SERVER_TIMEOUT_MS = 10_000;
     for (const server of enabled) {
       try {
-        await manager.connectToServer(server);
+        await Promise.race([
+          manager.connectToServer(server),
+          new Promise<never>((_, reject) =>
+            setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    `Connection to "${server.name}" timed out after ${SERVER_TIMEOUT_MS}ms`
+                  )
+                ),
+              SERVER_TIMEOUT_MS
+            )
+          ),
+        ]);
       } catch (error) {
         console.error(
           `Failed to connect to MCP server "${server.name}":`,
