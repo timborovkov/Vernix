@@ -109,13 +109,13 @@ export default function TermsPage() {
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
             All plans, including those described as &quot;unlimited&quot;, are
-            subject to a fair-use policy. The Service is designed for
-            reasonable business use by individual professionals and teams. You
-            may not use the Service in a manner that places disproportionate
-            load on our infrastructure or that of our sub-processors —
-            for example, running an excessive number of concurrent meeting bots,
-            recording calls continuously around the clock, or programmatically
-            creating meetings at a volume inconsistent with normal human use.
+            subject to a fair-use policy. The Service is designed for reasonable
+            business use by individual professionals and teams. You may not use
+            the Service in a manner that places disproportionate load on our
+            infrastructure or that of our sub-processors — for example, running
+            an excessive number of concurrent meeting bots, recording calls
+            continuously around the clock, or programmatically creating meetings
+            at a volume inconsistent with normal human use.
           </p>
           <p className="text-muted-foreground text-sm">
             We reserve the right to define, publish, and update specific usage
@@ -145,7 +145,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            6. Third-Party Platforms and Sub-Processors
+            7. Third-Party Platforms and Sub-Processors
           </h2>
           <p className="text-muted-foreground text-sm">
             The Service integrates with third-party video conferencing platforms
@@ -165,7 +165,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            7. Intellectual Property
+            8. Intellectual Property
           </h2>
           <p className="text-muted-foreground text-sm">
             You retain all ownership rights in your content, including meeting
@@ -180,7 +180,32 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            8. Data Processing and Privacy
+            9. Fees, Pricing, and Plan Changes
+          </h2>
+          <p className="text-muted-foreground mb-3 text-sm">
+            Certain features of the Service require a paid subscription. All
+            fees are stated on our pricing page at the time of purchase and are
+            non-refundable except where required by applicable law or as
+            expressly stated otherwise.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            We reserve the right to change pricing, introduce new fee
+            structures, or modify the features included in any plan at any time.
+            For existing subscribers, price changes will take effect at the
+            start of the next billing cycle following at least 30 days&apos;
+            prior notice via email or in-app notification. If you do not agree
+            to a price change, you may cancel your subscription before the new
+            pricing takes effect.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Free tiers and promotional offers are provided at our discretion and
+            may be modified or discontinued at any time without prior notice.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">
+            10. Data Processing and Privacy
           </h2>
           <p className="text-muted-foreground text-sm">
             Your data is processed in accordance with our{" "}
@@ -199,7 +224,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            9. Limitation of Liability
+            11. Limitation of Liability
           </h2>
           <p className="text-muted-foreground text-sm">
             To the maximum extent permitted by applicable law, the Service is
@@ -217,7 +242,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">10. Indemnification</h2>
+          <h2 className="mb-2 text-lg font-semibold">12. Indemnification</h2>
           <p className="text-muted-foreground text-sm">
             You agree to indemnify, defend, and hold harmless Vernix, its
             officers, directors, employees, and agents from and against any
@@ -230,23 +255,50 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">11. Termination</h2>
-          <p className="text-muted-foreground text-sm">
-            We may suspend or terminate your access to the Service at any time
-            for violation of these Terms or for any other reason at our
-            discretion, with or without notice. You may delete your account at
-            any time through the Service. Upon termination, your data will be
-            deleted in accordance with the retention schedule described in our{" "}
+          <h2 className="mb-2 text-lg font-semibold">
+            13. Suspension and Termination
+          </h2>
+          <p className="text-muted-foreground mb-3 text-sm">
+            We may, at our sole discretion and without liability, suspend or
+            terminate your account and access to the Service, with or without
+            notice, for any of the following reasons:
+          </p>
+          <ul className="text-muted-foreground list-disc space-y-1 pl-5 text-sm">
+            <li>
+              Breach of these Terms, including the Acceptable Use or Fair Use
+              policies.
+            </li>
+            <li>
+              Exceeding fair-use limits after a reasonable opportunity to
+              remedy.
+            </li>
+            <li>Non-payment of applicable fees.</li>
+            <li>
+              Conduct that we reasonably believe is harmful to other users, our
+              infrastructure, or our sub-processors.
+            </li>
+            <li>
+              A request or order from a law-enforcement or regulatory authority.
+            </li>
+            <li>
+              Extended periods of inactivity (12 months or more for free
+              accounts).
+            </li>
+          </ul>
+          <p className="text-muted-foreground mt-3 text-sm">
+            You may delete your account at any time through the Service. Upon
+            termination — whether by you or by us — your data will be deleted in
+            accordance with the retention schedule described in our{" "}
             <a href="/privacy" className="text-foreground underline">
               Privacy Policy
             </a>
-            . Sections 5, 7, 9, 10, and 12 survive termination.
+            . Sections 6, 8, 11, 12, and 14 survive termination.
           </p>
         </section>
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            12. Governing Law and Disputes
+            14. Governing Law and Disputes
           </h2>
           <p className="text-muted-foreground text-sm">
             These Terms shall be governed by and construed in accordance with
@@ -259,7 +311,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">13. Changes to Terms</h2>
+          <h2 className="mb-2 text-lg font-semibold">15. Changes to Terms</h2>
           <p className="text-muted-foreground text-sm">
             We may update these Terms from time to time. Material changes will
             be communicated by posting the updated Terms on the Service and
@@ -270,7 +322,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">14. Contact</h2>
+          <h2 className="mb-2 text-lg font-semibold">16. Contact</h2>
           <p className="text-muted-foreground text-sm">
             For questions about these Terms, contact us at{" "}
             <a
