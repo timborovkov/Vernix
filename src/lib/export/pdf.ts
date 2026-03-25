@@ -5,6 +5,27 @@ import {
   type MeetingExportData,
 } from "./markdown";
 
+/** Strip markdown formatting to plain text for PDF rendering */
+function stripMarkdown(text: string): string {
+  return (
+    text
+      // Bold/italic
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/__(.+?)__/g, "$1")
+      .replace(/_(.+?)_/g, "$1")
+      // Headers
+      .replace(/^#{1,6}\s+/gm, "")
+      // Links
+      .replace(/\[(.+?)\]\(.+?\)/g, "$1")
+      // Inline code
+      .replace(/`(.+?)`/g, "$1")
+      // List markers
+      .replace(/^[-*+]\s+/gm, "- ")
+      .replace(/^\d+\.\s+/gm, (m) => m)
+  );
+}
+
 function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -46,7 +67,7 @@ export async function generateMeetingPdf(
   doc.fontSize(10).font("Helvetica");
   doc.text(
     typeof meta.summary === "string" && meta.summary
-      ? meta.summary
+      ? stripMarkdown(meta.summary)
       : "No summary available."
   );
   doc.moveDown();

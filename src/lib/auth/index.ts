@@ -1,37 +1,163 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
+import type { Provider } from "next-auth/providers";
 import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { users, accounts } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import { authConfig } from "./config";
+
+// Build providers array conditionally
+const providers: Provider[] = [];
+
+// Google OAuth (if configured)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+// GitHub OAuth (if configured)
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  providers.push(
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    })
+  );
+}
+
+// Credentials (email/password)
+providers.push(
+  Credentials({
+    credentials: {
+      email: {},
+      password: {},
+    },
+    async authorize(credentials) {
+      const email = credentials?.email as string | undefined;
+      const password = credentials?.password as string | undefined;
+
+      if (!email || !password) return null;
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (!user) return null;
+
+      // SSO-only user attempting credentials login
+      if (!user.passwordHash) return null;
+
+      const valid = await compare(password, user.passwordHash);
+      if (!valid) return null;
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+      };
+    },
+  })
+);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  providers: [
-    Credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
-      async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
+  providers,
+  callbacks: {
+    jwt: authConfig.callbacks!.jwt!,
+    session: authConfig.callbacks!.session!,
+    async signIn({ user, account, profile }) {
+      // Credentials provider — already handled by authorize()
+      if (account?.provider === "credentials") return true;
 
-        if (!email || !password) return null;
+      // OAuth providers
+      if (!account || !user.email) return false;
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, email));
+      const email = user.email;
+      const providerAccountId = account.providerAccountId;
 
-        if (!user) return null;
+      // Check if this provider account is already linked
+      const [existingAccount] = await db
+        .select()
+        .from(accounts)
+        .where(
+          and(
+            eq(accounts.provider, account.provider),
+            eq(accounts.providerAccountId, providerAccountId)
+          )
+        );
 
-        const valid = await compare(password, user.passwordHash);
-        if (!valid) return null;
+      if (existingAccount) {
+        // Already linked — allow sign-in
+        user.id = existingAccount.userId;
+        return true;
+      }
 
-        return { id: user.id, email: user.email, name: user.name };
-      },
-    }),
-  ],
+      // Check if a user with this email already exists
+      const [existingUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+
+      if (existingUser) {
+        // Google auto-links (email always verified)
+        if (account.provider === "google") {
+          await db.insert(accounts).values({
+            userId: existingUser.id,
+            provider: account.provider,
+            providerAccountId,
+            accessToken: account.access_token ?? null,
+            refreshToken: account.refresh_token ?? null,
+            expiresAt: account.expires_at ?? null,
+          });
+          user.id = existingUser.id;
+          user.image =
+            existingUser.image ??
+            (profile as { avatar_url?: string } | undefined)?.avatar_url ??
+            null;
+          return true;
+        }
+
+        // Other providers: don't auto-link (security risk)
+        return "/login?error=AccountExists";
+      }
+
+      // New user — create account
+      const image =
+        (profile as { picture?: string } | undefined)?.picture ??
+        (profile as { avatar_url?: string } | undefined)?.avatar_url ??
+        null;
+
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          email,
+          name: user.name ?? email.split("@")[0],
+          passwordHash: null,
+          image,
+        })
+        .returning({ id: users.id });
+
+      await db.insert(accounts).values({
+        userId: newUser.id,
+        provider: account.provider,
+        providerAccountId,
+        accessToken: account.access_token ?? null,
+        refreshToken: account.refresh_token ?? null,
+        expiresAt: account.expires_at ?? null,
+      });
+
+      user.id = newUser.id;
+      user.image = image;
+      return true;
+    },
+  },
 });
