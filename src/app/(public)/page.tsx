@@ -88,9 +88,9 @@ const STEPS = [
   },
   {
     step: "3",
-    title: "Get everything after the call",
+    title: "Walk away with everything",
     description:
-      "Summary, action items, and full transcript — ready to search, chat with, or export as PDF.",
+      "Summary, action items, and full transcript land in your dashboard immediately. Search, chat, or export as PDF.",
   },
 ];
 
@@ -99,6 +99,13 @@ const PAIN_POINTS = [
   "Searching Slack for something someone definitely said on a call",
   "Asking 'can you repeat that?' because you were typing",
   "Spending 20 minutes after every meeting writing a recap no one reads",
+];
+
+const PROOF_POINTS = [
+  { value: "4", label: "platforms supported" },
+  { value: "<60s", label: "to set up" },
+  { value: "100%", label: "of words captured" },
+  { value: "0", label: "browser extensions" },
 ];
 
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
@@ -177,6 +184,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Proof points — Authority + Specificity */}
+      <section className="border-border border-t py-16">
+        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 px-4 sm:grid-cols-4">
+          {PROOF_POINTS.map((point) => (
+            <div key={point.label} className="text-center">
+              <div className="text-3xl font-bold">{point.value}</div>
+              <div className="text-muted-foreground text-sm">
+                {point.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Features */}
       <section id="features" className="border-border border-t py-24">
         <div className="mx-auto max-w-6xl px-4">
@@ -229,23 +250,27 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* CTA — Loss aversion + Regret aversion + Present bias */}
       <section className="bg-primary text-primary-foreground py-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="mb-4 text-2xl font-bold">
-            Stop writing notes. Start running meetings.
+            Your next meeting could be the first one you never have to
+            summarize.
           </h2>
           <p className="mb-8 opacity-80">
-            Your first 5 meetings are free. Set up takes 10 seconds.
+            5 meetings free. No credit card. Cancel anytime.
           </p>
           <Button
             size="lg"
             variant="secondary"
             render={<Link href="/register" />}
           >
-            Create Your Free Account
+            Try Vernix on Your Next Call
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
+          <p className="mt-4 text-xs opacity-60">
+            Set up in under 60 seconds
+          </p>
         </div>
       </section>
     </>
