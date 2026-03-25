@@ -46,22 +46,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 
 ## Environment Variables
 
-| Variable               | Description                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------ |
-| `DATABASE_URL`         | PostgreSQL connection string                                                               |
-| `QDRANT_URL`           | Qdrant instance URL (e.g. `http://localhost:6380` or `https://your-qdrant.up.railway.app`) |
-| `OPENAI_API_KEY`       | OpenAI API key (for embeddings, LLM, and Realtime API)                                     |
-| `AUTH_SECRET`          | NextAuth secret — generate with `openssl rand -base64 32`                                  |
-| `AUTH_URL`             | Your app's public URL for auth callbacks (e.g. `https://your-app.up.railway.app`)          |
-| `NEXT_PUBLIC_APP_URL`  | Your app's public URL for webhooks and voice agent (same as `AUTH_URL`)                    |
-| `MEETING_BOT_PROVIDER` | `recall` or `mock`                                                                         |
-| `RECALL_API_KEY`       | Recall.ai API token                                                                        |
-| `RECALL_API_URL`       | Recall.ai API base URL (region-specific, e.g. `https://eu-central-1.recall.ai/api/v1`)     |
-| `S3_ENDPOINT`          | S3-compatible endpoint (e.g. `http://localhost:9002` for local Minio)                      |
-| `S3_ACCESS_KEY`        | S3 access key (Minio root user for local dev)                                              |
-| `S3_SECRET_KEY`        | S3 secret key (Minio root password for local dev)                                          |
-| `S3_BUCKET`            | S3 bucket name for knowledge base files (default: `vernix-knowledge`)                      |
-| `S3_REGION`            | S3 region (default: `us-east-1`)                                                           |
+See `.env.example` for all environment variables.
 
 ## Recall.ai Webhook Configuration
 

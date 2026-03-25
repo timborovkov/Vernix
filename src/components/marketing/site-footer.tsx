@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
 
 const PRODUCT_LINKS = [
   { href: "/#features", label: "Features" },
@@ -12,7 +13,10 @@ const PRODUCT_LINKS = [
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
+  { href: "/cookie-policy", label: "Cookie Policy" },
 ];
+
+const isAnalyticsEnabled = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
 
 export function SiteFooter() {
   return (
@@ -70,6 +74,11 @@ export function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              {isAnalyticsEnabled ? (
+                <li>
+                  <CookiePreferencesButton />
+                </li>
+              ) : null}
             </ul>
           </div>
         </div>

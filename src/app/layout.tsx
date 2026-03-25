@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
+import Script from "next/script";
 import { Toaster } from "sonner";
+import { CookieConsentBanner } from "@/components/cookie-consent-banner";
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
+
+const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+const isAnalyticsEnabled = Boolean(gaMeasurementId);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,8 +80,40 @@ export default function RootLayout({
           <QueryProvider>
             {children}
             <Toaster richColors position="bottom-right" />
+            <CookieConsentBanner analyticsEnabled={isAnalyticsEnabled} />
           </QueryProvider>
         </SessionProvider>
+        {gaMeasurementId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="google-analytics-consent-v2"
+              strategy="afterInteractive"
+            >
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){window.dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('consent', 'default', {
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied',
+                  wait_for_update: 500
+                });
+                gtag('set', 'ads_data_redaction', true);
+                gtag('set', 'url_passthrough', true);
+                gtag('js', new Date());
+                gtag('config', '${gaMeasurementId}', {
+                  anonymize_ip: true
+                });
+              `}
+            </Script>
+          </>
+        ) : null}
       </body>
     </html>
   );
