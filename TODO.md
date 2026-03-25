@@ -115,7 +115,7 @@
 
 ## P15 — UI Polish & Launch Prep
 
-- **Implement the logo set**
+- **Implement the logo set** – Start using the new logo set in the UI
 - **Loading skeletons** – Structurally correct loading skeletons; general, page, and component specific loading components
 - **Landing page** — Build a clean marketing landing page matching the existing site style, with clear CTAs and value props
 - **Mobile responsiveness** — Audit and fix all pages for mobile; dashboard, meeting detail, settings, knowledge base
