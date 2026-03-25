@@ -54,7 +54,7 @@ export function MeetingCard({
 
   return (
     <>
-      <Card>
+      <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <CardTitle className="text-lg">
             <Link href={`/dashboard/${meeting.id}`} className="hover:underline">
