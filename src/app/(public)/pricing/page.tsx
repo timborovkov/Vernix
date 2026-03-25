@@ -74,7 +74,7 @@ export default function PricingPage() {
         {TIERS.map((tier) => (
           <Card
             key={tier.name}
-            className={tier.highlighted ? "ring-primary ring-2" : ""}
+            className={tier.highlighted ? "ring-ring ring-2" : ""}
           >
             <CardHeader>
               <div className="flex items-center gap-2">
