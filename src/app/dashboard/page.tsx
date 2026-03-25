@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VernixLogo } from "@/components/ui/vernix-logo";
 import {
   LogOut,
   MessageSquare,
@@ -60,20 +60,7 @@ export default function DashboardPage() {
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Image
-            src="/brand/icon/icon.svg"
-            alt="Vernix"
-            width={40}
-            height={40}
-            className="dark:hidden"
-          />
-          <Image
-            src="/brand/icon/icon-dark.png"
-            alt="Vernix"
-            width={40}
-            height={40}
-            className="hidden dark:block"
-          />
+          <VernixLogo size={40} />
           <div>
             <h1 className="text-3xl font-bold">Vernix</h1>
             <p className="text-muted-foreground">
