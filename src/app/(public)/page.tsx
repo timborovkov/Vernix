@@ -69,7 +69,7 @@ const FEATURES = [
     icon: Plug,
     title: "Plug into your tools",
     description:
-      "Connect meeting data to Claude Desktop, Cursor, or any MCP-compatible tool. Your meetings become queryable from anywhere.",
+      "Connect your meeting data to Claude Desktop, Cursor, or other AI tools. Your meetings become queryable from anywhere you work.",
   },
 ];
 
@@ -99,13 +99,6 @@ const PAIN_POINTS = [
   "Searching Slack for something someone definitely said on a call",
   "Asking 'can you repeat that?' because you were typing",
   "Spending 20 minutes after every meeting writing a recap no one reads",
-];
-
-const PROOF_POINTS = [
-  { value: "4", label: "platforms supported" },
-  { value: "<60s", label: "to set up" },
-  { value: "100%", label: "of words captured" },
-  { value: "0", label: "browser extensions" },
 ];
 
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
@@ -184,21 +177,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Proof points — Authority + Specificity */}
-      <section className="border-border border-t py-16">
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-8 px-4 sm:grid-cols-4">
-          {PROOF_POINTS.map((point) => (
-            <div key={point.label} className="text-center">
-              <div className="text-3xl font-bold">{point.value}</div>
-              <div className="text-muted-foreground text-sm">
-                {point.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
+      {/* Features — first row (core) */}
       <section id="features" className="border-border border-t py-24">
         <div className="mx-auto max-w-6xl px-4">
           <h2 className="mb-4 text-center text-2xl font-bold">
@@ -210,7 +189,7 @@ export default function LandingPage() {
             search, and tool integrations — in one place.
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((feature) => (
+            {FEATURES.slice(0, 4).map((feature) => (
               <Card key={feature.title}>
                 <CardContent className="pt-6">
                   <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
@@ -221,6 +200,36 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          {/* Second row with visual break */}
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.slice(4).map((feature) => (
+              <Card key={feature.title}>
+                <CardContent className="pt-6">
+                  <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
+                  <h3 className="mb-1 font-medium">{feature.title}</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {feature.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Mid-page CTA */}
+          <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Button size="lg" render={<Link href="/register" />}>
+              Try Vernix Free
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+            >
+              See Pricing
+            </Button>
           </div>
         </div>
       </section>
@@ -269,7 +278,7 @@ export default function LandingPage() {
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
           <p className="mt-4 text-xs opacity-60">
-            Set up in under 60 seconds
+            Set up in under 60 seconds. Your data stays after the trial.
           </p>
         </div>
       </section>
