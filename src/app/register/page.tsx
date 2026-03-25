@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VernixLogo } from "@/components/ui/vernix-logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -61,20 +61,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <div className="flex justify-center">
-            <Image
-              src="/brand/icon/icon.svg"
-              alt="Vernix"
-              width={48}
-              height={48}
-              className="dark:hidden"
-            />
-            <Image
-              src="/brand/icon/icon-dark.png"
-              alt="Vernix"
-              width={48}
-              height={48}
-              className="hidden dark:block"
-            />
+            <VernixLogo size={48} />
           </div>
           <CardTitle className="text-center text-2xl">
             Create an account
