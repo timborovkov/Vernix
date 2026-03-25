@@ -39,7 +39,13 @@ function persistConsent(choice: ConsentChoice) {
   document.cookie = `${CONSENT_COOKIE_NAME}=${choice}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${secure}`;
 }
 
-export function CookieConsentBanner() {
+type CookieConsentBannerProps = {
+  analyticsEnabled: boolean;
+};
+
+export function CookieConsentBanner({
+  analyticsEnabled,
+}: CookieConsentBannerProps) {
   const [consentChoice, setConsentChoice] = useState<ConsentChoice | null>(
     () => {
       if (typeof window === "undefined") {
@@ -55,10 +61,10 @@ export function CookieConsentBanner() {
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
 
   useEffect(() => {
-    if (consentChoice) {
+    if (analyticsEnabled && consentChoice) {
       updateConsentMode(consentChoice);
     }
-  }, [consentChoice]);
+  }, [analyticsEnabled, consentChoice]);
 
   useEffect(() => {
     const openPreferences = () => setIsPreferencesOpen(true);
@@ -76,7 +82,8 @@ export function CookieConsentBanner() {
     setIsPreferencesOpen(false);
   }
 
-  const isVisible = consentChoice === null || isPreferencesOpen;
+  const isVisible =
+    analyticsEnabled && (consentChoice === null || isPreferencesOpen);
 
   if (!isVisible) {
     return null;
@@ -87,7 +94,7 @@ export function CookieConsentBanner() {
       <p className="text-sm font-medium">We respect your privacy.</p>
       <p className="text-muted-foreground mt-1 text-sm">
         We use essential cookies to run Vernix and optional analytics cookies to
-        improve the product. You can change your choice any time from the
+        improve the product. You can change your choice at any time from the
         footer.
       </p>
       <p className="mt-2 text-sm">
@@ -101,7 +108,7 @@ export function CookieConsentBanner() {
           size="sm"
           onClick={() => handleConsent("rejected")}
         >
-          Reject non-essential
+          Reject optional analytics
         </Button>
         <Button
           variant="accent"
