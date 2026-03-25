@@ -58,7 +58,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <VernixLogo size={40} />
           <div>
@@ -68,14 +68,14 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             render={<Link href="/dashboard/knowledge" />}
           >
             <BookOpen className="mr-1 h-4 w-4" />
-            Knowledge
+            <span className="hidden sm:inline">Knowledge</span>
           </Button>
           <Button
             variant={showChat ? "default" : "outline"}
@@ -83,11 +83,11 @@ export default function DashboardPage() {
             onClick={() => setShowChat(!showChat)}
           >
             <MessageSquare className="mr-1 h-4 w-4" />
-            Chat
+            <span className="hidden sm:inline">Chat</span>
           </Button>
           <Button variant="outline" size="sm" render={<a href="/api/export" />}>
             <Download className="mr-1 h-4 w-4" />
-            Export All
+            <span className="hidden sm:inline">Export All</span>
           </Button>
           <CreateMeetingDialog
             onCreate={async (title, joinLink, agenda, silent) => {
