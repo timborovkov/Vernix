@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Cookie Policy - Vernix",
   description:
-    "Vernix Cookie Policy - which cookies we use, why we use them, and how you can manage your consent preferences.",
+    "Vernix Cookie Policy - which cookies and similar technologies we use, why we use them, and how you can manage your consent preferences.",
 };
 
 export default function CookiePolicyPage() {
@@ -20,7 +20,8 @@ export default function CookiePolicyPage() {
           <p className="text-muted-foreground text-sm">
             Cookies are small text files stored on your device. They help
             websites remember preferences, maintain sessions, and understand how
-            users interact with pages.
+            users interact with pages. We also use similar browser storage and
+            telemetry technologies for security and reliability monitoring.
           </p>
         </section>
 
@@ -29,12 +30,17 @@ export default function CookiePolicyPage() {
             2. Cookies we use at Vernix
           </h2>
           <p className="text-muted-foreground text-sm">
-            We use two categories of cookies:
+            We use three categories of cookies and similar technologies:
           </p>
           <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 text-sm">
             <li>
               <strong>Essential cookies</strong>: required for sign-in,
               security, and core product functionality. These are always active.
+            </li>
+            <li>
+              <strong>Essential monitoring technologies</strong>: used by Sentry
+              to detect errors, monitor performance, and keep the service
+              reliable. These are not used for advertising personalization.
             </li>
             <li>
               <strong>Analytics cookies</strong>: optional cookies used by
