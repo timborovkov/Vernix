@@ -108,8 +108,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         .where(eq(users.email, email));
 
       if (existingUser) {
-        // Google auto-links (email always verified)
-        if (account.provider === "google") {
+        // Auto-link for Google (email always verified) and for any provider
+        // when the user is already authenticated (linking from settings page).
+        // GitHub sign-in with unlinked email → redirect to error page.
+        const isGoogleVerified = account.provider === "google";
+        // If user.id is already set by NextAuth, the user has an active session
+        // (linking flow from settings). Allow linking for any provider.
+        const isLinkingFromSession =
+          user.id && user.id === existingUser.id;
+
+        if (isGoogleVerified || isLinkingFromSession) {
           await db.insert(accounts).values({
             userId: existingUser.id,
             provider: account.provider,
@@ -121,12 +129,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.id = existingUser.id;
           user.image =
             existingUser.image ??
+            (profile as { picture?: string } | undefined)?.picture ??
             (profile as { avatar_url?: string } | undefined)?.avatar_url ??
             null;
           return true;
         }
 
-        // Other providers: don't auto-link (security risk)
+        // Non-Google provider sign-in without existing link: don't auto-link
         return "/login?error=AccountExists";
       }
 
