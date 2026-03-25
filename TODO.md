@@ -251,3 +251,22 @@
 - **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
 - **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
 - **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
+
+## Changelog & Status Page
+
+- **CHANGELOG.md** — Create and maintain a changelog file in the repo tracking all releases and notable changes
+- **Public changelog page** — `/changelog` page on the website rendering the changelog with dates, version tags, and descriptions
+- **Service uptime monitoring** — Monitor all critical dependencies: Vernix app, Recall.ai, OpenAI API, Polar, Railway, Qdrant, S3/Minio. Alert on downtime.
+- **Public status page** — Host a public status page (e.g. Openstatus, Instatus, or BetterStack) showing real-time uptime for all services. Link from footer.
+
+## Blog & Content
+
+- **Blog infrastructure** — Add a `/blog` section to the website. MDX or markdown-based posts with frontmatter (title, date, author, slug, description). Static generation via Next.js.
+- **Blog list page** — `/blog` showing all posts sorted by date with title, excerpt, and read time
+- **Blog post page** — `/blog/[slug]` rendering full post with proper typography, OG images, and author info
+- **Initial posts** — Write 3-5 launch posts:
+  - "Introducing Vernix — an AI agent for your video calls"
+  - "How Vernix transcribes and searches across all your meetings"
+  - "Voice agent vs. silent mode: when to use each"
+  - "Building Vernix: from hackathon idea to production"
+  - "Why we built MCP integration into a meeting tool"
