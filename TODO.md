@@ -178,13 +178,30 @@
 - ~~**Test before save** — "Test Connection" button in the Add Server dialog; clears result when URL/API key changes~~
 - ~~**Test API** — `POST /api/settings/mcp-servers/test` accepts `{ id }` (DB lookup) or `{ url, apiKey? }` (pre-save); 10s timeout~~
 
-## P21 — Analytics & Monitoring
+## P21 — Analytics & Monitoring ~~DONE~~
 
-- **Sentry** — Error tracking and performance monitoring; instrument Next.js app, API routes, and background jobs (webhook handlers, agent pipeline)
-- **PostHog / Plausible** — Product analytics: page views, feature usage (meetings created, agent joins, silent mode, chat, exports), funnel tracking
-- **Custom events** — Track key actions: meeting created, agent joined, transcript received, summary generated, chat message sent, MCP tool called
-- **Uptime monitoring** — External health check on `/api/health` (to be created); alert on downtime
-- **Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page
+- ~~**Sentry** — Error tracking and performance monitoring; instrument Next.js app, API routes, and background jobs (webhook handlers, agent pipeline)~~
+- ~~**Google Analytics** — Consent Mode v2, cookie banner, page views and feature usage tracking~~
+- ~~**Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page~~
+- ~~**Privacy / Terms / Cookie Policy** — Updated all legal pages to reflect Sentry, Google Analytics, Recall.ai, OpenAI, and Railway as sub-processors~~
+
+## P21b — Contact Forms & Email
+
+- **Hook up contact form** — Wire the contact form on `/contact` to actually send emails (e.g. Resend, Postmark, or SES)
+- **Configure @vernix.app emails** — Set up MX/SPF/DKIM records for vernix.app domain, configure transactional email provider
+- **Contact form API** — `POST /api/contact` route that validates input and sends to hello@vernix.app
+
+## P21c — Welcome Email
+
+- **Email template** — Design a branded HTML welcome email (logo, onboarding steps, CTA to create first meeting)
+- **Send on registration** — Trigger welcome email from `POST /api/auth/register` after successful user creation
+- **Email provider** — Use the same transactional provider configured in P21b (Resend/Postmark/SES)
+
+## P21d — Google Analytics Sales Funnel (post-launch)
+
+- **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
+- **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
+- **Attribution** — UTM parameter tracking across signup flow for campaign attribution
 
 ## P22 — Billing with Polar
 
