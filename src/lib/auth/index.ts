@@ -119,11 +119,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           expiresAt: account.expires_at ?? null,
         });
         user.id = existingUser.id;
-        user.image =
-          existingUser.image ??
+
+        // Persist OAuth avatar to DB if user doesn't have one yet
+        const oauthImage =
           (profile as { picture?: string } | undefined)?.picture ??
           (profile as { avatar_url?: string } | undefined)?.avatar_url ??
           null;
+        const resolvedImage = existingUser.image ?? oauthImage;
+        if (resolvedImage && !existingUser.image) {
+          await db
+            .update(users)
+            .set({ image: resolvedImage, updatedAt: new Date() })
+            .where(eq(users.id, existingUser.id));
+        }
+        user.image = resolvedImage;
         return true;
       }
 
