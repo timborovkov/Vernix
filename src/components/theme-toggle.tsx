@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Sun, Moon, Monitor } from "lucide-react";
 
@@ -18,34 +18,36 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
+function getStoredTheme(): Theme {
+  if (typeof window === "undefined") return "system";
+  return (localStorage.getItem("theme") as Theme) ?? "system";
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const theme = useSyncExternalStore(subscribe, getStoredTheme, () => "system");
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme") as Theme | null;
-    if (stored) {
-      setTheme(stored);
-      applyTheme(stored);
-    } else {
-      applyTheme("system");
-    }
+    applyTheme(theme);
 
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      if ((localStorage.getItem("theme") ?? "system") === "system") {
-        applyTheme("system");
-      }
+      if (getStoredTheme() === "system") applyTheme("system");
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, []);
+  }, [theme]);
 
   const cycle = () => {
     const order: Theme[] = ["light", "dark", "system"];
     const next = order[(order.indexOf(theme) + 1) % order.length];
-    setTheme(next);
     localStorage.setItem("theme", next);
     applyTheme(next);
+    window.dispatchEvent(new StorageEvent("storage"));
   };
 
   const Icon = theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
