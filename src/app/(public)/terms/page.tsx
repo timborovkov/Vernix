@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Vernix",
+  description:
+    "Vernix Terms of Service — acceptable use, intellectual property, liability, and termination.",
 };
 
 export default function TermsPage() {
@@ -12,7 +14,7 @@ export default function TermsPage() {
         Last updated: March 2026
       </p>
 
-      <div className="prose-sm space-y-8">
+      <div className="space-y-8">
         <section>
           <h2 className="mb-2 text-lg font-semibold">1. Acceptance of Terms</h2>
           <p className="text-muted-foreground text-sm">
