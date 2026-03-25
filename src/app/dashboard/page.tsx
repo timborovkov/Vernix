@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VernixLogo } from "@/components/ui/vernix-logo";
 import {
   LogOut,
   MessageSquare,
@@ -58,11 +59,14 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Vernix</h1>
-          <p className="text-muted-foreground">
-            AI Video Call Agent — Zoom, Meet, Teams, Webex
-          </p>
+        <div className="flex items-center gap-3">
+          <VernixLogo size={40} />
+          <div>
+            <h1 className="text-3xl font-bold">Vernix</h1>
+            <p className="text-muted-foreground">
+              AI Video Call Agent — Zoom, Meet, Teams, Webex
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button

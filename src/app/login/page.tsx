@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { VernixLogo } from "@/components/ui/vernix-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +46,9 @@ export default function LoginPage() {
     <div className="flex min-h-full items-center justify-center px-4 py-12">
       <Card className="w-full max-w-sm">
         <CardHeader>
+          <div className="flex justify-center">
+            <VernixLogo size={48} />
+          </div>
           <CardTitle className="text-center text-2xl">
             Sign in to Vernix
           </CardTitle>

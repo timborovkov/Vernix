@@ -1,0 +1,26 @@
+{
+  "name": "Vernix — AI Video Call Agent",
+  "short_name": "Vernix",
+  "description": "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#242424",
+  "icons": [
+    {
+      "src": "/brand/favicon/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/favicon/favicon.svg",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
