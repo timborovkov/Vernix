@@ -85,8 +85,8 @@ export function MeetingCard({
           {meeting.status === "active" && (
             <p className="mt-2 text-xs text-green-600">
               {isSilent
-                ? "Text agent responds via meeting chat when called: KiviKova"
-                : "Voice agent responds to: KiviKova, Agent, Assistant"}
+                ? "Text agent responds via meeting chat when called: Vernix"
+                : "Voice agent responds to: Vernix, Agent, Assistant"}
             </p>
           )}
         </CardContent>

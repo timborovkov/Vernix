@@ -39,7 +39,7 @@
 
 - ~~**Audio bridging** — Recall Output Media renders voice-agent.html which bridges getUserMedia audio ↔ OpenAI Realtime API~~
 - ~~**In-call RAG** — Agent uses search_meeting_context tool via `/api/agent/rag` endpoint~~
-- ~~**Turn detection** — Semantic VAD with low eagerness; agent only responds when addressed as KiviKova/Agent/Assistant~~
+- ~~**Turn detection** — Semantic VAD with low eagerness; agent only responds when addressed as Vernix/Agent/Assistant~~
 
 ## P6 — Chat with Meeting Notes ~~DONE~~
 
@@ -108,8 +108,8 @@
 - **Rename GitHub repository**
 - **Register the domain and social media**
 - **Domain** — Point vernix.app to the deployment
-- **Update Recall** — Bot name from "KiviKova Agent" to "Vernix Agent", webhook URLs
-- **Voice agent wake words** — Change from "KiviKova" to "Vernix" in system prompt and UI hints
+- **Update Recall** — Bot name from "Vernix Agent" to "Vernix Agent", webhook URLs
+- **Voice agent wake words** — Change from "Vernix" to "Vernix" in system prompt and UI hints
 - **Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site
 - **Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent
 

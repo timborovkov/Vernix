@@ -20,7 +20,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ## Architecture
 
-**KiviKova** is an AI video call agent built with Next.js 16 App Router. It joins video calls (Zoom, Meet, Teams, Webex), transcribes conversations, generates summaries, and provides a live voice agent that responds to questions using RAG.
+**Vernix** is an AI video call agent built with Next.js 16 App Router. It joins video calls (Zoom, Meet, Teams, Webex), transcribes conversations, generates summaries, and provides a live voice agent that responds to questions using RAG.
 
 ### Data Flow
 
@@ -39,7 +39,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface (with `joinMeeting(link, id, name?, options?)`, `leaveMeeting()`, `sendChatMessage()`, `onTranscript()`) with `RecallProvider` and `MockProvider`. `joinMeeting` accepts `options.silent` to omit output_media. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.
 - **`src/lib/openai/`** — OpenAI client singleton. `embeddings.ts` for text embedding, `voice.ts` for server-side VoiceSession class (wraps OpenAI Realtime API).
-- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)`, `getVoiceAgentSystemPrompt(agenda?)`, and `getSilentAgentSystemPrompt(agenda?)`. `silent.ts` handles silent agent transcript monitoring: debounce buffering (3s), mention detection ("KiviKova"/"Kivi Kova"), rate limiting (1 response/30s), RAG-based response generation, and sending via Recall chat API.
+- **`src/lib/agent/`** — `rag.ts` for RAG context retrieval (cross-meeting + knowledge base search with boost). Meeting collections can contain document and agenda types alongside transcripts. `prompts.ts` exports `getAgentSystemPrompt(agenda?)`, `getVoiceAgentSystemPrompt(agenda?)`, and `getSilentAgentSystemPrompt(agenda?)`. `silent.ts` handles silent agent transcript monitoring: debounce buffering (3s), mention detection ("Vernix"), rate limiting (1 response/30s), RAG-based response generation, and sending via Recall chat API.
 - **`src/lib/summary/`** — `generate.ts` generates meeting summaries from transcript segments via LLM.
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
 - **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-5.4-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.

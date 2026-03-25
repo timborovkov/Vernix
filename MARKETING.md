@@ -1,8 +1,8 @@
-# KiviKova — Marketing Copy
+# Vernix — Marketing Copy
 
 ## Elevator Pitch (10 seconds)
 
-KiviKova is an AI agent that joins your video calls, transcribes everything in real time, and builds a searchable knowledge base — so you can ask "What did we decide about pricing last Tuesday?" and get an instant, accurate answer.
+Vernix is an AI agent that joins your video calls, transcribes everything in real time, and builds a searchable knowledge base — so you can ask "What did we decide about pricing last Tuesday?" and get an instant, accurate answer.
 
 ## One-Liner
 
@@ -16,15 +16,15 @@ Every meeting. Remembered. Searchable. Actionable.
 
 ## Product Description (Short)
 
-KiviKova is an AI meeting agent that joins your Google Meet, Zoom, or Teams calls automatically. It listens, transcribes, and converts every conversation into searchable intelligence. Ask questions during or after meetings and get answers grounded in what was actually said — across your entire meeting history.
+Vernix is an AI meeting agent that joins your Google Meet, Zoom, or Teams calls automatically. It listens, transcribes, and converts every conversation into searchable intelligence. Ask questions during or after meetings and get answers grounded in what was actually said — across your entire meeting history.
 
 ## Product Description (Full)
 
 Teams spend 23 hours per week in meetings, yet 86% of insights are never acted on. Decisions, context, and action items disappear the moment the call ends.
 
-KiviKova fixes this. Paste a meeting link, and an AI agent joins your call within seconds. It transcribes the conversation in real time, converts every sentence into semantic embeddings, and stores them in a per-meeting vector database. The result: a searchable knowledge base that grows with every call.
+Vernix fixes this. Paste a meeting link, and an AI agent joins your call within seconds. It transcribes the conversation in real time, converts every sentence into semantic embeddings, and stores them in a per-meeting vector database. The result: a searchable knowledge base that grows with every call.
 
-During a meeting, ask KiviKova a question by voice or text — it searches across your current call and all past meetings to give you an accurate, context-grounded answer. After the meeting, get an AI-generated summary, auto-extracted action items with assignees and deadlines, and a sentiment analysis of how the conversation went.
+During a meeting, ask Vernix a question by voice or text — it searches across your current call and all past meetings to give you an accurate, context-grounded answer. After the meeting, get an AI-generated summary, auto-extracted action items with assignees and deadlines, and a sentiment analysis of how the conversation went.
 
 No more "Can someone send the notes?" No more digging through recordings. Every meeting becomes a permanent, queryable part of your organization's memory.
 
@@ -33,7 +33,7 @@ No more "Can someone send the notes?" No more digging through recordings. Every 
 ## Key Features
 
 **Joins Any Call Instantly**
-Paste a Google Meet, Zoom, or Teams link. KiviKova's bot joins in seconds — no plugins, no extensions, no calendar integrations required.
+Paste a Google Meet, Zoom, or Teams link. Vernix's bot joins in seconds — no plugins, no extensions, no calendar integrations required.
 
 **Real-Time Transcription**
 Every word captured and attributed to the right speaker. Transcripts are available live during the call and permanently after.
@@ -42,7 +42,7 @@ Every word captured and attributed to the right speaker. Transcripts are availab
 Ask natural language questions like "What did Sarah say about the Q4 timeline?" and get precise answers pulled from any meeting in your history.
 
 **Voice-Powered RAG**
-KiviKova doesn't just record — it understands. Using retrieval-augmented generation, it answers questions with context from current and past conversations.
+Vernix doesn't just record — it understands. Using retrieval-augmented generation, it answers questions with context from current and past conversations.
 
 **AI Meeting Summaries**
 Get an executive digest after every call: key decisions, discussion topics, and collaboration sentiment — without watching the replay.
@@ -51,17 +51,17 @@ Get an executive digest after every call: key decisions, discussion topics, and 
 Tasks with assignees and deadlines, pulled directly from the conversation. No manual note-taking required.
 
 **Knowledge Base**
-Upload documents, specs, and notes to give KiviKova deeper context. It indexes everything and uses it to give better answers during calls.
+Upload documents, specs, and notes to give Vernix deeper context. It indexes everything and uses it to give better answers during calls.
 
 ---
 
 ## How It Works
 
-1. **Paste a meeting link** into KiviKova's dashboard
+1. **Paste a meeting link** into Vernix's dashboard
 2. **An AI bot joins your call** and begins transcribing in real time
 3. **Transcript chunks are embedded** using OpenAI's text-embedding-3-small model
 4. **Vectors are stored** in a per-meeting Qdrant collection
-5. **Ask questions** during or after the meeting — KiviKova searches across all your meetings and responds with grounded answers
+5. **Ask questions** during or after the meeting — Vernix searches across all your meetings and responds with grounded answers
 
 ---
 
@@ -76,13 +76,13 @@ Upload documents, specs, and notes to give KiviKova deeper context. It indexes e
 
 ## Differentiators
 
-| Feature                       | KiviKova | Otter.ai | Fireflies | Grain |
-| ----------------------------- | -------- | -------- | --------- | ----- |
-| Cross-meeting semantic search | Yes      | No       | Limited   | No    |
-| Voice Q&A during meetings     | Yes      | No       | No        | No    |
-| Per-meeting vector storage    | Yes      | No       | No        | No    |
-| Knowledge base upload         | Yes      | No       | No        | No    |
-| Open architecture (self-host) | Yes      | No       | No        | No    |
+| Feature                       | Vernix | Otter.ai | Fireflies | Grain |
+| ----------------------------- | ------ | -------- | --------- | ----- |
+| Cross-meeting semantic search | Yes    | No       | Limited   | No    |
+| Voice Q&A during meetings     | Yes    | No       | No        | No    |
+| Per-meeting vector storage    | Yes    | No       | No        | No    |
+| Knowledge base upload         | Yes    | No       | No        | No    |
+| Open architecture (self-host) | Yes    | No       | No        | No    |
 
 ---
 
@@ -102,7 +102,7 @@ We wanted to bring AI agents to meetings in an interactive way. Meetings are whe
 
 ### What it does
 
-KiviKova is an autonomous AI agent that joins Google Meet calls and participates intelligently. It runs a real-time pipeline of specialized components:
+Vernix is an autonomous AI agent that joins Google Meet calls and participates intelligently. It runs a real-time pipeline of specialized components:
 
 1. **Joins the meeting** — Paste a link and the bot enters the call within seconds via Recall.ai
 2. **Transcribes live speech** — Every utterance is captured with speaker attribution in real time
@@ -145,7 +145,7 @@ The result: an agent that actually participates in your meetings, not just recor
 - Per-meeting vector collections in Qdrant are a great isolation pattern — each meeting's context is independent, but cross-meeting search is still possible via fan-out
 - Hackathon code quality matters — the bugs we caught in review (silent error swallowing, stale connection handlers, breaking API changes) would have been demo-killers
 
-### What's next for KiviKova
+### What's next for Vernix
 
 - **Speaker diarization** — Better speaker identification and tracking across meetings
 - **Auto meeting summaries** — Generate executive digests when a meeting ends
@@ -168,4 +168,4 @@ The result: an agent that actually participates in your meetings, not just recor
 
 ## Vision
 
-KiviKova becomes your organization's collective brain — every decision, discussion, and insight permanently searchable and actionable. Not just meeting notes, but meeting intelligence.
+Vernix becomes your organization's collective brain — every decision, discussion, and insight permanently searchable and actionable. Not just meeting notes, but meeting intelligence.

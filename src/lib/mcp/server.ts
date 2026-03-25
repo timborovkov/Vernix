@@ -12,7 +12,7 @@ import { scrollTranscript } from "@/lib/vector/scroll";
  */
 export function createMcpServer(userId: string): McpServer {
   const server = new McpServer({
-    name: "KiviKova",
+    name: "Vernix",
     version: "1.0.0",
   });
 

@@ -64,7 +64,7 @@ export function isSsrfUrl(rawUrl: string): boolean {
 // MCP client connection
 // ---------------------------------------------------------------------------
 
-const CLIENT_INFO = { name: "KiviKova", version: "1.0.0" } as const;
+const CLIENT_INFO = { name: "Vernix", version: "1.0.0" } as const;
 
 /**
  * Create a new MCP Client and connect it to the server at `url`.

@@ -23,7 +23,7 @@ export class RecallProvider implements MeetingBotProvider {
 
     const botConfig: Record<string, unknown> = {
       meeting_url: joinLink,
-      bot_name: userName ? `${userName}'s KiviKova Agent` : "KiviKova Agent",
+      bot_name: userName ? `${userName}'s Vernix Agent` : "Vernix Agent",
       variant: {
         zoom: "web_4_core",
         google_meet: "web_4_core",

@@ -1,6 +1,6 @@
 # Design System
 
-This document captures the current visual language, component patterns, and conventions used across the KiviKova UI. Use it as the source of truth when building new screens or components.
+This document captures the current visual language, component patterns, and conventions used across the Vernix UI. Use it as the source of truth when building new screens or components.
 
 ---
 
@@ -79,7 +79,7 @@ The `<html>` root carries `antialiased` for smooth rendering.
 
 | Class                        | Size | Weight | Usage                                                                |
 | ---------------------------- | ---- | ------ | -------------------------------------------------------------------- |
-| `text-3xl font-bold`         | 30px | 700    | Main page title ("KiviKova" dashboard header)                        |
+| `text-3xl font-bold`         | 30px | 700    | Main page title ("Vernix" dashboard header)                          |
 | `text-2xl font-bold`         | 24px | 700    | Dashboard sub-page titles (Knowledge Base, Settings, meeting title)  |
 | `text-lg font-semibold`      | 18px | 600    | Section headings within a page (Participants, Transcript, Documents) |
 | `text-lg` (inside CardTitle) | 18px | 500    | Card titles (Agenda, Summary, Action Items)                          |
