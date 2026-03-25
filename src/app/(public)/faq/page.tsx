@@ -39,6 +39,22 @@ const QUESTIONS = [
     q: "Can I export my data?",
     a: "Yes. You can export individual meetings as PDF or Markdown, or bulk export all meetings as a ZIP archive containing Markdown files and metadata.",
   },
+  {
+    q: "Do all participants need to consent to recording?",
+    a: "Yes. You are responsible for obtaining consent from all call participants before using Vernix. Recording laws vary by jurisdiction — some require all-party consent, others require only one-party consent. We recommend informing all participants that an AI assistant will be joining the call.",
+  },
+  {
+    q: "Is there a free trial?",
+    a: "Yes. You can get started with 5 meetings at no cost, including live transcription, AI summaries, and action item extraction. No credit card required.",
+  },
+  {
+    q: "What happens to my data if I cancel?",
+    a: "You can export all your data before canceling. After account deletion, your meetings, transcripts, documents, and all associated data are permanently removed from our systems.",
+  },
+  {
+    q: "Does Vernix store meeting recordings?",
+    a: "Vernix does not store audio or video recordings. It processes the audio stream in real time for transcription, but only the text transcript is stored — not the raw audio.",
+  },
 ];
 
 export default function FAQPage() {
