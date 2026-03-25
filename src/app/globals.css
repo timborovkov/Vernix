@@ -147,14 +147,26 @@
 }
 
 /* Stagger delays for hero choreography */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-400 {
+  animation-delay: 400ms;
+}
 
 /* FAQ open/close */
-details summary { transition: color 0.2s; }
-details[open] summary { color: var(--foreground); }
+details summary {
+  transition: color 0.2s;
+}
+details[open] summary {
+  color: var(--foreground);
+}
 details .faq-answer {
   display: grid;
   grid-template-rows: 0fr;
