@@ -29,7 +29,7 @@ function parseEnv(overrides: Record<string, string | undefined> = {}) {
       S3_ENDPOINT: z.string().optional(),
       S3_ACCESS_KEY: z.string().optional(),
       S3_SECRET_KEY: z.string().optional(),
-      S3_BUCKET: z.string().default("kivikova-knowledge"),
+      S3_BUCKET: z.string().default("vernix-knowledge"),
       S3_REGION: z.string().default("us-east-1"),
     })
     .refine(
@@ -52,7 +52,7 @@ describe("env validation", () => {
     const env = parseEnv();
     expect(env.DATABASE_URL).toBe("postgresql://localhost/test");
     expect(env.QDRANT_URL).toBe("http://localhost:6333");
-    expect(env.S3_BUCKET).toBe("kivikova-knowledge");
+    expect(env.S3_BUCKET).toBe("vernix-knowledge");
   });
 
   it("throws when DATABASE_URL is missing", () => {

@@ -55,7 +55,7 @@ export async function GET() {
   return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="kivikova-export-${date}.zip"`,
+      "Content-Disposition": `attachment; filename="vernix-export-${date}.zip"`,
     },
   });
 }

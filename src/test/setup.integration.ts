@@ -3,8 +3,8 @@ import pg from "pg";
 
 const ADMIN_URL =
   process.env.DATABASE_URL ??
-  "postgres://kivikova:kivikova_dev@localhost:5432/kivikova";
-const TEST_DB = `kivikova_test_${Date.now()}`;
+  "postgres://vernix:vernix_dev@localhost:5432/vernix";
+const TEST_DB = `vernix_test_${Date.now()}`;
 const parsed = new URL(ADMIN_URL);
 parsed.pathname = `/${TEST_DB}`;
 const TEST_URL = parsed.toString();

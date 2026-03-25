@@ -14,7 +14,7 @@ const sampleTools: ToolDescription[] = [
 describe("getAgentSystemPrompt", () => {
   it("includes base prompt and post-meeting features", () => {
     const prompt = getAgentSystemPrompt();
-    expect(prompt).toContain("KiviKova");
+    expect(prompt).toContain("Vernix");
     expect(prompt).toContain("searchMeetingContext");
     expect(prompt).toContain("summary of the meeting");
     expect(prompt).toContain("Action items");
@@ -74,7 +74,7 @@ describe("getVoiceAgentSystemPrompt", () => {
 describe("getSilentAgentSystemPrompt", () => {
   it("includes silent-specific instructions and post-meeting features", () => {
     const prompt = getSilentAgentSystemPrompt();
-    expect(prompt).toContain("KiviKova");
+    expect(prompt).toContain("Vernix");
     expect(prompt).toContain("meeting chat");
     expect(prompt).toContain("summary of the meeting");
     expect(prompt).toContain("Action items");

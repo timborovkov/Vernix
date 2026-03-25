@@ -46,7 +46,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-center text-2xl">
-            Sign in to KiviKova
+            Sign in to Vernix
           </CardTitle>
         </CardHeader>
         <CardContent>

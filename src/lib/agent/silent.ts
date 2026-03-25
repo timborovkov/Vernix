@@ -6,7 +6,7 @@ import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { rateLimit, resetRateLimitKey } from "@/lib/rate-limit";
 import { McpClientManager } from "@/lib/mcp/client";
 
-const TRIGGER_KEYWORDS = ["kivikova", "kivi kova", "kivi-kova"];
+const TRIGGER_KEYWORDS = ["vernix"];
 const DEBOUNCE_MS = 3000;
 const RATE_LIMIT_INTERVAL_MS = 30_000;
 const MAX_RESPONSE_LENGTH = 500;
@@ -166,7 +166,7 @@ async function flushBuffer(
   const fullText = chunks.map((c) => `${c.speaker}: ${c.text}`).join("\n");
 
   // Only check spoken text — not speaker name prefixes — to avoid false positives
-  // from participants whose display names contain "KiviKova" (e.g. "KiviKova Support")
+  // from participants whose display names contain "Vernix" (e.g. "Vernix Support")
   const spokenText = chunks.map((c) => c.text).join("\n");
   if (!containsMention(spokenText)) return;
 

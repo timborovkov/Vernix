@@ -40,16 +40,10 @@ vi.mock("@/lib/mcp/client", () => ({
 }));
 
 describe("containsMention", () => {
-  it("returns true for 'KiviKova' (case-insensitive)", () => {
-    expect(containsMention("Hey KiviKova, what was discussed?")).toBe(true);
-    expect(containsMention("KIVIKOVA help me")).toBe(true);
-    expect(containsMention("ask kivikova")).toBe(true);
-  });
-
-  it("returns true for 'kivi kova' variants", () => {
-    expect(containsMention("kivi kova what do you think")).toBe(true);
-    expect(containsMention("Kivi Kova, can you summarize?")).toBe(true);
-    expect(containsMention("kivi-kova please answer")).toBe(true);
+  it("returns true for 'Vernix' (case-insensitive)", () => {
+    expect(containsMention("Hey Vernix, what was discussed?")).toBe(true);
+    expect(containsMention("VERNIX help me")).toBe(true);
+    expect(containsMention("ask vernix")).toBe(true);
   });
 
   it("returns false for unrelated text", () => {
@@ -60,8 +54,8 @@ describe("containsMention", () => {
   });
 
   it("returns false for partial matches that are not the full keyword", () => {
-    expect(containsMention("kivi")).toBe(false);
-    expect(containsMention("kova")).toBe(false);
+    expect(containsMention("ver")).toBe(false);
+    expect(containsMention("nix")).toBe(false);
   });
 });
 
@@ -82,12 +76,12 @@ describe("handleSilentTranscript — speaker name isolation", () => {
     const { getMeetingBotProvider } = await import("@/lib/meeting-bot");
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
-    // Speaker display name contains "KiviKova" but the spoken text does not
+    // Speaker display name contains "Vernix" but the spoken text does not
     handleSilentTranscript(
       "meeting-speaker",
       "user-1",
       "bot-speaker",
-      "KiviKova Support",
+      "Vernix Support",
       "Let us review the agenda items",
       1000
     );
@@ -120,7 +114,7 @@ describe("handleSilentTranscript", () => {
       "user-1",
       "bot-1",
       "Alice",
-      "Hey KiviKova",
+      "Hey Vernix",
       1000
     );
 
@@ -161,7 +155,7 @@ describe("handleSilentTranscript", () => {
       "user-1",
       "bot-3",
       "Alice",
-      "KiviKova help",
+      "Vernix help",
       1000
     );
     await vi.runAllTimersAsync();
@@ -175,7 +169,7 @@ describe("handleSilentTranscript", () => {
       "user-1",
       "bot-3",
       "Bob",
-      "KiviKova answer",
+      "Vernix answer",
       2000
     );
     await vi.runAllTimersAsync();
@@ -191,7 +185,7 @@ describe("handleSilentTranscript", () => {
       "user-1",
       "bot-4",
       "Alice",
-      "KiviKova",
+      "Vernix",
       1000
     );
 

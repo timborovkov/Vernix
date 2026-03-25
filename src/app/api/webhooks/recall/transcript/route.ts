@@ -70,7 +70,7 @@ function parsePayload(body: unknown): NormalizedTranscript | "skip" | null {
     return {
       botId: bot.id,
       // Null participant name = the bot itself (human participants always have names)
-      speaker: data.participant.name ?? "KiviKova Agent",
+      speaker: data.participant.name ?? "Vernix Agent",
       text: data.words.map((w) => w.text).join(" "),
       timestampMs: Math.round(data.words[0].start_timestamp.relative * 1000),
     };
@@ -219,7 +219,7 @@ export async function POST(request: Request) {
     meeting.status === "active" &&
     meeting.userId &&
     typeof metadata.botId === "string" &&
-    speaker !== "KiviKova Agent"
+    speaker !== "Vernix Agent"
   ) {
     const userId = meeting.userId;
     const botId = metadata.botId;

@@ -1,25 +1,25 @@
 services:
   postgres:
     image: postgres:17-alpine
-    container_name: kivikova-postgres
+    container_name: vernix-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: kivikova
-      POSTGRES_PASSWORD: kivikova_dev
-      POSTGRES_DB: kivikova
+      POSTGRES_USER: vernix
+      POSTGRES_PASSWORD: vernix_dev
+      POSTGRES_DB: vernix
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kivikova -d kivikova"]
+      test: ["CMD-SHELL", "pg_isready -U vernix -d vernix"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   qdrant:
     image: qdrant/qdrant:latest
-    container_name: kivikova-qdrant
+    container_name: vernix-qdrant
     restart: unless-stopped
     ports:
       - "6380:6333"
@@ -34,11 +34,11 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: kivikova-minio
+    container_name: vernix-minio
     restart: unless-stopped
     environment:
-      MINIO_ROOT_USER: kivikova
-      MINIO_ROOT_PASSWORD: kivikova_dev
+      MINIO_ROOT_USER: vernix
+      MINIO_ROOT_PASSWORD: vernix_dev
     command: server /data --console-address ":9001"
     ports:
       - "9002:9000"
@@ -48,8 +48,8 @@ services:
 
 volumes:
   pgdata:
-    name: kivikova-pgdata
+    name: vernix-pgdata
   qdrant_data:
-    name: kivikova-qdrant-data
+    name: vernix-qdrant-data
   minio_data:
-    name: kivikova-minio-data
+    name: vernix-minio-data

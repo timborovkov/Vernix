@@ -76,7 +76,7 @@ describe("POST /api/agent/chat", () => {
     expect(mockStreamText).toHaveBeenCalledWith(
       expect.objectContaining({
         model: "mock-model",
-        system: expect.stringContaining("KiviKova"),
+        system: expect.stringContaining("Vernix"),
       })
     );
   });

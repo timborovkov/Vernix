@@ -59,7 +59,7 @@ export default function DashboardPage() {
     <div className="container mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">KiviKova</h1>
+          <h1 className="text-3xl font-bold">Vernix</h1>
           <p className="text-muted-foreground">
             AI Video Call Agent — Zoom, Meet, Teams, Webex
           </p>
