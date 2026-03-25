@@ -16,6 +16,8 @@ const LEGAL_LINKS = [
   { href: "/cookie-policy", label: "Cookie Policy" },
 ];
 
+const isAnalyticsEnabled = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+
 export function SiteFooter() {
   return (
     <footer className="border-border border-t">
@@ -72,9 +74,11 @@ export function SiteFooter() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <CookiePreferencesButton />
-              </li>
+              {isAnalyticsEnabled ? (
+                <li>
+                  <CookiePreferencesButton />
+                </li>
+              ) : null}
             </ul>
           </div>
         </div>
