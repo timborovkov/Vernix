@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
@@ -61,9 +62,12 @@ const TIERS = [
 export default function PricingPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-24">
-      <h1 className="mb-4 text-center text-3xl font-bold">Pricing</h1>
+      <h1 className="mb-4 text-center text-3xl font-bold">
+        Pick a plan, try it on your next call
+      </h1>
       <p className="text-muted-foreground mx-auto mb-12 max-w-lg text-center">
-        Simple, transparent pricing. Start free and upgrade as you grow.
+        Start free with 5 meetings. Upgrade when you&apos;re ready — cancel
+        anytime.
       </p>
 
       <div className="grid gap-6 sm:grid-cols-3">
@@ -73,7 +77,12 @@ export default function PricingPage() {
             className={tier.highlighted ? "ring-primary ring-2" : ""}
           >
             <CardHeader>
-              <CardTitle className="text-lg">{tier.name}</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">{tier.name}</CardTitle>
+                {tier.highlighted && (
+                  <Badge variant="secondary">Most popular</Badge>
+                )}
+              </div>
               <div className="mt-2">
                 <span className="text-3xl font-bold">{tier.price}</span>
                 <span className="text-muted-foreground ml-1 text-sm">
@@ -101,6 +110,11 @@ export default function PricingPage() {
           </Card>
         ))}
       </div>
+
+      <p className="text-muted-foreground mx-auto mt-8 max-w-md text-center text-sm">
+        All plans include live transcription, AI summaries, and action item
+        extraction. No long-term contracts — cancel anytime.
+      </p>
     </div>
   );
 }
