@@ -40,14 +40,14 @@ export function SettingsForm({
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  const handleNameSave = async () => {
-    await updateName(editName);
+  const handleNameSave = () => {
+    updateName(editName);
     setNameEditing(false);
   };
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
+  const handlePasswordChange = (e: React.FormEvent) => {
     e.preventDefault();
-    await changePassword({
+    changePassword({
       currentPassword: profile?.hasPassword ? currentPassword : undefined,
       newPassword,
     });
