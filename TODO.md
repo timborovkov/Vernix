@@ -143,15 +143,9 @@
 - **Profile page** — `/settings/profile` page where users can edit name, email, company, and avatar
 - **Change password** — Current password verification + new password form
 - **SSO providers** — Add Google, GitHub, and X (Twitter) OAuth providers to NextAuth config
+- **Update docs** – Make sure all the new env variables and everything that needs to be done on google console etc. are well documented
 - **Account linking** — Allow users to link multiple auth providers to one account
 - **Profile API** — `PATCH /api/user/profile` endpoint for updating user details
-
-## P17 — Vision-Based Document Parsing (low priority)
-
-- **OpenAI Vision for PDFs** — Current PDF parsing (pdfjs-dist) extracts raw text only — images, charts, tables, and scanned pages are invisible. Use GPT-4o vision to process PDF pages as images for richer extraction
-- **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
-- **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
-- **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
 
 ## P18 — Silent Agent Mode (Text Agent) ~~DONE~~
 
@@ -206,3 +200,10 @@
 - **Video playback UI** — Add a video player to the meeting detail page. Sync transcript timeline with video position (click a transcript line → seek to that timestamp).
 - **Recording retention** — Decide on storage policy: keep forever, expire after N days, or let user choose. Estimate storage costs per meeting minute.
 - **Privacy controls** — Let users disable recording storage per meeting. Delete recording when meeting is deleted. Clear deletion from S3 bucket.
+
+## P24 — Vision-Based Document Parsing
+
+- **OpenAI Vision for PDFs** — Current PDF parsing (pdfjs-dist) extracts raw text only — images, charts, tables, and scanned pages are invisible. Use GPT-4o vision to process PDF pages as images for richer extraction
+- **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
+- **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
+- **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
