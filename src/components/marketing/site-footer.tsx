@@ -19,33 +19,19 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-3">
               <Image
-                src="/brand/icon/icon.svg"
-                alt=""
-                width={20}
-                height={20}
+                src="/brand/combo/horizontal-nobg.png"
+                alt="Vernix"
+                width={100}
+                height={28}
                 className="dark:hidden"
               />
               <Image
-                src="/brand/icon/icon-dark.png"
-                alt=""
-                width={20}
-                height={20}
-                className="hidden dark:block"
-              />
-              <Image
-                src="/brand/wordmark/wordmark-nobg.png"
+                src="/brand/combo/horizontal-dark-nobg.png"
                 alt="Vernix"
-                width={72}
-                height={20}
-                className="dark:hidden"
-              />
-              <Image
-                src="/brand/wordmark/wordmark-dark.png"
-                alt="Vernix"
-                width={72}
-                height={20}
+                width={100}
+                height={28}
                 className="hidden dark:block"
               />
             </div>
