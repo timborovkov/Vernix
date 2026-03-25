@@ -70,10 +70,16 @@ export default function FAQPage() {
       <div className="divide-border divide-y">
         {QUESTIONS.map((item) => (
           <details key={item.q} className="group py-4">
-            <summary className="cursor-pointer text-sm font-medium">
+            <summary className="text-muted-foreground cursor-pointer text-sm font-medium">
               {item.q}
             </summary>
-            <p className="text-muted-foreground mt-2 text-sm">{item.a}</p>
+            <div className="faq-answer">
+              <div>
+                <p className="text-muted-foreground pt-2 text-sm">
+                  {item.a}
+                </p>
+              </div>
+            </div>
           </details>
         ))}
       </div>
