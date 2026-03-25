@@ -125,15 +125,15 @@ export default function LandingPage() {
             className="hidden dark:block"
           />
         </div>
-        <h1 className="animate-fade-up delay-100 mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
           An AI agent that joins your calls and does the rest
         </h1>
-        <p className="animate-fade-up delay-200 text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
+        <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
           Vernix transcribes your video calls, writes the summary, extracts
           action items, and answers questions live — so you can actually focus
           on the conversation.
         </p>
-        <div className="animate-fade-up delay-300 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
           <Button size="lg" render={<Link href="/register" />}>
             Try Vernix Free
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -142,10 +142,10 @@ export default function LandingPage() {
             See How It Works
           </Button>
         </div>
-        <p className="animate-fade-up delay-300 text-muted-foreground mt-4 text-xs">
+        <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
           No credit card required. 5 meetings free.
         </p>
-        <div className="animate-fade-up delay-400 text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm">
+        <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
           <Video className="mr-1 h-4 w-4" />
           {PLATFORMS.map((p, i) => (
             <span key={p}>
