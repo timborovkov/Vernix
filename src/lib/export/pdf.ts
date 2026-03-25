@@ -22,7 +22,7 @@ function stripMarkdown(text: string): string {
       .replace(/`(.+?)`/g, "$1")
       // List markers
       .replace(/^[-*+]\s+/gm, "- ")
-      .replace(/^\d+\.\s+/gm, (m) => m)
+      .replace(/^(\d+)\.\s+/gm, "$1. ")
   );
 }
 
