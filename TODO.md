@@ -113,22 +113,30 @@
 - ~~**Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site~~
 - ~~**Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent~~
 
-## P15 — UI Polish & Launch Prep
+## P15 — UI Polish & Launch Prep ~~DONE~~
 
-- ~~**Implement the logo set** – Start using the new logo set in the UI~~
-- **Loading skeletons** – Structurally correct loading skeletons; general, page, and component specific loading components
-- **Landing page** — Build a clean marketing landing page matching the existing site style, with clear CTAs and value props
-- **Mobile responsiveness** — Audit and fix all pages for mobile; dashboard, meeting detail, settings, knowledge base
-- **UI cleanup** — Fix visual inconsistencies, improve empty states, sharpen CTAs, remove clutter
-- **Loading skeletons** — Replace "Loading..." text with shimmer placeholders
-- **Remove old assets** — Delete the `presentation/` and design system folders once the landing page is live
+- ~~**Implement the logo set** — Start using the new logo set in the UI~~
+- ~~**Loading skeletons** — Structurally correct `loading.tsx` files + inline skeleton replacements~~
+- ~~**Landing page** — Hero, features, how-it-works, pain points, CTAs with benefit-driven copy~~
+- ~~**Public pages** — Pricing, FAQ, Contact (with topic routing form), Terms, Privacy, About~~
+- ~~**Mobile responsiveness** — Flex-wrap headers, stacked layouts on mobile, hidden button labels~~
+- ~~**UI cleanup** — Empty state icons, delete old design-system/ and presentation/ folders~~
+- ~~**Marketing layout** — Sticky header + footer with logo, nav, theme toggle, mobile hamburger~~
+- ~~**Accent color** — Warm violet (hue 290°) on focus rings, CTAs, active states, pricing highlight~~
+- ~~**Animations** — Hero fade-up, scroll reveal on features/steps, FAQ accordion, hero bg grid~~
+- ~~**Auth pages** — Split layout with violet branded panel + form, mobile-friendly~~
+- ~~**Dashboard header** — Extracted to shared layout component, sticky, icon+wordmark combo logo~~
+- ~~**Theme system** — ThemeScript (FOUC prevention), ThemeToggle (light/dark/system cycle)~~
+- ~~**Signup CRO** — Password toggle, autofill hints, value reinforcement, actionable errors~~
+- ~~**Contact form** — Topic routing (question/bug/feature/enterprise) with contextual fields~~
 
-## P16 — Dark Mode & Theme Selector
+## P16 — Dark Mode & Theme Selector ~~DONE~~
 
-- **System default** — Detect `prefers-color-scheme` on first load and apply light or dark accordingly
-- **Theme selector** — Dropdown or toggle in the dashboard nav/settings sidebar with three options: Light, Dark, System; persist choice to `localStorage`
-- **CSS variables** — Ensure all Tailwind v4 `@theme` tokens have correct dark-mode counterparts in `globals.css`
-- **Component audit** — Check every page and component renders correctly in both themes (hardcoded colours, shadow mismatches, etc.)
+- ~~**System default** — Detect `prefers-color-scheme` on first load and apply light or dark accordingly~~
+- ~~**Theme selector** — Toggle in dashboard footer and marketing header; cycles Light → Dark → System~~
+- ~~**CSS variables** — All Tailwind v4 `@theme` tokens have dark-mode counterparts in `globals.css`~~
+- ~~**FOUC prevention** — Blocking `ThemeScript` in `<head>` applies theme before React hydration~~
+- ~~**Component audit** — Fixed hardcoded surfaces (auth panel, landing CTA) that broke in dark mode~~
 
 ## P16b — User Profiles & SSO
 
@@ -189,3 +197,12 @@
 - **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
 - **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
 - **Configure paywalls** — Configure paywalls for the pricing tiers. Claude Code has a paywall skill that can be used to configure paywalls.
+
+## P23 — Meeting Recordings & Recall Data Sync
+
+- **Audit Recall data** — Investigate what data Recall provides after a meeting: video recording (MP4), participant events, meeting metadata, speaker timeline. Map what's available via their API.
+- **Copy recordings to our storage** — After `recording_done`, download the video MP4 from Recall's S3 URL (expires after 6h) and upload to our S3/Minio bucket. Store the S3 key in meeting metadata.
+- **Participant data** — Fetch participant events and speaker timeline from Recall, store in meeting metadata (currently only populated from transcript speaker names).
+- **Video playback UI** — Add a video player to the meeting detail page. Sync transcript timeline with video position (click a transcript line → seek to that timestamp).
+- **Recording retention** — Decide on storage policy: keep forever, expire after N days, or let user choose. Estimate storage costs per meeting minute.
+- **Privacy controls** — Let users disable recording storage per meeting. Delete recording when meeting is deleted. Clear deletion from S3 bucket.
