@@ -123,8 +123,8 @@ export function ContactForm() {
               onClick={() => setTopic(t.id)}
               className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-sm transition-colors ${
                 topic === t.id
-                  ? "border-primary bg-primary/5 font-medium"
-                  : "border-border hover:border-primary/50"
+                  ? "border-ring bg-accent font-medium"
+                  : "border-border hover:border-ring/50"
               }`}
             >
               <t.icon
