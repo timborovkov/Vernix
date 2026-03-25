@@ -75,9 +75,7 @@ export default function FAQPage() {
             </summary>
             <div className="faq-answer">
               <div>
-                <p className="text-muted-foreground pt-2 text-sm">
-                  {item.a}
-                </p>
+                <p className="text-muted-foreground pt-2 text-sm">{item.a}</p>
               </div>
             </div>
           </details>
