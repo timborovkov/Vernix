@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Vernix",
@@ -358,9 +359,9 @@ export default function PrivacyPage() {
             errors and maintain service reliability. Optional Google Analytics
             cookies are only activated after you provide explicit consent via
             our cookie banner. For full details, see our{" "}
-            <a href="/cookie-policy" className="text-foreground underline">
+            <Link href="/cookie-policy" className="text-foreground underline">
               Cookie Policy
-            </a>
+            </Link>
             .
           </p>
         </section>

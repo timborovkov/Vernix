@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Cookie Policy - Vernix",
@@ -107,9 +108,9 @@ export default function CookiePolicyPage() {
             Our sub-processors (Recall.ai, OpenAI, Railway) do not set cookies
             on your device through the Vernix Service. Their processing of
             personal data is described in our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </section>
@@ -167,9 +168,9 @@ export default function CookiePolicyPage() {
             Google and Sentry. These transfers are governed by Standard
             Contractual Clauses and, where applicable, adequacy decisions. For
             further details, see Section 7 of our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </section>

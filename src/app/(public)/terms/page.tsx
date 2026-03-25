@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Vernix",
@@ -20,9 +21,9 @@ export default function TermsPage() {
           <p className="text-muted-foreground text-sm">
             By accessing or using Vernix (&quot;the Service&quot;), you agree to
             be bound by these Terms of Service and our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             . If you do not agree, do not use the Service.
           </p>
         </section>
@@ -151,9 +152,9 @@ export default function TermsPage() {
             The Service integrates with third-party video conferencing platforms
             (Zoom, Google Meet, Microsoft Teams, Webex) and relies on
             sub-processors as described in our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             . We do not control and are not responsible for the availability,
             accuracy, or policies of these third-party services. Your use of
             third-party platforms is governed by their respective terms of
@@ -209,9 +210,9 @@ export default function TermsPage() {
           </h2>
           <p className="text-muted-foreground text-sm">
             Your data is processed in accordance with our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             , which describes the personal data we collect, the legal bases for
             processing, sub-processor arrangements, international data
             transfers, retention periods, and your rights. By using the Service,
@@ -289,9 +290,9 @@ export default function TermsPage() {
             You may delete your account at any time through the Service. Upon
             termination — whether by you or by us — your data will be deleted in
             accordance with the retention schedule described in our{" "}
-            <a href="/privacy" className="text-foreground underline">
+            <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
-            </a>
+            </Link>
             . Sections 6, 8, 11, 12, and 14 survive termination.
           </p>
         </section>
