@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function LoginPage() {
@@ -45,6 +46,22 @@ export default function LoginPage() {
     <div className="flex min-h-full items-center justify-center px-4 py-12">
       <Card className="w-full max-w-sm">
         <CardHeader>
+          <div className="flex justify-center">
+            <Image
+              src="/brand/icon/icon.svg"
+              alt="Vernix"
+              width={48}
+              height={48}
+              className="dark:hidden"
+            />
+            <Image
+              src="/brand/icon/icon-dark.png"
+              alt="Vernix"
+              width={48}
+              height={48}
+              className="hidden dark:block"
+            />
+          </div>
           <CardTitle className="text-center text-2xl">
             Sign in to Vernix
           </CardTitle>
