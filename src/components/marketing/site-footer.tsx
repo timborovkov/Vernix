@@ -23,18 +23,31 @@ export function SiteFooter() {
               <Image
                 src="/brand/icon/icon.svg"
                 alt=""
-                width={24}
-                height={24}
+                width={20}
+                height={20}
                 className="dark:hidden"
               />
               <Image
                 src="/brand/icon/icon-dark.png"
                 alt=""
-                width={24}
-                height={24}
+                width={20}
+                height={20}
                 className="hidden dark:block"
               />
-              <span className="font-bold">Vernix</span>
+              <Image
+                src="/brand/wordmark/wordmark-nobg.png"
+                alt="Vernix"
+                width={72}
+                height={20}
+                className="dark:hidden"
+              />
+              <Image
+                src="/brand/wordmark/wordmark-dark.png"
+                alt="Vernix"
+                width={72}
+                height={20}
+                className="hidden dark:block"
+              />
             </div>
             <p className="text-muted-foreground text-sm">
               AI-powered meeting assistant for video calls.
