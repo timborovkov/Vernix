@@ -27,6 +27,7 @@ export const metadata: Metadata = {
     ],
     apple: "/brand/favicon/apple-touch-icon.png",
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: "Vernix — AI Video Call Agent",
     description:
