@@ -22,14 +22,14 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/brand/icon/icon.svg"
-            alt="Vernix"
+            alt=""
             width={28}
             height={28}
             className="dark:hidden"
           />
           <Image
             src="/brand/icon/icon-dark.png"
-            alt="Vernix"
+            alt=""
             width={28}
             height={28}
             className="hidden dark:block"
@@ -37,7 +37,10 @@ export function SiteHeader() {
           <span className="text-lg font-bold">Vernix</span>
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav
+          aria-label="Main navigation"
+          className="hidden items-center gap-6 md:flex"
+        >
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -63,7 +66,8 @@ export function SiteHeader() {
           size="icon"
           className="md:hidden"
           onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -71,7 +75,10 @@ export function SiteHeader() {
 
       {open && (
         <div className="border-border border-t px-4 pb-4 md:hidden">
-          <nav className="flex flex-col gap-2 pt-2">
+          <nav
+            aria-label="Mobile navigation"
+            className="flex flex-col gap-2 pt-2"
+          >
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
