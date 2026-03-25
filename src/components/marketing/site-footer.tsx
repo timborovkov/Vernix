@@ -22,14 +22,14 @@ export function SiteFooter() {
             <div className="mb-3 flex items-center gap-2">
               <Image
                 src="/brand/icon/icon.svg"
-                alt="Vernix"
+                alt=""
                 width={24}
                 height={24}
                 className="dark:hidden"
               />
               <Image
                 src="/brand/icon/icon-dark.png"
-                alt="Vernix"
+                alt=""
                 width={24}
                 height={24}
                 className="hidden dark:block"
