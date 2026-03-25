@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -16,8 +16,11 @@ declare global {
   }
 }
 
-function updateConsentMode(choice: ConsentChoice) {
+function updateConsentMode(choice: ConsentChoice, retries = 10) {
   if (typeof window.gtag !== "function") {
+    if (retries > 0) {
+      setTimeout(() => updateConsentMode(choice, retries - 1), 100);
+    }
     return;
   }
 
@@ -31,12 +34,30 @@ function updateConsentMode(choice: ConsentChoice) {
   });
 }
 
+const consentListeners = new Set<() => void>();
+
 function persistConsent(choice: ConsentChoice) {
   localStorage.setItem(CONSENT_STORAGE_KEY, choice);
 
   const maxAgeSeconds = 60 * 60 * 24 * 180;
   const secure = window.location.protocol === "https:" ? "; Secure" : "";
   document.cookie = `${CONSENT_COOKIE_NAME}=${choice}; Path=/; Max-Age=${maxAgeSeconds}; SameSite=Lax${secure}`;
+
+  consentListeners.forEach((listener) => listener());
+}
+
+function subscribeConsent(listener: () => void) {
+  consentListeners.add(listener);
+  return () => consentListeners.delete(listener);
+}
+
+function getConsentSnapshot(): ConsentChoice | null {
+  const value = localStorage.getItem(CONSENT_STORAGE_KEY);
+  return value === "accepted" || value === "rejected" ? value : null;
+}
+
+function getConsentServerSnapshot(): ConsentChoice | null {
+  return null;
 }
 
 type CookieConsentBannerProps = {
@@ -46,17 +67,10 @@ type CookieConsentBannerProps = {
 export function CookieConsentBanner({
   analyticsEnabled,
 }: CookieConsentBannerProps) {
-  const [consentChoice, setConsentChoice] = useState<ConsentChoice | null>(
-    () => {
-      if (typeof window === "undefined") {
-        return null;
-      }
-
-      const savedConsent = localStorage.getItem(CONSENT_STORAGE_KEY);
-      return savedConsent === "accepted" || savedConsent === "rejected"
-        ? savedConsent
-        : null;
-    }
+  const consentChoice = useSyncExternalStore(
+    subscribeConsent,
+    getConsentSnapshot,
+    getConsentServerSnapshot
   );
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
 
@@ -83,7 +97,9 @@ export function CookieConsentBanner({
   }
 
   const isVisible =
-    analyticsEnabled && (consentChoice === null || isPreferencesOpen);
+    hydrated &&
+    analyticsEnabled &&
+    (consentChoice === null || isPreferencesOpen);
 
   if (!isVisible) {
     return null;
