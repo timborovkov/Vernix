@@ -6,7 +6,7 @@ import {
 } from "./markdown";
 
 /** Strip markdown formatting to plain text for PDF rendering */
-function stripMarkdown(text: string): string {
+export function stripMarkdown(text: string): string {
   return (
     text
       // Bold/italic
