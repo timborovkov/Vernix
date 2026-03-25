@@ -18,21 +18,21 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-full">
+    <div className="flex min-h-dvh">
       {/* Left: value panel — hidden on mobile */}
       <div className="bg-primary text-primary-foreground hidden w-1/2 flex-col justify-between p-12 lg:flex">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/brand/icon/icon-dark.png"
             alt=""
-            width={24}
-            height={24}
+            width={32}
+            height={32}
           />
           <Image
             src="/brand/wordmark/wordmark-dark.png"
             alt="Vernix"
-            width={80}
-            height={24}
+            width={100}
+            height={28}
           />
         </Link>
 
@@ -60,36 +60,36 @@ export default function AuthLayout({
       </div>
 
       {/* Right: form */}
-      <div className="flex w-full flex-col items-center justify-center px-4 py-12 lg:w-1/2">
+      <div className="flex min-h-dvh w-full flex-col items-center justify-center px-4 py-12 lg:w-1/2">
         {/* Mobile logo — visible only below lg */}
-        <div className="mb-8 flex items-center gap-2 lg:hidden">
-          <Link href="/" className="flex items-center gap-2">
+        <div className="mb-8 flex items-center gap-3 lg:hidden">
+          <Link href="/" className="flex items-center gap-3">
             <Image
               src="/brand/icon/icon.svg"
               alt=""
-              width={24}
-              height={24}
+              width={32}
+              height={32}
               className="dark:hidden"
             />
             <Image
               src="/brand/icon/icon-dark.png"
               alt=""
-              width={24}
-              height={24}
+              width={32}
+              height={32}
               className="hidden dark:block"
             />
             <Image
               src="/brand/wordmark/wordmark-nobg.png"
               alt="Vernix"
-              width={80}
-              height={24}
+              width={100}
+              height={28}
               className="dark:hidden"
             />
             <Image
               src="/brand/wordmark/wordmark-dark.png"
               alt="Vernix"
-              width={80}
-              height={24}
+              width={100}
+              height={28}
               className="hidden dark:block"
             />
           </Link>
