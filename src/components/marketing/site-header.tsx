@@ -84,11 +84,7 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link href="/login" />}
-            >
+            <Button variant="outline" size="sm" render={<Link href="/login" />}>
               Sign In
             </Button>
             <Button size="sm" render={<Link href="/register" />}>

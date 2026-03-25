@@ -14,9 +14,7 @@ export default function TermsPage() {
 
       <div className="prose-sm space-y-8">
         <section>
-          <h2 className="mb-2 text-lg font-semibold">
-            1. Acceptance of Terms
-          </h2>
+          <h2 className="mb-2 text-lg font-semibold">1. Acceptance of Terms</h2>
           <p className="text-muted-foreground text-sm">
             By accessing or using Vernix (&quot;the Service&quot;), you agree to
             be bound by these Terms of Service. If you do not agree to these
@@ -52,8 +50,8 @@ export default function TermsPage() {
             You agree not to use the Service for any unlawful purpose or in any
             way that could damage, disable, or impair the Service. You must
             comply with all applicable laws regarding recording and
-            transcription of conversations, including obtaining necessary consent
-            from all participants.
+            transcription of conversations, including obtaining necessary
+            consent from all participants.
           </p>
         </section>
 

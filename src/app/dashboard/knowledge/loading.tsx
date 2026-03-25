@@ -13,7 +13,10 @@ export default function KnowledgeLoading() {
 
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-xl border p-4">
+          <div
+            key={i}
+            className="flex items-center gap-3 rounded-xl border p-4"
+          >
             <Skeleton className="h-5 w-5 rounded" />
             <div className="flex-1">
               <Skeleton className="mb-2 h-4 w-48" />

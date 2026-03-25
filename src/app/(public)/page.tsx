@@ -126,9 +126,7 @@ export default function LandingPage() {
       {/* How it works */}
       <section className="border-border border-t py-24">
         <div className="mx-auto max-w-4xl px-4">
-          <h2 className="mb-12 text-center text-2xl font-bold">
-            How it works
-          </h2>
+          <h2 className="mb-12 text-center text-2xl font-bold">How it works</h2>
           <div className="grid gap-8 sm:grid-cols-3">
             {STEPS.map((item) => (
               <div key={item.step} className="text-center">

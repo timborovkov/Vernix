@@ -44,51 +44,51 @@ export default function LoginPage() {
 
   return (
     <Card className="w-full max-w-sm">
-        <CardHeader>
-          <div className="flex justify-center">
-            <VernixLogo size={48} />
+      <CardHeader>
+        <div className="flex justify-center">
+          <VernixLogo size={48} />
+        </div>
+        <CardTitle className="text-center text-2xl">
+          Sign in to Vernix
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <p className="text-destructive text-center text-sm">{error}</p>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-          <CardTitle className="text-center text-2xl">
-            Sign in to Vernix
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <p className="text-destructive text-center text-sm">{error}</p>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
-            </Button>
-          </form>
-          <p className="text-muted-foreground mt-4 text-center text-sm">
-            No account?{" "}
-            <Link href="/register" className="text-foreground underline">
-              Sign up
-            </Link>
-          </p>
-        </CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? "Signing in..." : "Sign in"}
+          </Button>
+        </form>
+        <p className="text-muted-foreground mt-4 text-center text-sm">
+          No account?{" "}
+          <Link href="/register" className="text-foreground underline">
+            Sign up
+          </Link>
+        </p>
+      </CardContent>
     </Card>
   );
 }

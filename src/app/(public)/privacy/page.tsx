@@ -20,8 +20,8 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground text-sm">
             We collect information you provide directly: account details (name,
             email), meeting data (transcripts, summaries, action items), and
-            uploaded documents. We also collect usage data such as page views and
-            feature usage to improve the Service.
+            uploaded documents. We also collect usage data such as page views
+            and feature usage to improve the Service.
           </p>
         </section>
 
@@ -30,9 +30,9 @@ export default function PrivacyPage() {
             2. How We Use Your Information
           </h2>
           <p className="text-muted-foreground text-sm">
-            We use your information to provide and improve the Service, including
-            transcription, summarization, and AI-powered search. We do not sell
-            your personal data or meeting content to third parties.
+            We use your information to provide and improve the Service,
+            including transcription, summarization, and AI-powered search. We do
+            not sell your personal data or meeting content to third parties.
           </p>
         </section>
 
@@ -55,10 +55,10 @@ export default function PrivacyPage() {
           </h2>
           <p className="text-muted-foreground text-sm">
             We use third-party services to provide the Service, including
-            Recall.ai for meeting bot functionality, OpenAI for transcription and
-            AI capabilities, and cloud infrastructure providers for hosting and
-            storage. These services process your data in accordance with their
-            own privacy policies.
+            Recall.ai for meeting bot functionality, OpenAI for transcription
+            and AI capabilities, and cloud infrastructure providers for hosting
+            and storage. These services process your data in accordance with
+            their own privacy policies.
           </p>
         </section>
 

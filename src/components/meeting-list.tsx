@@ -1,5 +1,6 @@
 "use client";
 
+import { Video } from "lucide-react";
 import { MeetingCard } from "./meeting-card";
 import type { Meeting } from "@/lib/db/schema";
 
@@ -21,7 +22,10 @@ export function MeetingList({
   if (meetings.length === 0) {
     return (
       <div className="text-muted-foreground py-12 text-center">
-        <p className="text-lg">{emptyMessage ?? "No meetings yet"}</p>
+        <Video className="mx-auto mb-3 h-12 w-12 opacity-40" />
+        <p className="text-lg font-medium">
+          {emptyMessage ?? "No meetings yet"}
+        </p>
         {!emptyMessage && (
           <p className="text-sm">
             Create a meeting to get started with your AI agent.

@@ -81,10 +81,7 @@ export default function PricingPage() {
             <CardContent>
               <ul className="mb-6 space-y-2">
                 {tier.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-2 text-sm"
-                  >
+                  <li key={feature} className="flex items-center gap-2 text-sm">
                     <Check className="text-muted-foreground h-4 w-4 shrink-0" />
                     {feature}
                   </li>
