@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { CookiePreferencesButton } from "@/components/cookie-preferences-button";
 
 const PRODUCT_LINKS = [
   { href: "/#features", label: "Features" },
@@ -12,6 +13,7 @@ const PRODUCT_LINKS = [
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
+  { href: "/cookie-policy", label: "Cookie Policy" },
 ];
 
 export function SiteFooter() {
@@ -70,6 +72,9 @@ export function SiteFooter() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <CookiePreferencesButton />
+              </li>
             </ul>
           </div>
         </div>
