@@ -1,24 +1,24 @@
 # TODO
 
-## P0 — Core Pipeline ~~(makes the app functional)~~ DONE
+## Core Pipeline ~~(makes the app functional)~~ DONE
 
 - ~~**Recall.ai transcript webhook** — `src/app/api/webhooks/recall/transcript/route.ts`~~
 - ~~**Embedding pipeline** — `src/lib/vector/upsert.ts` wires transcript → embedding → Qdrant upsert~~
 - ~~**Vector search endpoint** — `src/app/api/search/route.ts` with single-meeting and cross-meeting search~~
 
-## P1 — Voice Agent ~~(the differentiator)~~ DONE
+## Voice Agent ~~(the differentiator)~~ DONE
 
 - ~~**OpenAI Realtime API integration** — `src/lib/openai/voice.ts` wraps `OpenAIRealtimeWebSocket` with RAG tool calling~~
 - ~~**RAG-powered responses** — `src/lib/agent/rag.ts` builds context from Qdrant, `src/app/api/agent/respond/route.ts` provides text-based RAG endpoint~~
 - ~~**Cross-meeting search** — Implemented in `/api/search` via fan-out across per-meeting collections~~
 
-## P2 — Post-Meeting Processing ~~DONE~~
+## Post-Meeting Processing ~~DONE~~
 
 - ~~**Meeting summary generation** — After meeting ends (status → `processing`), generate a summary from all embedded segments using an LLM, store in `metadata.summary`~~
 - ~~**Meeting notes UI** — Add `/dashboard/[id]` page showing transcript timeline, summary, and search within a single meeting~~
 - ~~**Participants tracking** — Populate `participants` JSONB from bot transcript speaker data~~
 
-## P3 — UX Polish ~~DONE~~
+## UX Polish ~~DONE~~
 
 - ~~**Real-time status updates** — Poll every 5s when meetings are in transient states (joining/active/processing)~~
 - ~~**Error toasts** — Sonner toasts for all API errors and success feedback~~
@@ -27,7 +27,7 @@
 - ~~**Button loading states** — Disable buttons and show loading text during async operations~~
 - ~~**SEO metadata** — Updated title and description in layout~~
 
-## P4 — Authentication ~~DONE~~
+## Authentication ~~DONE~~
 
 - ~~**NextAuth setup** — Credentials provider (email/password) with JWT sessions~~
 - ~~**User table** — `users` table with email, name, passwordHash; `userId` FK on meetings~~
@@ -35,13 +35,13 @@
 - ~~**Data scoping** — All meeting queries filtered by userId, ownership checks on all endpoints~~
 - ~~**Sign in / Sign up pages** — Login, register pages with auto-redirect~~
 
-## P5 — Live Voice Agent ~~DONE~~
+## Live Voice Agent ~~DONE~~
 
 - ~~**Audio bridging** — Recall Output Media renders voice-agent.html which bridges getUserMedia audio ↔ OpenAI Realtime API~~
 - ~~**In-call RAG** — Agent uses search_meeting_context tool via `/api/agent/rag` endpoint~~
 - ~~**Turn detection** — Semantic VAD with low eagerness; agent only responds when addressed as Vernix/Agent/Assistant~~
 
-## P6 — Chat with Meeting Notes ~~DONE~~
+## Chat with Meeting Notes ~~DONE~~
 
 - ~~**Chat UI** — Chat panel on meeting detail page with streaming responses via Vercel AI SDK~~
 - ~~**General Chat UI** — Collapsible chat on dashboard for cross-meeting questions~~
@@ -49,7 +49,7 @@
 - ~~**Source citations** — Expandable source list with speaker, timestamp, and relevance score~~
 - ~~**Tool call visualization** — "Searching meeting context..." indicator during RAG lookup~~
 
-## P7 — Knowledge Base (file uploads + RAG) ~~DONE~~
+## Knowledge Base (file uploads + RAG) ~~DONE~~
 
 - ~~**File upload API** — `POST /api/knowledge` accepts PDF, DOCX, TXT, MD files (multipart form-data, 10MB limit)~~
 - ~~**Object storage** — Minio locally, S3-compatible in prod; `src/lib/storage/` with upload, delete, presigned URL~~
@@ -57,7 +57,7 @@
 - ~~**Unified RAG** — `getRAGContext` now searches per-user knowledge collection alongside meeting transcripts; `RAGResult` has `source: "transcript" | "document"`~~
 - ~~**Knowledge base UI** — `/dashboard/knowledge` page with upload dialog, document list, status badges, delete~~
 
-## P8 — Meeting-Scoped Knowledge ~~DONE~~
+## Meeting-Scoped Knowledge ~~DONE~~
 
 - ~~`**meetingId` on documents — Optional FK on `documents` table linking uploads to a specific meeting~~
 - ~~**Upload on meeting detail page** — Upload button on `/dashboard/[id]` scoped to that meeting, chunks go into meeting's Qdrant collection~~
@@ -65,7 +65,7 @@
 - ~~**Knowledge list integration** — Meeting detail shows only that meeting's docs; global page shows all docs~~
 - ~~**Meeting DELETE cleanup** — Deleting a meeting removes its scoped documents from S3 and DB~~
 
-## P9 — Meeting Context & Agenda ~~DONE~~
+## Meeting Context & Agenda ~~DONE~~
 
 - ~~**Agenda field** — Optional free-form text field on meetings (stored in `metadata.agenda`)~~
 - ~~**UI** — Editable text area on meeting detail page and in the create meeting dialog~~
@@ -73,7 +73,7 @@
 - ~~**Agent context** — `getAgentSystemPrompt(agenda)` and `getVoiceAgentSystemPrompt(agenda)` inject agenda into all agent prompts~~
 - ~~**Summary awareness** — Agenda passed to summary generation; LLM compares planned vs discussed~~
 
-## P10 — Action Items & Tasks ~~DONE~~
+## Action Items & Tasks ~~DONE~~
 
 - ~~**Auto-extract action items** — `src/lib/tasks/extract.ts` uses gpt-4o-mini JSON mode to extract action items from transcript segments~~
 - ~~**Task storage** — `tasks` table with cascade delete from meetings; `src/lib/tasks/store.ts` for batch insert/replace~~
@@ -81,7 +81,7 @@
 - ~~**Tasks API** — `GET/POST /api/meetings/[id]/tasks`, `PATCH/DELETE /api/meetings/[id]/tasks/[taskId]`, `GET /api/tasks` (cross-meeting)~~
 - ~~**Tasks UI** — Action Items card on meeting detail with checkbox toggle, delete, add; dashboard widget showing pending tasks across meetings~~
 
-## P11 — MCP Tool Connections ~~DONE~~
+## MCP Tool Connections ~~DONE~~
 
 - ~~**MCP Server** — `src/lib/mcp/server.ts` exposes tools: `search_meetings`, `list_meetings`, `get_meeting`, `get_transcript`, `list_tasks`, `create_task`. SSE endpoint at `/api/mcp` with API key auth~~
 - ~~**API Keys** — `apiKeys` table with bcrypt-hashed keys, shown once on creation. Routes at `/api/settings/api-keys`~~
@@ -90,19 +90,19 @@
 - ~~**Config Storage** — `mcpServers` table for per-user server configs (name, url, apiKey, enabled)~~
 - ~~**Settings UI** — `/dashboard/settings` page with API key management + MCP server config CRUD~~
 
-## P12 — Data Export ~~DONE~~
+## Data Export ~~DONE~~
 
 - ~~**Single meeting export** — Download meeting notes (summary, transcript, action items, participants) as PDF or Markdown~~
 - ~~**Bulk export** — Export all meetings and data as a ZIP archive (Markdown files + metadata JSON)~~
 - ~~**Export API** — `GET /api/meetings/[id]/export` and `GET /api/export` endpoints~~
 
-## P13 — Production Hardening ~~DONE~~
+## Production Hardening ~~DONE~~
 
 - ~~**Rate limiting** — In-memory per-IP rate limiter on all public endpoints (webhooks, voice-token, rag, mcp-tool, register)~~
 - ~~**Env validation** — `src/lib/env.ts` validates all required env vars with Zod at first access; client singletons use `getEnv()`~~
 - ~~**Webhook signature verification** — HMAC-SHA256 verification of Recall webhook payloads via `RECALL_WEBHOOK_SECRET` (optional, skip in dev)~~
 
-## P14 — Rebrand to Vernix (vernix.app) ~~DONE~~
+## Rebrand to Vernix (vernix.app) ~~DONE~~
 
 - ~~**Rename everywhere** — Package name, repo, README, CLAUDE.md, UI text, bot name, prompts, SEO metadata~~
 - ~~**Rename GitHub repository**~~
@@ -113,7 +113,7 @@
 - ~~**Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site~~
 - ~~**Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent~~
 
-## P15 — UI Polish & Launch Prep ~~DONE~~
+## UI Polish & Launch Prep ~~DONE~~
 
 - ~~**Implement the logo set** — Start using the new logo set in the UI~~
 - ~~**Loading skeletons** — Structurally correct `loading.tsx` files + inline skeleton replacements~~
@@ -130,7 +130,7 @@
 - ~~**Signup CRO** — Password toggle, autofill hints, value reinforcement, actionable errors~~
 - ~~**Contact form** — Topic routing (question/bug/feature/enterprise) with contextual fields~~
 
-## P16 — Dark Mode & Theme Selector ~~DONE~~
+## Dark Mode & Theme Selector ~~DONE~~
 
 - ~~**System default** — Detect `prefers-color-scheme` on first load and apply light or dark accordingly~~
 - ~~**Theme selector** — Toggle in dashboard footer and marketing header; cycles Light → Dark → System~~
@@ -138,7 +138,7 @@
 - ~~**FOUC prevention** — Blocking `ThemeScript` in `<head>` applies theme before React hydration~~
 - ~~**Component audit** — Fixed hardcoded surfaces (auth panel, landing CTA) that broke in dark mode~~
 
-## P16b — User Profiles & SSO ~~DONE~~
+## User Profiles & SSO ~~DONE~~
 
 - ~~**Profile page** — Profile card on settings page with avatar, editable name, read-only email~~
 - ~~**Change password** — Current password verification + new password form (SSO users can set without current)~~
@@ -147,7 +147,7 @@
 - ~~**Account linking** — Auto-link by verified email; unlink from settings with guard against removing last auth method~~
 - ~~**Profile API** — `GET/PATCH /api/user/profile`, `PATCH /api/user/password`, `GET/DELETE /api/user/accounts`~~
 
-## P18 — Silent Agent Mode (Text Agent) ~~DONE~~
+## Silent Agent Mode (Text Agent) ~~DONE~~
 
 - ~~**Silent mode toggle** — Per-meeting toggle (in create dialog and meeting detail). This is a fundamentally different agent type: text agent instead of voice agent~~
 - ~~**Recall without Output Media** — Omit `output_media` and `include_bot_in_recording: { audio: false }` so the bot joins as a passive listener with no voice/screen presence~~
@@ -157,7 +157,7 @@
 - ~~**UI indicator** — Show "Silent" badge on meeting card and detail page~~
 - ~~**Storage** — `metadata.silent: boolean` on the meeting row~~
 
-## P19 — Switch to TanStack Query ~~DONE~~
+## Switch to TanStack Query ~~DONE~~
 
 - ~~**Replace custom hooks** — All 7 hooks (`useMeetings`, `useMeetingDetail`, `useKnowledge`, `useTasks`, `useAllTasks`, `useApiKeys`, `useMcpServers`) migrated to `useQuery`/`useMutation`~~
 - ~~**Query client setup** — `QueryProvider` in root layout with 30s staleTime, 5min gcTime, refetch on focus~~
@@ -166,38 +166,32 @@
 - ~~**Mutations** — `useMutation` with optimistic updates for task toggle and meeting delete~~
 - ~~**Remove polling** — `setInterval` replaced with TanStack Query `refetchInterval` on both meetings list and meeting detail~~
 
-## P20 — MCP Server Connection Testing ~~DONE~~
+## MCP Server Connection Testing ~~DONE~~
 
 - ~~**Test button per server** — Zap icon button on each MCP server row; shows inline result (tool count + tool names, or error message)~~
 - ~~**Test before save** — "Test Connection" button in the Add Server dialog; clears result when URL/API key changes~~
 - ~~**Test API** — `POST /api/settings/mcp-servers/test` accepts `{ id }` (DB lookup) or `{ url, apiKey? }` (pre-save); 10s timeout~~
 
-## P21 — Analytics & Monitoring ~~DONE~~
+## Analytics & Monitoring ~~DONE~~
 
 - ~~**Sentry** — Error tracking and performance monitoring; instrument Next.js app, API routes, and background jobs (webhook handlers, agent pipeline)~~
 - ~~**Google Analytics** — Consent Mode v2, cookie banner, page views and feature usage tracking~~
 - ~~**Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page~~
 - ~~**Privacy / Terms / Cookie Policy** — Updated all legal pages to reflect Sentry, Google Analytics, Recall.ai, OpenAI, and Railway as sub-processors~~
 
-## P21b — Contact Forms & Email
+## Contact Forms & Email
 
 - **Hook up contact form** — Wire the contact form on `/contact` to actually send emails (e.g. Resend, Postmark, or SES)
 - **Configure @vernix.app emails** — Set up MX/SPF/DKIM records for vernix.app domain, configure transactional email provider
-- **Contact form API** — `POST /api/contact` route that validates input and sends to hello@vernix.app
+- **Contact form API** — `POST /api/contact` route that validates input and sends to [hello@vernix.app](mailto:hello@vernix.app)
 
-## P21c — Welcome Email
+## Welcome Email
 
 - **Email template** — Design a branded HTML welcome email (logo, onboarding steps, CTA to create first meeting)
 - **Send on registration** — Trigger welcome email from `POST /api/auth/register` after successful user creation
 - **Email provider** — Use the same transactional provider configured in P21b (Resend/Postmark/SES)
 
-## P21d — Google Analytics Sales Funnel (post-launch)
-
-- **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
-- **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
-- **Attribution** — UTM parameter tracking across signup flow for campaign attribution
-
-## P22 — Billing with Polar
+## Billing with Polar
 
 - **Calculate the pricing** — Calculate our baseline costs and add our margins on top, decide on the pricing strategy. Use proper Claude skills to do this. Current pricing idea: Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
 - **Create a pricing page** — `/pricing` page with the pricing tiers and a call to action to sign up.
@@ -209,16 +203,7 @@
 - **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
 - **Configure paywalls** — Configure paywalls for the pricing tiers. Claude Code has a paywall skill that can be used to configure paywalls.
 
-## P23 — Meeting Recordings & Recall Data Sync
-
-- **Audit Recall data** — Investigate what data Recall provides after a meeting: video recording (MP4), participant events, meeting metadata, speaker timeline. Map what's available via their API.
-- **Copy recordings to our storage** — After `recording_done`, download the video MP4 from Recall's S3 URL (expires after 6h) and upload to our S3/Minio bucket. Store the S3 key in meeting metadata.
-- **Participant data** — Fetch participant events and speaker timeline from Recall, store in meeting metadata (currently only populated from transcript speaker names).
-- **Video playback UI** — Add a video player to the meeting detail page. Sync transcript timeline with video position (click a transcript line → seek to that timestamp).
-- **Recording retention** — Decide on storage policy: keep forever, expire after N days, or let user choose. Estimate storage costs per meeting minute.
-- **Privacy controls** — Let users disable recording storage per meeting. Delete recording when meeting is deleted. Clear deletion from S3 bucket.
-
-## P24 — SEO & Discoverability
+## SEO & Discoverability
 
 - **robots.txt** — Add `public/robots.txt` allowing all crawlers, pointing to sitemap
 - **sitemap.xml** — Generate `src/app/sitemap.ts` listing all public pages (landing, pricing, faq, about, contact, terms, privacy)
@@ -228,14 +213,22 @@
 - **Meta tags audit** — Verify all pages have unique title, description, and OG images
 - **Canonical URLs** — Ensure all pages have proper canonical tags via metadataBase
 
-## P25 — Vision-Based Document Parsing
+## Google Analytics Sales Funnel
 
-- **OpenAI Vision for PDFs** — Current PDF parsing (pdfjs-dist) extracts raw text only — images, charts, tables, and scanned pages are invisible. Use GPT-4o vision to process PDF pages as images for richer extraction
-- **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
-- **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
-- **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
+- **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
+- **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
+- **Attribution** — UTM parameter tracking across signup flow for campaign attribution
 
-## P26 — Public REST API & Documentation
+## Meeting Recordings & Recall Data Sync
+
+- **Audit Recall data** — Investigate what data Recall provides after a meeting: video recording (MP4), participant events, meeting metadata, speaker timeline. Map what's available via their API.
+- **Copy recordings to our storage** — After `recording_done`, download the video MP4 from Recall's S3 URL (expires after 6h) and upload to our S3/Minio bucket. Store the S3 key in meeting metadata.
+- **Participant data** — Fetch participant events and speaker timeline from Recall, store in meeting metadata (currently only populated from transcript speaker names).
+- **Video playback UI** — Add a video player to the meeting detail page. Sync transcript timeline with video position (click a transcript line → seek to that timestamp).
+- **Recording retention** — Decide on storage policy: keep forever, expire after N days, or let user choose. Estimate storage costs per meeting minute.
+- **Privacy controls** — Let users disable recording storage per meeting. Delete recording when meeting is deleted. Clear deletion from S3 bucket.
+
+## Public REST API & Documentation
 
 - **API design** — Design a clean, versioned REST API (`/api/v1/`) exposing meetings, transcripts, tasks, search, knowledge base, and agent control (join/stop). Mirrors the existing internal routes but with stable contracts and proper error responses.
 - **OpenAPI spec** — Write an OpenAPI 3.1 spec (`openapi.yaml`) documenting all endpoints, request/response schemas, auth (Bearer API key), pagination, and error codes.
@@ -245,9 +238,16 @@
 - **Rate limiting & versioning** — Per-key rate limits, API version in URL path, deprecation headers.
 - **SDKs** — Consider auto-generating TypeScript/Python SDKs from the OpenAPI spec.
 
-## P27 — Claude Code Skill for Vernix
+## Claude Code Skill for Vernix
 
 - **Vernix skill** — Create a Claude Code skill (`vernix`) that lets AI agents interact with Vernix via the REST API. Agents could list meetings, search transcripts, get summaries, create tasks, and ask questions about meeting content.
 - **Skill packaging** — Publish as an installable skill with proper SKILL.md, tool definitions, and auth flow (API key from Vernix settings)
 - **MCP + REST** — Skill uses the REST API under the hood; MCP server remains as an alternative for direct MCP clients (Claude Desktop, Cursor)
 - **Use cases** — "What did we discuss in yesterday's standup?", "Find all action items assigned to me", "Search meetings for mentions of the Q4 roadmap"
+
+## Vision-Based Document Parsing
+
+- **OpenAI Vision for PDFs** — Current PDF parsing (pdfjs-dist) extracts raw text only — images, charts, tables, and scanned pages are invisible. Use GPT-4o vision to process PDF pages as images for richer extraction
+- **Image/diagram uploads** — Accept PNG, JPG, SVG uploads in knowledge base, extract descriptions via vision API
+- **Hybrid parsing** — Try text extraction first; if a page has low text density, fall back to vision-based extraction
+- **Cost management** — Vision API is expensive per page; add per-user limits or make it a premium feature
