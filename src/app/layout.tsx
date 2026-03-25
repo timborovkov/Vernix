@@ -82,35 +82,38 @@ export default function RootLayout({
             <CookieConsentBanner />
           </QueryProvider>
         </SessionProvider>
+        {gaMeasurementId ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="google-analytics-consent-v2"
+              strategy="afterInteractive"
+            >
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){window.dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('consent', 'default', {
+                  analytics_storage: 'denied',
+                  ad_storage: 'denied',
+                  ad_user_data: 'denied',
+                  ad_personalization: 'denied',
+                  wait_for_update: 500
+                });
+                gtag('set', 'ads_data_redaction', true);
+                gtag('set', 'url_passthrough', true);
+                gtag('js', new Date());
+                gtag('config', '${gaMeasurementId}', {
+                  anonymize_ip: true
+                });
+              `}
+            </Script>
+          </>
+        ) : null}
       </body>
-      {gaMeasurementId ? (
-        <>
-          <Script
-            src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
-            strategy="afterInteractive"
-          />
-          <Script id="google-analytics-consent-v2" strategy="afterInteractive">
-            {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){window.dataLayer.push(arguments);}
-              window.gtag = gtag;
-              gtag('consent', 'default', {
-                analytics_storage: 'denied',
-                ad_storage: 'denied',
-                ad_user_data: 'denied',
-                ad_personalization: 'denied',
-                wait_for_update: 500
-              });
-              gtag('set', 'ads_data_redaction', true);
-              gtag('set', 'url_passthrough', true);
-              gtag('js', new Date());
-              gtag('config', '${gaMeasurementId}', {
-                anonymize_ip: true
-              });
-            `}
-          </Script>
-        </>
-      ) : null}
     </html>
   );
 }
