@@ -180,9 +180,12 @@
 
 ## P22 — Billing with Polar
 
+- **Calculate the pricing** — Calculate our baseline costs and add our margins on top, decide on the pricing strategy. Use proper Claude skills to do this. Current pricing idea: Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
+- **Create a pricing page** — `/pricing` page with the pricing tiers and a call to action to sign up.
+- **Pricing as consts in the code** — Pricing tiers as consts in the code, so we can easily change the pricing without having to change the code. Would affect billing, pricing page, and marketing.
 - **Polar integration** — Connect Polar.sh for subscription management
-- **Pricing tiers** — Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
 - **Hard caps** – Fair use hard caps on uploaded context, meeting duration, token usage, embeddings creation etc for each plan
 - **Usage tracking** — Track meeting minutes, API calls, and storage per user
 - **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
 - **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
+- **Configure paywalls** — Configure paywalls for the pricing tiers. Claude Code has a paywall skill that can be used to configure paywalls.
