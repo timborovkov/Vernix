@@ -102,16 +102,16 @@
 - ~~**Env validation** — `src/lib/env.ts` validates all required env vars with Zod at first access; client singletons use `getEnv()`~~
 - ~~**Webhook signature verification** — HMAC-SHA256 verification of Recall webhook payloads via `RECALL_WEBHOOK_SECRET` (optional, skip in dev)~~
 
-## P14 — Rebrand to Vernix (vernix.app)
+## P14 — Rebrand to Vernix (vernix.app) ~~DONE~~
 
-- **Rename everywhere** — Package name, repo, README, CLAUDE.md, UI text, bot name, prompts, SEO metadata
-- **Rename GitHub repository**
-- **Register the domain and social media**
-- **Domain** — Point vernix.app to the deployment
-- **Update Recall** — Bot name from "Vernix Agent" to "Vernix Agent", webhook URLs
-- **Voice agent wake words** — Change from "Vernix" to "Vernix" in system prompt and UI hints
-- **Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site
-- **Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent
+- ~~**Rename everywhere** — Package name, repo, README, CLAUDE.md, UI text, bot name, prompts, SEO metadata~~
+- ~~**Rename GitHub repository**~~
+- ~~**Register the domain and social media**~~
+- ~~**Domain** — Point vernix.app to the deployment~~
+- ~~**Update Recall** — Bot name from "Vernix Agent" to "Vernix Agent", webhook URLs~~
+- ~~**Voice agent wake words** — Change from "Vernix" to "Vernix" in system prompt and UI hints~~
+- ~~**Logo set** — Create icon, wordmark, favicon, and OG image in the style of the current site~~
+- ~~**Design system doc** — Write `DESIGN.md` capturing current color palette, typography, spacing, and component patterns so they're codified and consistent~~
 
 ## P15 — UI Polish & Launch Prep
 
