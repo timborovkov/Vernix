@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollReveal } from "@/components/scroll-reveal";
 import {
   Mic,
   FileText,
@@ -108,7 +109,7 @@ export default function LandingPage() {
     <>
       {/* Hero */}
       <section className="mx-auto max-w-3xl px-4 py-24 text-center">
-        <div className="mb-8 flex justify-center">
+        <div className="animate-fade-up mb-8 flex justify-center">
           <Image
             src="/brand/icon/icon.svg"
             alt="Vernix logo"
@@ -124,15 +125,15 @@ export default function LandingPage() {
             className="hidden dark:block"
           />
         </div>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+        <h1 className="animate-fade-up delay-100 mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
           An AI agent that joins your calls and does the rest
         </h1>
-        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
+        <p className="animate-fade-up delay-200 text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
           Vernix transcribes your video calls, writes the summary, extracts
           action items, and answers questions live — so you can actually focus
           on the conversation.
         </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="animate-fade-up delay-300 flex flex-col justify-center gap-3 sm:flex-row">
           <Button size="lg" render={<Link href="/register" />}>
             Try Vernix Free
             <ArrowRight className="ml-1 h-4 w-4" />
@@ -141,10 +142,10 @@ export default function LandingPage() {
             See How It Works
           </Button>
         </div>
-        <p className="text-muted-foreground mt-4 text-xs">
+        <p className="animate-fade-up delay-300 text-muted-foreground mt-4 text-xs">
           No credit card required. 5 meetings free.
         </p>
-        <div className="text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm">
+        <div className="animate-fade-up delay-400 text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm">
           <Video className="mr-1 h-4 w-4" />
           {PLATFORMS.map((p, i) => (
             <span key={p}>
@@ -189,31 +190,35 @@ export default function LandingPage() {
             search, and tool integrations — in one place.
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.slice(0, 4).map((feature) => (
-              <Card key={feature.title}>
-                <CardContent className="pt-6">
-                  <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
-                  <h3 className="mb-1 font-medium">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+            {FEATURES.slice(0, 4).map((feature, i) => (
+              <ScrollReveal key={feature.title} delay={i * 75}>
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
+                    <h3 className="mb-1 font-medium">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
             ))}
           </div>
 
           {/* Second row with visual break */}
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.slice(4).map((feature) => (
-              <Card key={feature.title}>
-                <CardContent className="pt-6">
-                  <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
-                  <h3 className="mb-1 font-medium">{feature.title}</h3>
-                  <p className="text-muted-foreground text-sm">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+            {FEATURES.slice(4).map((feature, i) => (
+              <ScrollReveal key={feature.title} delay={i * 75}>
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <feature.icon className="text-muted-foreground mb-3 h-8 w-8" />
+                    <h3 className="mb-1 font-medium">{feature.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
             ))}
           </div>
 
@@ -244,16 +249,18 @@ export default function LandingPage() {
             No integrations to configure, no browser extensions to install.
           </p>
           <div className="grid gap-8 sm:grid-cols-3">
-            {STEPS.map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="bg-primary text-primary-foreground mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
-                  {item.step}
+            {STEPS.map((item, i) => (
+              <ScrollReveal key={item.step} delay={i * 100}>
+                <div className="text-center">
+                  <div className="bg-primary text-primary-foreground mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+                    {item.step}
+                  </div>
+                  <h3 className="mb-2 font-medium">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">
+                    {item.description}
+                  </p>
                 </div>
-                <h3 className="mb-2 font-medium">{item.title}</h3>
-                <p className="text-muted-foreground text-sm">
-                  {item.description}
-                </p>
-              </div>
+              </ScrollReveal>
             ))}
           </div>
         </div>
