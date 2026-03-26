@@ -271,8 +271,8 @@ async function flushBuffer(
         .from(meetings)
         .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
 
-      // Handle mute_self tool call
-      if (result.mute && meeting) {
+      // Handle mute_self tool call (skip if also leaving)
+      if (result.mute && !result.leave && meeting) {
         console.log(`[Silent Agent] Muting for meeting ${meetingId}`);
         const metadata = (meeting.metadata as Record<string, unknown>) ?? {};
         await db

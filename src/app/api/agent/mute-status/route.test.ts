@@ -19,29 +19,42 @@ const { mockDb } = vi.hoisted(() => {
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 
-import { GET } from "./route";
-import { parseJsonResponse } from "@/test/helpers";
+import { POST } from "./route";
+import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
 
-const BASE_URL = "http://localhost/api/agent/mute-status";
+const URL = "http://localhost/api/agent/mute-status";
 
-describe("GET /api/agent/mute-status", () => {
+describe("POST /api/agent/mute-status", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("returns 400 on missing params", async () => {
-    const req = new Request(BASE_URL);
-    const { status } = await parseJsonResponse(await GET(req));
+  it("returns 400 on missing fields", async () => {
+    const req = createJsonRequest(URL, { method: "POST", body: {} });
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it("returns 400 on invalid meetingId", async () => {
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { meetingId: "not-a-uuid", botSecret: "secret" },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
   });
 
   it("returns 404 for unknown meeting", async () => {
     mockDb.where.mockResolvedValueOnce([]);
 
-    const req = new Request(
-      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=secret`
-    );
-    const { status } = await parseJsonResponse(await GET(req));
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "secret",
+      },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(404);
   });
 
@@ -50,10 +63,14 @@ describe("GET /api/agent/mute-status", () => {
       { metadata: { voiceSecret: "correct-secret" } },
     ]);
 
-    const req = new Request(
-      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=wrong`
-    );
-    const { status } = await parseJsonResponse(await GET(req));
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "wrong",
+      },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(403);
   });
 
@@ -62,10 +79,14 @@ describe("GET /api/agent/mute-status", () => {
       { metadata: { voiceSecret: "valid-secret" } },
     ]);
 
-    const req = new Request(
-      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=valid-secret`
-    );
-    const { status, data } = await parseJsonResponse(await GET(req));
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+      },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(200);
     expect(data.muted).toBe(false);
   });
@@ -75,10 +96,14 @@ describe("GET /api/agent/mute-status", () => {
       { metadata: { voiceSecret: "valid-secret", muted: true } },
     ]);
 
-    const req = new Request(
-      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=valid-secret`
-    );
-    const { status, data } = await parseJsonResponse(await GET(req));
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+      },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(200);
     expect(data.muted).toBe(true);
   });
@@ -88,10 +113,14 @@ describe("GET /api/agent/mute-status", () => {
       { metadata: { botId: "bot-1", silent: true, muted: true } },
     ]);
 
-    const req = new Request(
-      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=bot-1`
-    );
-    const { status, data } = await parseJsonResponse(await GET(req));
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "bot-1",
+      },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(200);
     expect(data.muted).toBe(true);
   });

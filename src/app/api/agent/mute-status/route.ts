@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
+import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 
-export async function GET(request: Request) {
+const muteStatusSchema = z.object({
+  meetingId: z.uuid(),
+  botSecret: z.string().min(1, "Bot secret is required"),
+});
+
+export async function POST(request: Request) {
   const rl = rateLimitByIp(request, "agent:mute-status", {
     interval: 60_000,
     limit: 120,
@@ -13,16 +20,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  const { searchParams } = new URL(request.url);
-  const meetingId = searchParams.get("meetingId");
-  const botSecret = searchParams.get("botSecret");
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-  if (!meetingId || !botSecret) {
+  const parsed = muteStatusSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "meetingId and botSecret are required" },
+      { error: "Invalid request", issues: parsed.error.issues },
       { status: 400 }
     );
   }
+
+  const { meetingId, botSecret } = parsed.data;
 
   const [meeting] = await db
     .select({ metadata: meetings.metadata })
@@ -35,15 +48,7 @@ export async function GET(request: Request) {
 
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
 
-  // Accept voiceSecret (voice mode) or botId (silent mode) for auth
-  const storedVoiceSecret = metadata.voiceSecret;
-  const storedBotId = metadata.botId;
-  const validVoiceSecret =
-    typeof storedVoiceSecret === "string" && storedVoiceSecret === botSecret;
-  const validBotId =
-    typeof storedBotId === "string" && storedBotId === botSecret;
-
-  if (!validVoiceSecret && !validBotId) {
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 

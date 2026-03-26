@@ -102,7 +102,11 @@ export async function POST(request: Request) {
       .from(meetings)
       .where(sql`${meetings.metadata}->>'botId' = ${botId}`);
 
-    if (!meeting || meeting.status === "failed") {
+    if (
+      !meeting ||
+      meeting.status === "failed" ||
+      meeting.status === "completed"
+    ) {
       return NextResponse.json({ skipped: true });
     }
 

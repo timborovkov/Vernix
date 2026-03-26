@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 
 const switchModeSchema = z.object({
   meetingId: z.uuid(),
@@ -47,8 +48,8 @@ export async function POST(request: Request) {
 
   // Verify bot secret
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
-  const storedSecret = metadata.voiceSecret;
-  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
+
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 

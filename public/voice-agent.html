@@ -344,9 +344,11 @@
         muteCheckInterval = setInterval(async () => {
           if (leaving) return;
           try {
-            const res = await fetch(
-              `${appUrl}/api/agent/mute-status?meetingId=${meetingId}&botSecret=${botSecret}`
-            );
+            const res = await fetch(`${appUrl}/api/agent/mute-status`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ meetingId, botSecret }),
+            });
             if (!res.ok) return;
             const data = await res.json();
             if (data.muted && !isMuted) {
@@ -361,6 +363,7 @@
               setStatus("Muted by host", "");
             } else if (!data.muted && isMuted) {
               isMuted = false;
+              leaving = false;
               connect();
             }
           } catch (e) {

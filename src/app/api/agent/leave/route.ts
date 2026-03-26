@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { processMeetingEnd } from "@/lib/agent/processing";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 
 const leaveSchema = z.object({
   meetingId: z.uuid(),
@@ -47,17 +48,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
   }
 
-  // Verify bot secret — accept voiceSecret (voice mode) or botId (silent mode)
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
-  const storedVoiceSecret = metadata.voiceSecret;
-  const storedBotId = metadata.botId;
 
-  const validVoiceSecret =
-    typeof storedVoiceSecret === "string" && storedVoiceSecret === botSecret;
-  const validBotId =
-    typeof storedBotId === "string" && storedBotId === botSecret;
-
-  if (!validVoiceSecret && !validBotId) {
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
@@ -74,6 +67,7 @@ export async function POST(request: Request) {
   }
 
   // Leave the call
+  const storedBotId = metadata.botId;
   const botId = typeof storedBotId === "string" ? storedBotId : undefined;
   if (botId) {
     const provider = getMeetingBotProvider();

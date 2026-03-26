@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 
 const muteSelfSchema = z.object({
   meetingId: z.uuid(),
@@ -37,7 +38,12 @@ export async function POST(request: Request) {
   const { meetingId, botSecret } = parsed.data;
 
   const [meeting] = await db
-    .select()
+    .select({
+      id: meetings.id,
+      userId: meetings.userId,
+      status: meetings.status,
+      metadata: meetings.metadata,
+    })
     .from(meetings)
     .where(eq(meetings.id, meetingId));
 
@@ -47,15 +53,7 @@ export async function POST(request: Request) {
 
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
 
-  // Accept voiceSecret (voice mode) or botId (silent mode)
-  const storedVoiceSecret = metadata.voiceSecret;
-  const storedBotId = metadata.botId;
-  const validVoiceSecret =
-    typeof storedVoiceSecret === "string" && storedVoiceSecret === botSecret;
-  const validBotId =
-    typeof storedBotId === "string" && storedBotId === botSecret;
-
-  if (!validVoiceSecret && !validBotId) {
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 

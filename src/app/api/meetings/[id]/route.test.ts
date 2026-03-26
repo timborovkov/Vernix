@@ -88,6 +88,53 @@ describe("PATCH /api/meetings/[id]", () => {
     const response = await PATCH(req, makeParams("999"));
     expect(response.status).toBe(404);
   });
+
+  it("sets muted in metadata for active meetings", async () => {
+    mockDb.where
+      .mockResolvedValueOnce([
+        fakeMeeting({ status: "active", metadata: { botId: "bot-1" } }),
+      ])
+      .mockReturnValueOnce(mockDb);
+    mockDb.returning.mockResolvedValueOnce([
+      fakeMeeting({
+        status: "active",
+        metadata: { botId: "bot-1", muted: true },
+      }),
+    ]);
+
+    const req = createJsonRequest("http://localhost/api/meetings/1", {
+      method: "PATCH",
+      body: { muted: true },
+    });
+    const { status, data } = await parseJsonResponse(
+      await PATCH(req, makeParams("1"))
+    );
+
+    expect(status).toBe(200);
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ muted: true }),
+      })
+    );
+    expect(data.metadata.muted).toBe(true);
+  });
+
+  it("ignores muted for non-active meetings", async () => {
+    mockDb.where
+      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
+      .mockReturnValueOnce(mockDb);
+    mockDb.returning.mockResolvedValueOnce([fakeMeeting()]);
+
+    const req = createJsonRequest("http://localhost/api/meetings/1", {
+      method: "PATCH",
+      body: { muted: true },
+    });
+    await PATCH(req, makeParams("1"));
+
+    // metadata should not include muted since meeting is pending
+    const setCall = mockDb.set.mock.calls[0][0];
+    expect(setCall.metadata).toBeUndefined();
+  });
 });
 
 describe("DELETE /api/meetings/[id]", () => {
