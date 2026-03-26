@@ -9,6 +9,7 @@ import {
 } from "@/lib/agent/prompts";
 import { McpClientManager } from "@/lib/mcp/client";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 
 // MCP tool cache per meeting (avoid re-fetching on every token request)
 const MCP_CACHE_TTL_MS = 5 * 60_000; // 5 minutes
@@ -64,10 +65,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Verify the bot secret matches the stored voiceSecret
-  const storedSecret = (meeting.metadata as Record<string, unknown>)
-    ?.voiceSecret;
-  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
+  const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
@@ -119,7 +118,7 @@ export async function GET(request: Request) {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const agendaRaw = (meeting.metadata as Record<string, unknown>)?.agenda;
+  const agendaRaw = metadata.agenda;
   const agenda = typeof agendaRaw === "string" ? agendaRaw : undefined;
 
   try {

@@ -194,4 +194,38 @@ describe("POST /api/agent/voice-fallback", () => {
       expect.objectContaining({ title: "Test Meeting" })
     );
   });
+
+  it("handles mute_self tool call result", async () => {
+    mockDb.where.mockResolvedValueOnce([activeMeeting()]);
+    mockGenerateAgentResponse.mockResolvedValueOnce({
+      text: "I'll be quiet now.",
+      mute: true,
+    });
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+        transcriptWindow: "Vernix please mute yourself",
+      },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
+
+    expect(status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(mockSendChatMessage).toHaveBeenCalledWith(
+      "bot-1",
+      "I'll be quiet now."
+    );
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ muted: true }),
+      })
+    );
+    // Should NOT leave or process meeting end
+    expect(mockLeaveMeeting).not.toHaveBeenCalled();
+    expect(mockProcessMeetingEnd).not.toHaveBeenCalled();
+  });
 });
