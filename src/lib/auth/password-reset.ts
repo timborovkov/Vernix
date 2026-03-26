@@ -41,28 +41,6 @@ export async function createPasswordResetToken(
   return token;
 }
 
-/** Atomically validate and consume (delete) a token. Returns userId if valid, null otherwise. */
-export async function consumePasswordResetToken(
-  token: string
-): Promise<string | null> {
-  const tokenHash = hashResetToken(token);
-
-  // Atomic DELETE ... RETURNING — prevents TOCTOU race condition
-  const deleted = await db
-    .delete(passwordResetTokens)
-    .where(eq(passwordResetTokens.tokenHash, tokenHash))
-    .returning({
-      userId: passwordResetTokens.userId,
-      expiresAt: passwordResetTokens.expiresAt,
-    });
-
-  const row = deleted[0];
-  if (!row) return null;
-  if (row.expiresAt < new Date()) return null;
-
-  return row.userId;
-}
-
 /** Look up a user by email. Returns { id, name, email } or null. */
 export async function findUserByEmail(
   email: string
