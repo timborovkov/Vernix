@@ -70,27 +70,23 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 
 ### Free (permanent)
 
-- 30 silent minutes/month (no voice)
-- Summaries, tasks, RAG chat (20 queries/day)
-- 5 knowledge base documents, 50 MB storage
-- No API/MCP access
+- Silent meeting agent (no voice)
+- Summaries, tasks, RAG chat
+- Knowledge base uploads
 - **Cost to us:** ~$0.36/mo per active user (0.5 hr × $0.71)
 
 ### Free Trial (14 days, on top of Free)
 
 - Full Pro features including voice mode
-- 180 minutes total (voice or silent)
+- 90 minutes total (voice or silent)
 - Auto-activates on signup
-- **Max CAC:** ~$3 (3 hrs wake-on-demand voice × $1.40)
+- **Max CAC:** ~$2.10 (1.5 hrs wake-on-demand voice × $1.40)
 
 ### Pro — $29/month
 
-- All features unlocked: voice, silent, RAG chat, API, MCP
+- Voice + silent meeting agent
 - **$30 usage credit included** per month (does not roll over)
-- 200 knowledge base documents, 25 MB max doc size, 500 MB storage
-- API access (1,000 requests/day), MCP server (5 connections) & client (10 connections)
-- Up to 5 concurrent meetings
-- 200 RAG chat queries/day
+- Knowledge base, RAG chat, API, MCP
 - **Annual: $24/mo** (billed $288/yr — 17% discount)
 
 ### Usage Rates
@@ -112,8 +108,8 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 
 | Limit                           | Free          | Free Trial (14d) | Pro            |
 | ------------------------------- | ------------- | ---------------- | -------------- |
-| **Voice minutes/month**         | 0             | 180 (shared)     | By credits     |
-| **Silent minutes/month**        | 30            | 180 (shared)     | By credits     |
+| **Voice minutes/month**         | 0             | 90 (trial total) | By credits (~10 hrs at $3/hr) |
+| **Silent minutes/month**        | 30            | 90 (trial total) | By credits (~20 hrs at $1.50/hr) |
 | **Knowledge base documents**    | 5             | 200              | 200            |
 | **Max document size**           | 10 MB         | 25 MB            | 25 MB          |
 | **Doc uploads/month**           | 5             | 30               | 50             |
@@ -141,6 +137,7 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 ### Enforcement
 
 - **Free minutes exhausted:** Cannot start new meetings until next cycle. In-progress meetings are never interrupted.
+- **Trial minutes exhausted or trial expired:** User falls back to Free limits (30 min silent, no voice). Upgrade prompt shown. Any in-progress meeting finishes but no new voice meetings can start.
 - **Credits exhausted (paid):** Meeting continues; overage is billed. Spending cap (if set) triggers bot auto-leave with 5-minute warning.
 - **Document/storage cap:** Upload blocked with upgrade prompt.
 - **Chat/API limit reached:** Blocked until next day.
@@ -195,7 +192,7 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 | -------------------- | --------- | -------- | --------- | --------- | -------- | ------ | ------- |
 | **Free (inactive)**  | 480       | —        | —         | $0        | —        | —      | —       |
 | **Free (active)**    | 270       | 0 hr     | 0.3 hr    | $0.21     | —        | —      | —       |
-| **Free trial**       | 50        | 1 hr     | 1 hr      | $2.11     | —        | —      | —       |
+| **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.06     | —        | —      | —       |
 | **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | $7.50    | $30    | $0      |
 | **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | $24.00   | $30    | $0      |
 | **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | $61.50   | $30    | $31.50  |
@@ -217,28 +214,28 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 | Line item          | Calculation                          | Amount     |
 | ------------------ | ------------------------------------ | ---------- |
 | Free active        | 270 × $0.21                         | $57        |
-| Free trial         | 50 × $2.11                          | $106       |
+| Free trial         | 50 × $1.06                          | $53        |
 | Pro light          | 90 × $3.53                          | $318       |
 | Pro typical        | 70 × $11.30                         | $791       |
 | Pro heavy          | 30 × $28.95                         | $869       |
 | Pro very heavy     | 10 × $70.50                         | $705       |
-| **Subtotal usage** |                                      | **$2,846** |
+| **Subtotal usage** |                                      | **$2,793** |
 | Polar on base      | 200 × $1.56                         | $312       |
 | Polar on overage   | 30×$1.66 + 10×$5.20                 | $102       |
 | Infrastructure     |                                      | $120       |
-| **Total cost**     |                                      | **$3,380** |
+| **Total cost**     |                                      | **$3,327** |
 
 ### Summary
 
 | Metric            | Amount                  |
 | ----------------- | ----------------------- |
 | **Gross revenue** | **$7,945**              |
-| **Total cost**    | **$3,380**              |
-| **Net margin**    | **$4,565**              |
-| **Margin %**      | **57.5%**               |
+| **Total cost**    | **$3,327**              |
+| **Net margin**    | **$4,618**              |
+| **Margin %**      | **58.1%**               |
 | Revenue per user  | $7.95                   |
-| Cost per user     | $3.38                   |
-| Free user drag    | $163 (2.1% of revenue)  |
+| Cost per user     | $3.33                   |
+| Free user drag    | $110 (1.4% of revenue)  |
 
 ### Takeaways
 
@@ -246,79 +243,6 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 - $30 credit covers light and typical users — predictable $29/mo bill for 80% of paid users.
 - Heavy users generate overage at ~50% margin. Very heavy users are the most profitable segment.
 - 57.5% margin is stronger than the two-tier model — single $29 price captures more from light users.
-
----
-
-## CAC & Conversion Funnel
-
-### Organic CAC (no ad spend)
-
-Every free user costs us something — that's our organic customer acquisition cost.
-
-| Metric                          | Value    |
-| ------------------------------- | -------- |
-| Free active users (cost $0.21/mo each) | 270 |
-| Free trial users (cost $2.11/mo each)  | 50  |
-| **Monthly organic CAC spend**   | **$163** |
-
-If 5% of free signups eventually convert to Pro (industry average for freemium):
-- 800 free users × 5% = 40 conversions over time
-- Spread across ~6 months avg conversion time → ~7 new Pro users/month
-- **Organic CAC per Pro user: $163 / 7 = ~$23**
-
-### Pro User Lifetime Value (LTV)
-
-| Metric                     | Conservative | Optimistic |
-| -------------------------- | ------------ | ---------- |
-| Monthly churn              | 8%           | 5%         |
-| Avg lifetime               | 12.5 months  | 20 months  |
-| Avg monthly revenue/user   | $39.73       | $39.73     |
-| Avg monthly cost/user      | $16.90       | $16.90     |
-| Avg monthly margin/user    | $22.83       | $22.83     |
-| **LTV (margin)**           | **$285**     | **$457**   |
-
-*Avg revenue = $7,945 / 200 paid users = $39.73. Avg cost = $2,846+$312+$102 / 200 = $16.30 + $0.60 infra = $16.90.*
-
-### LTV:CAC Ratio
-
-| Scenario           | CAC   | LTV   | LTV:CAC | Healthy? |
-| ------------------ | ----- | ----- | ------- | -------- |
-| Organic only       | $23   | $285  | 12.4:1  | Excellent (>3:1 is good) |
-| With $50 ad spend  | $73   | $285  | 3.9:1   | Good     |
-| With $100 ad spend | $123  | $285  | 2.3:1   | Marginal |
-
-**Max affordable CAC (target 3:1):** $285 / 3 = **$95 per Pro user** → leaves $72 for paid acquisition on top of organic CAC.
-
-### Conversion Funnel (monthly, conservative)
-
-| Stage                    | Users  | Conversion | Notes                              |
-| ------------------------ | ------ | ---------- | ---------------------------------- |
-| **Landing page visits**  | 10,000 | —          | Organic + paid traffic             |
-| **Free signups**         | 500    | 5.0%       | Visitor → signup                   |
-| **Activate trial**       | 250    | 50%        | Signup → start first meeting       |
-| **Complete trial**       | 125    | 50%        | Use 2+ meetings during trial       |
-| **Convert to Pro**       | 25     | 20%        | Trial → paid (of those who complete)|
-| **Monthly churn (Pro)**  | 2      | 8%         | Of existing 25 Pro users           |
-
-**Cost of this funnel:**
-- 500 free signups/mo: ~250 active × $0.21 = $53 (free tier cost)
-- 250 trialists: 250 × $2.11 = $528 (trial cost, biggest expense)
-- **Total organic funnel cost: ~$581/mo → 25 new Pro users → $23/user CAC**
-
-**If we add $2,000/mo ad spend to drive traffic:**
-- Total CAC: ($581 + $2,000) / 25 = **$103/user** → LTV:CAC = 2.8:1
-- Need to improve conversion to justify: at 30 trial completions converting → $86/user → 3.3:1
-
-### What we can afford on ads
-
-| Monthly ad budget | New Pro users needed (target 3:1 LTV:CAC) | Required landing page visits (at 0.25% visit→Pro) |
-| ----------------- | ------------------------------------------ | -------------------------------------------------- |
-| $0 (organic)      | 7                                          | 2,800                                              |
-| $1,000            | 14                                         | 5,600                                              |
-| $2,000            | 22                                         | 8,800                                              |
-| $5,000            | 54                                         | 21,600                                             |
-
-*0.25% = end-to-end visit-to-Pro conversion (5% signup × 50% trial × 50% complete × 20% convert). Each new Pro user needs to generate ≥$95 LTV margin to justify spend.*
 
 ---
 

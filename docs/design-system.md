@@ -472,7 +472,7 @@ Common icons by category:
 | Query client setup                                  | `src/components/query-provider.tsx`   |
 | Query key factory                                   | `src/lib/query-keys.ts`               |
 | Markdown renderer                                   | `src/lib/format.ts`                   |
-| Product marketing context                           | `MARKETING.md`                        |
+| Product marketing context                           | `docs/product-marketing-context.md`   |
 
 ---
 
