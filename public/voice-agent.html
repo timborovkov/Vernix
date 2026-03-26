@@ -824,10 +824,13 @@
           log("Fallback error: " + err.message);
         }
 
-        // Reset state only after fallback completes
+        // Reset state only after fallback completes.
+        // Compute session duration before resetting timestamp (same as closeSession).
+        const sessionDurationMs =
+          sessionStartedAt > 0 ? Date.now() - sessionStartedAt : 0;
         sessionActive = false;
         sessionStartedAt = 0;
-        notifyState("idle");
+        notifyState("idle", { sessionDurationMs });
         setStatus("Listening for your name...", "idle");
         startPolling();
       }
