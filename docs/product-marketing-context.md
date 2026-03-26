@@ -8,7 +8,7 @@ _Last updated: 2026-03-25_
 **What it does:** Vernix joins Zoom, Meet, Teams, and Webex calls as a participant. It transcribes in real time, generates summaries, extracts action items, and provides a live voice (or silent text) agent that answers questions using RAG across your meetings and uploaded documents.
 **Product category:** Meeting intelligence / AI meeting assistant
 **Product type:** SaaS (web app)
-**Business model:** Freemium — Free (5 meetings), Pro ($29/mo), Unlimited ($99/mo)
+**Business model:** Freemium — Free (5 meetings), Pro (€29/mo), Unlimited (€99/mo)
 
 ## Target Audience
 

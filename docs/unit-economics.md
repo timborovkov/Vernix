@@ -2,7 +2,7 @@
 
 How much it costs to acquire a paying user, what that user is worth, and where to spend on growth.
 
-All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 credit, voice $1.40/hr, silent $0.71/hr.
+All numbers reference the [pricing model](./pricing.md): Pro at €29/mo, €30 credit, voice $1.40/hr, silent $0.71/hr.
 
 ---
 
@@ -19,14 +19,14 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 
 ### Cost of serving Pro users
 
-| User type       | Usage pattern              | COGS/mo | Usage $ | Overage beyond $30 credit |
+| User type       | Usage pattern              | COGS/mo | Usage € | Overage beyond €30 credit |
 | --------------- | -------------------------- | ------- | ------- | ------------------------- |
-| Light (45%)     | 1 hr voice + 3 hr silent   | $3.53   | $7.50   | $0                        |
-| Typical (35%)   | 3 hr voice + 10 hr silent  | $11.30  | $24.00  | $0                        |
-| Heavy (15%)     | 8 hr voice + 25 hr silent  | $28.95  | $61.50  | $31.50                    |
-| Very heavy (5%) | 25 hr voice + 50 hr silent | $70.50  | $150.00 | $120.00                   |
+| Light (45%)     | 1 hr voice + 3 hr silent   | $3.53   | €7.50   | €0                        |
+| Typical (35%)   | 3 hr voice + 10 hr silent  | $11.30  | €24.00  | €0                        |
+| Heavy (15%)     | 8 hr voice + 25 hr silent  | $28.95  | €61.50  | €31.50                    |
+| Very heavy (5%) | 25 hr voice + 50 hr silent | $70.50  | €150.00 | €120.00                   |
 
-_COGS = voice hours × $1.40 + silent hours × $0.71. Usage $ = voice hours × $3 + silent hours × $1.50._
+_COGS = voice hours × $1.40 + silent hours × $0.71. Usage € = voice hours × €3 + silent hours × €1.50._
 
 ### Conversion rates
 
@@ -44,8 +44,8 @@ _COGS = voice hours × $1.40 + silent hours × $0.71. Usage $ = voice hours × $
 | --------------------- | -------- | ------------------------------------- |
 | Monthly Pro churn     | 8%       | Conservative for early-stage B2B SaaS |
 | Avg Pro lifetime      | 12 mo    | 1 / 0.08 = 12.5, rounded down         |
-| Polar fee (monthly)   | $1.56    | $29 × 4% + $0.40                      |
-| Polar fee (annual)    | $0.99/mo | $288 × 4% + $0.40 = $11.92/yr         |
+| Polar fee (monthly)   | $1.56    | €29 × 4% + $0.40                      |
+| Polar fee (annual)    | $0.99/mo | €288 × 4% + $0.40 = $11.92/yr         |
 | B2B CPC (search ads)  | $5.00    | Google Ads for SaaS keywords          |
 | B2B CPC (social ads)  | $2.00    | LinkedIn/Twitter for awareness        |
 | B2B CPC (content/SEO) | ~$0      | Organic, no per-click cost            |
@@ -129,12 +129,12 @@ _Formula: required rate = CPC / $82. At $82 CAC and the given CPC, you need that
 
 | User type  | % of Pro | Revenue/mo | COGS/mo | Polar/mo | Margin/mo |
 | ---------- | -------- | ---------- | ------- | -------- | --------- |
-| Light      | 45%      | $29.00     | $3.53   | $1.56    | $23.91    |
-| Typical    | 35%      | $29.00     | $11.30  | $1.56    | $16.14    |
-| Heavy      | 15%      | $60.50     | $28.95  | $3.22    | $28.33    |
-| Very heavy | 5%       | $149.00    | $70.50  | $6.76    | $71.74    |
+| Light      | 45%      | €29.00     | $3.53   | $1.56    | $23.91    |
+| Typical    | 35%      | €29.00     | $11.30  | $1.56    | $16.14    |
+| Heavy      | 15%      | €60.50     | $28.95  | $3.22    | $28.33    |
+| Very heavy | 5%       | €149.00    | $70.50  | $6.76    | $71.74    |
 
-_Heavy/very heavy revenue = $29 base + overage. Heavy Polar = $1.56 base + $1.66 overage. Very heavy Polar = $1.56 base + $5.20 overage._
+_Heavy/very heavy revenue = €29 base + overage. Heavy Polar = $1.56 base + $1.66 overage. Very heavy Polar = $1.56 base + $5.20 overage._
 
 ### Lifetime value (at 8% monthly churn = 12 month avg lifetime)
 
@@ -179,7 +179,7 @@ Organic unit economics are strong. Every $14 spent serving free/trial users retu
 **Increase LTV:**
 
 - Reduce churn with engagement emails, usage insights
-- Annual plans ($24/mo) lock in 12 months and reduce Polar fees
+- Annual plans (€24/mo) lock in 12 months and reduce Polar fees
 - Users naturally grow into heavier usage over time
 
 **Unlock paid acquisition (later):**

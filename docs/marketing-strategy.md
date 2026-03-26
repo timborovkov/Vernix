@@ -1,6 +1,6 @@
 # Vernix Marketing Strategy
 
-Early-stage, solo founder, $0 marketing budget. AI meeting agent at $29/mo. Paid ads are not viable at launch (see [unit economics](./unit-economics.md)). Everything here is organic and product-led.
+Early-stage, solo founder, $0 marketing budget. AI meeting agent at €29/mo. Paid ads are not viable at launch (see [unit economics](./unit-economics.md)). Everything here is organic and product-led.
 
 ---
 
@@ -141,7 +141,7 @@ Shareable tool that drives awareness and captures leads.
 
 - "How much do your meetings really cost?" — input team size, avg salary, meeting hours
 - Output: annual meeting cost, time wasted, what Vernix could save
-- Designed to be shared on social ("Our team spends $X/year on meetings")
+- Designed to be shared on social ("Our team spends €X/year on meetings")
 - Captures email for follow-up
 
 ### Partnerships
@@ -184,11 +184,11 @@ Goal-gradient effect: people accelerate toward a goal. Present bias: people care
 
 - "In 14 days, Vernix saved you 6.2 hours of note-taking and captured 34 action items"
 - "Your team asked Vernix 19 questions mid-meeting instead of interrupting the flow"
-- Make the value concrete and personal before asking for $29
+- Make the value concrete and personal before asking for €29
 
 **Near credit limit (Pro):**
 
-- "You've used $24 of $30 credit this month (3 voice meetings, 8 silent)"
+- "You've used €24 of €30 credit this month (3 voice meetings, 8 silent)"
 - Progress bar in dashboard, not just a number
 
 ### Landing Page: Instant Payoff
@@ -226,8 +226,8 @@ The first action should be trivially easy. Don't make people configure anything 
 Paradox of choice is already solved — one plan. Reinforce it:
 
 - Show the single plan prominently with clear "what you get"
-- Use mental accounting: "$29/mo — less than one hour of your salary to save 10+ hours of meeting admin"
-- Annual toggle with anchoring: show $29/mo crossed out → $24/mo ("Save $60/year")
+- Use mental accounting: "€29/mo — less than one hour of your salary to save 10+ hours of meeting admin"
+- Annual toggle with anchoring: show €29/mo crossed out → €24/mo ("Save €60/year")
 - Money-back guarantee or "cancel anytime" to eliminate regret aversion
 
 ---
