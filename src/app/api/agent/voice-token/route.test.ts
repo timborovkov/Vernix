@@ -43,7 +43,8 @@ vi.mock("@/lib/mcp/client", () => ({
   McpClientManager: { connectForUser: mockConnectForUser },
 }));
 
-import { GET, clearMcpToolCache } from "./route";
+import { GET } from "./route";
+import { clearMcpToolCache } from "@/lib/agent/mcp-cache";
 import { parseJsonResponse, fakeMeeting } from "@/test/helpers";
 
 describe("GET /api/agent/voice-token", () => {
