@@ -7,6 +7,10 @@ const PUBLIC_AGENT_PATHS = [
   "/api/agent/voice-token",
   "/api/agent/rag",
   "/api/agent/mcp-tool",
+  "/api/agent/leave",
+  "/api/agent/switch-mode",
+  "/api/agent/mute-status",
+  "/api/agent/mute-self",
   "/api/mcp",
 ];
 

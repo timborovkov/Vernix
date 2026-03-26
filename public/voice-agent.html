@@ -74,6 +74,8 @@
       let audioContext = null;
       let audioDone = true; // true when no more audio chunks expected
       let mcpToolNames = new Set();
+      let muteCheckInterval = null;
+      let isMuted = false;
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -170,8 +172,107 @@
         silentGain.connect(audioContext.destination);
       }
 
+      // --- Agent action helpers ---
+      let leaving = false;
+
+      async function agentLeave() {
+        if (leaving) return;
+        leaving = true;
+        try {
+          await fetch(`${appUrl}/api/agent/leave`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret }),
+          });
+        } catch (err) {
+          log("Leave error: " + err.message);
+        }
+        if (ws) {
+          ws.onclose = null;
+          ws.close();
+          ws = null;
+        }
+        if (muteCheckInterval) {
+          clearInterval(muteCheckInterval);
+          muteCheckInterval = null;
+        }
+        setStatus("Left meeting", "");
+      }
+
+      async function agentSwitchToSilent() {
+        if (leaving) return;
+        leaving = true;
+        try {
+          await fetch(`${appUrl}/api/agent/switch-mode`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret }),
+          });
+        } catch (err) {
+          log("Switch mode error: " + err.message);
+        }
+        if (ws) {
+          ws.onclose = null;
+          ws.close();
+          ws = null;
+        }
+        if (muteCheckInterval) {
+          clearInterval(muteCheckInterval);
+          muteCheckInterval = null;
+        }
+        setStatus("Silent mode active", "");
+      }
+
       // --- Tool handlers ---
       async function handleToolCall(callId, name, args) {
+        if (name === "leave_meeting") {
+          setStatus("Leaving meeting...", "thinking");
+          sendToolOutput(callId, "I'll leave the meeting now. Goodbye!");
+          setTimeout(agentLeave, 3000);
+          return;
+        }
+
+        if (name === "switch_to_silent") {
+          setStatus("Switching to silent mode...", "thinking");
+          sendToolOutput(
+            callId,
+            "Switching to silent mode. I'll respond via text chat from now on."
+          );
+          setTimeout(agentSwitchToSilent, 3000);
+          return;
+        }
+
+        if (name === "mute_self") {
+          setStatus("Muting...", "thinking");
+          sendToolOutput(
+            callId,
+            "I'll be quiet now. The host can unmute me from the dashboard."
+          );
+          setTimeout(async () => {
+            if (leaving) return;
+            // Don't set leaving — mute is reversible via dashboard unmute
+            try {
+              await fetch(`${appUrl}/api/agent/mute-self`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ meetingId, botSecret }),
+              });
+            } catch (err) {
+              log("Mute error: " + err.message);
+            }
+            isMuted = true;
+            if (ws) {
+              ws.onclose = null;
+              ws.close();
+              ws = null;
+            }
+            audioQueue.length = 0;
+            isPlaying = false;
+            setStatus("Muted", "");
+          }, 3000);
+          return;
+        }
+
         if (name === "search_meeting_context") {
           setStatus("Searching context...", "thinking");
           try {
@@ -237,6 +338,40 @@
         ws.send(JSON.stringify({ type: "response.create" }));
       }
 
+      // --- Mute polling ---
+      function startMutePolling() {
+        if (muteCheckInterval) return;
+        muteCheckInterval = setInterval(async () => {
+          if (leaving) return;
+          try {
+            const res = await fetch(`${appUrl}/api/agent/mute-status`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ meetingId, botSecret }),
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.muted && !isMuted) {
+              isMuted = true;
+              if (ws) {
+                ws.onclose = null;
+                ws.close();
+                ws = null;
+              }
+              audioQueue.length = 0;
+              isPlaying = false;
+              setStatus("Muted by host", "");
+            } else if (!data.muted && isMuted) {
+              isMuted = false;
+              leaving = false;
+              connect();
+            }
+          } catch (e) {
+            /* ignore polling errors */
+          }
+        }, 10000);
+      }
+
       // --- OpenAI WebSocket ---
       async function connect() {
         setStatus("Getting token...", "");
@@ -282,6 +417,7 @@
             case "session.updated":
               setStatus("Listening...", "listening");
               log("Session ready");
+              startMutePolling();
               break;
 
             case "response.output_audio.delta":

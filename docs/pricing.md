@@ -73,19 +73,19 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 - Auto-activates on signup
 - **Max CAC:** ~$2.10 (1.5 hrs voice × $1.40)
 
-### Pro — $29/month
+### Pro — €29/month
 
 - Voice + silent meeting agent
-- **$30 usage credit included** per month (does not roll over)
+- **€30 usage credit included** per month (does not roll over)
 - Knowledge base, RAG chat, API, MCP
-- **Annual: $24/mo** (billed $288/yr — 17% discount)
+- **Annual: €24/mo** (billed €288/yr — 17% discount)
 
 ### Usage Rates
 
 | Meeting Type      | User Price   | Our Cost | Margin |
 | ----------------- | ------------ | -------- | ------ |
-| Voice meeting     | **$3/hr**    | ~$1.40   | 53.3%  |
-| Silent meeting    | **$1.50/hr** | ~$0.71   | 52.7%  |
+| Voice meeting     | **€3/hr**    | ~$1.40   | 53.3%  |
+| Silent meeting    | **€1.50/hr** | ~$0.71   | 52.7%  |
 | Post-meeting chat | **Free**     | ~$0.01   | Incl.  |
 
 Credits are consumed at these rates. Once exhausted, the same rates apply as metered overage.
@@ -98,7 +98,7 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 
 | Limit                           | Free          | Free Trial (14d)               | Pro                                                             |
 | ------------------------------- | ------------- | ------------------------------ | --------------------------------------------------------------- |
-| **Meeting minutes/month**       | 30 silent     | 90 total (voice+silent shared) | By credits (~10 hrs voice at $3/hr, ~20 hrs silent at $1.50/hr) |
+| **Meeting minutes/month**       | 30 silent     | 90 total (voice+silent shared) | By credits (~10 hrs voice at €3/hr, ~20 hrs silent at €1.50/hr) |
 | **Voice mode**                  | No            | Yes                            | Yes                                                             |
 | **Knowledge base documents**    | 5             | 200                            | 200                                                             |
 | **Max document size**           | 10 MB         | 25 MB                          | 25 MB                                                           |
@@ -141,37 +141,37 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 
 | Plan        | Billed       | Polar Fee (4% + $0.40) | Net Revenue/mo |
 | ----------- | ------------ | ---------------------- | -------------- |
-| Pro monthly | $29/mo       | $1.56/mo               | $27.44/mo      |
-| Pro annual  | $288/yr once | $11.92/yr              | $23.01/mo      |
+| Pro monthly | €29/mo       | $1.56/mo               | €27.44/mo      |
+| Pro annual  | €288/yr once | $11.92/yr              | €23.01/mo      |
 
 _Polar also charges 4% + $0.40 on each overage invoice._
 
-### Pro $29/mo Scenarios
+### Pro €29/mo Scenarios
 
 **Light (1 hr voice + 3 hr silent):**
 
-- Usage: 1×$3 + 3×$1.50 = $7.50 → within $30 credit, no overage
-- Revenue: $27.44 | Cost: 1×$1.40 + 3×$0.71 + $0.10 = $3.63
+- Usage: 1×€3 + 3×€1.50 = €7.50 → within €30 credit, no overage
+- Revenue: €27.44 | Cost: 1×$1.40 + 3×$0.71 + $0.10 = $3.63
 - **Margin: $23.81 (86.8%)**
 
 **Typical (3 hr voice + 10 hr silent):**
 
-- Usage: 3×$3 + 10×$1.50 = $24.00 → within $30 credit, no overage
-- Revenue: $27.44 | Cost: 3×$1.40 + 10×$0.71 + $0.10 = $11.40
+- Usage: 3×€3 + 10×€1.50 = €24.00 → within €30 credit, no overage
+- Revenue: €27.44 | Cost: 3×$1.40 + 10×$0.71 + $0.10 = $11.40
 - **Margin: $16.04 (58.5%)**
 
 **Heavy (8 hr voice + 25 hr silent):**
 
-- Usage: 8×$3 + 25×$1.50 = $61.50 → $30 credit, $31.50 overage
+- Usage: 8×€3 + 25×€1.50 = €61.50 → €30 credit, €31.50 overage
 - Overage Polar: $31.50 × 0.04 + $0.40 = $1.66
-- Revenue: $27.44 + $31.50 - $1.66 = $57.28 | Cost: 8×$1.40 + 25×$0.71 + $0.10 = $29.05
+- Revenue: €27.44 + €31.50 - $1.66 = €57.28 | Cost: 8×$1.40 + 25×$0.71 + $0.10 = $29.05
 - **Margin: $28.23 (49.3%)**
 
 **Very heavy (25 hr voice + 50 hr silent):**
 
-- Usage: 25×$3 + 50×$1.50 = $150.00 → $30 credit, $120 overage
+- Usage: 25×€3 + 50×€1.50 = €150.00 → €30 credit, €120 overage
 - Overage Polar: $120 × 0.04 + $0.40 = $5.20
-- Revenue: $27.44 + $120.00 - $5.20 = $142.24 | Cost: 25×$1.40 + 50×$0.71 + $0.10 = $70.60
+- Revenue: €27.44 + €120.00 - $5.20 = €142.24 | Cost: 25×$1.40 + 50×$0.71 + $0.10 = $70.60
 - **Margin: $71.64 (50.4%)**
 
 ---
@@ -182,26 +182,26 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 
 ### User Distribution
 
-| Segment              | Users     | Voice/mo | Silent/mo | Cost/user | Usage $ | Credit | Overage |
+| Segment              | Users     | Voice/mo | Silent/mo | Cost/user | Usage € | Credit | Overage |
 | -------------------- | --------- | -------- | --------- | --------- | ------- | ------ | ------- |
 | **Free (inactive)**  | 480       | —        | —         | $0        | —       | —      | —       |
 | **Free (active)**    | 270       | 0 hr     | 0.3 hr    | $0.21     | —       | —      | —       |
 | **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.06     | —       | —      | —       |
-| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | $7.50   | $30    | $0      |
-| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | $24.00  | $30    | $0      |
-| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | $61.50  | $30    | $31.50  |
-| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $70.50    | $150.00 | $30    | $120    |
+| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | €7.50   | €30    | €0      |
+| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | €24.00  | €30    | €0      |
+| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | €61.50  | €30    | €31.50  |
+| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $70.50    | €150.00 | €30    | €120    |
 | **Total**            | **1,000** |          |           |           |         |        |         |
 
-_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within $30 credit._
+_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within €30 credit._
 
 ### Revenue
 
 | Line item            | Calculation         | Amount     |
 | -------------------- | ------------------- | ---------- |
-| Pro base (200 × $29) |                     | $5,800     |
-| Pro overage          | 30×$31.50 + 10×$120 | $2,145     |
-| **Gross revenue**    |                     | **$7,945** |
+| Pro base (200 × €29) |                     | €5,800     |
+| Pro overage          | 30×€31.50 + 10×€120 | €2,145     |
+| **Gross revenue**    |                     | **€7,945** |
 
 ### Costs
 
@@ -223,18 +223,18 @@ _800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, si
 
 | Metric            | Amount                 |
 | ----------------- | ---------------------- |
-| **Gross revenue** | **$7,945**             |
+| **Gross revenue** | **€7,945**             |
 | **Total cost**    | **$3,327**             |
 | **Net margin**    | **$4,618**             |
 | **Margin %**      | **58.1%**              |
-| Revenue per user  | $7.95                  |
+| Revenue per user  | €7.95                  |
 | Cost per user     | $3.33                  |
 | Free user drag    | $110 (1.4% of revenue) |
 
 ### Takeaways
 
 - Single plan simplifies the funnel: Free → Trial → Pro. No tier comparison needed.
-- $30 credit covers light and typical users — predictable $29/mo bill for 80% of paid users.
+- €30 credit covers light and typical users — predictable €29/mo bill for 80% of paid users.
 - Heavy users generate overage at ~49% margin. Very heavy users are the most profitable segment.
 - 58.1% overall margin with conservative assumptions.
 

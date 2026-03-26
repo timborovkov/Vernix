@@ -1,9 +1,10 @@
 "use client";
 
-import type { Document } from "@/lib/db/schema";
+import type { DocumentWithMeeting } from "@/hooks/use-knowledge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Trash2, AlertCircle, Loader2, Download } from "lucide-react";
+import Link from "next/link";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF",
@@ -35,15 +36,17 @@ function formatDate(date: Date | string): string {
 }
 
 interface KnowledgeListProps {
-  documents: Document[];
+  documents: DocumentWithMeeting[];
   onDelete: (id: string) => void;
   onDownload: (id: string) => void;
+  showMeetingLink?: boolean;
 }
 
 export function KnowledgeList({
   documents,
   onDelete,
   onDownload,
+  showMeetingLink,
 }: KnowledgeListProps) {
   if (documents.length === 0) {
     return (
@@ -75,6 +78,14 @@ export function KnowledgeList({
                 <span>{formatDate(doc.createdAt)}</span>
                 {doc.status === "ready" && doc.chunkCount > 0 && (
                   <span>{doc.chunkCount} chunks</span>
+                )}
+                {showMeetingLink && doc.meetingId && doc.meetingTitle && (
+                  <Link
+                    href={`/dashboard/${doc.meetingId}`}
+                    className="truncate text-blue-600 hover:underline"
+                  >
+                    {doc.meetingTitle}
+                  </Link>
                 )}
               </div>
             </div>

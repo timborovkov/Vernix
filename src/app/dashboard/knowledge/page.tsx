@@ -56,6 +56,7 @@ export default function KnowledgePage() {
           documents={documents}
           onDelete={deleteDocument}
           onDownload={downloadDocument}
+          showMeetingLink
         />
       )}
     </div>
