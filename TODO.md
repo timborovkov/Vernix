@@ -208,6 +208,9 @@
 - **Background listener** — Implement cheap wake detection from Recall transcript stream + wake words ("Vernix", "Agent", "Assistant") + question intent heuristics.
 - **Activation gate** — Require confidence threshold + debounce/rate limits before creating a Realtime session to prevent accidental triggers.
 - **On-demand Realtime lifecycle** — Create Realtime session on trigger, inject agenda + RAG/MCP tools, respond, then auto-close after short idle timeout.
+- **Faster spin-up path** — Reduce activation latency via precomputed context cache (recent transcript + top RAG snippets), prompt/session template reuse, and parallel token/tool preparation.
+- **Warm pool strategy** — Keep a very small capped pool of pre-initialized short-lived voice sessions during active meetings (with strict timeout) to avoid full cold starts.
+- **Progressive response strategy** — Start with a short acknowledgement ("One sec") while context finalization runs, then stream the full answer as soon as ready.
 - **No-interruption guardrails** — Keep strict "respond only when addressed" logic and add cooldown after each response to avoid back-to-back accidental replies.
 - **Context handoff** — On activation, fetch latest transcript window + relevant RAG context so the model has immediate conversational grounding.
 - **Fallback behavior** — If Realtime session fails, send brief text response in meeting chat (or skip with safe no-op) and keep listener alive.
@@ -219,6 +222,8 @@
 
 - **Self-kick agent tool** — Add an in-call agent tool that lets Vernix remove itself from the meeting when explicitly asked (safe intent confirmation + call leave action).
 - **Switch to silent mode tool** — Add an in-call agent tool that lets Vernix switch to silent mode when explicitly asked (safe intent confirmation + call switch to silent mode action).
+- **User mute control (UI kill switch)** — Add visible in-call controls for users to mute/unmute Vernix instantly, plus an emergency "Stop responding for this meeting" action.
+- **Mute state enforcement** — Persist mute state per meeting and enforce it in both wake detection and response generation paths so the agent cannot speak while muted.
 
 ## Billing with Polar
 
@@ -283,6 +288,8 @@
 - **Collect and attribute usage telemetry** — Track token usage, Recall usage, and related costs; attribute to users and flag abnormalities.
 - **Block brute-force attempts** — Add brute-force protection on auth and other sensitive endpoints.
 - **Enforce hard product usage caps** — Enforce hard caps for storage, embeddings, and meetings.
+- **Restrict knowledge base uploads** — Enforce strict file type allowlist and size limits for uploaded knowledge base documents.
+- **Validate and sanitize all user input** — Enforce max length limits and strict schema validation on all user-provided fields, and sanitize inputs before storage/use.
 - **Admin account data purge** — Add an admin operation to fully remove all data for a user account across DB records, object storage bucket data, and Recall resources.
 
 ## Changelog & Status Page
@@ -316,6 +323,15 @@
 - **Variant assignment** — Implement deterministic user/session bucketing and persist variant assignment.
 - **Experiment analytics** — Track impressions, CTA clicks, signup starts, and completed signups per variant.
 - **Decision workflow** — Define experiment guardrails (minimum sample size, runtime, significance target) and rollout/rollback process.
+
+## Marketing Visual Assets & Product Demo Content
+
+- **Animated demo video** — Create a polished animated product demo (Clueso-style and/or Remotion-based) for landing page hero and social snippets.
+- **Narrated product demo** — Record a full product walkthrough with voice narration (Loom-style) covering setup, joining a meeting, transcript/RAG, and action items.
+- **Tutorial video series** — Produce short task-focused tutorial videos (1-3 min each) for key workflows and FAQs.
+- **Screenshot library** — Capture and curate high-quality screenshots for landing, pricing, docs/help, social previews, and press kit usage.
+- **Visual asset pack** — Create supporting branded assets (feature illustrations, icons, UI callout graphics, thumbnails, GIF loops).
+- **Site integration pass** — Integrate videos and assets across landing/pricing/content sections with optimized formats, lazy loading, and mobile-safe fallbacks.
 
 ## Vision-Based Document Parsing
 
