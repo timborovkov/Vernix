@@ -651,6 +651,7 @@
       async function activateSession(transcriptWindow) {
         sessionActive = true;
         sessionStartedAt = Date.now();
+        let fallbackFired = false;
         playAcknowledgement();
         setStatus("Connecting...", "connecting");
         notifyState("responding");
@@ -659,6 +660,7 @@
         const fallbackTimer = setTimeout(() => {
           if (!ws || ws.readyState !== WebSocket.OPEN) {
             log("Realtime connection timed out, falling back to chat");
+            fallbackFired = true;
             triggerFallback(transcriptWindow);
           }
         }, FALLBACK_TIMEOUT_MS);
@@ -675,8 +677,8 @@
           return;
         }
 
-        // Fallback may have fired while fetch was pending — bail out
-        if (!sessionActive) return;
+        // Fallback timer may have fired while fetch was pending — bail out
+        if (fallbackFired) return;
 
         if (!tokenRes.ok) {
           clearTimeout(fallbackTimer);
@@ -689,8 +691,8 @@
         const token = tokenData.token;
         mcpToolNames = new Set(tokenData.mcpToolNames || []);
 
-        // Check again after json() parse — fallback could have fired
-        if (!sessionActive) return;
+        // Check again after json() parse
+        if (fallbackFired) return;
 
         const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
