@@ -27,6 +27,19 @@ const mcpToolCache = new Map<
   }
 >();
 
+// Periodically evict expired cache entries (same pattern as rate-limit.ts)
+if (typeof setInterval !== "undefined") {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of mcpToolCache) {
+      if (now - entry.fetchedAt >= MCP_CACHE_TTL_MS) {
+        // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+        mcpToolCache.delete(key);
+      }
+    }
+  }, 60_000);
+}
+
 export function clearMcpToolCache(meetingId: string): void {
   // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
   mcpToolCache.delete(meetingId);
