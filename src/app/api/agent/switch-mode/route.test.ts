@@ -21,12 +21,14 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 
 import { POST } from "./route";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
+import { resetRateLimits } from "@/lib/rate-limit";
 
 const URL = "http://localhost/api/agent/switch-mode";
 
 describe("POST /api/agent/switch-mode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetRateLimits();
   });
 
   it("returns 400 on missing fields", async () => {
@@ -104,6 +106,31 @@ describe("POST /api/agent/switch-mode", () => {
         }),
       })
     );
+  });
+
+  it("returns 429 when rate limited", async () => {
+    // The route allows 5 requests per 60s
+    for (let i = 0; i < 5; i++) {
+      mockDb.where.mockResolvedValueOnce([]);
+      const req = createJsonRequest(URL, {
+        method: "POST",
+        body: {
+          meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+          botSecret: "secret",
+        },
+      });
+      await POST(req);
+    }
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "secret",
+      },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(429);
   });
 
   it("rejects non-active meeting", async () => {

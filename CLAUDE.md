@@ -34,7 +34,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 
 ### Key Layers
 
-- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, `tasks`, `apiKeys`, and `mcpServers` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. `meetings.metadata` JSONB stores: `agenda?`, `botId?`, `voiceSecret?` (voice mode only), `summary?`, `silent?` (boolean, enables silent/text agent mode). Schema changes → `pnpm db:push`.
+- **`src/lib/db/`** — Drizzle ORM. `users`, `meetings`, `documents`, `tasks`, `apiKeys`, and `mcpServers` tables. `meetings` has status enum (`pending → joining → active → processing → completed | failed`). `documents` tracks knowledge base uploads with optional `meetingId` FK for meeting-scoped docs and status enum (`processing → ready | failed`). `tasks` stores action items per meeting with `autoExtracted` boolean. `meetings.metadata` JSONB stores: `agenda?`, `botId?`, `voiceSecret?` (voice mode only), `summary?`, `silent?` (boolean, enables silent/text agent mode), `voiceActivation?` (`{ state, activatedAt?, transcriptWindow? }` — on-demand voice state machine), `voiceTelemetry?` (`{ activationCount, totalConnectedSeconds, avgSessionSeconds }` — flushed on meeting end). Schema changes → `pnpm db:push`.
 - **`src/lib/auth/`** — NextAuth v5 with credentials provider (email/password). `config.ts` for edge-compatible config, `index.ts` for full config with DB. `session.ts` has `requireSessionUser()` helper.
 - **`src/lib/meeting-bot/`** — Provider pattern. `MeetingBotProvider` interface (with `joinMeeting(link, id, name?, options?)`, `leaveMeeting()`, `sendChatMessage()`, `onTranscript()`) with `RecallProvider` and `MockProvider`. `joinMeeting` accepts `options.silent` to omit output_media. Selected via `MEETING_BOT_PROVIDER` env var.
 - **`src/lib/vector/`** — Qdrant client singleton. Each meeting gets its own collection (1536-dim Cosine) containing transcripts, meeting-scoped documents (`type:"document"`), and agenda (`type:"agenda"`). `scroll.ts` fetches transcript points only (filtered by `type:"transcript"`). `knowledge.ts` manages per-user knowledge collections. `agenda.ts` upserts/clears agenda text in meeting collections.
@@ -58,9 +58,11 @@ All under `src/app/api/`:
 - `agent/join/route.ts` — POST starts bot for a meeting
 - `agent/stop/route.ts` — POST stops bot, triggers processing
 - `agent/respond/route.ts` — POST text-based RAG chat
-- `agent/voice-token/route.ts` — GET ephemeral OpenAI Realtime token (public, verified by botSecret)
+- `agent/voice-token/route.ts` — GET ephemeral OpenAI Realtime token (public, verified by botSecret, MCP tool cache with 5-min TTL)
 - `agent/rag/route.ts` — POST RAG search for voice agent (public, verified by botSecret)
 - `agent/mcp-tool/route.ts` — POST MCP tool execution for voice agent (public, verified by botSecret)
+- `agent/activation-status/route.ts` — POST poll/update voice activation state (public, verified by botSecret, consumes activated→responding on read)
+- `agent/voice-fallback/route.ts` — POST chat fallback when Realtime fails (public, verified by botSecret)
 - `webhooks/recall/transcript/route.ts` — Receives realtime transcript data from Recall
 - `webhooks/recall/status/route.ts` — Receives bot lifecycle events (call_ended, transcript.done)
 - `auth/[...nextauth]/route.ts` — NextAuth handlers
@@ -83,17 +85,23 @@ All under `src/app/api/`:
 ### Auth & Middleware
 
 - `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`, `/api/settings/*`, `/api/export`
-- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool` (verified by botSecret), `/api/mcp` (API key auth)
+- Public endpoints (no auth): `/api/webhooks/*`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool`, `/api/agent/activation-status`, `/api/agent/voice-fallback` (all verified by botSecret), `/api/mcp` (API key auth)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
 
-### Voice Agent
+### Voice Agent (On-Demand Realtime)
 
 - `public/voice-agent.html` — Static page rendered inside Recall bot via Output Media
-- Captures meeting audio → streams to OpenAI Realtime API → plays response audio back
-- Uses ephemeral token from `/api/agent/voice-token` (authenticated by `botSecret`)
-- RAG tool calls go through `/api/agent/rag`
+- **On-demand activation**: page captures audio but does NOT connect to OpenAI immediately
+- Polls `/api/agent/activation-status` every 2s for wake-word detection
+- Server-side wake detection in transcript webhook: "Vernix", "Agent", "Assistant" (1.5s debounce, 15s rate limit)
+- On activation: plays acknowledgement → fetches voice token → connects OpenAI Realtime → flushes 10s audio buffer → responds
+- Auto-closes Realtime session after 15s idle, returns to polling
+- Fallback: if Realtime fails within 5s, sends text response via `/api/agent/voice-fallback`
+- Activation state consumed on read (activated → responding) to prevent duplicate triggers
 - `voiceSecret` is generated per bot session, stored in meeting metadata, passed in URL
+- `src/lib/agent/activation.ts` — Wake detection state machine (buffer, debounce, rate limit)
+- `src/lib/agent/telemetry.ts` — Per-meeting activation count, session duration tracking
 
 ### UI
 
@@ -121,10 +129,38 @@ Shadcn/ui with base-ui primitives (not Radix). Use `render` prop instead of `asC
 - Test helpers: `createJsonRequest`, `parseJsonResponse`, `fakeMeeting`, `fakeDocument` in `src/test/helpers.ts`
 - `fakeMeeting()`, `fakeDocument()`, and `fakeTask()` include `userId` field matching the test user
 
+### Test Quality Rules
+
+Tests must verify **real behavior**, not just confirm that mocks return what you told them to. A test that only does `expect(data.field).toBe(mockValue)` without logic in between is worthless — delete it or make it meaningful.
+
+**Every test should answer: "What bug would this catch?"** If the answer is "none", delete it.
+
+**What makes a test strong:**
+
+- Tests real logic: validation rejection, branching, state transitions, math, parsing
+- Tests negative cases: invalid input rejected, unauthorized access blocked, missing data handled
+- Verifies values passed TO dependencies (not just what comes back from mocks): assert `mockDb.set` was called with `{ status: "processing" }`, assert `hash` was called with `(password, 12)`
+- Would break if the implementation logic changed
+
+**What makes a test weak (don't write these):**
+
+- Only asserts that a mock's return value came out the other end: `mock.mockReturnValue(x); expect(result).toBe(x)` — tests nothing
+- Mocks away the thing being tested: mocking bcrypt in a password test defeats the purpose
+- Only tests happy paths with no error/edge cases
+- No negative assertions (`expect(x).not.toHaveBeenCalled()`)
+
+**Specific patterns:**
+
+- **Rate limiting**: Do NOT mock `rateLimitByIp`. Use the real rate limiter. Import `resetRateLimits` in `beforeEach`. Add a test that exceeds the limit and expects 429.
+- **Bcrypt**: Keep mocked for speed, but assert `hash` was called with `(password, 12)` and verify the hash output was passed to the DB.
+- **DB writes**: Assert `mockDb.set` or `mockDb.values` was called with the correct values — this verifies your route actually transforms and stores data correctly.
+- **State transitions**: Verify the status value in `set()` calls (e.g., `{ status: "processing" }`), not just that `set()` was called.
+- **Bot secret verification**: All public agent endpoints must have a test for invalid bot secret returning 403.
+
 ## Checklist for Changes
 
-- [ ] Write tests for new API routes and utility functions
-- [ ] Run `pnpm validate` (format, lint, typecheck, test)
+- [ ] Write meaningful tests for new API routes and utility functions (see Test Quality Rules)
+- [ ] Run `pnpm validate` (format, lint, typecheck, test) — **mandatory after every change**
 - [ ] Update `.env.example` if adding new environment variables
 - [ ] Update `README.md` env table and any relevant sections
 - [ ] Update `docker-compose.yml` if adding new services

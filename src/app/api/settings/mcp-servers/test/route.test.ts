@@ -35,4 +35,57 @@ describe("POST /api/settings/mcp-servers/test", () => {
     });
     expect(mockConnectMcpClient).not.toHaveBeenCalled();
   });
+
+  it("rejects localhost URLs to prevent SSRF", async () => {
+    const req = createJsonRequest(
+      "http://localhost/api/settings/mcp-servers/test",
+      {
+        method: "POST",
+        body: { url: "http://127.0.0.1:8080/mcp" },
+      }
+    );
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(data.success).toBe(false);
+    expect(mockConnectMcpClient).not.toHaveBeenCalled();
+  });
+
+  it("returns tool count on successful connection", async () => {
+    const mockClient = {
+      listTools: vi.fn().mockResolvedValue({
+        tools: [{ name: "search", description: "Search docs" }],
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    mockConnectMcpClient.mockResolvedValueOnce(mockClient);
+
+    const req = createJsonRequest(
+      "http://localhost/api/settings/mcp-servers/test",
+      {
+        method: "POST",
+        body: { url: "https://mcp.example.com" },
+      }
+    );
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.toolCount).toBe(1);
+    expect(data.tools[0].name).toBe("search");
+    expect(mockClient.close).toHaveBeenCalled();
+  });
+
+  it("returns 400 for invalid request body", async () => {
+    const req = createJsonRequest(
+      "http://localhost/api/settings/mcp-servers/test",
+      {
+        method: "POST",
+        body: { invalid: true },
+      }
+    );
+
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+  });
 });

@@ -1,4 +1,4 @@
-const { mockDb } = vi.hoisted(() => {
+const { mockDb, mockHash } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -14,15 +14,13 @@ const { mockDb } = vi.hoisted(() => {
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return { mockDb: db };
+  const mockHash = vi.fn().mockResolvedValue("hashed-password");
+  return { mockDb: db, mockHash };
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("bcryptjs", () => ({
-  hash: vi.fn().mockResolvedValue("hashed-password"),
-}));
-vi.mock("@/lib/rate-limit", () => ({
-  rateLimitByIp: () => ({ success: true, remaining: 99 }),
+  hash: mockHash,
 }));
 vi.mock("@/lib/email/send", () => ({
   sendEmail: vi.fn().mockResolvedValue({ success: true }),
@@ -32,12 +30,19 @@ vi.mock("@/lib/email/templates", () => ({
 }));
 
 import { POST } from "./route";
+import { hash } from "bcryptjs";
 import { sendEmail } from "@/lib/email/send";
+import { resetRateLimits } from "@/lib/rate-limit";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
 
 const URL = "http://localhost/api/auth/register";
 
 describe("POST /api/auth/register", () => {
+  beforeEach(() => {
+    resetRateLimits();
+    vi.clearAllMocks();
+  });
+
   it("returns 400 on missing fields", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",
@@ -56,13 +61,18 @@ describe("POST /api/auth/register", () => {
     expect(status).toBe(400);
   });
 
-  it("returns 400 on short password", async () => {
+  it("returns 400 on short password with descriptive error", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",
       body: { email: "test@example.com", password: "123", name: "Test" },
     });
-    const { status } = await parseJsonResponse(await POST(req));
+    const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
+    expect(data.issues).toBeDefined();
+    const messages = data.issues.map((i: { message: string }) => i.message);
+    expect(messages).toEqual(
+      expect.arrayContaining([expect.stringMatching(/password/i)])
+    );
   });
 
   it("registers user successfully", async () => {
@@ -84,11 +94,20 @@ describe("POST /api/auth/register", () => {
     expect(data.success).toBe(true);
     expect(data.user.email).toBe("new@example.com");
 
-    // Welcome email should be sent
+    // bcrypt hash was called with the actual password and cost factor 12
+    expect(hash).toHaveBeenCalledWith("password123", 12);
+
+    // The hashed password was passed to the DB insert
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({ passwordHash: "hashed-password" })
+    );
+
+    // Welcome email should be sent with HTML body
     expect(sendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "new@example.com",
         subject: "Welcome to Vernix",
+        html: expect.stringContaining("<p>Welcome</p>"),
       })
     );
   });
@@ -127,5 +146,36 @@ describe("POST /api/auth/register", () => {
     });
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
+  });
+
+  it("returns 429 after exceeding rate limit (5 requests)", async () => {
+    mockDb.returning.mockResolvedValue([
+      { id: "user-1", email: "rl@example.com", name: "RL User" },
+    ]);
+
+    const makeReq = () =>
+      new Request(URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-real-ip": "10.0.0.99",
+        },
+        body: JSON.stringify({
+          email: "rl@example.com",
+          password: "password123",
+          name: "RL User",
+        }),
+      });
+
+    // First 5 requests should succeed
+    for (let i = 0; i < 5; i++) {
+      const { status } = await parseJsonResponse(await POST(makeReq()));
+      expect(status).toBe(200);
+    }
+
+    // 6th request should be rate limited
+    const { status, data } = await parseJsonResponse(await POST(makeReq()));
+    expect(status).toBe(429);
+    expect(data.error).toMatch(/too many/i);
   });
 });

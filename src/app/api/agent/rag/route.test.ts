@@ -85,6 +85,28 @@ describe("POST /api/agent/rag", () => {
     expect(status).toBe(403);
   });
 
+  it("returns fallback text when no RAG results found", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        userId: "user-1",
+        metadata: { voiceSecret: "valid-secret" },
+      },
+    ]);
+    mockGetRAGContext.mockResolvedValueOnce([]);
+    mockFormatContext.mockReturnValueOnce("");
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+        query: "something obscure",
+      },
+    });
+    const { data } = await parseJsonResponse(await POST(req));
+    expect(data.context).toBe("No relevant context found.");
+  });
+
   it("returns RAG context on valid request", async () => {
     mockDb.where.mockResolvedValueOnce([
       {

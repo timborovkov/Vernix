@@ -107,6 +107,28 @@ describe("POST /api/agent/mcp-tool", () => {
     });
   });
 
+  it("connects MCP manager with the meeting owner userId", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      { userId: "owner-42", metadata: { voiceSecret: "valid-secret" } },
+    ]);
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+        toolName: "mcp__abc__lookup",
+        arguments: { query: "test" },
+      },
+    });
+    await POST(req);
+
+    expect(mockConnectForUser).toHaveBeenCalledWith("owner-42");
+    expect(mockCallTool).toHaveBeenCalledWith("mcp__abc__lookup", {
+      query: "test",
+    });
+  });
+
   it("returns graceful error when MCP call fails", async () => {
     mockDb.where.mockResolvedValueOnce([
       { userId: "user-1", metadata: { voiceSecret: "valid-secret" } },

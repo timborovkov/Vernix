@@ -170,6 +170,43 @@ describe("POST /api/agent/chat", () => {
     expect(call.system).toContain("Look up customer data");
   });
 
+  it("includes agenda in system prompt when meeting has one", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      { metadata: { agenda: "Sprint retro" } },
+    ]);
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        messages: [{ role: "user", content: "test" }],
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      },
+    });
+
+    await POST(req);
+
+    const call = mockStreamText.mock.calls[0][0];
+    expect(call.system).toContain("Sprint retro");
+  });
+
+  it("merges MCP tools into streamText tools", async () => {
+    const mockMcpTool = { description: "CRM lookup", execute: vi.fn() };
+    mockConnectForUser.mockResolvedValueOnce({
+      getVercelTools: () => ({ mcp__crm__lookup: mockMcpTool }),
+    });
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { messages: [{ role: "user", content: "test" }] },
+    });
+
+    await POST(req);
+
+    const call = mockStreamText.mock.calls[0][0];
+    expect(call.tools).toHaveProperty("mcp__crm__lookup");
+    expect(call.tools).toHaveProperty("searchMeetingContext");
+  });
+
   it("returns streaming response", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",

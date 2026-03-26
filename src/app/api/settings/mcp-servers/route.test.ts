@@ -67,4 +67,37 @@ describe("POST /api/settings/mcp-servers", () => {
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
   });
+
+  it("returns 400 for missing name", async () => {
+    const req = createJsonRequest("http://localhost/api/settings/mcp-servers", {
+      method: "POST",
+      body: { url: "https://mcp.example.com" },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+  });
+
+  it("stores userId and optional apiKey in DB", async () => {
+    const server = fakeMcpServer();
+    mockDb.returning.mockResolvedValueOnce([server]);
+
+    const req = createJsonRequest("http://localhost/api/settings/mcp-servers", {
+      method: "POST",
+      body: {
+        name: "My Server",
+        url: "https://mcp.example.com",
+        apiKey: "sk-secret",
+      },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(201);
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+        name: "My Server",
+        url: "https://mcp.example.com",
+        apiKey: "sk-secret",
+      })
+    );
+  });
 });

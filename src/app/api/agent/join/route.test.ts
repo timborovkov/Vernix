@@ -132,4 +132,80 @@ describe("POST /api/agent/join", () => {
     const response = await POST(req);
     expect(response.status).toBe(200);
   });
+
+  it("stores voiceSecret in metadata when provider returns one", async () => {
+    mockProvider.joinMeeting.mockResolvedValueOnce({
+      botId: "bot-1",
+      voiceSecret: "secret-abc",
+    });
+    mockDb.where
+      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest("http://localhost/api/agent/join", {
+      method: "POST",
+      body: { meetingId: validUuid },
+    });
+
+    await POST(req);
+
+    // Second set call is the active transition with metadata
+    const activeSetCall = mockDb.set.mock.calls[1][0];
+    expect(activeSetCall.status).toBe("active");
+    expect(activeSetCall.metadata).toMatchObject({
+      botId: "bot-1",
+      voiceSecret: "secret-abc",
+    });
+  });
+
+  it("omits voiceSecret from metadata in silent mode", async () => {
+    mockProvider.joinMeeting.mockResolvedValueOnce({
+      botId: "bot-1",
+      voiceSecret: undefined,
+    });
+    mockDb.where
+      .mockResolvedValueOnce([
+        fakeMeeting({ status: "pending", metadata: { silent: true } }),
+      ])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest("http://localhost/api/agent/join", {
+      method: "POST",
+      body: { meetingId: validUuid },
+    });
+
+    await POST(req);
+
+    const activeSetCall = mockDb.set.mock.calls[1][0];
+    expect(activeSetCall.metadata).toMatchObject({
+      botId: "bot-1",
+      silent: true,
+    });
+    expect(activeSetCall.metadata).not.toHaveProperty("voiceSecret");
+  });
+
+  it("passes silent option to provider when meeting has silent metadata", async () => {
+    mockDb.where
+      .mockResolvedValueOnce([
+        fakeMeeting({ status: "pending", metadata: { silent: true } }),
+      ])
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(undefined);
+
+    const req = createJsonRequest("http://localhost/api/agent/join", {
+      method: "POST",
+      body: { meetingId: validUuid },
+    });
+
+    await POST(req);
+
+    expect(mockProvider.joinMeeting).toHaveBeenCalledWith(
+      expect.any(String),
+      validUuid,
+      undefined,
+      { silent: true }
+    );
+  });
 });

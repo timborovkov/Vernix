@@ -62,21 +62,34 @@ describe("GET /api/meetings/:id/tasks", () => {
 describe("POST /api/meetings/:id/tasks", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates a task", async () => {
+  it("creates a task with correct meetingId and userId", async () => {
     const task = fakeTask();
     mockDb.where.mockResolvedValueOnce([fakeMeeting()]); // meeting check
     mockDb.returning.mockResolvedValueOnce([task]);
 
-    const req = createJsonRequest("http://localhost/api/meetings/1/tasks", {
-      method: "POST",
-      body: { title: "New task" },
-    });
+    const meetingId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
+    const req = createJsonRequest(
+      `http://localhost/api/meetings/${meetingId}/tasks`,
+      {
+        method: "POST",
+        body: { title: "New task", assignee: "Alice" },
+      }
+    );
     const { status, data } = await parseJsonResponse(
-      await POST(req, makeParams("1"))
+      await POST(req, makeParams(meetingId))
     );
 
     expect(status).toBe(201);
     expect(data.title).toBe("Follow up with client");
+    // Verify insert was called with the correct meetingId and userId
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        meetingId,
+        userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+        title: "New task",
+        assignee: "Alice",
+      })
+    );
   });
 
   it("returns 400 for missing title", async () => {

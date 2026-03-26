@@ -35,6 +35,20 @@ describe("storeExtractedTasks", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("deletes auto-extracted tasks and inserts new ones in a transaction", async () => {
+    const callOrder: string[] = [];
+    mockDb.execute.mockImplementation(() => {
+      callOrder.push("execute");
+      return mockDb;
+    });
+    mockDb.delete.mockImplementation(() => {
+      callOrder.push("delete");
+      return mockDb;
+    });
+    mockDb.insert.mockImplementation(() => {
+      callOrder.push("insert");
+      return mockDb;
+    });
+
     await storeExtractedTasks(MEETING_ID, USER_ID, [
       { title: "Task A", assignee: "Alice" },
       { title: "Task B", assignee: null },
@@ -42,6 +56,11 @@ describe("storeExtractedTasks", () => {
 
     expect(mockDb.transaction).toHaveBeenCalled();
     expect(mockDb.delete).toHaveBeenCalled();
+    expect(mockDb.insert).toHaveBeenCalled();
+
+    // Verify advisory lock (execute) runs first, then DELETE, then INSERT
+    expect(callOrder).toEqual(["execute", "delete", "insert"]);
+
     expect(mockDb.values).toHaveBeenCalledWith([
       {
         meetingId: MEETING_ID,

@@ -1,3 +1,5 @@
+import { resetRateLimits } from "@/lib/rate-limit";
+
 const { mockDb, mockLeaveMeeting, mockProcessMeetingEnd } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
@@ -37,6 +39,7 @@ const URL = "http://localhost/api/agent/leave";
 describe("POST /api/agent/leave", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetRateLimits();
   });
 
   it("returns 400 on missing fields", async () => {
@@ -121,6 +124,60 @@ describe("POST /api/agent/leave", () => {
       "col-1",
       expect.objectContaining({ title: "Test Meeting" })
     );
+  });
+
+  it("sets status to processing in DB", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        userId: "user-1",
+        status: "active",
+        metadata: { voiceSecret: "valid-secret", botId: "bot-1" },
+        qdrantCollectionName: "col-1",
+        title: "Test Meeting",
+        startedAt: null,
+        endedAt: null,
+        participants: [],
+      },
+    ]);
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "valid-secret",
+      },
+    });
+    await POST(req);
+
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "processing" })
+    );
+  });
+
+  it("returns 429 when rate limited", async () => {
+    // The route allows 5 requests per 60s
+    for (let i = 0; i < 5; i++) {
+      mockDb.where.mockResolvedValueOnce([]);
+      const req = createJsonRequest(URL, {
+        method: "POST",
+        body: {
+          meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+          botSecret: "secret",
+        },
+      });
+      await POST(req);
+    }
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        botSecret: "secret",
+      },
+    });
+    const { status } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(429);
   });
 
   it("accepts botId as auth for silent mode", async () => {

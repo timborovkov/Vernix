@@ -73,9 +73,14 @@ export function MeetingCard({
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground truncate text-sm">
+          <a
+            href={meeting.joinLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground block truncate text-sm hover:underline"
+          >
             {meeting.joinLink}
-          </p>
+          </a>
           {meeting.startedAt && (
             <p className="text-muted-foreground mt-1 text-xs">
               Started: {new Date(meeting.startedAt).toLocaleString()}

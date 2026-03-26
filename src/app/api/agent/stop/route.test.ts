@@ -4,50 +4,39 @@ import {
   fakeMeeting,
 } from "@/test/helpers";
 
-const { mockDb, mockProvider, mockScrollTranscript, mockGenerateSummary } =
-  vi.hoisted(() => {
-    const db: Record<string, ReturnType<typeof vi.fn>> = {};
-    for (const m of [
-      "select",
-      "from",
-      "where",
-      "orderBy",
-      "insert",
-      "values",
-      "returning",
-      "update",
-      "set",
-      "delete",
-    ]) {
-      db[m] = vi.fn().mockImplementation(() => db);
-    }
-    return {
-      mockDb: db,
-      mockProvider: {
-        joinMeeting: vi.fn(),
-        leaveMeeting: vi.fn().mockResolvedValue(undefined),
-        onTranscript: vi.fn(),
-      },
-      mockScrollTranscript: vi.fn().mockResolvedValue([]),
-      mockGenerateSummary: vi.fn().mockResolvedValue("Test summary"),
-    };
-  });
+const { mockDb, mockProvider, mockProcessMeetingEnd } = vi.hoisted(() => {
+  const db: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const m of [
+    "select",
+    "from",
+    "where",
+    "orderBy",
+    "insert",
+    "values",
+    "returning",
+    "update",
+    "set",
+    "delete",
+  ]) {
+    db[m] = vi.fn().mockImplementation(() => db);
+  }
+  return {
+    mockDb: db,
+    mockProvider: {
+      joinMeeting: vi.fn(),
+      leaveMeeting: vi.fn().mockResolvedValue(undefined),
+      onTranscript: vi.fn(),
+    },
+    mockProcessMeetingEnd: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/meeting-bot", () => ({
   getMeetingBotProvider: () => mockProvider,
 }));
-vi.mock("@/lib/vector/scroll", () => ({
-  scrollTranscript: mockScrollTranscript,
-}));
-vi.mock("@/lib/summary/generate", () => ({
-  generateMeetingSummary: mockGenerateSummary,
-}));
-vi.mock("@/lib/tasks/extract", () => ({
-  extractActionItems: vi.fn().mockResolvedValue([]),
-}));
-vi.mock("@/lib/tasks/store", () => ({
-  storeExtractedTasks: vi.fn().mockResolvedValue(undefined),
+vi.mock("@/lib/agent/processing", () => ({
+  processMeetingEnd: mockProcessMeetingEnd,
 }));
 
 import { POST } from "./route";
@@ -55,6 +44,10 @@ import { POST } from "./route";
 const validUuid = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
 
 describe("POST /api/agent/stop", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("returns 400 for invalid meetingId", async () => {
     const req = createJsonRequest("http://localhost/api/agent/stop", {
       method: "POST",
@@ -92,12 +85,11 @@ describe("POST /api/agent/stop", () => {
     expect(data.error).toContain("Cannot stop meeting with status: pending");
   });
 
-  it("stops active meeting and calls leaveMeeting", async () => {
+  it("stops active meeting and calls leaveMeeting with correct botId", async () => {
     mockDb.where
       .mockResolvedValueOnce([
         fakeMeeting({ status: "active", metadata: { botId: "bot-42" } }),
       ])
-      .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined);
 
     const req = createJsonRequest("http://localhost/api/agent/stop", {
@@ -116,10 +108,9 @@ describe("POST /api/agent/stop", () => {
     );
   });
 
-  it("stops joining meeting without botId", async () => {
+  it("stops joining meeting without botId — does not call leaveMeeting", async () => {
     mockDb.where
       .mockResolvedValueOnce([fakeMeeting({ status: "joining", metadata: {} })])
-      .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined);
 
     const req = createJsonRequest("http://localhost/api/agent/stop", {
@@ -132,18 +123,13 @@ describe("POST /api/agent/stop", () => {
     expect(mockProvider.leaveMeeting).not.toHaveBeenCalled();
   });
 
-  it("sets processing then completed with summary in metadata", async () => {
-    const segments = [{ text: "Hello", speaker: "Alice", timestampMs: 1000 }];
-    mockScrollTranscript.mockResolvedValueOnce(segments);
-    mockGenerateSummary.mockResolvedValueOnce("Summary text");
+  it("sets processing status and calls processMeetingEnd with correct args", async () => {
+    const meeting = fakeMeeting({
+      status: "active",
+      metadata: { botId: "bot-1" },
+    });
     mockDb.where
-      .mockResolvedValueOnce([
-        fakeMeeting({
-          status: "active",
-          metadata: { botId: "bot-1" },
-        }),
-      ])
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce([meeting])
       .mockResolvedValueOnce(undefined);
 
     const req = createJsonRequest("http://localhost/api/agent/stop", {
@@ -153,67 +139,21 @@ describe("POST /api/agent/stop", () => {
 
     await POST(req);
 
+    // Verify status was set to processing
     const setCalls = mockDb.set.mock.calls;
     expect(setCalls[0][0]).toEqual(
       expect.objectContaining({ status: "processing" })
     );
-    expect(setCalls[1][0]).toEqual(
+
+    // Verify processMeetingEnd was called with correct arguments
+    expect(mockProcessMeetingEnd).toHaveBeenCalledWith(
+      validUuid,
+      "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22", // test user id
+      meeting.qdrantCollectionName,
       expect.objectContaining({
-        status: "completed",
-        metadata: expect.objectContaining({ summary: "Summary text" }),
+        botId: "bot-1",
+        title: meeting.title,
       })
-    );
-  });
-
-  it("completes without summary when processing fails", async () => {
-    mockScrollTranscript.mockRejectedValueOnce(new Error("Qdrant down"));
-    mockDb.where
-      .mockResolvedValueOnce([
-        fakeMeeting({ status: "active", metadata: { botId: "bot-1" } }),
-      ])
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
-
-    const req = createJsonRequest("http://localhost/api/agent/stop", {
-      method: "POST",
-      body: { meetingId: validUuid },
-    });
-
-    const response = await POST(req);
-    expect(response.status).toBe(200);
-
-    const setCalls = mockDb.set.mock.calls;
-    expect(setCalls[0][0]).toEqual(
-      expect.objectContaining({ status: "processing" })
-    );
-    expect(setCalls[1][0]).toEqual(
-      expect.objectContaining({ status: "completed" })
-    );
-  });
-
-  it("passes scrolled segments to generateMeetingSummary", async () => {
-    const segments = [
-      { text: "Point A", speaker: "Alice", timestampMs: 1000 },
-      { text: "Point B", speaker: "Bob", timestampMs: 2000 },
-    ];
-    mockScrollTranscript.mockResolvedValueOnce(segments);
-    mockDb.where
-      .mockResolvedValueOnce([
-        fakeMeeting({ status: "active", metadata: { botId: "bot-1" } }),
-      ])
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
-
-    const req = createJsonRequest("http://localhost/api/agent/stop", {
-      method: "POST",
-      body: { meetingId: validUuid },
-    });
-
-    await POST(req);
-
-    expect(mockGenerateSummary).toHaveBeenCalledWith(
-      segments,
-      expect.objectContaining({ title: "Test Meeting" })
     );
   });
 
@@ -227,7 +167,6 @@ describe("POST /api/agent/stop", () => {
           endedAt,
         }),
       ])
-      .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(undefined);
 
     const req = createJsonRequest("http://localhost/api/agent/stop", {

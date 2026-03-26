@@ -35,23 +35,21 @@
 - Mute state enforcement
 - Hide completed tasks from dashboard action points
 - Show meeting-scoped files on knowledge page
+- Voice Mode Rewrite (On-Demand Realtime)
+- Internal Agent System Documentation (`docs/agent-architecture.md`)
 
-## Voice Mode Rewrite (On-Demand Realtime)
+## Fast Wake-Word Detection (Client-Side VAD + gpt-4o-mini-transcribe)
 
-Replace always-on Realtime API connection with on-demand activation. Voice mode will use wake-word detection on the transcript stream and only spin up OpenAI Realtime when the agent is addressed. This is the only voice mode — no separate "always-on" option.
+Replace transcript-based wake-word detection (~2-4s latency) with client-side voice activity detection + server-side gpt-4o-mini-transcribe (~500ms latency). Keep transcript-based activation as fallback.
 
-- **Background listener** — Implement wake detection from Recall transcript stream + wake words ("Vernix", "Agent", "Assistant") + question intent heuristics.
-- **Activation gate** — Require confidence threshold + debounce/rate limits before creating a Realtime session to prevent accidental triggers.
-- **On-demand Realtime lifecycle** — Create Realtime session on trigger, inject agenda + RAG/MCP tools, respond, then auto-close after short idle timeout.
-- **Faster spin-up path** — Reduce activation latency via precomputed context cache (recent transcript + top RAG snippets), prompt/session template reuse, and parallel token/tool preparation.
-- **Warm pool strategy** — Keep a very small capped pool of pre-initialized short-lived voice sessions during active meetings (with strict timeout) to avoid full cold starts.
-- **Progressive response strategy** — Start with a short acknowledgement ("One sec") while context finalization runs, then stream the full answer as soon as ready.
-- **No-interruption guardrails** — Keep strict "respond only when addressed" logic and add cooldown after each response to avoid back-to-back accidental replies.
-- **Context handoff** — On activation, fetch latest transcript window + relevant RAG context so the model has immediate conversational grounding.
-- **Fallback behavior** — If Realtime session fails, send brief text response in meeting chat (or skip with safe no-op) and keep listener alive.
-- **Cost & usage telemetry** — Track per-meeting/per-user activation count, Realtime connected seconds, token usage, and estimated cost.
-- **UX controls** — Expose status ("Listening", "Responding", "Cooling down") on meeting detail.
-- **Testing & rollout** — Add integration tests + staged rollout (feature flag) + success criteria (low false-trigger rate, acceptable response latency).
+- **Voice Activity Detection in HTML page** — Replace `ScriptProcessor` with `AudioWorklet`. Add RMS energy threshold to detect when someone is speaking (vs silence/background noise). Only buffer and send audio when speech is detected. This also fixes the deprecation warning on ScriptProcessor.
+- **Speech buffer + send** — When VAD detects speech, buffer 1.5 seconds of audio, then POST the audio chunk (base64 PCM) to a new endpoint `/api/agent/wake-detect`. Fire-and-forget — don't block audio capture. Rate limit client-side to max 1 request per 2 seconds to avoid spamming.
+- **Wake detection endpoint** — `POST /api/agent/wake-detect` accepts `{ meetingId, botSecret, audio }`. Calls OpenAI transcription API (`gpt-4o-mini-transcribe`, $0.003/min — latest and cheapest model) on the audio chunk. Checks transcribed text for wake words ("vernix", "agent", "assistant"). If match found, writes `activated` state to meeting metadata (same as current `activation.ts` logic). Rate limited server-side. Public endpoint, verified by botSecret.
+- **Direct activation signal** — Instead of polling for state changes, the wake-detect endpoint returns `{ activated: true, transcriptWindow }` when a wake word is detected. The HTML page can act on this immediately — no 1s poll delay. Keep polling as fallback for transcript-based activations.
+- **Fallback preservation** — Keep the existing transcript webhook activation path (`activation.ts`). If gpt-4o-mini-transcribe detection misses a wake word, the transcript webhook catches it ~2-3s later. Both paths write to the same `voiceActivation` metadata — first one wins.
+- **Cost controls** — VAD threshold filters out silence (majority of meeting time). gpt-4o-mini-transcribe cost: $0.003/min (~$0.0005/10s chunk). With VAD filtering, expect ~$0.05-0.15 per meeting hour. Add per-meeting transcription call counter to telemetry.
+- **Middleware + auth** — Add `/api/agent/wake-detect` to public agent paths in middleware. Verify botSecret same as other agent endpoints.
+- **Testing** — Unit tests for VAD threshold logic, wake-detect endpoint (validation, auth, rate limiting, wake word matching). Integration test with mock gpt-4o-mini-transcribe response.
 
 ## Billing with Polar
 

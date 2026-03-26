@@ -55,7 +55,21 @@ describe("extractActionItems", () => {
     expect(mockChatCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         response_format: { type: "json_object" },
+        messages: expect.arrayContaining([
+          expect.objectContaining({
+            role: "system",
+            content: expect.stringContaining("action items"),
+          }),
+        ]),
       })
+    );
+
+    // Verify segments are sorted by timestamp and formatted as transcript
+    const userMessage = mockChatCreate.mock.calls[0][0].messages.find(
+      (m: { role: string }) => m.role === "user"
+    );
+    expect(userMessage.content).toBe(
+      "[Alice]: We should review the proposal\n[Bob]: I will schedule a follow-up"
     );
   });
 

@@ -222,5 +222,30 @@ export async function POST(request: Request) {
       .catch((err) => console.error("[Silent Agent] Error:", err));
   }
 
+  // Voice agent (non-silent): monitor transcript for wake words
+  if (
+    !metadata.silent &&
+    !metadata.muted &&
+    meeting.status === "active" &&
+    meeting.userId &&
+    typeof metadata.botId === "string" &&
+    speaker !== "Vernix Agent"
+  ) {
+    const voiceUserId = meeting.userId;
+    const voiceBotId = metadata.botId as string;
+    import("@/lib/agent/activation")
+      .then(({ handleVoiceTranscript }) =>
+        handleVoiceTranscript(
+          meeting.id,
+          voiceUserId,
+          voiceBotId,
+          speaker,
+          text,
+          timestampMs
+        )
+      )
+      .catch((err) => console.error("[Voice Activation] Error:", err));
+  }
+
   return NextResponse.json({ success: true });
 }

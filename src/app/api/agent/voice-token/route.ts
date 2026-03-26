@@ -9,11 +9,13 @@ import {
 } from "@/lib/agent/prompts";
 import { McpClientManager } from "@/lib/mcp/client";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
+import { getMcpToolCache, setMcpToolCache } from "@/lib/agent/mcp-cache";
 
 export async function GET(request: Request) {
   const rl = rateLimitByIp(request, "agent:voice-token", {
     interval: 60_000,
-    limit: 10,
+    limit: 30,
   });
   if (!rl.success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
@@ -43,10 +45,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Verify the bot secret matches the stored voiceSecret
-  const storedSecret = (meeting.metadata as Record<string, unknown>)
-    ?.voiceSecret;
-  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
+  const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
+  if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     );
   }
 
-  // Load MCP tools for the meeting owner (with timeout so voice agent isn't blocked)
+  // Load MCP tools (cached per meeting to avoid re-fetching on every activation)
   const MCP_TIMEOUT_MS = 5_000;
   let mcpOpenAITools: Array<{
     type: "function";
@@ -66,27 +66,39 @@ export async function GET(request: Request) {
     parameters: Record<string, unknown>;
   }> = [];
   let mcpToolDescriptions: ToolDescription[] = [];
-  try {
-    const mcpManager = await Promise.race([
-      McpClientManager.connectForUser(meeting.userId),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("MCP connection timeout")),
-          MCP_TIMEOUT_MS
-        )
-      ),
-    ]);
-    mcpOpenAITools = mcpManager.getOpenAITools();
-    mcpToolDescriptions = mcpOpenAITools.map((t) => ({
-      name: t.name,
-      description: t.description,
-    }));
-  } catch (error) {
-    console.error("MCP client connection failed:", error);
+
+  const cached = getMcpToolCache(meetingId);
+  if (cached) {
+    mcpOpenAITools = cached.tools;
+    mcpToolDescriptions = cached.descriptions;
+  } else {
+    try {
+      const mcpManager = await Promise.race([
+        McpClientManager.connectForUser(meeting.userId),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("MCP connection timeout")),
+            MCP_TIMEOUT_MS
+          )
+        ),
+      ]);
+      mcpOpenAITools = mcpManager.getOpenAITools();
+      mcpToolDescriptions = mcpOpenAITools.map((t) => ({
+        name: t.name,
+        description: t.description,
+      }));
+      setMcpToolCache(meetingId, {
+        tools: mcpOpenAITools,
+        descriptions: mcpToolDescriptions,
+        fetchedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error("MCP client connection failed:", error);
+    }
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const agendaRaw = (meeting.metadata as Record<string, unknown>)?.agenda;
+  const agendaRaw = metadata.agenda;
   const agenda = typeof agendaRaw === "string" ? agendaRaw : undefined;
 
   try {

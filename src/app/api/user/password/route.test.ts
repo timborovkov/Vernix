@@ -1,4 +1,4 @@
-const { mockDb, mockCompare } = vi.hoisted(() => {
+const { mockDb, mockCompare, mockHash } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -14,12 +14,16 @@ const { mockDb, mockCompare } = vi.hoisted(() => {
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return { mockDb: db, mockCompare: vi.fn() };
+  return {
+    mockDb: db,
+    mockCompare: vi.fn(),
+    mockHash: vi.fn().mockResolvedValue("new-hashed-password"),
+  };
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("bcryptjs", () => ({
-  hash: vi.fn().mockResolvedValue("new-hashed-password"),
+  hash: mockHash,
   compare: mockCompare,
 }));
 
@@ -41,6 +45,12 @@ describe("PATCH /api/user/password", () => {
     const { status, data } = await parseJsonResponse(await PATCH(req));
     expect(status).toBe(200);
     expect(data.success).toBe(true);
+    expect(mockCompare).toHaveBeenCalledWith("oldpass123", "old-hash");
+    expect(mockHash).toHaveBeenCalledWith("newpass123", 12);
+    expect(mockDb.set).toHaveBeenCalledWith({
+      passwordHash: "new-hashed-password",
+      updatedAt: expect.any(Date),
+    });
   });
 
   it("returns 400 when current password is incorrect", async () => {
@@ -79,6 +89,7 @@ describe("PATCH /api/user/password", () => {
     const { status, data } = await parseJsonResponse(await PATCH(req));
     expect(status).toBe(200);
     expect(data.success).toBe(true);
+    expect(mockCompare).not.toHaveBeenCalled();
   });
 
   it("returns 400 on short new password", async () => {
