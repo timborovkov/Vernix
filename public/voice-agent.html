@@ -695,6 +695,10 @@
         // Check again after json() parse
         if (fallbackFired) return;
 
+        // Token fetched successfully — cancel the fallback timer.
+        // If the WebSocket itself fails, ws.onclose handles cleanup via closeSession.
+        clearTimeout(fallbackTimer);
+
         const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
           "realtime",
@@ -702,7 +706,6 @@
         ]);
 
         ws.onopen = () => {
-          clearTimeout(fallbackTimer);
           log("WebSocket connected");
         };
 
