@@ -1,0 +1,73 @@
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+
+export function getWelcomeEmailHtml(name: string): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden">
+    <div style="background:#242424;padding:32px;text-align:center">
+      <h1 style="color:#fff;font-size:24px;margin:0">Welcome to Vernix</h1>
+    </div>
+    <div style="padding:32px">
+      <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">
+        Thanks for signing up. Vernix joins your video calls, transcribes everything,
+        and gives you searchable, actionable meeting intelligence.
+      </p>
+      <p style="font-size:14px;font-weight:600;color:#333;margin:0 0 12px">Get started in 3 steps:</p>
+      <ol style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0 0 24px">
+        <li>Paste a Zoom, Meet, Teams, or Webex link</li>
+        <li>Vernix joins your call and transcribes everything</li>
+        <li>Get a summary, action items, and searchable transcript</li>
+      </ol>
+      <div style="text-align:center;margin:32px 0">
+        <a href="${APP_URL}/dashboard" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+          Go to Dashboard
+        </a>
+      </div>
+      <p style="font-size:12px;color:#999;margin:0;text-align:center">
+        Questions? Reply to this email or visit <a href="${APP_URL}/contact" style="color:#666">vernix.app/contact</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+interface ContactNotificationData {
+  topic: string;
+  email: string;
+  name?: string;
+  company?: string;
+  message: string;
+}
+
+export function getContactNotificationHtml(
+  data: ContactNotificationData
+): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:20px auto;padding:24px">
+    <h2 style="font-size:18px;color:#333;margin:0 0 16px">[${escapeHtml(data.topic)}] Contact Form Submission</h2>
+    <table style="font-size:14px;color:#555;line-height:1.6;border-collapse:collapse;width:100%">
+      <tr><td style="padding:4px 12px 4px 0;font-weight:600;vertical-align:top">From:</td><td>${escapeHtml(data.name || "—")} &lt;${escapeHtml(data.email)}&gt;</td></tr>
+      ${data.company ? `<tr><td style="padding:4px 12px 4px 0;font-weight:600;vertical-align:top">Company:</td><td>${escapeHtml(data.company)}</td></tr>` : ""}
+      <tr><td style="padding:4px 12px 4px 0;font-weight:600;vertical-align:top">Topic:</td><td>${escapeHtml(data.topic)}</td></tr>
+    </table>
+    <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+    <p style="font-size:14px;color:#333;line-height:1.6;white-space:pre-wrap">${escapeHtml(data.message)}</p>
+  </div>
+</body>
+</html>`;
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
