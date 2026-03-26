@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { after } from "next/server";
 import { z } from "zod/v4";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import {
@@ -39,9 +40,9 @@ export async function POST(request: Request) {
   const { email } = parsed.data;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
-  // Fire-and-forget: do all work after returning the response.
-  // This eliminates timing side-channels that could reveal whether an email exists.
-  void (async () => {
+  // Run after response is sent — prevents timing side-channels and
+  // keeps the serverless function alive until the work completes.
+  after(async () => {
     try {
       const user = await findUserByEmail(email);
       if (!user) return;
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
     } catch (err) {
       console.error("[ForgotPassword] Error:", err);
     }
-  })();
+  });
 
   return NextResponse.json({
     success: true,
