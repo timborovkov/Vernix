@@ -147,6 +147,16 @@
 - ~~**Account linking** — Auto-link by verified email; unlink from settings with guard against removing last auth method~~
 - ~~**Profile API** — `GET/PATCH /api/user/profile`, `PATCH /api/user/password`, `GET/DELETE /api/user/accounts`~~
 
+## Password Reset & NextAuth Email Integration
+
+- **Forgot password flow** — "Forgot password?" link on login page, enter email, receive reset link via Resend
+- **Password reset token** — Generate a time-limited token (e.g. 1 hour), store hash in DB (new `password_reset_tokens` table or use `verification_tokens`)
+- **Reset page** — `/reset-password?token=...` page where user sets a new password
+- **Reset API** — `POST /api/auth/forgot-password` (sends email) and `POST /api/auth/reset-password` (validates token, sets new password)
+- **Email template** — Branded password reset email with secure link and expiry notice
+- **Rate limiting** — Limit forgot-password requests per email and per IP to prevent abuse
+- **Wire Resend with NextAuth** — Use Resend as the email provider for any NextAuth email flows (magic links, email verification if added later)
+
 ## Silent Agent Mode (Text Agent) ~~DONE~~
 
 - ~~**Silent mode toggle** — Per-meeting toggle (in create dialog and meeting detail). This is a fundamentally different agent type: text agent instead of voice agent~~
