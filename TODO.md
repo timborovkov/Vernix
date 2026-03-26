@@ -53,6 +53,10 @@ Replace always-on Realtime API connection with on-demand activation. Voice mode 
 - **UX controls** — Expose status ("Listening", "Responding", "Cooling down") on meeting detail.
 - **Testing & rollout** — Add integration tests + staged rollout (feature flag) + success criteria (low false-trigger rate, acceptable response latency).
 
+## Internal Agent System Documentation
+
+- **Agent architecture playbook (internal)** — Create a single internal doc that inventories all agents and modes: what each does, where each is used, which tools it can call, how calls are routed/invoked (API routes, MCP tools, webhooks, bot runtime), which models are used where, and detailed lifecycle/sequence flows for both voice mode and silent mode (triggering, guardrails, context/RAG, response path, fallback behavior, and limits).
+
 ## Billing with Polar
 
 - **Pricing as consts in the code** — Pricing tiers as consts in the code, so we can easily change the pricing without having to change the code. Would affect billing, pricing page, and marketing.
