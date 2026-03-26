@@ -67,8 +67,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ state: "idle", muted: false });
   }
 
-  // If the HTML page is updating state, write it
+  // If the HTML page is updating state, write it — but never overwrite
+  // a pending "activated" state with "idle" (would clobber a wake-word trigger)
   if (newState) {
+    const currentState = (
+      metadata.voiceActivation as VoiceActivation | undefined
+    )?.state;
+
+    // Guard: don't let "idle" or "cooldown" overwrite a pending "activated"
+    if (
+      (newState === "idle" || newState === "cooldown") &&
+      currentState === "activated"
+    ) {
+      console.log(
+        `[Activation] Skipping ${newState} write — pending activation exists for ${meetingId}`
+      );
+      return NextResponse.json({
+        state: "activated",
+        muted: Boolean(metadata.muted),
+      });
+    }
+
     const activation: VoiceActivation = { state: newState };
     const updatedMetadata = { ...metadata, voiceActivation: activation };
     await db
@@ -97,6 +116,9 @@ export async function POST(request: Request) {
   // so a duplicate poll won't re-trigger activateSession.
   // The SQL condition ensures only the first concurrent poll succeeds.
   if (activation?.state === "activated") {
+    console.log(
+      `[Activation] Consuming activated state for ${meetingId} — client will connect`
+    );
     const consumed: VoiceActivation = { state: "responding" };
     await db
       .update(meetings)
