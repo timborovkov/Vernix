@@ -27,6 +27,8 @@
 - Analytics & Monitoring
 - Contact Forms & Email
 - Welcome Email
+- Pricing strategy calculation
+- Pricing page (`/pricing`)
 
 ## Hybrid Voice Activation Mode (Wake-on-Demand Realtime)
 
@@ -53,8 +55,6 @@
 
 ## Billing with Polar
 
-- **Calculate the pricing** — Calculate our baseline costs and add our margins on top, decide on the pricing strategy. Use proper Claude skills to do this. Current pricing idea: Free trial for pro, Pro (x hours of meetings / month), Unlimited (not really unlimited, fair use applies)
-- **Create a pricing page** — `/pricing` page with the pricing tiers and a call to action to sign up.
 - **Pricing as consts in the code** — Pricing tiers as consts in the code, so we can easily change the pricing without having to change the code. Would affect billing, pricing page, and marketing.
 - **Polar integration** — Connect Polar.sh for subscription management
 - **Hard caps** – Fair use hard caps on uploaded context, meeting duration, token usage, embeddings creation etc for each plan
