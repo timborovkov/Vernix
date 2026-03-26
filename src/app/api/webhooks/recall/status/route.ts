@@ -129,7 +129,7 @@ export async function POST(request: Request) {
           ...existingMetadata,
           title: meeting.title,
           startedAt: meeting.startedAt,
-          participants: meeting.participants as string[],
+          participants: (meeting.participants as string[]) ?? [],
         }
       );
 
