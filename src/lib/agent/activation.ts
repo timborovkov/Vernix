@@ -14,6 +14,7 @@ export const WAKE_WORDS = [
   "fernix",
   "vernik",
   "vernicks",
+  "vernix's",
   "agent",
   "assistant",
 ];

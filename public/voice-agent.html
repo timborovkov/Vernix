@@ -161,8 +161,9 @@
       const AUDIO_BUFFER_SECONDS = 10;
       const FALLBACK_TIMEOUT_MS = 4000;
       const VAD_RMS_THRESHOLD = 0.015;
-      const VAD_BUFFER_DURATION_MS = 1500;
-      const WAKE_DETECT_COOLDOWN_MS = 2000;
+      const VAD_BUFFER_DURATION_MS = 800;
+      const WAKE_DETECT_COOLDOWN_MS = 1500;
+      let activating = false; // mutex to prevent dual activation
       let cachedToken = null;
       let cachedTokenExpiresAt = 0;
       let lastWakeDetectAt = 0;
@@ -186,8 +187,10 @@
       let isPlaying = false;
 
       function queueAudio(base64Pcm) {
+        try {
         audioDone = false;
         const binary = atob(base64Pcm);
+        if (binary.length === 0) return;
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const int16 = new Int16Array(bytes.buffer);
@@ -197,7 +200,7 @@
 
         audioQueue.push(float32);
         if (!isPlaying) playNext();
-      }
+        } catch (e) { console.warn("[VoiceAgent] Audio decode error:", e); }
 
       function playNext() {
         if (audioQueue.length === 0) {
@@ -224,30 +227,32 @@
       }
 
       // --- Circular audio buffer ---
-      const CHUNK_SIZE = 4096;
-      const MAX_RING_CHUNKS = Math.ceil(
-        (AUDIO_BUFFER_SECONDS * 24000) / CHUNK_SIZE
-      );
+      const CHUNK_SIZE = 4096; // ScriptProcessor fallback chunk size
+      const MAX_RING_SAMPLES = AUDIO_BUFFER_SECONDS * 24000;
       const audioRingBuffer = [];
+      let ringBufferSamples = 0;
 
-      function pushToRingBuffer(base64Chunk) {
-        audioRingBuffer.push(base64Chunk);
-        if (audioRingBuffer.length > MAX_RING_CHUNKS) {
-          audioRingBuffer.shift();
+      function pushToRingBuffer(base64Chunk, sampleCount) {
+        audioRingBuffer.push({ data: base64Chunk, samples: sampleCount });
+        ringBufferSamples += sampleCount;
+        while (ringBufferSamples > MAX_RING_SAMPLES && audioRingBuffer.length > 1) {
+          const removed = audioRingBuffer.shift();
+          ringBufferSamples -= removed.samples;
         }
       }
 
       function flushRingBuffer() {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        for (const chunk of audioRingBuffer) {
+        for (const entry of audioRingBuffer) {
           ws.send(
             JSON.stringify({
               type: "input_audio_buffer.append",
-              audio: chunk,
+              audio: entry.data,
             })
           );
         }
         audioRingBuffer.length = 0;
+        ringBufferSamples = 0;
       }
 
       // --- WAV encoding for wake-detect ---
@@ -279,7 +284,7 @@
 
       // --- Wake-word detection via server ---
       async function sendWakeDetect(int16Samples) {
-        if (sessionActive || leaving || isMuted) return;
+        if (sessionActive || activating || leaving || isMuted) return;
         const now = Date.now();
         if (now - lastWakeDetectAt < WAKE_DETECT_COOLDOWN_MS) return;
         lastWakeDetectAt = now;
@@ -316,8 +321,9 @@
           });
           if (!res.ok) return;
           const data = await res.json();
-          if (data.activated && !sessionActive) {
+          if (data.activated && !sessionActive && !activating) {
             log("Wake word detected — activating");
+            activating = true;
             stopPolling();
             activateSession(data.transcriptWindow);
           }
@@ -428,7 +434,7 @@
         const base64 = btoa(binary);
 
         // Always buffer for context on activation
-        pushToRingBuffer(base64);
+        pushToRingBuffer(base64, int16Samples.length);
 
         // Stream live audio when session is active
         if (ws && ws.readyState === WebSocket.OPEN && sessionActive) {
@@ -504,6 +510,7 @@
       function closeSession(reason) {
         clearIdleTimer();
         sessionActive = false;
+        activating = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -757,7 +764,8 @@
           if (isMuted) return;
 
           // Handle activation
-          if (data.state === "activated" && !sessionActive) {
+          if (data.state === "activated" && !sessionActive && !activating) {
+            activating = true;
             stopPolling();
             activateSession(data.transcriptWindow);
           }
@@ -796,6 +804,7 @@
       // --- On-demand Realtime session ---
       async function activateSession(transcriptWindow) {
         sessionActive = true;
+        activating = false;
         sessionStartedAt = Date.now();
         let fallbackFired = false;
         playAcknowledgement();
@@ -979,6 +988,7 @@
         const sessionDurationMs =
           sessionStartedAt > 0 ? Date.now() - sessionStartedAt : 0;
         sessionActive = false;
+        activating = false;
         sessionStartedAt = 0;
         notifyState("idle", { sessionDurationMs });
         setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");

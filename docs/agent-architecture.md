@@ -100,7 +100,7 @@ Start audio capture (AudioWorklet, 24kHz PCM)
     |     Speech detected (RMS > 0.015)?
     |     |
     |     v
-    |     Buffer 1.5s of speech audio
+    |     Buffer 0.5s of speech audio
     |     |
     |     v
     |     Downsample 24kHz → 16kHz, encode as WAV
@@ -352,8 +352,8 @@ Mute is a cross-cutting concern that affects both voice and silent modes:
 | Silent rate limit       | 30s                                 | silent.ts         |
 | Silent response cap     | 500 chars                           | response.ts       |
 | VAD RMS threshold       | 0.015                               | voice-agent.html  |
-| VAD buffer duration     | 1.5s                                | voice-agent.html  |
-| Wake-detect cooldown    | 2s                                  | voice-agent.html  |
+| VAD buffer duration     | 0.5s                                | voice-agent.html  |
+| Wake-detect cooldown    | 1.5s                                | voice-agent.html  |
 | Idle timeout            | 15s                                 | voice-agent.html  |
 | Fallback timeout        | 4s                                  | voice-agent.html  |
 | Poll interval           | 1s                                  | voice-agent.html  |
