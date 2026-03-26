@@ -29,6 +29,12 @@
 - Welcome Email
 - Pricing strategy calculation
 - Pricing page (`/pricing`)
+- Self-kick agent tool (leave_meeting)
+- Switch to silent mode tool (switch_to_silent)
+- User mute control (UI kill switch)
+- Mute state enforcement
+- Hide completed tasks from dashboard action points
+- Show meeting-scoped files on knowledge page
 
 ## Voice Mode Rewrite (On-Demand Realtime)
 
@@ -47,13 +53,6 @@ Replace always-on Realtime API connection with on-demand activation. Voice mode 
 - **UX controls** — Expose status ("Listening", "Responding", "Cooling down") on meeting detail.
 - **Testing & rollout** — Add integration tests + staged rollout (feature flag) + success criteria (low false-trigger rate, acceptable response latency).
 
-## Adittional Agent Tools for In-Call Usage
-
-- **Self-kick agent tool** — Add an in-call agent tool that lets Vernix remove itself from the meeting when explicitly asked (safe intent confirmation + call leave action).
-- **Switch to silent mode tool** — Add an in-call agent tool that lets Vernix switch to silent mode when explicitly asked (safe intent confirmation + call switch to silent mode action).
-- **User mute control (UI kill switch)** — Add visible in-call controls for users to mute/unmute Vernix instantly, plus an emergency "Stop responding for this meeting" action.
-- **Mute state enforcement** — Persist mute state per meeting and enforce it in both wake detection and response generation paths so the agent cannot speak while muted.
-
 ## Billing with Polar
 
 - **Pricing as consts in the code** — Pricing tiers as consts in the code, so we can easily change the pricing without having to change the code. Would affect billing, pricing page, and marketing.
@@ -63,11 +62,6 @@ Replace always-on Realtime API connection with on-demand activation. Voice mode 
 - **Billing UI** — `/settings/billing` page with current plan, usage, and upgrade options
 - **Webhook handler** — `POST /api/webhooks/polar` for subscription lifecycle events
 - **Configure paywalls** — Configure paywalls for the pricing tiers. Claude Code has a paywall skill that can be used to configure paywalls.
-
-## Dashboard Tasks & Knowledge UX
-
-- **Hide completed tasks from dashboard action points** — Completed tasks should be removed from the dashboard tasks/action points view by default (with optional toggle to show completed).
-- **Show meeting-scoped files on knowledge page** — `dashboard/knowledge` should list context files uploaded to specific meetings, show which meeting each file belongs to, and include a link to that meeting.
 
 ## SEO & Discoverability
 
