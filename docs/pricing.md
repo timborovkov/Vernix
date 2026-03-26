@@ -6,15 +6,16 @@
 
 ## Cost Basis
 
-### Voice Meeting — ~$1.40/hr
+### Voice Meeting — ~$1.50/hr
 
-Voice agent listens for wake words on the transcript stream and spins up OpenAI Realtime only when addressed. Conservative estimate: ~8 activations/hr, ~45 sec avg (includes session spin-up, warm pool overhead) = ~6 min of Realtime per hour.
+Voice agent uses client-side voice activity detection + gpt-4o-mini-transcribe for fast wake-word detection (~500ms), plus transcript-based fallback. On-demand OpenAI Realtime spins up only when addressed. Conservative estimate: ~8 activations/hr, ~45 sec avg = ~6 min of Realtime per hour.
 
 | Cost Item                          | Detail                                           | Cost   |
 | ---------------------------------- | ------------------------------------------------ | ------ |
 | Recall bot                         | $0.50/hr recording                               | $0.50  |
 | Recall transcription               | $0.15/hr                                         | $0.15  |
 | OpenAI Realtime (gpt-realtime-1.5) | ~6 min/hr on-demand (8 × 45s avg incl. overhead) | ~$0.70 |
+| Wake-word detection                | gpt-4o-mini-transcribe, VAD-filtered, $0.003/min | ~$0.10 |
 | Embeddings + Summary + Tasks       | Transcript chunks, post-meeting processing       | ~$0.01 |
 | Warm pool / session overhead       | Pre-initialized sessions, idle keepalive         | ~$0.04 |
 
@@ -48,6 +49,7 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 
 - **Recall.ai**: $0.50/hr recording + $0.15/hr transcription (recall.ai/pricing)
 - **OpenAI Realtime**: ~$7/hr estimated for gpt-realtime-1.5 (verify at platform.openai.com/docs/pricing)
+- **OpenAI Transcription**: gpt-4o-mini-transcribe @ $0.003/min, gpt-4o-transcribe @ $0.006/min, whisper-1 @ $0.006/min (platform.openai.com/docs/pricing)
 - **OpenAI Embeddings**: text-embedding-3-small @ $0.02/1M tokens
 - **OpenAI Chat**: gpt-5.4-mini @ ~$0.15/$0.60 per 1M tokens (in/out), gpt-5.4 @ ~$2.50/$10 per 1M tokens
 - **Polar**: 4% + $0.40 per transaction, no monthly fees
@@ -64,14 +66,14 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 - Summaries, tasks, RAG chat
 - Knowledge base uploads
 - No API/MCP access
-- **Cost to us:** up to ~$0.36/mo per active user (0.5 hr × $0.71), plus ~$0.20 if they max out RAG chat
+- **Cost to us:** up to ~$0.36/mo per active user (0.5 hr × $0.71), plus ~$0.20 if they max out RAG chat (no Whisper cost — free tier has no voice)
 
 ### Free Trial (14 days, on top of Free)
 
 - Full Pro features including voice mode (excludes API/MCP)
 - 90 minutes total (voice and silent combined, shared pool)
 - Auto-activates on signup
-- **Max CAC:** ~$2.10 (1.5 hrs voice × $1.40)
+- **Max CAC:** ~$2.25 (1.5 hrs voice × $1.50)
 
 ### Pro — €29/month
 
@@ -84,7 +86,7 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 
 | Meeting Type      | User Price   | Our Cost | Margin |
 | ----------------- | ------------ | -------- | ------ |
-| Voice meeting     | **€3/hr**    | ~$1.40   | 53.3%  |
+| Voice meeting     | **€3/hr**    | ~$1.50   | 50.0%  |
 | Silent meeting    | **€1.50/hr** | ~$0.71   | 52.7%  |
 | Post-meeting chat | **Free**     | ~$0.01   | Incl.  |
 
@@ -151,28 +153,28 @@ _Polar also charges 4% + $0.40 on each overage invoice._
 **Light (1 hr voice + 3 hr silent):**
 
 - Usage: 1×€3 + 3×€1.50 = €7.50 → within €30 credit, no overage
-- Revenue: €27.44 | Cost: 1×$1.40 + 3×$0.71 + $0.10 = $3.63
-- **Margin: $23.81 (86.8%)**
+- Revenue: €27.44 | Cost: 1×$1.50 + 3×$0.71 + $0.10 = $3.73
+- **Margin: $23.71 (86.4%)**
 
 **Typical (3 hr voice + 10 hr silent):**
 
 - Usage: 3×€3 + 10×€1.50 = €24.00 → within €30 credit, no overage
-- Revenue: €27.44 | Cost: 3×$1.40 + 10×$0.71 + $0.10 = $11.40
-- **Margin: $16.04 (58.5%)**
+- Revenue: €27.44 | Cost: 3×$1.50 + 10×$0.71 + $0.10 = $11.70
+- **Margin: $15.74 (57.4%)**
 
 **Heavy (8 hr voice + 25 hr silent):**
 
 - Usage: 8×€3 + 25×€1.50 = €61.50 → €30 credit, €31.50 overage
 - Overage Polar: $31.50 × 0.04 + $0.40 = $1.66
-- Revenue: €27.44 + €31.50 - $1.66 = €57.28 | Cost: 8×$1.40 + 25×$0.71 + $0.10 = $29.05
-- **Margin: $28.23 (49.3%)**
+- Revenue: €27.44 + €31.50 - $1.66 = €57.28 | Cost: 8×$1.50 + 25×$0.71 + $0.10 = $29.85
+- **Margin: $27.43 (47.9%)**
 
 **Very heavy (25 hr voice + 50 hr silent):**
 
 - Usage: 25×€3 + 50×€1.50 = €150.00 → €30 credit, €120 overage
 - Overage Polar: $120 × 0.04 + $0.40 = $5.20
-- Revenue: €27.44 + €120.00 - $5.20 = €142.24 | Cost: 25×$1.40 + 50×$0.71 + $0.10 = $70.60
-- **Margin: $71.64 (50.4%)**
+- Revenue: €27.44 + €120.00 - $5.20 = €142.24 | Cost: 25×$1.50 + 50×$0.71 + $0.10 = $73.10
+- **Margin: $69.14 (48.6%)**
 
 ---
 
@@ -186,14 +188,14 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 | -------------------- | --------- | -------- | --------- | --------- | ------- | ------ | ------- |
 | **Free (inactive)**  | 480       | —        | —         | $0        | —       | —      | —       |
 | **Free (active)**    | 270       | 0 hr     | 0.3 hr    | $0.21     | —       | —      | —       |
-| **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.06     | —       | —      | —       |
-| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | €7.50   | €30    | €0      |
-| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | €24.00  | €30    | €0      |
-| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | €61.50  | €30    | €31.50  |
-| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $70.50    | €150.00 | €30    | €120    |
+| **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.11     | —       | —      | —       |
+| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.73     | €7.50   | €30    | €0      |
+| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.70    | €24.00  | €30    | €0      |
+| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $29.85    | €61.50  | €30    | €31.50  |
+| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $73.10    | €150.00 | €30    | €120    |
 | **Total**            | **1,000** |          |           |           |         |        |         |
 
-_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within €30 credit._
+_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.50/hr (incl. gpt-4o-mini-transcribe wake-detection), silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within €30 credit._
 
 ### Revenue
 
@@ -208,35 +210,35 @@ _800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, si
 | Line item          | Calculation         | Amount     |
 | ------------------ | ------------------- | ---------- |
 | Free active        | 270 × $0.21         | $57        |
-| Free trial         | 50 × $1.06          | $53        |
-| Pro light          | 90 × $3.53          | $318       |
-| Pro typical        | 70 × $11.30         | $791       |
-| Pro heavy          | 30 × $28.95         | $869       |
-| Pro very heavy     | 10 × $70.50         | $705       |
-| **Subtotal usage** |                     | **$2,793** |
+| Free trial         | 50 × $1.11          | $56        |
+| Pro light          | 90 × $3.73          | $336       |
+| Pro typical        | 70 × $11.70         | $819       |
+| Pro heavy          | 30 × $29.85         | $896       |
+| Pro very heavy     | 10 × $73.10         | $731       |
+| **Subtotal usage** |                     | **$2,895** |
 | Polar on base      | 200 × $1.56         | $312       |
 | Polar on overage   | 30×$1.66 + 10×$5.20 | $102       |
 | Infrastructure     |                     | $120       |
-| **Total cost**     |                     | **$3,327** |
+| **Total cost**     |                     | **$3,429** |
 
 ### Summary
 
 | Metric            | Amount                 |
 | ----------------- | ---------------------- |
 | **Gross revenue** | **€7,945**             |
-| **Total cost**    | **$3,327**             |
-| **Net margin**    | **$4,618**             |
-| **Margin %**      | **58.1%**              |
+| **Total cost**    | **$3,429**             |
+| **Net margin**    | **$4,516**             |
+| **Margin %**      | **56.8%**              |
 | Revenue per user  | €7.95                  |
-| Cost per user     | $3.33                  |
-| Free user drag    | $110 (1.4% of revenue) |
+| Cost per user     | $3.43                  |
+| Free user drag    | $113 (1.4% of revenue) |
 
 ### Takeaways
 
 - Single plan simplifies the funnel: Free → Trial → Pro. No tier comparison needed.
 - €30 credit covers light and typical users — predictable €29/mo bill for 80% of paid users.
-- Heavy users generate overage at ~49% margin. Very heavy users are the most profitable segment.
-- 58.1% overall margin with conservative assumptions.
+- Heavy users generate overage at ~48% margin. Very heavy users are the most profitable segment.
+- 56.8% overall margin with conservative assumptions. gpt-4o-mini-transcribe wake-detection adds ~$0.10/hr to voice cost but cuts response latency from ~4s to ~500ms.
 
 ---
 
