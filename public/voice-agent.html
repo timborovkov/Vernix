@@ -206,19 +206,23 @@
 
       function queueAudio(base64Pcm) {
         try {
-        audioDone = false;
-        const binary = atob(base64Pcm);
-        if (binary.length === 0) return;
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const int16 = new Int16Array(bytes.buffer);
+          audioDone = false;
+          const binary = atob(base64Pcm);
+          if (binary.length === 0) return;
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++)
+            bytes[i] = binary.charCodeAt(i);
+          const int16 = new Int16Array(bytes.buffer);
 
-        const float32 = new Float32Array(int16.length);
-        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+          const float32 = new Float32Array(int16.length);
+          for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
 
-        audioQueue.push(float32);
-        if (!isPlaying) playNext();
-        } catch (e) { console.warn("[VoiceAgent] Audio decode error:", e); }
+          audioQueue.push(float32);
+          if (!isPlaying) playNext();
+        } catch (e) {
+          console.warn("[VoiceAgent] Audio decode error:", e);
+        }
+      }
 
       function playNext() {
         if (audioQueue.length === 0) {
@@ -253,7 +257,10 @@
       function pushToRingBuffer(base64Chunk, sampleCount) {
         audioRingBuffer.push({ data: base64Chunk, samples: sampleCount });
         ringBufferSamples += sampleCount;
-        while (ringBufferSamples > MAX_RING_SAMPLES && audioRingBuffer.length > 1) {
+        while (
+          ringBufferSamples > MAX_RING_SAMPLES &&
+          audioRingBuffer.length > 1
+        ) {
           const removed = audioRingBuffer.shift();
           ringBufferSamples -= removed.samples;
         }
@@ -350,100 +357,38 @@
         }
       }
 
-      // --- Audio capture with AudioWorklet ---
+      // --- Audio capture (ScriptProcessor + VAD) ---
       async function startCapture() {
-        log("Requesting microphone...");
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        log("Microphone granted");
+        const micTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Microphone timeout")), 5000)
+        );
+        const stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia({ audio: true }),
+          micTimeout,
+        ]);
         audioContext = new AudioContext({ sampleRate: 24000 });
 
-        // Try AudioWorklet first, fall back to ScriptProcessor
-        let useWorklet = false;
-        try {
-          const workletCode = `
-            class AudioCaptureProcessor extends AudioWorkletProcessor {
-              constructor() {
-                super();
-                this.rmsThreshold = ${VAD_RMS_THRESHOLD};
-              }
-              process(inputs) {
-                const input = inputs[0];
-                if (!input || !input[0]) return true;
-                const samples = input[0];
-                let sum = 0;
-                for (let i = 0; i < samples.length; i++) {
-                  sum += samples[i] * samples[i];
-                }
-                const rms = Math.sqrt(sum / samples.length);
-                // Convert Float32 to Int16
-                const int16 = new Int16Array(samples.length);
-                for (let i = 0; i < samples.length; i++) {
-                  const s = Math.max(-1, Math.min(1, samples[i]));
-                  int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-                }
-                this.port.postMessage({
-                  int16: int16,
-                  speechDetected: rms > this.rmsThreshold
-                }, [int16.buffer]);
-                return true;
-              }
-            }
-            registerProcessor("audio-capture", AudioCaptureProcessor);
-          `;
-          const blob = new Blob([workletCode], {
-            type: "application/javascript",
-          });
-          const url = URL.createObjectURL(blob);
-          log("Loading AudioWorklet...");
-          await audioContext.audioWorklet.addModule(url);
-          URL.revokeObjectURL(url);
-          useWorklet = true;
-          log("AudioWorklet loaded");
-        } catch (e) {
-          console.warn(
-            "[VoiceAgent] AudioWorklet not supported, using ScriptProcessor fallback"
-          );
-        }
-
         const source = audioContext.createMediaStreamSource(stream);
+        const processor = audioContext.createScriptProcessor(CHUNK_SIZE, 1, 1);
 
-        if (useWorklet) {
-          const workletNode = new AudioWorkletNode(
-            audioContext,
-            "audio-capture"
-          );
-          workletNode.port.onmessage = (e) => {
-            handleAudioFrame(e.data.int16, e.data.speechDetected);
-          };
-          source.connect(workletNode);
-          workletNode.connect(audioContext.destination);
-        } else {
-          // Fallback: ScriptProcessor (deprecated but widely supported)
-          const processor = audioContext.createScriptProcessor(
-            CHUNK_SIZE,
-            1,
-            1
-          );
-          processor.onaudioprocess = (e) => {
-            const float32 = e.inputBuffer.getChannelData(0);
-            const int16 = new Int16Array(float32.length);
-            let sum = 0;
-            for (let i = 0; i < float32.length; i++) {
-              const s = Math.max(-1, Math.min(1, float32[i]));
-              int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-              sum += float32[i] * float32[i];
-            }
-            const rms = Math.sqrt(sum / float32.length);
-            handleAudioFrame(int16, rms > VAD_RMS_THRESHOLD);
-          };
-          source.connect(processor);
-          const silentGain = audioContext.createGain();
-          silentGain.gain.value = 0;
-          processor.connect(silentGain);
-          silentGain.connect(audioContext.destination);
-        }
+        processor.onaudioprocess = (e) => {
+          const float32 = e.inputBuffer.getChannelData(0);
+          const int16 = new Int16Array(float32.length);
+          let sum = 0;
+          for (let i = 0; i < float32.length; i++) {
+            const s = Math.max(-1, Math.min(1, float32[i]));
+            int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+            sum += float32[i] * float32[i];
+          }
+          const rms = Math.sqrt(sum / float32.length);
+          handleAudioFrame(int16, rms > VAD_RMS_THRESHOLD);
+        };
+
+        source.connect(processor);
+        const silentGain = audioContext.createGain();
+        silentGain.gain.value = 0;
+        processor.connect(silentGain);
+        silentGain.connect(audioContext.destination);
       }
 
       // --- Handle each audio frame (from worklet or ScriptProcessor) ---
