@@ -179,17 +179,18 @@
 - ~~**Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page~~
 - ~~**Privacy / Terms / Cookie Policy** — Updated all legal pages to reflect Sentry, Google Analytics, Recall.ai, OpenAI, and Railway as sub-processors~~
 
-## Contact Forms & Email
+## Contact Forms & Email ~~DONE~~
 
-- **Hook up contact form** — Wire the contact form on `/contact` to actually send emails (e.g. Resend, Postmark, or SES)
-- **Configure @vernix.app emails** — Set up MX/SPF/DKIM records for vernix.app domain, configure transactional email provider
-- **Contact form API** — `POST /api/contact` route that validates input and sends to [hello@vernix.app](mailto:hello@vernix.app)
+- ~~**Hook up contact form** — Replaced mailto with `POST /api/contact` using Resend~~
+- ~~**Configure @vernix.app emails** — Resend integration with domain verification, inbound forwarding webhook~~
+- ~~**Contact form API** — `POST /api/contact` with Zod validation, rate limiting, Resend send~~
+- ~~**Inbound forwarding** — Resend webhook at `/api/webhooks/resend` with Svix signature verification, forwards to `EMAIL_FORWARD_TO`~~
 
-## Welcome Email
+## Welcome Email ~~DONE~~
 
-- **Email template** — Design a branded HTML welcome email (logo, onboarding steps, CTA to create first meeting)
-- **Send on registration** — Trigger welcome email from `POST /api/auth/register` after successful user creation
-- **Email provider** — Use the same transactional provider configured in P21b (Resend/Postmark/SES)
+- ~~**Email template** — Branded HTML welcome email with onboarding steps and dashboard CTA~~
+- ~~**Send on registration** — Fire-and-forget welcome email from `POST /api/auth/register`~~
+- ~~**Email provider** — Resend with lazy singleton client, graceful no-op when unconfigured~~
 
 ## Billing with Polar
 
