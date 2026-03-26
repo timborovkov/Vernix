@@ -82,4 +82,17 @@ describe("GET /api/agent/mute-status", () => {
     expect(status).toBe(200);
     expect(data.muted).toBe(true);
   });
+
+  it("accepts botId as auth for silent mode", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      { metadata: { botId: "bot-1", silent: true, muted: true } },
+    ]);
+
+    const req = new Request(
+      `${BASE_URL}?meetingId=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11&botSecret=bot-1`
+    );
+    const { status, data } = await parseJsonResponse(await GET(req));
+    expect(status).toBe(200);
+    expect(data.muted).toBe(true);
+  });
 });

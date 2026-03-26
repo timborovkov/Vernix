@@ -34,8 +34,16 @@ export async function GET(request: Request) {
   }
 
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
-  const storedSecret = metadata.voiceSecret;
-  if (typeof storedSecret !== "string" || storedSecret !== botSecret) {
+
+  // Accept voiceSecret (voice mode) or botId (silent mode) for auth
+  const storedVoiceSecret = metadata.voiceSecret;
+  const storedBotId = metadata.botId;
+  const validVoiceSecret =
+    typeof storedVoiceSecret === "string" && storedVoiceSecret === botSecret;
+  const validBotId =
+    typeof storedBotId === "string" && storedBotId === botSecret;
+
+  if (!validVoiceSecret && !validBotId) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
