@@ -20,7 +20,7 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  "Voice agent (wake-on-demand or always-on)",
+  "Voice agent",
   "Silent agent",
   "$30 usage credit included monthly",
   "Pay-as-you-go beyond credits",
@@ -33,8 +33,7 @@ const PRO_FEATURES = [
 ];
 
 const USAGE_RATES = [
-  { type: "Voice meeting (wake-on-demand)", price: "$3/hr" },
-  { type: "Voice meeting (always-on)", price: "$10/hr" },
+  { type: "Voice meeting", price: "$3/hr" },
   { type: "Silent meeting", price: "$1.50/hr" },
   { type: "Post-meeting chat", price: "Free" },
 ];
