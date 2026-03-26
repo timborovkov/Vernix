@@ -148,6 +148,8 @@ Replace always-on Realtime API connection with on-demand activation. Voice mode 
 - **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
 - **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
 - **Attribution** — UTM parameter tracking across signup flow for campaign attribution
+- **Feature usage event tracking** — Track key in-product feature usage events (chat queries, voice agent usage, silent mode, knowledge uploads, exports, task completion, API key usage) for product analytics beyond funnel conversion.
+- **Event taxonomy & dashboards** — Define a consistent event naming schema/properties and build dashboards for activation, retention, and feature adoption trends.
 
 ## A/B Testing for Landing Pages
 
