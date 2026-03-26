@@ -29,6 +29,9 @@ import {
   Save,
   ListChecks,
   Download,
+  VolumeX,
+  Volume2,
+  OctagonX,
 } from "lucide-react";
 
 export default function MeetingDetailPage() {
@@ -44,10 +47,13 @@ export default function MeetingDetailPage() {
     search,
   } = useMeetingDetail(id);
   const [query, setQuery] = useState("");
+  const [hideCompleted, setHideCompleted] = useState(true);
 
   const [agenda, setAgenda] = useState("");
   const [agendaSaving, setAgendaSaving] = useState(false);
   const [silentSaving, setSilentSaving] = useState(false);
+  const [muteSaving, setMuteSaving] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const syncedMeetingId = useRef<string | null>(null);
 
   // Sync agenda from meeting metadata once per meeting load
@@ -141,6 +147,47 @@ export default function MeetingDetailPage() {
   const isSilent = Boolean(
     (meeting.metadata as Record<string, unknown>)?.silent
   );
+  const isMuted = Boolean((meeting.metadata as Record<string, unknown>)?.muted);
+
+  const toggleMute = async () => {
+    setMuteSaving(true);
+    try {
+      const res = await fetch(`/api/meetings/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ muted: !isMuted }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(`Agent ${!isMuted ? "muted" : "unmuted"}`);
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.meetings.detail(id),
+      });
+    } catch {
+      toast.error("Failed to update mute state");
+    } finally {
+      setMuteSaving(false);
+    }
+  };
+
+  const handleStopAgent = async () => {
+    setStopping(true);
+    try {
+      const res = await fetch("/api/agent/stop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ meetingId: id }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Agent stopped");
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.meetings.detail(id),
+      });
+    } catch {
+      toast.error("Failed to stop agent");
+    } finally {
+      setStopping(false);
+    }
+  };
 
   const toggleSilent = async () => {
     setSilentSaving(true);
@@ -213,6 +260,41 @@ export default function MeetingDetailPage() {
           <span>Ended: {new Date(meeting.endedAt).toLocaleString()}</span>
         )}
       </div>
+
+      {/* Agent Controls */}
+      {meeting.status === "active" && (
+        <Card className="mt-4 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
+          <CardContent className="flex flex-wrap items-center gap-3 py-3">
+            <span className="text-sm font-medium">Agent Controls</span>
+            <Button
+              variant={isMuted ? "default" : "outline"}
+              size="sm"
+              onClick={toggleMute}
+              disabled={muteSaving}
+            >
+              {isMuted ? (
+                <VolumeX className="mr-1 h-3.5 w-3.5" />
+              ) : (
+                <Volume2 className="mr-1 h-3.5 w-3.5" />
+              )}
+              {muteSaving
+                ? "Saving..."
+                : isMuted
+                  ? "Unmute Agent"
+                  : "Mute Agent"}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleStopAgent}
+              disabled={stopping}
+            >
+              <OctagonX className="mr-1 h-3.5 w-3.5" />
+              {stopping ? "Stopping..." : "Stop Agent"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Agenda */}
       <Card className="mt-6">
@@ -299,10 +381,31 @@ export default function MeetingDetailPage() {
       {/* Action Items */}
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ListChecks className="h-4 w-4" />
-            Action Items
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <ListChecks className="h-4 w-4" />
+              Action Items
+            </CardTitle>
+            {(() => {
+              const completedCount = meetingTasks.filter(
+                (t) => t.status === "completed"
+              ).length;
+              return (
+                completedCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setHideCompleted(!hideCompleted)}
+                    className="text-muted-foreground text-xs"
+                  >
+                    {hideCompleted
+                      ? `Show ${completedCount} completed`
+                      : "Hide completed"}
+                  </Button>
+                )
+              );
+            })()}
+          </div>
         </CardHeader>
         <CardContent>
           {tasksLoading ? (
@@ -320,7 +423,11 @@ export default function MeetingDetailPage() {
             </p>
           ) : (
             <TaskList
-              tasks={meetingTasks}
+              tasks={
+                hideCompleted
+                  ? meetingTasks.filter((t) => t.status === "open")
+                  : meetingTasks
+              }
               onToggle={(taskId, status) =>
                 updateTask(taskId, { status: status as "open" | "completed" })
               }

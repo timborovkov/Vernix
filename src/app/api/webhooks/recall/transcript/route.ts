@@ -199,6 +199,7 @@ export async function POST(request: Request) {
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
   if (
     metadata.silent &&
+    !metadata.muted &&
     meeting.status === "active" &&
     meeting.userId &&
     typeof metadata.botId === "string" &&

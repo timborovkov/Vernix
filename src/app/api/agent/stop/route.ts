@@ -4,10 +4,7 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { requireSessionUser } from "@/lib/auth/session";
-import { scrollTranscript } from "@/lib/vector/scroll";
-import { generateMeetingSummary } from "@/lib/summary/generate";
-import { extractActionItems } from "@/lib/tasks/extract";
-import { storeExtractedTasks } from "@/lib/tasks/store";
+import { processMeetingEnd } from "@/lib/agent/processing";
 import { z } from "zod/v4";
 
 const stopSchema = z.object({
@@ -74,42 +71,13 @@ export async function POST(request: Request) {
     })
     .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
 
-  // Generate summary (best-effort)
-  try {
-    const segments = await scrollTranscript(meeting.qdrantCollectionName);
-    const existingMetadata =
-      (meeting.metadata as Record<string, unknown>) ?? {};
-    const summary = await generateMeetingSummary(segments, {
-      title: meeting.title,
-      startedAt: meeting.startedAt,
-      participants: meeting.participants as string[],
-      agenda: existingMetadata.agenda as string | undefined,
-    });
-
-    await db
-      .update(meetings)
-      .set({
-        status: "completed",
-        metadata: { ...existingMetadata, summary },
-        updatedAt: new Date(),
-      })
-      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
-
-    // Extract action items (non-critical)
-    try {
-      const items = await extractActionItems(segments);
-      await storeExtractedTasks(meetingId, user.id, items);
-    } catch (err) {
-      console.error("Action item extraction failed:", err);
-    }
-  } catch (error) {
-    console.error("Post-processing failed:", error);
-    // Still complete on failure, just without summary
-    await db
-      .update(meetings)
-      .set({ status: "completed", updatedAt: new Date() })
-      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)));
-  }
+  const existingMetadata = (meeting.metadata as Record<string, unknown>) ?? {};
+  await processMeetingEnd(meetingId, user.id, meeting.qdrantCollectionName, {
+    ...existingMetadata,
+    title: meeting.title,
+    startedAt: meeting.startedAt,
+    participants: meeting.participants as string[],
+  });
 
   return NextResponse.json({ success: true });
 }

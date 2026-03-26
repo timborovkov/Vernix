@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, getTableColumns } from "drizzle-orm";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { documents, meetings } from "@/lib/db/schema";
@@ -36,8 +36,12 @@ export async function GET(request: Request) {
   }
 
   const docs = await db
-    .select()
+    .select({
+      ...getTableColumns(documents),
+      meetingTitle: meetings.title,
+    })
     .from(documents)
+    .leftJoin(meetings, eq(documents.meetingId, meetings.id))
     .where(and(...conditions))
     .orderBy(desc(documents.createdAt));
 

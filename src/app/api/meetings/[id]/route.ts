@@ -49,7 +49,10 @@ export async function PATCH(
   }
 
   // Only allow updating safe fields
-  const { title, joinLink, agenda, silent } = body as Record<string, unknown>;
+  const { title, joinLink, agenda, silent, muted } = body as Record<
+    string,
+    unknown
+  >;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof title === "string") updates.title = title;
   if (typeof joinLink === "string") updates.joinLink = joinLink;
@@ -89,6 +92,16 @@ export async function PATCH(
         silent,
       };
     }
+  }
+
+  // Allow toggling mute only for active meetings
+  if (typeof muted === "boolean" && meeting.status === "active") {
+    const existingMetadata =
+      (meeting.metadata as Record<string, unknown>) ?? {};
+    updates.metadata = {
+      ...(updates.metadata ?? existingMetadata),
+      muted,
+    };
   }
 
   const [updated] = await db

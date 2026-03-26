@@ -4,6 +4,7 @@ const { mockDb, mockEnsureBucket, mockUploadFile, mockProcessDocument } =
     for (const m of [
       "select",
       "from",
+      "leftJoin",
       "where",
       "orderBy",
       "insert",
