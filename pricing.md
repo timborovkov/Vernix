@@ -1,4 +1,4 @@
-# MVernix Pricing Model
+# Vernix Pricing Model
 
 > Hybrid plan + usage-based billing. Base plans unlock features and include usage credits; overflow is billed per-hour. Always profitable at every usage level.
 
@@ -234,6 +234,7 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 
 ### User Distribution
 
+
 | Segment             | Users     | Voice/mo | Silent/mo | Cost/user | Usage $ | Credit | Overage |
 | ------------------- | --------- | -------- | --------- | --------- | ------- | ------ | ------- |
 | **Free (inactive)** | 480       | —        | —         | $0        | —       | —      | —       |
@@ -247,47 +248,54 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 | **Max (heavy)**     | 10        | 25 hr    | 50 hr     | $70.50    | $150.00 | $60    | $90     |
 | **Total**           | **1,000** |          |           |           |         |        |         |
 
+
 *800 free (480 inactive + 270 active + 50 trial), 160 Pro, 40 Max. Voice at $1.40/hr, silent at $0.71/hr. Cost/user includes $0.10 infra. Trial users have Pro features for 14 days — they cost us but generate $0 revenue.*
 
 ### Revenue
 
-| Line item            | Calculation                | Amount     |
-| -------------------- | -------------------------- | ---------- |
-| Pro base (160 × $24) |                            | $3,840     |
-| Max base (40 × $49)  |                            | $1,960     |
-| Pro overage           | 55×$4 + 30×$41.50         | $1,465     |
-| Max overage           | 18×$15 + 10×$90           | $1,170     |
-| **Gross revenue**     |                            | **$8,435** |
+
+| Line item            | Calculation       | Amount     |
+| -------------------- | ----------------- | ---------- |
+| Pro base (160 × $24) |                   | $3,840     |
+| Max base (40 × $49)  |                   | $1,960     |
+| Pro overage          | 55×$4 + 30×$41.50 | $1,465     |
+| Max overage          | 18×$15 + 10×$90   | $1,170     |
+| **Gross revenue**    |                   | **$8,435** |
+
 
 ### Costs
 
-| Line item          | Calculation                                    | Amount     |
-| ------------------ | ---------------------------------------------- | ---------- |
-| Free active        | 270 × $0.21                                   | $57        |
-| Free trial         | 50 × $2.11                                    | $106       |
-| Pro light          | 75 × $3.53                                    | $265       |
-| Pro typical        | 55 × $11.30                                   | $622       |
-| Pro heavy          | 30 × $28.95                                   | $869       |
-| Max light          | 12 × $11.30                                   | $136       |
-| Max typical        | 18 × $35.30                                   | $635       |
-| Max heavy          | 10 × $70.50                                   | $705       |
-| **Subtotal usage** |                                                | **$3,395** |
-| Polar on base      | 160×$1.36 + 40×$2.36                          | $312       |
-| Polar on overage   | 55×$0.56 + 30×$2.06 + 18×$1.00 + 10×$4.00    | $151       |
-| Infrastructure     |                                                | $120       |
-| **Total cost**     |                                                | **$3,978** |
+
+| Line item          | Calculation                               | Amount     |
+| ------------------ | ----------------------------------------- | ---------- |
+| Free active        | 270 × $0.21                               | $57        |
+| Free trial         | 50 × $2.11                                | $106       |
+| Pro light          | 75 × $3.53                                | $265       |
+| Pro typical        | 55 × $11.30                               | $622       |
+| Pro heavy          | 30 × $28.95                               | $869       |
+| Max light          | 12 × $11.30                               | $136       |
+| Max typical        | 18 × $35.30                               | $635       |
+| Max heavy          | 10 × $70.50                               | $705       |
+| **Subtotal usage** |                                           | **$3,395** |
+| Polar on base      | 160×$1.36 + 40×$2.36                      | $312       |
+| Polar on overage   | 55×$0.56 + 30×$2.06 + 18×$1.00 + 10×$4.00 | $151       |
+| Infrastructure     |                                           | $120       |
+| **Total cost**     |                                           | **$3,978** |
+
 
 ### Summary
 
-| Metric            | Amount                  |
-| ----------------- | ----------------------- |
-| **Gross revenue** | **$8,435**              |
-| **Total cost**    | **$3,978**              |
-| **Net margin**    | **$4,457**              |
-| **Margin %**      | **52.8%**               |
-| Revenue per user  | $8.44                   |
-| Cost per user     | $3.98                   |
-| Free user drag    | $163 (1.9% of revenue)  |
+
+| Metric            | Amount                 |
+| ----------------- | ---------------------- |
+| **Gross revenue** | **$8,435**             |
+| **Total cost**    | **$3,978**             |
+| **Net margin**    | **$4,457**             |
+| **Margin %**      | **52.8%**              |
+| Revenue per user  | $8.44                  |
+| Cost per user     | $3.98                  |
+| Free user drag    | $163 (1.9% of revenue) |
+
 
 ### Takeaways
 
