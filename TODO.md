@@ -36,10 +36,7 @@
 - Hide completed tasks from dashboard action points
 - Show meeting-scoped files on knowledge page
 - Voice Mode Rewrite (On-Demand Realtime)
-
-## Internal Agent System Documentation
-
-- **Agent architecture playbook (internal)** — Create a single internal doc that inventories all agents and modes: what each does, where each is used, which tools it can call, how calls are routed/invoked (API routes, MCP tools, webhooks, bot runtime), which models are used where, and detailed lifecycle/sequence flows for both voice mode and silent mode (triggering, guardrails, context/RAG, response path, fallback behavior, and limits).
+- Internal Agent System Documentation (`docs/agent-architecture.md`)
 
 ## Billing with Polar
 
