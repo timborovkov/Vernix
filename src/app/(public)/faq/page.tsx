@@ -3,57 +3,69 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FAQ — Vernix",
   description:
-    "Frequently asked questions about Vernix — platform support, voice agent, silent mode, data security, document uploads, and MCP integration.",
+    "Frequently asked questions about Vernix — platform support, voice agent, silent mode, pricing, data security, and more.",
 };
 
 const QUESTIONS = [
   {
     q: "What is Vernix?",
-    a: "Vernix is an AI-powered meeting assistant that joins your video calls as a participant. It transcribes conversations in real time, generates summaries, extracts action items, and provides a voice agent that can answer questions using context from your meetings and uploaded documents.",
+    a: "Vernix is an AI meeting agent that joins your video calls as a participant. It transcribes conversations in real time, generates summaries, extracts action items, and provides a voice agent that can answer questions using context from your meetings and uploaded documents.",
   },
   {
     q: "Which video platforms are supported?",
-    a: "Vernix supports Zoom, Google Meet, Microsoft Teams, and Webex. Simply paste the meeting join link and the agent will join automatically.",
+    a: "Vernix supports Zoom, Google Meet, Microsoft Teams, and Webex. Paste the meeting join link and the agent joins automatically.",
   },
   {
     q: "How does the voice agent work?",
-    a: "The voice agent uses the OpenAI Realtime API to listen and respond during your call. When you address it by name, it searches through meeting transcripts and your knowledge base using RAG (Retrieval-Augmented Generation) to provide accurate, context-aware answers.",
+    a: "The voice agent listens during your call and responds when addressed by name. It searches through meeting transcripts and your knowledge base to give accurate, context-aware answers. By default it uses wake-on-demand mode — it only activates when you speak to it, keeping costs low. You can also opt into always-on mode for continuous interaction.",
   },
   {
     q: "What is silent mode?",
-    a: "Silent mode lets the agent join your call without any audio presence. Instead of responding by voice, it monitors the transcript and replies via the meeting chat when mentioned. This is useful for meetings where a voice agent would be disruptive.",
+    a: "Silent mode lets the agent join your call without any audio presence. Instead of responding by voice, it monitors the transcript and replies via the meeting chat when mentioned. Useful for meetings where a voice agent would be disruptive.",
   },
   {
-    q: "Is my data secure?",
-    a: "Yes. All data is scoped to your account — no one else can access your meetings, transcripts, or documents. Transcripts are stored in a vector database for search, and documents are stored in S3-compatible object storage. We never share your data with third parties.",
+    q: "Is there a free plan?",
+    a: "Yes. The free plan gives you 30 minutes of silent meetings per month with transcription, summaries, action items, and RAG chat. No credit card needed, no time limit — it's free forever.",
+  },
+  {
+    q: "How does the free trial work?",
+    a: "When you sign up, you get a 14-day trial of Pro with 90 minutes of meeting time (voice or silent). After the trial ends or you use up the 90 minutes, you fall back to the free plan. No credit card required.",
+  },
+  {
+    q: "How does pricing work?",
+    a: "Pro is $29/mo and includes $30 of usage credit. Voice meetings cost $3/hr (wake-on-demand) or $10/hr (always-on). Silent meetings cost $1.50/hr. Most users stay within the $30 credit and pay a flat $29/mo. If you go over, you only pay for the extra usage. You can set a monthly spending cap to avoid surprises.",
+  },
+  {
+    q: "What counts as usage?",
+    a: "Meeting time is the main usage metric. A 1-hour voice meeting (wake-on-demand) uses $3 of credit. A 1-hour silent meeting uses $1.50. Post-meeting chat, summaries, and action items are included at no extra cost. Your $30 monthly credit covers roughly 10 hours of voice meetings or 20 hours of silent meetings.",
   },
   {
     q: "Can I use my own documents?",
-    a: "Absolutely. Upload PDF, DOCX, TXT, or Markdown files to your knowledge base. Documents are chunked, embedded, and made available to the agent for RAG-powered answers. You can also upload documents scoped to a specific meeting.",
+    a: "Yes. Upload PDF, DOCX, TXT, or Markdown files to your knowledge base. Documents are processed and made available to the agent for context-aware answers. You can also upload documents scoped to a specific meeting.",
   },
   {
     q: "What is MCP integration?",
-    a: "MCP (Model Context Protocol) allows you to connect external tools to Vernix. You can expose your meeting data to tools like Claude Desktop or Cursor, and connect external MCP servers to give your agent access to additional capabilities.",
+    a: "MCP (Model Context Protocol) lets you connect external tools to Vernix. You can expose your meeting data to tools like Claude Desktop or Cursor, and connect external MCP servers to give your agent access to additional capabilities. Available on Pro.",
   },
   {
-    q: "Can I export my data?",
-    a: "Yes. You can export individual meetings as PDF or Markdown, or bulk export all meetings as a ZIP archive containing Markdown files and metadata.",
-  },
-  {
-    q: "Do all participants need to consent to recording?",
-    a: "Yes. You are responsible for obtaining consent from all call participants before using Vernix. Recording laws vary by jurisdiction — some require all-party consent, others require only one-party consent. We recommend informing all participants that an AI assistant will be joining the call.",
-  },
-  {
-    q: "Is there a free trial?",
-    a: "Yes. You can get started with 5 meetings at no cost, including live transcription, AI summaries, and action item extraction. No credit card required.",
-  },
-  {
-    q: "What happens to my data if I cancel?",
-    a: "You can export all your data before canceling. After account deletion, your meetings, transcripts, documents, and all associated data are permanently removed from our systems.",
+    q: "Is my data secure?",
+    a: "All data is scoped to your account — no one else can access your meetings, transcripts, or documents. Transcripts are stored in a vector database for search, and documents are stored in encrypted object storage. We never share your data with third parties.",
   },
   {
     q: "Does Vernix store meeting recordings?",
-    a: "Vernix does not store audio or video recordings. It processes the audio stream in real time for transcription, but only the text transcript is stored — not the raw audio.",
+    a: "No. Vernix processes the audio stream in real time for transcription, but only the text transcript is stored — not the raw audio or video.",
+  },
+  {
+    q: "Do participants need to consent to recording?",
+    a: "Yes. You are responsible for obtaining consent from all call participants. Recording laws vary by jurisdiction. We recommend informing participants that an AI assistant will be joining the call.",
+  },
+  {
+    q: "Can I export my data?",
+    a: "Yes. Export individual meetings as PDF or Markdown, or bulk export all meetings as a ZIP archive. Your data is always yours.",
+  },
+  {
+    q: "What happens if I cancel Pro?",
+    a: "You fall back to the free plan. Your existing meetings, transcripts, and documents stay accessible (read-only for anything over free limits). You can export everything at any time. Re-subscribe whenever you want — nothing is deleted.",
   },
 ];
 
