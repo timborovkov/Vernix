@@ -6,6 +6,8 @@ import { eq, sql } from "drizzle-orm";
 import { processMeetingEnd } from "@/lib/agent/processing";
 import { verifyRecallSignature } from "@/lib/webhooks/verify";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { flushTelemetry } from "@/lib/agent/telemetry";
+import { clearMcpToolCache } from "@/app/api/agent/voice-token/route";
 
 const statusEventSchema = z.object({
   event: z.string(),
@@ -92,6 +94,14 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       })
       .where(eq(meetings.id, meeting.id));
+
+    // Flush voice telemetry and clear MCP cache
+    if (meeting.userId) {
+      flushTelemetry(meeting.id, meeting.userId).catch((err) =>
+        console.error("[Webhook:status] Telemetry flush failed:", err)
+      );
+    }
+    clearMcpToolCache(meeting.id);
 
     return NextResponse.json({ success: true });
   }

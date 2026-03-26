@@ -10,10 +10,31 @@ import {
 import { McpClientManager } from "@/lib/mcp/client";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
+// MCP tool cache per meeting (avoid re-fetching on every token request)
+const MCP_CACHE_TTL_MS = 5 * 60_000; // 5 minutes
+const mcpToolCache = new Map<
+  string,
+  {
+    tools: Array<{
+      type: "function";
+      name: string;
+      description: string;
+      parameters: Record<string, unknown>;
+    }>;
+    descriptions: ToolDescription[];
+    fetchedAt: number;
+  }
+>();
+
+export function clearMcpToolCache(meetingId: string): void {
+  // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+  mcpToolCache.delete(meetingId);
+}
+
 export async function GET(request: Request) {
   const rl = rateLimitByIp(request, "agent:voice-token", {
     interval: 60_000,
-    limit: 10,
+    limit: 30,
   });
   if (!rl.success) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
@@ -57,7 +78,7 @@ export async function GET(request: Request) {
     );
   }
 
-  // Load MCP tools for the meeting owner (with timeout so voice agent isn't blocked)
+  // Load MCP tools (cached per meeting to avoid re-fetching on every activation)
   const MCP_TIMEOUT_MS = 5_000;
   let mcpOpenAITools: Array<{
     type: "function";
@@ -66,23 +87,35 @@ export async function GET(request: Request) {
     parameters: Record<string, unknown>;
   }> = [];
   let mcpToolDescriptions: ToolDescription[] = [];
-  try {
-    const mcpManager = await Promise.race([
-      McpClientManager.connectForUser(meeting.userId),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error("MCP connection timeout")),
-          MCP_TIMEOUT_MS
-        )
-      ),
-    ]);
-    mcpOpenAITools = mcpManager.getOpenAITools();
-    mcpToolDescriptions = mcpOpenAITools.map((t) => ({
-      name: t.name,
-      description: t.description,
-    }));
-  } catch (error) {
-    console.error("MCP client connection failed:", error);
+
+  const cached = mcpToolCache.get(meetingId);
+  if (cached && Date.now() - cached.fetchedAt < MCP_CACHE_TTL_MS) {
+    mcpOpenAITools = cached.tools;
+    mcpToolDescriptions = cached.descriptions;
+  } else {
+    try {
+      const mcpManager = await Promise.race([
+        McpClientManager.connectForUser(meeting.userId),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error("MCP connection timeout")),
+            MCP_TIMEOUT_MS
+          )
+        ),
+      ]);
+      mcpOpenAITools = mcpManager.getOpenAITools();
+      mcpToolDescriptions = mcpOpenAITools.map((t) => ({
+        name: t.name,
+        description: t.description,
+      }));
+      mcpToolCache.set(meetingId, {
+        tools: mcpOpenAITools,
+        descriptions: mcpToolDescriptions,
+        fetchedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error("MCP client connection failed:", error);
+    }
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

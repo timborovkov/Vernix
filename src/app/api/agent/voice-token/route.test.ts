@@ -43,7 +43,7 @@ vi.mock("@/lib/mcp/client", () => ({
   McpClientManager: { connectForUser: mockConnectForUser },
 }));
 
-import { GET } from "./route";
+import { GET, clearMcpToolCache } from "./route";
 import { parseJsonResponse, fakeMeeting } from "@/test/helpers";
 
 describe("GET /api/agent/voice-token", () => {
@@ -59,6 +59,8 @@ describe("GET /api/agent/voice-token", () => {
     mockConnectForUser.mockReset().mockResolvedValue({
       getOpenAITools: () => [],
     });
+    // Clear MCP tool cache between tests
+    clearMcpToolCache("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
   });
 
   it("returns 400 without meetingId", async () => {

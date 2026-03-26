@@ -27,6 +27,13 @@
         background: #333;
         transition: background 0.3s;
       }
+      #indicator.idle {
+        background: #555;
+      }
+      #indicator.connecting {
+        background: #eab308;
+        animation: pulse 0.8s infinite;
+      }
       #indicator.listening {
         background: #22c55e;
       }
@@ -36,6 +43,9 @@
       #indicator.speaking {
         background: #3b82f6;
         animation: pulse 0.8s infinite;
+      }
+      #indicator.cooldown {
+        background: #166534;
       }
       @keyframes pulse {
         0%,
@@ -72,10 +82,19 @@
 
       let ws = null;
       let audioContext = null;
-      let audioDone = true; // true when no more audio chunks expected
+      let audioDone = true;
       let mcpToolNames = new Set();
-      let muteCheckInterval = null;
       let isMuted = false;
+      let leaving = false;
+      let sessionActive = false;
+      let pollInterval = null;
+      let idleTimer = null;
+
+      // --- Constants ---
+      const POLL_INTERVAL_MS = 2000;
+      const IDLE_TIMEOUT_MS = 15000;
+      const AUDIO_BUFFER_SECONDS = 10;
+      const FALLBACK_TIMEOUT_MS = 5000;
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -93,13 +112,11 @@
 
       function queueAudio(base64Pcm) {
         audioDone = false;
-        // Decode base64 to Int16Array
         const binary = atob(base64Pcm);
         const bytes = new Uint8Array(binary.length);
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
         const int16 = new Int16Array(bytes.buffer);
 
-        // Convert to Float32
         const float32 = new Float32Array(int16.length);
         for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
 
@@ -110,11 +127,15 @@
       function playNext() {
         if (audioQueue.length === 0) {
           isPlaying = false;
-          if (audioDone) setStatus("Listening...", "listening");
+          if (audioDone && sessionActive) {
+            setStatus("Listening...", "listening");
+            startIdleTimer();
+          }
           return;
         }
         isPlaying = true;
         setStatus("Speaking...", "speaking");
+        clearIdleTimer();
 
         const samples = audioQueue.shift();
         const buffer = audioContext.createBuffer(1, samples.length, 24000);
@@ -127,6 +148,33 @@
         source.start();
       }
 
+      // --- Circular audio buffer ---
+      const CHUNK_SIZE = 4096;
+      const MAX_RING_CHUNKS = Math.ceil(
+        (AUDIO_BUFFER_SECONDS * 24000) / CHUNK_SIZE
+      );
+      const audioRingBuffer = [];
+
+      function pushToRingBuffer(base64Chunk) {
+        audioRingBuffer.push(base64Chunk);
+        if (audioRingBuffer.length > MAX_RING_CHUNKS) {
+          audioRingBuffer.shift();
+        }
+      }
+
+      function flushRingBuffer() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        for (const chunk of audioRingBuffer) {
+          ws.send(
+            JSON.stringify({
+              type: "input_audio_buffer.append",
+              audio: chunk,
+            })
+          );
+        }
+        audioRingBuffer.length = 0;
+      }
+
       // --- Audio capture ---
       async function startCapture() {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -135,46 +183,108 @@
         audioContext = new AudioContext({ sampleRate: 24000 });
 
         const source = audioContext.createMediaStreamSource(stream);
-        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        const processor = audioContext.createScriptProcessor(CHUNK_SIZE, 1, 1);
 
         processor.onaudioprocess = (e) => {
-          if (!ws || ws.readyState !== WebSocket.OPEN) return;
-
           const float32 = e.inputBuffer.getChannelData(0);
-          // Convert Float32 to Int16
           const int16 = new Int16Array(float32.length);
           for (let i = 0; i < float32.length; i++) {
             const s = Math.max(-1, Math.min(1, float32[i]));
             int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
           }
 
-          // Encode to base64
           const bytes = new Uint8Array(int16.buffer);
           let binary = "";
           for (let i = 0; i < bytes.length; i++)
             binary += String.fromCharCode(bytes[i]);
           const base64 = btoa(binary);
 
-          ws.send(
-            JSON.stringify({
-              type: "input_audio_buffer.append",
-              audio: base64,
-            })
-          );
+          // Always buffer audio for context on activation
+          pushToRingBuffer(base64);
+
+          // Only stream live audio when session is active
+          if (ws && ws.readyState === WebSocket.OPEN && sessionActive) {
+            ws.send(
+              JSON.stringify({
+                type: "input_audio_buffer.append",
+                audio: base64,
+              })
+            );
+          }
         };
 
         source.connect(processor);
-        // Connect through a silent gain node to keep ScriptProcessor active
-        // without echoing meeting audio back to participants
         const silentGain = audioContext.createGain();
         silentGain.gain.value = 0;
         processor.connect(silentGain);
         silentGain.connect(audioContext.destination);
       }
 
-      // --- Agent action helpers ---
-      let leaving = false;
+      // --- Idle timer ---
+      function startIdleTimer() {
+        clearIdleTimer();
+        idleTimer = setTimeout(() => {
+          log("Idle timeout — closing session");
+          closeSession("idle");
+        }, IDLE_TIMEOUT_MS);
+      }
 
+      function clearIdleTimer() {
+        if (idleTimer) {
+          clearTimeout(idleTimer);
+          idleTimer = null;
+        }
+      }
+
+      // --- Session lifecycle ---
+      function closeSession(reason) {
+        clearIdleTimer();
+        sessionActive = false;
+        if (ws) {
+          ws.onclose = null;
+          ws.close();
+          ws = null;
+        }
+        audioQueue.length = 0;
+        isPlaying = false;
+        audioDone = true;
+
+        // Notify server
+        notifyState("idle");
+
+        if (!leaving && !isMuted) {
+          setStatus("Listening for your name...", "idle");
+          startPolling();
+        }
+
+        log("Session closed: " + reason);
+      }
+
+      // --- Pre-generated acknowledgement audio ---
+      // Short "one moment" beep — three ascending tones
+      function playAcknowledgement() {
+        if (!audioContext) return;
+        const duration = 0.15;
+        const frequencies = [440, 554, 659];
+        frequencies.forEach((freq, i) => {
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.frequency.value = freq;
+          osc.type = "sine";
+          gain.gain.value = 0.15;
+          gain.gain.setValueAtTime(0.15, audioContext.currentTime + i * 0.18);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + i * 0.18 + duration
+          );
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start(audioContext.currentTime + i * 0.18);
+          osc.stop(audioContext.currentTime + i * 0.18 + duration);
+        });
+      }
+
+      // --- Agent action helpers ---
       async function agentLeave() {
         if (leaving) return;
         leaving = true;
@@ -187,15 +297,8 @@
         } catch (err) {
           log("Leave error: " + err.message);
         }
-        if (ws) {
-          ws.onclose = null;
-          ws.close();
-          ws = null;
-        }
-        if (muteCheckInterval) {
-          clearInterval(muteCheckInterval);
-          muteCheckInterval = null;
-        }
+        closeSession("leaving");
+        stopPolling();
         setStatus("Left meeting", "");
       }
 
@@ -211,15 +314,8 @@
         } catch (err) {
           log("Switch mode error: " + err.message);
         }
-        if (ws) {
-          ws.onclose = null;
-          ws.close();
-          ws = null;
-        }
-        if (muteCheckInterval) {
-          clearInterval(muteCheckInterval);
-          muteCheckInterval = null;
-        }
+        closeSession("switch-to-silent");
+        stopPolling();
         setStatus("Silent mode active", "");
       }
 
@@ -250,7 +346,6 @@
           );
           setTimeout(async () => {
             if (leaving) return;
-            // Don't set leaving — mute is reversible via dashboard unmute
             try {
               await fetch(`${appUrl}/api/agent/mute-self`, {
                 method: "POST",
@@ -261,13 +356,7 @@
               log("Mute error: " + err.message);
             }
             isMuted = true;
-            if (ws) {
-              ws.onclose = null;
-              ws.close();
-              ws = null;
-            }
-            audioQueue.length = 0;
-            isPlaying = false;
+            closeSession("muted");
             setStatus("Muted", "");
           }, 3000);
           return;
@@ -279,7 +368,11 @@
             const res = await fetch(`${appUrl}/api/agent/rag`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ meetingId, botSecret, query: args.query }),
+              body: JSON.stringify({
+                meetingId,
+                botSecret,
+                query: args.query,
+              }),
             });
             const data = await res.json();
             sendToolOutput(callId, data.context || "No context found.");
@@ -338,43 +431,81 @@
         ws.send(JSON.stringify({ type: "response.create" }));
       }
 
-      // --- Mute polling ---
-      function startMutePolling() {
-        if (muteCheckInterval) return;
-        muteCheckInterval = setInterval(async () => {
-          if (leaving) return;
-          try {
-            const res = await fetch(`${appUrl}/api/agent/mute-status`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ meetingId, botSecret }),
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            if (data.muted && !isMuted) {
-              isMuted = true;
-              if (ws) {
-                ws.onclose = null;
-                ws.close();
-                ws = null;
-              }
-              audioQueue.length = 0;
-              isPlaying = false;
-              setStatus("Muted by host", "");
-            } else if (!data.muted && isMuted) {
-              isMuted = false;
-              leaving = false;
-              connect();
-            }
-          } catch (e) {
-            /* ignore polling errors */
-          }
-        }, 10000);
+      // --- Server state notifications ---
+      async function notifyState(state) {
+        try {
+          await fetch(`${appUrl}/api/agent/activation-status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret, state }),
+          });
+        } catch {
+          /* best effort */
+        }
       }
 
-      // --- OpenAI WebSocket ---
-      async function connect() {
-        setStatus("Getting token...", "");
+      // --- Activation polling ---
+      function startPolling() {
+        stopPolling();
+        pollInterval = setInterval(pollActivation, POLL_INTERVAL_MS);
+      }
+
+      function stopPolling() {
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+      }
+
+      async function pollActivation() {
+        if (leaving || sessionActive) return;
+        try {
+          const res = await fetch(`${appUrl}/api/agent/activation-status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret }),
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+
+          // Handle mute state
+          if (data.muted && !isMuted) {
+            isMuted = true;
+            setStatus("Muted by host", "");
+            return;
+          }
+          if (!data.muted && isMuted) {
+            isMuted = false;
+            leaving = false;
+            setStatus("Listening for your name...", "idle");
+          }
+
+          if (isMuted) return;
+
+          // Handle activation
+          if (data.state === "activated" && !sessionActive) {
+            stopPolling();
+            activateSession(data.transcriptWindow);
+          }
+        } catch {
+          /* ignore polling errors */
+        }
+      }
+
+      // --- On-demand Realtime session ---
+      async function activateSession(transcriptWindow) {
+        sessionActive = true;
+        playAcknowledgement();
+        setStatus("Connecting...", "connecting");
+        notifyState("responding");
+
+        // Set a fallback timeout
+        const fallbackTimer = setTimeout(() => {
+          if (!ws || ws.readyState !== WebSocket.OPEN) {
+            log("Realtime connection timed out, falling back to chat");
+            triggerFallback(transcriptWindow);
+          }
+        }, FALLBACK_TIMEOUT_MS);
 
         let tokenRes;
         try {
@@ -382,22 +513,22 @@
             `${appUrl}/api/agent/voice-token?meetingId=${meetingId}&botSecret=${botSecret}`
           );
         } catch (err) {
+          clearTimeout(fallbackTimer);
           log("Token fetch failed: " + err.message);
-          setStatus("Retrying in 5s...", "");
-          setTimeout(connect, 5000);
+          triggerFallback(transcriptWindow);
           return;
         }
+
         if (!tokenRes.ok) {
+          clearTimeout(fallbackTimer);
           log("Token error: " + tokenRes.status);
-          setStatus("Retrying in 5s...", "");
-          setTimeout(connect, 5000);
+          triggerFallback(transcriptWindow);
           return;
         }
+
         const tokenData = await tokenRes.json();
         const token = tokenData.token;
         mcpToolNames = new Set(tokenData.mcpToolNames || []);
-
-        setStatus("Connecting to AI...", "");
 
         const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
@@ -406,6 +537,7 @@
         ]);
 
         ws.onopen = () => {
+          clearTimeout(fallbackTimer);
           log("WebSocket connected");
         };
 
@@ -417,19 +549,50 @@
             case "session.updated":
               setStatus("Listening...", "listening");
               log("Session ready");
-              startMutePolling();
+
+              // Inject transcript window as context
+              if (transcriptWindow) {
+                ws.send(
+                  JSON.stringify({
+                    type: "conversation.item.create",
+                    item: {
+                      type: "message",
+                      role: "user",
+                      content: [
+                        {
+                          type: "input_text",
+                          text:
+                            "Here is the recent meeting transcript. Someone just addressed you — listen to the audio to hear their question and respond.\n\n" +
+                            transcriptWindow,
+                        },
+                      ],
+                    },
+                  })
+                );
+              }
+
+              // Flush buffered audio so the model hears the full question
+              flushRingBuffer();
+
+              // Trigger a response to the wake-word question
+              ws.send(JSON.stringify({ type: "response.create" }));
               break;
 
             case "response.output_audio.delta":
+              clearIdleTimer();
               queueAudio(msg.delta);
               break;
 
             case "response.output_audio.done":
               audioDone = true;
-              if (!isPlaying) setStatus("Listening...", "listening");
+              if (!isPlaying) {
+                setStatus("Listening...", "listening");
+                startIdleTimer();
+              }
               break;
 
             case "response.function_call_arguments.done":
+              clearIdleTimer();
               try {
                 const args = JSON.parse(msg.arguments);
                 handleToolCall(msg.call_id, msg.name, args);
@@ -439,10 +602,11 @@
               break;
 
             case "input_audio_buffer.speech_started":
-              // Stop any playing audio (barge-in)
+              // Barge-in: stop playing and cancel idle timer (follow-up question)
               audioQueue.length = 0;
               isPlaying = false;
               audioDone = true;
+              clearIdleTimer();
               setStatus("Hearing speech...", "listening");
               break;
 
@@ -462,10 +626,37 @@
         };
 
         ws.onclose = () => {
-          setStatus("Disconnected", "");
-          log("WebSocket closed, reconnecting in 5s...");
-          setTimeout(connect, 5000);
+          // Do NOT auto-reconnect — return to polling
+          if (sessionActive) {
+            closeSession("ws-closed");
+          }
         };
+      }
+
+      // --- Fallback to chat ---
+      async function triggerFallback(transcriptWindow) {
+        log("Falling back to chat response...");
+        sessionActive = false;
+        if (ws) {
+          ws.onclose = null;
+          ws.close();
+          ws = null;
+        }
+
+        try {
+          await fetch(`${appUrl}/api/agent/voice-fallback`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret, transcriptWindow }),
+          });
+          log("Fallback chat response sent");
+        } catch (err) {
+          log("Fallback error: " + err.message);
+        }
+
+        notifyState("idle");
+        setStatus("Listening for your name...", "idle");
+        startPolling();
       }
 
       // --- Init ---
@@ -477,7 +668,8 @@
 
         try {
           await startCapture();
-          await connect();
+          setStatus("Listening for your name...", "idle");
+          startPolling();
         } catch (err) {
           setStatus("Error: " + err.message, "");
           console.error(err);
