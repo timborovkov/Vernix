@@ -5,6 +5,10 @@ import { getSilentAgentSystemPrompt } from "@/lib/agent/prompts";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { rateLimit, resetRateLimitKey } from "@/lib/rate-limit";
 import { McpClientManager } from "@/lib/mcp/client";
+import { db } from "@/lib/db";
+import { meetings } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
+import { processMeetingEnd } from "@/lib/agent/processing";
 
 const TRIGGER_KEYWORDS = ["vernix"];
 const DEBOUNCE_MS = 3000;
@@ -29,12 +33,18 @@ interface TranscriptBuffer {
 
 const buffers = new Map<string, TranscriptBuffer>();
 
+interface SilentResponse {
+  text: string;
+  leave?: boolean;
+  mute?: boolean;
+}
+
 async function generateSilentResponse(
   meetingId: string,
   userId: string,
   recentTranscript: string,
   agenda?: string | null
-): Promise<string> {
+): Promise<SilentResponse> {
   let ragContext = "";
   try {
     const results = await getRAGContext(recentTranscript, {
@@ -80,17 +90,37 @@ async function generateSilentResponse(
 
   const openai = getOpenAIClient();
 
-  const tools =
-    mcpTools.length > 0
-      ? mcpTools.map((t) => ({
-          type: "function" as const,
-          function: {
-            name: t.name,
-            description: t.description,
-            parameters: t.parameters,
-          },
-        }))
-      : undefined;
+  const builtInToolDefs = [
+    {
+      type: "function" as const,
+      function: {
+        name: "leave_meeting",
+        description:
+          "Leave the current meeting. Use when a participant explicitly asks you to leave or disconnect.",
+        parameters: { type: "object" as const, properties: {}, required: [] },
+      },
+    },
+    {
+      type: "function" as const,
+      function: {
+        name: "mute_self",
+        description:
+          "Mute yourself for the rest of the meeting. Use when a participant asks you to be quiet, stop listening, or mute. You will not respond until the host unmutes you.",
+        parameters: { type: "object" as const, properties: {}, required: [] },
+      },
+    },
+  ];
+
+  const mcpToolDefs = mcpTools.map((t) => ({
+    type: "function" as const,
+    function: {
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+    },
+  }));
+
+  const tools = [...builtInToolDefs, ...mcpToolDefs];
 
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
@@ -103,30 +133,58 @@ async function generateSilentResponse(
     messages,
     max_tokens: 200,
     temperature: 0.7,
-    ...(tools ? { tools, tool_choice: "auto" } : {}),
+    tools,
+    tool_choice: "auto",
   });
+
+  let shouldLeave = false;
+  let shouldMute = false;
 
   const firstChoice = completion.choices[0];
   if (
     firstChoice?.finish_reason === "tool_calls" &&
-    firstChoice.message.tool_calls &&
-    mcpManager
+    firstChoice.message.tool_calls
   ) {
     // Execute tool calls and get final response
     messages.push(firstChoice.message);
 
     for (const call of firstChoice.message.tool_calls) {
       if (call.type !== "function") continue;
+
+      if (call.function.name === "leave_meeting") {
+        shouldLeave = true;
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify({ leaving: true }),
+        });
+        continue;
+      }
+
+      if (call.function.name === "mute_self") {
+        shouldMute = true;
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify({ muted: true }),
+        });
+        continue;
+      }
+
       let toolResult = "";
-      try {
-        const args = JSON.parse(call.function.arguments) as Record<
-          string,
-          unknown
-        >;
-        const result = await mcpManager.callTool(call.function.name, args);
-        toolResult = JSON.stringify(result);
-      } catch (err) {
-        toolResult = `Error: ${err instanceof Error ? err.message : "Unknown error"}`;
+      if (mcpManager) {
+        try {
+          const args = JSON.parse(call.function.arguments) as Record<
+            string,
+            unknown
+          >;
+          const result = await mcpManager.callTool(call.function.name, args);
+          toolResult = JSON.stringify(result);
+        } catch (err) {
+          toolResult = `Error: ${err instanceof Error ? err.message : "Unknown error"}`;
+        }
+      } else {
+        toolResult = "Tool not available";
       }
       messages.push({
         role: "tool",
@@ -142,11 +200,19 @@ async function generateSilentResponse(
       temperature: 0.7,
     });
     const response = followUp.choices[0]?.message?.content ?? "";
-    return response.slice(0, MAX_RESPONSE_LENGTH);
+    return {
+      text: response.slice(0, MAX_RESPONSE_LENGTH),
+      leave: shouldLeave,
+      mute: shouldMute,
+    };
   }
 
   const response = firstChoice?.message?.content ?? "";
-  return response.slice(0, MAX_RESPONSE_LENGTH);
+  return {
+    text: response.slice(0, MAX_RESPONSE_LENGTH),
+    leave: shouldLeave,
+    mute: shouldMute,
+  };
 }
 
 async function flushBuffer(
@@ -184,18 +250,72 @@ async function flushBuffer(
   }
 
   try {
-    const response = await generateSilentResponse(
+    const result = await generateSilentResponse(
       meetingId,
       userId,
       fullText,
       agenda
     );
-    if (response) {
-      await getMeetingBotProvider().sendChatMessage(botId, response);
+    if (result.text) {
+      await getMeetingBotProvider().sendChatMessage(botId, result.text);
       console.log(`[Silent Agent] Sent chat response for meeting ${meetingId}`);
     } else {
       // Empty response — release the slot so future mentions can be answered
       resetRateLimitKey(rateLimitKey);
+    }
+
+    // Fetch meeting for mute/leave actions
+    if (result.mute || result.leave) {
+      const [meeting] = await db
+        .select()
+        .from(meetings)
+        .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+
+      // Handle mute_self tool call (skip if also leaving)
+      if (result.mute && !result.leave && meeting) {
+        console.log(`[Silent Agent] Muting for meeting ${meetingId}`);
+        const metadata = (meeting.metadata as Record<string, unknown>) ?? {};
+        await db
+          .update(meetings)
+          .set({
+            metadata: { ...metadata, muted: true },
+            updatedAt: new Date(),
+          })
+          .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+      }
+
+      // Handle leave_meeting tool call
+      if (result.leave && meeting) {
+        console.log(`[Silent Agent] Leaving meeting ${meetingId}`);
+        const provider = getMeetingBotProvider();
+        try {
+          await provider.leaveMeeting(botId);
+        } catch (leaveErr) {
+          console.warn("leaveMeeting failed:", leaveErr);
+        }
+
+        await db
+          .update(meetings)
+          .set({
+            status: "processing",
+            endedAt: meeting.endedAt ?? new Date(),
+            updatedAt: new Date(),
+          })
+          .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+
+        const metadata = (meeting.metadata as Record<string, unknown>) ?? {};
+        await processMeetingEnd(
+          meetingId,
+          userId,
+          meeting.qdrantCollectionName,
+          {
+            ...metadata,
+            title: meeting.title,
+            startedAt: meeting.startedAt,
+            participants: (meeting.participants as string[]) ?? [],
+          }
+        );
+      }
     }
   } catch (err) {
     // Release the slot so the next mention can retry

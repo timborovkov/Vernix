@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import type { Document } from "@/lib/db/schema";
 import { queryKeys } from "@/lib/query-keys";
 
-async function fetchDocuments(meetingId?: string): Promise<Document[]> {
+export interface DocumentWithMeeting extends Document {
+  meetingTitle?: string | null;
+}
+
+async function fetchDocuments(
+  meetingId?: string
+): Promise<DocumentWithMeeting[]> {
   const url = meetingId
     ? `/api/knowledge?meetingId=${meetingId}`
     : "/api/knowledge";

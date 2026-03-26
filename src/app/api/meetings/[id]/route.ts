@@ -49,7 +49,10 @@ export async function PATCH(
   }
 
   // Only allow updating safe fields
-  const { title, joinLink, agenda, silent } = body as Record<string, unknown>;
+  const { title, joinLink, agenda, silent, muted } = body as Record<
+    string,
+    unknown
+  >;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof title === "string") updates.title = title;
   if (typeof joinLink === "string") updates.joinLink = joinLink;
@@ -61,14 +64,16 @@ export async function PATCH(
       { status: 400 }
     );
   }
+
+  // Accumulate metadata changes on a single base to prevent clobbering
+  const existingMetadata = (meeting.metadata as Record<string, unknown>) ?? {};
+  let metadataChanged = false;
+  const metadataUpdates: Record<string, unknown> = { ...existingMetadata };
+
   if (typeof agenda === "string") {
     const trimmedAgenda = agenda.trim();
-    const existingMetadata =
-      (meeting.metadata as Record<string, unknown>) ?? {};
-    updates.metadata = {
-      ...existingMetadata,
-      agenda: trimmedAgenda || null,
-    };
+    metadataUpdates.agenda = trimmedAgenda || null;
+    metadataChanged = true;
 
     // Re-embed agenda into Qdrant
     try {
@@ -82,13 +87,19 @@ export async function PATCH(
   if (typeof silent === "boolean") {
     const canEditSilent = ["pending", "failed"].includes(meeting.status);
     if (canEditSilent) {
-      const existingMetadata =
-        (meeting.metadata as Record<string, unknown>) ?? {};
-      updates.metadata = {
-        ...(updates.metadata ?? existingMetadata),
-        silent,
-      };
+      metadataUpdates.silent = silent;
+      metadataChanged = true;
     }
+  }
+
+  // Allow toggling mute only for active meetings
+  if (typeof muted === "boolean" && meeting.status === "active") {
+    metadataUpdates.muted = muted;
+    metadataChanged = true;
+  }
+
+  if (metadataChanged) {
+    updates.metadata = metadataUpdates;
   }
 
   const [updated] = await db

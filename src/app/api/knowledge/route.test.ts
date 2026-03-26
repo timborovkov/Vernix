@@ -4,6 +4,7 @@ const { mockDb, mockEnsureBucket, mockUploadFile, mockProcessDocument } =
     for (const m of [
       "select",
       "from",
+      "leftJoin",
       "where",
       "orderBy",
       "insert",
@@ -40,10 +41,17 @@ describe("GET /api/knowledge", () => {
     vi.clearAllMocks();
   });
 
-  it("returns user documents", async () => {
+  it("returns user documents with meetingTitle", async () => {
     const docs = [
-      fakeDocument(),
-      fakeDocument({ id: "d2", fileName: "other.txt" }),
+      { ...fakeDocument(), meetingTitle: null },
+      {
+        ...fakeDocument({
+          id: "d2",
+          fileName: "other.txt",
+          meetingId: "meeting-1",
+        }),
+        meetingTitle: "Sprint Retro",
+      },
     ];
     mockDb.orderBy.mockResolvedValueOnce(docs);
 
@@ -52,6 +60,26 @@ describe("GET /api/knowledge", () => {
 
     expect(status).toBe(200);
     expect(data.documents).toHaveLength(2);
+    expect(data.documents[0].meetingTitle).toBeNull();
+    expect(data.documents[1].meetingTitle).toBe("Sprint Retro");
+  });
+
+  it("filters by meetingId when provided", async () => {
+    const docs = [
+      {
+        ...fakeDocument({ meetingId: "meeting-1" }),
+        meetingTitle: "Sprint Retro",
+      },
+    ];
+    mockDb.orderBy.mockResolvedValueOnce(docs);
+
+    const req = new Request(
+      "http://localhost/api/knowledge?meetingId=meeting-1"
+    );
+    const { status, data } = await parseJsonResponse(await GET(req));
+
+    expect(status).toBe(200);
+    expect(data.documents).toHaveLength(1);
   });
 });
 
@@ -90,7 +118,7 @@ describe("POST /api/knowledge", () => {
   });
 
   it("uploads and processes valid PDF", async () => {
-    const doc = fakeDocument({ status: "ready" });
+    const doc = fakeDocument({ status: "ready", fileName: "test.pdf" });
     mockDb.returning.mockResolvedValueOnce([doc]);
     mockDb.where.mockResolvedValueOnce([doc]); // re-fetch after processing
 
@@ -107,7 +135,7 @@ describe("POST /api/knowledge", () => {
 
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(201);
-    expect(data.fileName).toBe("test-doc.pdf");
+    expect(data.fileName).toBe("test.pdf");
     expect(mockEnsureBucket).toHaveBeenCalled();
     expect(mockUploadFile).toHaveBeenCalled();
     expect(mockProcessDocument).toHaveBeenCalled();
@@ -151,6 +179,26 @@ describe("POST /api/knowledge", () => {
     // S3 key should not contain path traversal
     const uploadCall = mockUploadFile.mock.calls[0];
     expect(uploadCall[0]).not.toContain("..");
+  });
+
+  it("rejects upload with non-existent meetingId", async () => {
+    mockDb.where.mockResolvedValueOnce([]); // meeting not found
+
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new File(["data"], "test.pdf", { type: "application/pdf" })
+    );
+    formData.append("meetingId", "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11");
+
+    const req = new Request("http://localhost/api/knowledge", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(404);
+    expect(data.error).toMatch(/meeting not found/i);
   });
 
   it("accepts text/plain files", async () => {

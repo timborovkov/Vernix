@@ -3,10 +3,7 @@ import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { scrollTranscript } from "@/lib/vector/scroll";
-import { generateMeetingSummary } from "@/lib/summary/generate";
-import { extractActionItems } from "@/lib/tasks/extract";
-import { storeExtractedTasks } from "@/lib/tasks/store";
+import { processMeetingEnd } from "@/lib/agent/processing";
 import { verifyRecallSignature } from "@/lib/webhooks/verify";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
@@ -78,7 +75,8 @@ export async function POST(request: Request) {
     if (
       !meeting ||
       meeting.status === "completed" ||
-      meeting.status === "failed"
+      meeting.status === "failed" ||
+      meeting.status === "processing"
     ) {
       return NextResponse.json({ skipped: true });
     }
@@ -105,7 +103,11 @@ export async function POST(request: Request) {
       .from(meetings)
       .where(sql`${meetings.metadata}->>'botId' = ${botId}`);
 
-    if (!meeting || meeting.status === "failed") {
+    if (
+      !meeting ||
+      meeting.status === "failed" ||
+      meeting.status === "completed"
+    ) {
       return NextResponse.json({ skipped: true });
     }
 
@@ -113,45 +115,34 @@ export async function POST(request: Request) {
       `[Webhook:status] transcript.done for bot ${botId}, generating summary`
     );
 
-    try {
-      const segments = await scrollTranscript(meeting.qdrantCollectionName);
-      console.log(
-        `[Webhook:status] Found ${segments.length} segments for summary`
-      );
+    if (meeting.userId) {
+      // Ensure endedAt is set before processing
+      if (!meeting.endedAt) {
+        await db
+          .update(meetings)
+          .set({ endedAt: new Date(), updatedAt: new Date() })
+          .where(eq(meetings.id, meeting.id));
+      }
+
       const existingMetadata =
         (meeting.metadata as Record<string, unknown>) ?? {};
-      const summary = await generateMeetingSummary(segments, {
-        title: meeting.title,
-        startedAt: meeting.startedAt,
-        participants: meeting.participants as string[],
-        agenda: existingMetadata.agenda as string | undefined,
-      });
-
-      await db
-        .update(meetings)
-        .set({
-          status: "completed",
-          endedAt: meeting.endedAt ?? new Date(),
-          metadata: { ...existingMetadata, summary },
-          updatedAt: new Date(),
-        })
-        .where(eq(meetings.id, meeting.id));
-
-      // Extract action items (non-critical)
-      try {
-        if (meeting.userId) {
-          const items = await extractActionItems(segments);
-          await storeExtractedTasks(meeting.id, meeting.userId, items);
+      await processMeetingEnd(
+        meeting.id,
+        meeting.userId,
+        meeting.qdrantCollectionName,
+        {
+          ...existingMetadata,
+          title: meeting.title,
+          startedAt: meeting.startedAt,
+          participants: (meeting.participants as string[]) ?? [],
         }
-      } catch (error) {
-        console.error("Action item extraction failed:", error);
-      }
+      );
 
       console.log(
         `[Webhook:status] Summary generated for meeting ${meeting.id}`
       );
-    } catch (error) {
-      console.error("Summary generation failed on transcript.done:", error);
+    } else {
+      // No userId — can't generate summary, but still mark completed
       await db
         .update(meetings)
         .set({
@@ -160,6 +151,9 @@ export async function POST(request: Request) {
           updatedAt: new Date(),
         })
         .where(eq(meetings.id, meeting.id));
+      console.warn(
+        `[Webhook:status] Meeting ${meeting.id} has no userId, skipping summary`
+      );
     }
 
     return NextResponse.json({ success: true });

@@ -14,7 +14,7 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Meeting } from "@/lib/db/schema";
 import { statusVariant } from "@/lib/meetings/constants";
 import Link from "next/link";
-import { Play, Square, Trash2 } from "lucide-react";
+import { Play, Square, Trash2, VolumeX } from "lucide-react";
 
 interface MeetingCardProps {
   meeting: Meeting;
@@ -51,6 +51,7 @@ export function MeetingCard({
   const isSilent = Boolean(
     (meeting.metadata as Record<string, unknown>)?.silent
   );
+  const isMuted = Boolean((meeting.metadata as Record<string, unknown>)?.muted);
 
   return (
     <>
@@ -62,6 +63,9 @@ export function MeetingCard({
             </Link>
           </CardTitle>
           <div className="flex items-center gap-1">
+            {isMuted && meeting.status === "active" && (
+              <VolumeX className="text-muted-foreground h-4 w-4" />
+            )}
             {isSilent && <Badge variant="secondary">Silent</Badge>}
             <Badge variant={statusVariant[meeting.status] ?? "outline"}>
               {meeting.status}
