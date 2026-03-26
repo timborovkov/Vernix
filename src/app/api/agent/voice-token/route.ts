@@ -113,6 +113,28 @@ export async function GET(request: Request) {
               required: ["query"],
             },
           },
+          {
+            type: "function",
+            name: "leave_meeting",
+            description:
+              "Leave the current meeting. Use when a participant explicitly asks you to leave, disconnect, or stop attending the meeting.",
+            parameters: {
+              type: "object",
+              properties: {},
+              required: [],
+            },
+          },
+          {
+            type: "function",
+            name: "switch_to_silent",
+            description:
+              "Switch from voice mode to silent/text-only mode. Use when a participant asks you to stop speaking and communicate via text chat instead.",
+            parameters: {
+              type: "object",
+              properties: {},
+              required: [],
+            },
+          },
           ...mcpOpenAITools,
         ],
         tool_choice: "auto",
