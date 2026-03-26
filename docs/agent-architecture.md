@@ -41,14 +41,14 @@ External MCP tools are dynamically loaded per user. They're available in all thr
 
 ## Models
 
-| Endpoint               | Model              | Parameters                                                   |
-| ---------------------- | ------------------ | ------------------------------------------------------------ |
-| Voice Realtime         | `gpt-realtime-1.5` | PCM 24kHz, voice "cedar", semantic VAD (low eagerness)       |
-| Silent Response        | `gpt-5.4-mini`     | `max_tokens: 200`, `temperature: 0.7`, 500-char response cap |
-| Chat (streaming)       | `gpt-5.4`          | Vercel AI SDK `streamText()`, max 10 tool-call rounds        |
-| Respond (single-turn)  | `gpt-5.4`          | `max_tokens: 1024`, `temperature: 0.7`                       |
-| Summary Generation     | `gpt-5.4-mini`     | Used in `generateMeetingSummary()`                           |
-| Action Item Extraction | `gpt-5.4-mini`     | JSON mode, extracts tasks from transcript                    |
+| Endpoint               | Model              | Parameters                                                              |
+| ---------------------- | ------------------ | ----------------------------------------------------------------------- |
+| Voice Realtime         | `gpt-realtime-1.5` | PCM 24kHz, voice "cedar", semantic VAD (low eagerness)                  |
+| Silent Response        | `gpt-5.4-mini`     | `max_completion_tokens: 200`, `temperature: 0.7`, 500-char response cap |
+| Chat (streaming)       | `gpt-5.4`          | Vercel AI SDK `streamText()`, max 10 tool-call rounds                   |
+| Respond (single-turn)  | `gpt-5.4`          | `max_completion_tokens: 1024`, `temperature: 0.7`                       |
+| Summary Generation     | `gpt-5.4-mini`     | Used in `generateMeetingSummary()`                                      |
+| Action Item Extraction | `gpt-5.4-mini`     | JSON mode, extracts tasks from transcript                               |
 
 ---
 
