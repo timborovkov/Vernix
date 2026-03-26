@@ -94,7 +94,7 @@ All under `src/app/api/`:
 
 - `public/voice-agent.html` — Static page rendered inside Recall bot via Output Media
 - **Dual-path wake detection**: fast path (VAD + gpt-4o-mini-transcribe, ~500ms) and slow fallback (Recall transcript webhook, ~2-4s)
-- Fast path: AudioWorklet captures audio → RMS VAD detects speech → 1.5s buffer → POST to `/api/agent/wake-detect` → transcribe → keyword match → activate directly
+- Fast path: ScriptProcessor captures audio → RMS VAD detects speech → 0.8s buffer → POST to `/api/agent/wake-detect` → transcribe → keyword match → activate directly
 - Slow path: Recall transcript webhook → `activation.ts` debounce (0.5s) → keyword match → write to DB → poll detects activation
 - Wake words: "vernix" + fuzzy variants (varnix, burnix, fernix, etc.) + "agent" + "assistant" — shared `WAKE_WORDS` constant in `activation.ts`
 - On activation: plays acknowledgement → fetches voice token (pre-cached) → connects OpenAI Realtime → flushes 10s audio buffer → responds
