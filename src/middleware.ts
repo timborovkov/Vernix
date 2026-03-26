@@ -9,8 +9,9 @@ const PUBLIC_AGENT_PATHS = [
   "/api/agent/mcp-tool",
   "/api/agent/leave",
   "/api/agent/switch-mode",
-  "/api/agent/mute-status",
   "/api/agent/mute-self",
+  "/api/agent/activation-status",
+  "/api/agent/voice-fallback",
   "/api/mcp",
 ];
 
