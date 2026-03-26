@@ -62,6 +62,7 @@ All under `src/app/api/`:
 - `agent/rag/route.ts` — POST RAG search for voice agent (public, verified by botSecret)
 - `agent/mcp-tool/route.ts` — POST MCP tool execution for voice agent (public, verified by botSecret)
 - `agent/activation-status/route.ts` — POST poll/update voice activation state (public, verified by botSecret, consumes activated→responding on read)
+- `agent/wake-detect/route.ts` — POST fast wake-word detection via gpt-4o-mini-transcribe (public, verified by botSecret, ~500ms latency)
 - `agent/voice-fallback/route.ts` — POST chat fallback when Realtime fails (public, verified by botSecret)
 - `webhooks/recall/transcript/route.ts` — Receives realtime transcript data from Recall
 - `webhooks/recall/status/route.ts` — Receives bot lifecycle events (call_ended, transcript.done)
