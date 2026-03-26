@@ -318,13 +318,12 @@ export default function TermsPage() {
             </li>
           </ul>
           <p className="text-muted-foreground mt-3 text-sm">
-            You may cancel your subscription or delete your account at any
-            time through the Service. If you cancel a paid subscription, your
-            account reverts to the free plan. Existing data above free-plan
-            limits becomes read-only for 30 days, after which it may be
-            archived. Upon account deletion — whether by you or by us — your
-            data will be removed in accordance with the retention schedule
-            described in our{" "}
+            You may cancel your subscription or delete your account at any time
+            through the Service. If you cancel a paid subscription, your account
+            reverts to the free plan. Existing data above free-plan limits
+            becomes read-only for 30 days, after which it may be archived. Upon
+            account deletion — whether by you or by us — your data will be
+            removed in accordance with the retention schedule described in our{" "}
             <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
             </Link>
