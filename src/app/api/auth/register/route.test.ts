@@ -24,6 +24,12 @@ vi.mock("bcryptjs", () => ({
 vi.mock("@/lib/rate-limit", () => ({
   rateLimitByIp: () => ({ success: true, remaining: 99 }),
 }));
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+}));
+vi.mock("@/lib/email/templates", () => ({
+  getWelcomeEmailHtml: () => "<p>Welcome</p>",
+}));
 
 import { POST } from "./route";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";

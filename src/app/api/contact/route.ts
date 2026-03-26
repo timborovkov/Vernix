@@ -7,9 +7,12 @@ import { rateLimitByIp } from "@/lib/rate-limit";
 const contactSchema = z.object({
   topic: z.enum(["question", "bug", "feature", "enterprise"]),
   email: z.email(),
-  name: z.string().optional(),
-  company: z.string().optional(),
-  message: z.string().min(1, "Message is required"),
+  name: z.string().max(200).optional(),
+  company: z.string().max(200).optional(),
+  message: z
+    .string()
+    .min(1, "Message is required")
+    .max(5000, "Message is too long"),
 });
 
 const TOPIC_LABELS: Record<string, string> = {

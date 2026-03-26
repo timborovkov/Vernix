@@ -68,11 +68,9 @@ function getOAuthImage(
   profile: Record<string, unknown> | undefined
 ): string | null {
   if (!profile) return null;
-  return (
-    (profile.picture as string | undefined) ??
-    (profile.avatar_url as string | undefined) ??
-    null
-  );
+  if (typeof profile.picture === "string") return profile.picture;
+  if (typeof profile.avatar_url === "string") return profile.avatar_url;
+  return null;
 }
 
 /** Check if the OAuth provider guarantees the email is verified.
@@ -127,15 +125,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return "/login?error=AccountExists";
         }
 
-        // Link the provider to the existing user
-        await db.insert(accounts).values({
-          userId: existingUser.id,
-          provider: account.provider,
-          providerAccountId,
-          accessToken: account.access_token ?? null,
-          refreshToken: account.refresh_token ?? null,
-          expiresAt: account.expires_at ?? null,
-        });
+        // Link the provider to the existing user (ignore if already linked via race condition)
+        await db
+          .insert(accounts)
+          .values({
+            userId: existingUser.id,
+            provider: account.provider,
+            providerAccountId,
+            accessToken: account.access_token ?? null,
+            refreshToken: account.refresh_token ?? null,
+            expiresAt: account.expires_at ?? null,
+          })
+          .onConflictDoNothing();
         user.id = existingUser.id;
 
         // Persist OAuth avatar to DB if user doesn't have one yet

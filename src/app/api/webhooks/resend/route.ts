@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email/send";
+import { escapeHtml } from "@/lib/email/templates";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
 // All Resend webhook event types
@@ -25,7 +26,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Too many requests" }, { status: 429 });
   }
 
-  // TODO: Verify Svix signature when RESEND_WEBHOOK_SECRET is set
+  // Reject if webhook secret is not configured — prevents open relay
+  const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 503 }
+    );
+  }
+
+  // TODO: Verify Svix signature using webhookSecret
   // Resend uses Svix for webhook delivery — signature is in svix-id, svix-timestamp, svix-signature headers
 
   let body: unknown;
@@ -100,7 +110,7 @@ export async function POST(request: Request) {
     subject: `[Fwd] ${subject}`,
     html:
       data?.html ??
-      `<pre style="font-family:sans-serif;white-space:pre-wrap">${data?.text ?? ""}</pre>`,
+      `<pre style="font-family:sans-serif;white-space:pre-wrap">${escapeHtml(data?.text ?? "")}</pre>`,
     text: data?.text ?? undefined,
     replyTo: from,
   });
