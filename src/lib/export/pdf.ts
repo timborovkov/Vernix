@@ -5,6 +5,28 @@ import {
   type MeetingExportData,
 } from "./markdown";
 
+/** Strip markdown formatting to plain text for PDF rendering */
+export function stripMarkdown(text: string): string {
+  return (
+    text
+      // List markers first (before italic stripping to avoid * conflicts)
+      .replace(/^[-*+]\s+/gm, "- ")
+      .replace(/^(\d+)\.\s+/gm, "$1. ")
+      // Headers
+      .replace(/^#{1,6}\s+/gm, "")
+      // Bold (must run before italic)
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/__(.+?)__/g, "$1")
+      // Italic (non-greedy, must not start at line beginning after "- ")
+      .replace(/(?<!\w)\*([^*]+?)\*(?!\*)/g, "$1")
+      .replace(/(?<!\w)_([^_]+?)_(?!\w)/g, "$1")
+      // Links
+      .replace(/\[(.+?)\]\(.+?\)/g, "$1")
+      // Inline code
+      .replace(/`(.+?)`/g, "$1")
+  );
+}
+
 function collectBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -46,7 +68,7 @@ export async function generateMeetingPdf(
   doc.fontSize(10).font("Helvetica");
   doc.text(
     typeof meta.summary === "string" && meta.summary
-      ? meta.summary
+      ? stripMarkdown(meta.summary)
       : "No summary available."
   );
   doc.moveDown();
@@ -57,7 +79,7 @@ export async function generateMeetingPdf(
   doc.fontSize(10).font("Helvetica");
   doc.text(
     typeof meta.agenda === "string" && meta.agenda
-      ? meta.agenda
+      ? stripMarkdown(meta.agenda)
       : "No agenda set."
   );
   doc.moveDown();
