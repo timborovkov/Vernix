@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   recordActivation,
   recordSessionEnd,
-  getTelemetry,
   flushTelemetry,
   resetTelemetry,
 } from "./telemetry";
@@ -40,65 +39,29 @@ beforeEach(() => {
 });
 
 describe("recordActivation", () => {
-  it("creates a new entry and increments count", () => {
+  it("creates entry and increments count", async () => {
     recordActivation("m1");
-    const t = getTelemetry("m1");
-    expect(t).not.toBeNull();
-    expect(t!.activationCount).toBe(1);
-    expect(t!.lastActivatedAt).toBeGreaterThan(0);
+    const result = await flushTelemetry("m1", "u1");
+    expect(result).not.toBeNull();
+    expect(result!.activationCount).toBe(1);
   });
 
-  it("increments count on subsequent calls", () => {
+  it("increments count on subsequent calls", async () => {
     recordActivation("m1");
     recordActivation("m1");
     recordActivation("m1");
-    const t = getTelemetry("m1");
-    expect(t!.activationCount).toBe(3);
-  });
-
-  it("updates lastActivatedAt on each call", () => {
-    recordActivation("m1");
-    const first = getTelemetry("m1")!.lastActivatedAt;
-    recordActivation("m1");
-    const second = getTelemetry("m1")!.lastActivatedAt;
-    expect(second).toBeGreaterThanOrEqual(first);
+    const result = await flushTelemetry("m1", "u1");
+    expect(result!.activationCount).toBe(3);
   });
 });
 
 describe("recordSessionEnd", () => {
-  it("creates a new entry when none exists", () => {
-    recordSessionEnd("m1", 5000);
-    const t = getTelemetry("m1");
-    expect(t).not.toBeNull();
-    expect(t!.totalConnectedMs).toBe(5000);
-    expect(t!.sessionDurations).toEqual([5000]);
-  });
-
-  it("accumulates total connected time", () => {
+  it("accumulates total connected time and session durations", async () => {
+    recordActivation("m1");
     recordSessionEnd("m1", 3000);
     recordSessionEnd("m1", 7000);
-    const t = getTelemetry("m1");
-    expect(t!.totalConnectedMs).toBe(10000);
-    expect(t!.sessionDurations).toEqual([3000, 7000]);
-  });
-});
-
-describe("getTelemetry", () => {
-  it("returns null for unknown meeting", () => {
-    expect(getTelemetry("unknown")).toBeNull();
-  });
-
-  it("returns data for a known meeting", () => {
-    recordActivation("m1");
-    recordSessionEnd("m1", 2000);
-    const t = getTelemetry("m1");
-    expect(t).toEqual(
-      expect.objectContaining({
-        activationCount: 1,
-        totalConnectedMs: 2000,
-        sessionDurations: [2000],
-      })
-    );
+    const result = await flushTelemetry("m1", "u1");
+    expect(result!.totalConnectedSeconds).toBe(10);
   });
 });
 
@@ -120,7 +83,9 @@ describe("flushTelemetry", () => {
     recordActivation("m1");
     await flushTelemetry("m1", "u1");
 
-    expect(getTelemetry("m1")).toBeNull();
+    // Second flush should return null — data was cleared
+    const second = await flushTelemetry("m1", "u1");
+    expect(second).toBeNull();
   });
 
   it("returns null when no activations recorded", async () => {
@@ -132,7 +97,10 @@ describe("flushTelemetry", () => {
     recordSessionEnd("m1", 5000);
     const result = await flushTelemetry("m1", "u1");
     expect(result).toBeNull();
-    expect(getTelemetry("m1")).toBeNull();
+
+    // Entry should also be cleared
+    const second = await flushTelemetry("m1", "u1");
+    expect(second).toBeNull();
   });
 
   it("computes average session seconds correctly", async () => {
@@ -151,11 +119,11 @@ describe("flushTelemetry", () => {
 });
 
 describe("resetTelemetry", () => {
-  it("clears all entries", () => {
+  it("clears all entries", async () => {
     recordActivation("m1");
     recordActivation("m2");
     resetTelemetry();
-    expect(getTelemetry("m1")).toBeNull();
-    expect(getTelemetry("m2")).toBeNull();
+    expect(await flushTelemetry("m1", "u1")).toBeNull();
+    expect(await flushTelemetry("m2", "u1")).toBeNull();
   });
 });
