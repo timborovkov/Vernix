@@ -86,8 +86,23 @@ export async function POST(request: Request) {
     });
   }
 
-  // Read-only: return state from the metadata we already fetched
+  // Read state from the metadata we already fetched
   const activation = metadata.voiceActivation as VoiceActivation | undefined;
+
+  // If activated, atomically consume it by transitioning to "responding"
+  // so a duplicate poll won't re-trigger activateSession
+  if (activation?.state === "activated" && meeting.userId) {
+    const consumed: VoiceActivation = { state: "responding" };
+    await db
+      .update(meetings)
+      .set({
+        metadata: { ...metadata, voiceActivation: consumed },
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
+      );
+  }
 
   return NextResponse.json({
     state: activation?.state ?? "idle",
