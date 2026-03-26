@@ -3,6 +3,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfjs-dist", "pdfkit"],
+  images: {
+    remotePatterns: [
+      { hostname: "lh3.googleusercontent.com" },
+      { hostname: "avatars.githubusercontent.com" },
+      // S3/Minio bucket — parsed from S3_ENDPOINT env at build time
+      ...(process.env.S3_ENDPOINT
+        ? [{ hostname: new URL(process.env.S3_ENDPOINT).hostname }]
+        : []),
+    ],
+  },
 };
 
 export default withSentryConfig(nextConfig, {

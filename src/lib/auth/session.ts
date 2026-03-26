@@ -8,6 +8,7 @@ export async function getSessionUser() {
     id: session.user.id,
     email: session.user.email!,
     name: session.user.name ?? undefined,
+    image: session.user.image ?? undefined,
   };
 }
 

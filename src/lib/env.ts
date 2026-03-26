@@ -36,6 +36,12 @@ const envSchema = z
     RECALL_API_URL: z.string().optional(),
     RECALL_WEBHOOK_SECRET: z.string().optional(),
 
+    // OAuth (optional — SSO buttons only appear when configured)
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GITHUB_CLIENT_ID: z.string().optional(),
+    GITHUB_CLIENT_SECRET: z.string().optional(),
+
     // S3
     S3_ENDPOINT: z.string().optional(),
     S3_ACCESS_KEY: z.string().optional(),
