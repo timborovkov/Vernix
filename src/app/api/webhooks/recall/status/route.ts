@@ -7,7 +7,7 @@ import { processMeetingEnd } from "@/lib/agent/processing";
 import { verifyRecallSignature } from "@/lib/webhooks/verify";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { flushTelemetry } from "@/lib/agent/telemetry";
-import { clearMcpToolCache } from "@/app/api/agent/voice-token/route";
+import { clearMcpToolCache } from "@/lib/agent/mcp-cache";
 
 const statusEventSchema = z.object({
   event: z.string(),
