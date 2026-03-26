@@ -147,15 +147,15 @@
 - ~~**Account linking** — Auto-link by verified email; unlink from settings with guard against removing last auth method~~
 - ~~**Profile API** — `GET/PATCH /api/user/profile`, `PATCH /api/user/password`, `GET/DELETE /api/user/accounts`~~
 
-## Password Reset & NextAuth Email Integration
+## Password Reset & NextAuth Email Integration ~~DONE~~
 
-- **Forgot password flow** — "Forgot password?" link on login page, enter email, receive reset link via Resend
-- **Password reset token** — Generate a time-limited token (e.g. 1 hour), store hash in DB (new `password_reset_tokens` table or use `verification_tokens`)
-- **Reset page** — `/reset-password?token=...` page where user sets a new password
-- **Reset API** — `POST /api/auth/forgot-password` (sends email) and `POST /api/auth/reset-password` (validates token, sets new password)
-- **Email template** — Branded password reset email with secure link and expiry notice
-- **Rate limiting** — Limit forgot-password requests per email and per IP to prevent abuse
-- **Wire Resend with NextAuth** — Use Resend as the email provider for any NextAuth email flows (magic links, email verification if added later)
+- ~~**Forgot password flow** — "Forgot password?" link on login page with email form and success state~~
+- ~~**Password reset token** — SHA-256 hashed tokens in `password_reset_tokens` table, 1-hour expiry, one-time use~~
+- ~~**Reset page** — `/reset-password?token=...` with new password + confirm fields~~
+- ~~**Reset API** — `POST /api/auth/forgot-password` (generic response, no enumeration) and `POST /api/auth/reset-password` (validate + consume token)~~
+- ~~**Email template** — Branded HTML matching welcome email style with reset button and expiry notice~~
+- ~~**Rate limiting** — 3 per 5 min (forgot), 5 per 5 min (reset) per IP~~
+- ~~**Resend integration** — Already wired via `sendEmail()` utility; ready for future NextAuth email flows~~
 
 ## Silent Agent Mode (Text Agent) ~~DONE~~
 
@@ -246,6 +246,7 @@
 - **API docs page** — Host interactive docs at `/docs` or `/api-docs` (Scalar, Swagger UI, or similar). Auto-generated from the OpenAPI spec.
 - **Agent control endpoints** — `POST /api/v1/meetings` (create + auto-join), `POST /api/v1/meetings/:id/join` (join existing), `POST /api/v1/meetings/:id/stop` — lets external tools and agents invite Vernix to calls on the fly with just a meeting link.
 - **MCP server tools** — Add `join_meeting` and `stop_meeting` tools to the MCP server so Claude Desktop / Cursor users can say "join this call" and paste a link.
+- **MCP OAuth login** — Implement OAuth-based authentication for the MCP server endpoint per the [MCP auth spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization). Allow tools like Claude Desktop and Cursor to authenticate via OAuth flow instead of manually copying API keys. Requires authorization server endpoints (authorize, token, register), PKCE support, and dynamic client registration.
 - **Rate limiting & versioning** — Per-key rate limits, API version in URL path, deprecation headers.
 - **SDKs** — Consider auto-generating TypeScript/Python SDKs from the OpenAPI spec.
 

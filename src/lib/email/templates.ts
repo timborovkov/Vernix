@@ -67,6 +67,40 @@ export function getContactNotificationHtml(
 </html>`;
 }
 
+export function getPasswordResetEmailHtml(
+  name: string,
+  resetUrl: string
+): string {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden">
+    <div style="background:#242424;padding:32px;text-align:center">
+      <h1 style="color:#fff;font-size:24px;margin:0">Reset Your Password</h1>
+    </div>
+    <div style="padding:32px">
+      <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">
+        We received a request to reset your password. Click the button below to choose a new one.
+      </p>
+      <div style="text-align:center;margin:32px 0">
+        <a href="${escapeHtml(resetUrl)}" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+          Reset Password
+        </a>
+      </div>
+      <p style="font-size:12px;color:#999;line-height:1.6;margin:0 0 8px">
+        This link expires in 60 minutes. After that, you'll need to request a new one.
+      </p>
+      <p style="font-size:12px;color:#999;line-height:1.6;margin:0">
+        If you didn't request this, you can safely ignore this email. Your password won't change.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 export function escapeHtml(str: string): string {
   return str
     .replace(/&/g, "&amp;")
