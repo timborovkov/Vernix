@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 import type { VoiceActivation } from "@/lib/agent/activation";
@@ -94,7 +94,8 @@ export async function POST(request: Request) {
   const activation = metadata.voiceActivation as VoiceActivation | undefined;
 
   // If activated, atomically consume it by transitioning to "responding"
-  // so a duplicate poll won't re-trigger activateSession
+  // so a duplicate poll won't re-trigger activateSession.
+  // The SQL condition ensures only the first concurrent poll succeeds.
   if (activation?.state === "activated") {
     const consumed: VoiceActivation = { state: "responding" };
     await db
@@ -104,7 +105,11 @@ export async function POST(request: Request) {
         updatedAt: new Date(),
       })
       .where(
-        and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
+        and(
+          eq(meetings.id, meetingId),
+          eq(meetings.userId, meeting.userId),
+          sql`${meetings.metadata}->>'voiceActivation' IS NOT NULL AND (${meetings.metadata}->'voiceActivation'->>'state') = 'activated'`
+        )
       );
   }
 
