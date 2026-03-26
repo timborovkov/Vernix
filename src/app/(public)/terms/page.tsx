@@ -109,14 +109,29 @@ export default function TermsPage() {
             5. Fair Use and Service Limits
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
-            All plans, including those described as &quot;unlimited&quot;, are
-            subject to a fair-use policy. The Service is designed for reasonable
-            business use by individual professionals and teams. You may not use
-            the Service in a manner that places disproportionate load on our
-            infrastructure or that of our sub-processors — for example, running
-            an excessive number of concurrent meeting bots, recording calls
-            continuously around the clock, or programmatically creating meetings
-            at a volume inconsistent with normal human use.
+            Each plan is subject to published usage limits, including meeting
+            minutes, knowledge base storage, API request quotas, and concurrent
+            meeting caps. The free plan includes a fixed monthly allowance of
+            silent meeting minutes. Paid plans include a monthly usage credit
+            that covers meeting time at published per-hour rates. Usage beyond
+            the included credit is billed as overage at the same per-hour rates.
+            Credits do not roll over between billing cycles.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            You may set an optional monthly spending cap to limit overage
+            charges. If a spending cap is reached, the current meeting will be
+            allowed to finish, but new meetings cannot be started until the next
+            billing cycle or the cap is raised.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            All plans are subject to anti-abuse limits on the number of meetings
+            per month. These limits are set well above normal usage and exist to
+            prevent automated misuse. You may not use the Service in a manner
+            that places disproportionate load on our infrastructure or that of
+            our sub-processors — for example, running an excessive number of
+            concurrent meeting bots, recording calls continuously around the
+            clock, or programmatically creating meetings at a volume
+            inconsistent with normal human use.
           </p>
           <p className="text-muted-foreground text-sm">
             We reserve the right to define, publish, and update specific usage
@@ -184,23 +199,38 @@ export default function TermsPage() {
             9. Fees, Pricing, and Plan Changes
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
-            Certain features of the Service require a paid subscription. All
-            fees are stated on our pricing page at the time of purchase and are
-            non-refundable except where required by applicable law or as
-            expressly stated otherwise.
+            The Service offers a free plan with limited usage and a paid Pro
+            plan. The Pro plan includes a base monthly subscription fee and a
+            usage credit. Meeting time consumed beyond the included credit is
+            billed as overage at published per-hour rates. All fees — including
+            base subscription and overage charges — are stated on our pricing
+            page and are non-refundable except where required by applicable law.
           </p>
           <p className="text-muted-foreground mb-3 text-sm">
-            We reserve the right to change pricing, introduce new fee
-            structures, or modify the features included in any plan at any time.
-            For existing subscribers, price changes will take effect at the
-            start of the next billing cycle following at least 30 days&apos;
-            prior notice via email or in-app notification. If you do not agree
-            to a price change, you may cancel your subscription before the new
-            pricing takes effect.
+            Subscription payments are processed by our billing provider
+            (Polar.sh), which acts as merchant of record. Overage charges are
+            invoiced at the end of each billing cycle based on actual usage.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            We reserve the right to change pricing, usage rates, included credit
+            amounts, or the features included in any plan at any time. For
+            existing subscribers, price changes will take effect at the start of
+            the next billing cycle following at least 30 days&apos; prior notice
+            via email or in-app notification. If you do not agree to a price
+            change, you may cancel your subscription before the new pricing
+            takes effect.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            New users receive a free trial of the Pro plan with a limited
+            allowance of meeting minutes. The trial activates on signup and
+            expires after the stated duration or when the trial minutes are
+            exhausted, whichever comes first. After the trial, the account
+            reverts to the free plan unless the user subscribes to Pro.
           </p>
           <p className="text-muted-foreground text-sm">
-            Free tiers and promotional offers are provided at our discretion and
-            may be modified or discontinued at any time without prior notice.
+            Free plans, trials, and promotional offers are provided at our
+            discretion and may be modified or discontinued at any time without
+            prior notice.
           </p>
         </section>
 
@@ -282,14 +312,18 @@ export default function TermsPage() {
               A request or order from a law-enforcement or regulatory authority.
             </li>
             <li>
-              Extended periods of inactivity (12 months or more for free
-              accounts).
+              Extended periods of inactivity (90 days or more for free
+              accounts). Data for inactive accounts may be archived after 90
+              days and deleted after 180 days, with prior email notice.
             </li>
           </ul>
           <p className="text-muted-foreground mt-3 text-sm">
-            You may delete your account at any time through the Service. Upon
-            termination — whether by you or by us — your data will be deleted in
-            accordance with the retention schedule described in our{" "}
+            You may cancel your subscription or delete your account at any time
+            through the Service. If you cancel a paid subscription, your account
+            reverts to the free plan. Existing data above free-plan limits
+            becomes read-only for 30 days, after which it may be archived. Upon
+            account deletion — whether by you or by us — your data will be
+            removed in accordance with the retention schedule described in our{" "}
             <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
             </Link>

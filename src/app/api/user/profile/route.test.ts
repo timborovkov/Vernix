@@ -45,7 +45,6 @@ describe("GET /api/user/profile", () => {
       },
     ]);
 
-    const req = createJsonRequest(URL);
     const { status, data } = await parseJsonResponse(await GET());
     expect(status).toBe(200);
     expect(data.name).toBe("Test User");
