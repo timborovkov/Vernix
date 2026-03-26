@@ -65,6 +65,32 @@ describe("generateMeetingSummary", () => {
 
     const result = await generateMeetingSummary(segments);
 
-    expect(result).toBe("Summary generation failed.");
+    expect(result).toContain(
+      "Automatic summary generation failed temporarily."
+    );
+    expect(result).toContain("Transcript highlights:");
+    expect(result).toContain("**Alice:** Hello");
+  });
+
+  it("returns fallback when OpenAI request throws", async () => {
+    const segments: TranscriptPoint[] = [
+      { text: "Discussion point", speaker: "Bob", timestampMs: 1000 },
+    ];
+
+    mockOpenAIClient.chat.completions.create.mockRejectedValueOnce(
+      new Error("OpenAI timeout")
+    );
+
+    const result = await generateMeetingSummary(segments, {
+      title: "Weekly Sync",
+      participants: ["Bob"],
+    });
+
+    expect(result).toContain(
+      "Automatic summary generation failed temporarily."
+    );
+    expect(result).toContain("Reason: OpenAI timeout");
+    expect(result).toContain("Meeting: Weekly Sync");
+    expect(result).toContain("Participants: Bob");
   });
 });
