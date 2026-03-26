@@ -49,7 +49,7 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 
 | Item                                             | Cost                              |
 | ------------------------------------------------ | --------------------------------- |
-| Railway (shared, marginal per-user)              | ~$0.02–0.10 (at 100+ users)      |
+| Railway (shared, marginal per-user)              | ~$0.02–0.10 (at 100+ users)       |
 | Resend (transactional emails, ~3 emails/user/mo) | ~$0.002                           |
 | Polar (4% + $0.40 per transaction)               | Per billing event                 |
 | **Total infra per user**                         | **~$0.03–0.10** (excluding Polar) |
@@ -107,23 +107,23 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 
 ### Per-Plan Limits
 
-| Limit                           | Free          | Free Trial (14d)       | Pro                              |
-| ------------------------------- | ------------- | ---------------------- | -------------------------------- |
+| Limit                           | Free          | Free Trial (14d)               | Pro                                                             |
+| ------------------------------- | ------------- | ------------------------------ | --------------------------------------------------------------- |
 | **Meeting minutes/month**       | 30 silent     | 90 total (voice+silent shared) | By credits (~10 hrs voice at $3/hr, ~20 hrs silent at $1.50/hr) |
-| **Voice mode**                  | No            | Yes                    | Yes                              |
-| **Knowledge base documents**    | 5             | 200                    | 200                              |
-| **Max document size**           | 10 MB         | 25 MB                  | 25 MB                            |
-| **Doc uploads/month**           | 5             | 30                     | 50                               |
-| **Total storage**               | 50 MB         | 500 MB                 | 500 MB                           |
-| **Max chunks per document**     | 500           | 500                    | 500                              |
-| **RAG chat queries/day**        | 20            | 200                    | 200                              |
-| **Meeting-scoped documents**    | 1 per meeting | 10 per meeting         | 10 per meeting                   |
-| **Concurrent active meetings**  | 1             | 5                      | 5                                |
-| **API requests/day**            | No            | No                     | 1,000                            |
-| **MCP server connections**      | No            | No                     | 5                                |
-| **MCP client connections**      | No            | No                     | 10                               |
-| **Monthly spending cap**        | N/A           | N/A                    | Optional                         |
-| **Meetings/month (anti-abuse)** | 5             | 20                     | 500                              |
+| **Voice mode**                  | No            | Yes                            | Yes                                                             |
+| **Knowledge base documents**    | 5             | 200                            | 200                                                             |
+| **Max document size**           | 10 MB         | 25 MB                          | 25 MB                                                           |
+| **Doc uploads/month**           | 5             | 30                             | 50                                                              |
+| **Total storage**               | 50 MB         | 500 MB                         | 500 MB                                                          |
+| **Max chunks per document**     | 500           | 500                            | 500                                                             |
+| **RAG chat queries/day**        | 20            | 200                            | 200                                                             |
+| **Meeting-scoped documents**    | 1 per meeting | 10 per meeting                 | 10 per meeting                                                  |
+| **Concurrent active meetings**  | 1             | 5                              | 5                                                               |
+| **API requests/day**            | No            | No                             | 1,000                                                           |
+| **MCP server connections**      | No            | No                             | 5                                                               |
+| **MCP client connections**      | No            | No                             | 10                                                              |
+| **Monthly spending cap**        | N/A           | N/A                            | Optional                                                        |
+| **Meetings/month (anti-abuse)** | 5             | 20                             | 500                                                             |
 
 ### Universal Limits
 
@@ -155,27 +155,31 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 | Pro monthly | $29/mo       | $1.56/mo               | $27.44/mo      |
 | Pro annual  | $288/yr once | $11.92/yr              | $23.01/mo      |
 
-*Polar also charges 4% + $0.40 on each overage invoice.*
+_Polar also charges 4% + $0.40 on each overage invoice._
 
 ### Pro $29/mo Scenarios (wake-on-demand voice)
 
 **Light (1 hr voice + 3 hr silent):**
+
 - Usage: 1×$3 + 3×$1.50 = $7.50 → within $30 credit, no overage
 - Revenue: $27.44 | Cost: 1×$1.40 + 3×$0.71 + $0.10 = $3.63
 - **Margin: $23.81 (86.8%)**
 
 **Typical (3 hr voice + 10 hr silent):**
+
 - Usage: 3×$3 + 10×$1.50 = $24.00 → within $30 credit, no overage
 - Revenue: $27.44 | Cost: 3×$1.40 + 10×$0.71 + $0.10 = $11.40
 - **Margin: $16.04 (58.5%)**
 
 **Heavy (8 hr voice + 25 hr silent):**
+
 - Usage: 8×$3 + 25×$1.50 = $61.50 → $30 credit, $31.50 overage
 - Overage Polar: $31.50 × 0.04 + $0.40 = $1.66
 - Revenue: $27.44 + $31.50 - $1.66 = $57.28 | Cost: 8×$1.40 + 25×$0.71 + $0.10 = $29.05
 - **Margin: $28.23 (49.3%)**
 
 **Very heavy (25 hr voice + 50 hr silent):**
+
 - Usage: 25×$3 + 50×$1.50 = $150.00 → $30 credit, $120 overage
 - Overage Polar: $120 × 0.04 + $0.40 = $5.20
 - Revenue: $27.44 + $120.00 - $5.20 = $142.24 | Cost: 25×$1.40 + 50×$0.71 + $0.10 = $70.60
@@ -189,18 +193,18 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 
 ### User Distribution
 
-| Segment              | Users     | Voice/mo | Silent/mo | Cost/user | Usage $  | Credit | Overage |
-| -------------------- | --------- | -------- | --------- | --------- | -------- | ------ | ------- |
-| **Free (inactive)**  | 480       | —        | —         | $0        | —        | —      | —       |
-| **Free (active)**    | 270       | 0 hr     | 0.3 hr    | $0.21     | —        | —      | —       |
-| **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.06     | —        | —      | —       |
-| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | $7.50    | $30    | $0      |
-| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | $24.00   | $30    | $0      |
-| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | $61.50   | $30    | $31.50  |
-| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $70.50    | $150.00  | $30    | $120    |
-| **Total**            | **1,000** |          |           |           |          |        |         |
+| Segment              | Users     | Voice/mo | Silent/mo | Cost/user | Usage $ | Credit | Overage |
+| -------------------- | --------- | -------- | --------- | --------- | ------- | ------ | ------- |
+| **Free (inactive)**  | 480       | —        | —         | $0        | —       | —      | —       |
+| **Free (active)**    | 270       | 0 hr     | 0.3 hr    | $0.21     | —       | —      | —       |
+| **Free trial**       | 50        | 0.5 hr   | 0.5 hr    | $1.06     | —       | —      | —       |
+| **Pro (light)**      | 90        | 1 hr     | 3 hr      | $3.53     | $7.50   | $30    | $0      |
+| **Pro (typical)**    | 70        | 3 hr     | 10 hr     | $11.30    | $24.00  | $30    | $0      |
+| **Pro (heavy)**      | 30        | 8 hr     | 25 hr     | $28.95    | $61.50  | $30    | $31.50  |
+| **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $70.50    | $150.00 | $30    | $120    |
+| **Total**            | **1,000** |          |           |           |         |        |         |
 
-*800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within $30 credit.*
+_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.40/hr, silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within $30 credit._
 
 ### Revenue
 
