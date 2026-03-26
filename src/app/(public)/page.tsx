@@ -21,7 +21,7 @@ import {
 export const metadata: Metadata = {
   title: "Vernix — AI Video Call Agent",
   description:
-    "Vernix joins your video calls, transcribes conversations, generates AI summaries, extracts action items, and answers questions live. Works with Zoom, Meet, Teams, and Webex.",
+    "Vernix joins your video calls, transcribes conversations, writes summaries, extracts action items, and answers questions live. Works with Zoom, Meet, Teams, and Webex. Free to start.",
 };
 
 const FEATURES = [
@@ -145,7 +145,7 @@ export default function LandingPage() {
           </Button>
         </div>
         <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
-          No credit card required. 5 meetings free.
+          No credit card required. 14-day free trial.
         </p>
         <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
           <Video className="mr-1 h-4 w-4" />
@@ -280,7 +280,7 @@ export default function LandingPage() {
             summarize.
           </h2>
           <p className="mb-8 opacity-80">
-            5 meetings free. No credit card. Cancel anytime.
+            14-day free trial. No credit card. Cancel anytime.
           </p>
           <Button
             size="lg"
