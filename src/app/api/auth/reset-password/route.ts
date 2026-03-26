@@ -9,7 +9,6 @@ import { consumePasswordResetToken } from "@/lib/auth/password-reset";
 
 const resetSchema = z.object({
   token: z.string().min(1, "Token is required"),
-  email: z.email(),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 

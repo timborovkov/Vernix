@@ -41,7 +41,6 @@ describe("POST /api/auth/reset-password", () => {
       method: "POST",
       body: {
         token: "valid-token",
-        email: "test@example.com",
         newPassword: "newpass123",
       },
     });
@@ -57,7 +56,6 @@ describe("POST /api/auth/reset-password", () => {
       method: "POST",
       body: {
         token: "expired-token",
-        email: "test@example.com",
         newPassword: "newpass123",
       },
     });
@@ -71,7 +69,6 @@ describe("POST /api/auth/reset-password", () => {
       method: "POST",
       body: {
         token: "token",
-        email: "test@example.com",
         newPassword: "short",
       },
     });
@@ -82,7 +79,7 @@ describe("POST /api/auth/reset-password", () => {
   it("returns 400 on missing token", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: { email: "test@example.com", newPassword: "newpass123" },
+      body: { newPassword: "newpass123" },
     });
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);

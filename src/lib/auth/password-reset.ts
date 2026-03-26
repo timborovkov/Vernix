@@ -61,20 +61,26 @@ export async function validatePasswordResetToken(
   return row.userId;
 }
 
-/** Validate and consume (delete) a token. Returns userId if valid, null otherwise. */
+/** Atomically validate and consume (delete) a token. Returns userId if valid, null otherwise. */
 export async function consumePasswordResetToken(
   token: string
 ): Promise<string | null> {
-  const userId = await validatePasswordResetToken(token);
-  if (!userId) return null;
-
-  // Delete the token (one-time use)
   const tokenHash = hashResetToken(token);
-  await db
-    .delete(passwordResetTokens)
-    .where(eq(passwordResetTokens.tokenHash, tokenHash));
 
-  return userId;
+  // Atomic DELETE ... RETURNING — prevents TOCTOU race condition
+  const deleted = await db
+    .delete(passwordResetTokens)
+    .where(eq(passwordResetTokens.tokenHash, tokenHash))
+    .returning({
+      userId: passwordResetTokens.userId,
+      expiresAt: passwordResetTokens.expiresAt,
+    });
+
+  const row = deleted[0];
+  if (!row) return null;
+  if (row.expiresAt < new Date()) return null;
+
+  return row.userId;
 }
 
 /** Look up a user by email. Returns { id, name, email } or null. */
