@@ -41,27 +41,50 @@ export async function POST(request: Request) {
 
   const { meetingId, botSecret, transcriptWindow } = parsed.data;
 
-  const [meeting] = await db
-    .select()
+  const [meetingAuth] = await db
+    .select({
+      userId: meetings.userId,
+      metadata: meetings.metadata,
+    })
     .from(meetings)
     .where(and(eq(meetings.id, meetingId), eq(meetings.status, "active")));
 
-  if (!meeting) {
+  if (!meetingAuth) {
     return NextResponse.json(
       { error: "Meeting not found or not active" },
       { status: 404 }
     );
   }
 
-  const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
+  const metadata = (meetingAuth.metadata ?? {}) as Record<string, unknown>;
 
   if (!verifyBotSecret(metadata, botSecret)) {
     return NextResponse.json({ error: "Invalid bot secret" }, { status: 403 });
   }
 
-  if (!meeting.userId) {
+  const userId = meetingAuth.userId;
+  if (!userId) {
     return NextResponse.json(
       { error: "Meeting has no owner" },
+      { status: 404 }
+    );
+  }
+
+  // Scope full record fetch by userId after bot-secret verification.
+  const [meeting] = await db
+    .select()
+    .from(meetings)
+    .where(
+      and(
+        eq(meetings.id, meetingId),
+        eq(meetings.status, "active"),
+        eq(meetings.userId, userId)
+      )
+    );
+
+  if (!meeting) {
+    return NextResponse.json(
+      { error: "Meeting not found or not active" },
       { status: 404 }
     );
   }
@@ -73,7 +96,7 @@ export async function POST(request: Request) {
   try {
     const result = await generateAgentResponse(
       meetingId,
-      meeting.userId,
+      userId,
       transcriptWindow,
       agenda
     );
@@ -100,20 +123,13 @@ export async function POST(request: Request) {
           endedAt: meeting.endedAt ?? new Date(),
           updatedAt: new Date(),
         })
-        .where(
-          and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
-        );
-      await processMeetingEnd(
-        meetingId,
-        meeting.userId,
-        meeting.qdrantCollectionName,
-        {
-          ...metadata,
-          title: meeting.title,
-          startedAt: meeting.startedAt,
-          participants: (meeting.participants as string[]) ?? [],
-        }
-      );
+        .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+      await processMeetingEnd(meetingId, userId, meeting.qdrantCollectionName, {
+        ...metadata,
+        title: meeting.title,
+        startedAt: meeting.startedAt,
+        participants: (meeting.participants as string[]) ?? [],
+      });
     }
 
     // Handle mute_self tool call
@@ -124,9 +140,7 @@ export async function POST(request: Request) {
           metadata: { ...metadata, muted: true },
           updatedAt: new Date(),
         })
-        .where(
-          and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
-        );
+        .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
     }
 
     return NextResponse.json({ success: true });

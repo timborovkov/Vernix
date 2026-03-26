@@ -140,7 +140,9 @@ describe("POST /api/agent/voice-fallback", () => {
   });
 
   it("successfully generates and sends fallback response", async () => {
-    mockDb.where.mockResolvedValueOnce([activeMeeting()]);
+    mockDb.where
+      .mockResolvedValueOnce([activeMeeting()])
+      .mockResolvedValueOnce([activeMeeting()]);
 
     const req = createJsonRequest(URL, {
       method: "POST",
@@ -164,7 +166,9 @@ describe("POST /api/agent/voice-fallback", () => {
   });
 
   it("handles leave tool call result", async () => {
-    mockDb.where.mockResolvedValueOnce([activeMeeting()]);
+    mockDb.where
+      .mockResolvedValueOnce([activeMeeting()])
+      .mockResolvedValueOnce([activeMeeting()]);
     mockGenerateAgentResponse.mockResolvedValueOnce({
       text: "Goodbye!",
       leave: true,
@@ -197,6 +201,9 @@ describe("POST /api/agent/voice-fallback", () => {
     mockDb.where.mockResolvedValueOnce([
       activeMeeting({ metadata: { voiceSecret: "valid-secret" } }),
     ]);
+    mockDb.where.mockResolvedValueOnce([
+      activeMeeting({ metadata: { voiceSecret: "valid-secret" } }),
+    ]);
 
     const req = createJsonRequest(URL, {
       method: "POST",
@@ -215,7 +222,9 @@ describe("POST /api/agent/voice-fallback", () => {
   });
 
   it("skips chat message when response text is empty", async () => {
-    mockDb.where.mockResolvedValueOnce([activeMeeting()]);
+    mockDb.where
+      .mockResolvedValueOnce([activeMeeting()])
+      .mockResolvedValueOnce([activeMeeting()]);
     mockGenerateAgentResponse.mockResolvedValueOnce({ text: "" });
 
     const req = createJsonRequest(URL, {
@@ -234,7 +243,9 @@ describe("POST /api/agent/voice-fallback", () => {
   });
 
   it("handles mute_self tool call result", async () => {
-    mockDb.where.mockResolvedValueOnce([activeMeeting()]);
+    mockDb.where
+      .mockResolvedValueOnce([activeMeeting()])
+      .mockResolvedValueOnce([activeMeeting()]);
     mockGenerateAgentResponse.mockResolvedValueOnce({
       text: "I'll be quiet now.",
       mute: true,
