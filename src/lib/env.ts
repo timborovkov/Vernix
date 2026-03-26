@@ -42,6 +42,11 @@ const envSchema = z
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
 
+    // Resend (email provider — optional, emails disabled without it)
+    RESEND_API_KEY: z.string().optional(),
+    RESEND_WEBHOOK_SECRET: z.string().optional(),
+    EMAIL_FORWARD_TO: z.string().optional(),
+
     // S3
     S3_ENDPOINT: z.string().optional(),
     S3_ACCESS_KEY: z.string().optional(),

@@ -4,6 +4,8 @@ import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email/send";
+import { getWelcomeEmailHtml } from "@/lib/email/templates";
 
 const registerSchema = z.object({
   email: z.email(),
@@ -52,6 +54,13 @@ export async function POST(request: Request) {
       .insert(users)
       .values({ email, name, passwordHash })
       .returning({ id: users.id, email: users.email, name: users.name });
+
+    // Fire-and-forget welcome email — don't block registration
+    sendEmail({
+      to: email,
+      subject: "Welcome to Vernix",
+      html: getWelcomeEmailHtml(name),
+    }).catch((err) => console.error("[Register] Welcome email failed:", err));
 
     return NextResponse.json({ success: true, user });
   } catch (error) {
