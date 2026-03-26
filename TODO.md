@@ -147,6 +147,16 @@
 - ~~**Account linking** — Auto-link by verified email; unlink from settings with guard against removing last auth method~~
 - ~~**Profile API** — `GET/PATCH /api/user/profile`, `PATCH /api/user/password`, `GET/DELETE /api/user/accounts`~~
 
+## Password Reset & NextAuth Email Integration
+
+- **Forgot password flow** — "Forgot password?" link on login page, enter email, receive reset link via Resend
+- **Password reset token** — Generate a time-limited token (e.g. 1 hour), store hash in DB (new `password_reset_tokens` table or use `verification_tokens`)
+- **Reset page** — `/reset-password?token=...` page where user sets a new password
+- **Reset API** — `POST /api/auth/forgot-password` (sends email) and `POST /api/auth/reset-password` (validates token, sets new password)
+- **Email template** — Branded password reset email with secure link and expiry notice
+- **Rate limiting** — Limit forgot-password requests per email and per IP to prevent abuse
+- **Wire Resend with NextAuth** — Use Resend as the email provider for any NextAuth email flows (magic links, email verification if added later)
+
 ## Silent Agent Mode (Text Agent) ~~DONE~~
 
 - ~~**Silent mode toggle** — Per-meeting toggle (in create dialog and meeting detail). This is a fundamentally different agent type: text agent instead of voice agent~~
@@ -179,17 +189,18 @@
 - ~~**Error boundaries** — React error boundaries on dashboard pages so one component failure doesn't blank the whole page~~
 - ~~**Privacy / Terms / Cookie Policy** — Updated all legal pages to reflect Sentry, Google Analytics, Recall.ai, OpenAI, and Railway as sub-processors~~
 
-## Contact Forms & Email
+## Contact Forms & Email ~~DONE~~
 
-- **Hook up contact form** — Wire the contact form on `/contact` to actually send emails (e.g. Resend, Postmark, or SES)
-- **Configure @vernix.app emails** — Set up MX/SPF/DKIM records for vernix.app domain, configure transactional email provider
-- **Contact form API** — `POST /api/contact` route that validates input and sends to [hello@vernix.app](mailto:hello@vernix.app)
+- ~~**Hook up contact form** — Replaced mailto with `POST /api/contact` using Resend~~
+- ~~**Configure @vernix.app emails** — Resend integration with domain verification, inbound forwarding webhook~~
+- ~~**Contact form API** — `POST /api/contact` with Zod validation, rate limiting, Resend send~~
+- ~~**Inbound forwarding** — Resend webhook at `/api/webhooks/resend` with Svix signature verification, forwards to `EMAIL_FORWARD_TO`~~
 
-## Welcome Email
+## Welcome Email ~~DONE~~
 
-- **Email template** — Design a branded HTML welcome email (logo, onboarding steps, CTA to create first meeting)
-- **Send on registration** — Trigger welcome email from `POST /api/auth/register` after successful user creation
-- **Email provider** — Use the same transactional provider configured in P21b (Resend/Postmark/SES)
+- ~~**Email template** — Branded HTML welcome email with onboarding steps and dashboard CTA~~
+- ~~**Send on registration** — Fire-and-forget welcome email from `POST /api/auth/register`~~
+- ~~**Email provider** — Resend with lazy singleton client, graceful no-op when unconfigured~~
 
 ## Billing with Polar
 

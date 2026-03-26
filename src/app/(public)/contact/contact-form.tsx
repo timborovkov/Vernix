@@ -14,30 +14,10 @@ import {
 } from "lucide-react";
 
 const TOPICS = [
-  {
-    id: "question",
-    label: "Question",
-    icon: HelpCircle,
-    subject: "General question",
-  },
-  {
-    id: "bug",
-    label: "Bug report",
-    icon: Bug,
-    subject: "Bug report",
-  },
-  {
-    id: "feature",
-    label: "Feature request",
-    icon: Lightbulb,
-    subject: "Feature request",
-  },
-  {
-    id: "enterprise",
-    label: "Enterprise",
-    icon: Building2,
-    subject: "Enterprise inquiry",
-  },
+  { id: "question", label: "Question", icon: HelpCircle },
+  { id: "bug", label: "Bug report", icon: Bug },
+  { id: "feature", label: "Feature request", icon: Lightbulb },
+  { id: "enterprise", label: "Enterprise", icon: Building2 },
 ] as const;
 
 type Topic = (typeof TOPICS)[number]["id"];
@@ -48,48 +28,51 @@ export function ContactForm() {
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
-  const selectedTopic = TOPICS.find((t) => t.id === topic);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTopic) return;
+    if (!topic) return;
 
-    const subject = encodeURIComponent(
-      `[${selectedTopic.subject}] from ${name || email}`
-    );
-    const body = encodeURIComponent(
-      [
-        `Topic: ${selectedTopic.subject}`,
-        `From: ${name || "—"} <${email}>`,
-        company ? `Company: ${company}` : null,
-        "",
-        message,
-      ]
-        .filter(Boolean)
-        .join("\n")
-    );
+    setSending(true);
+    setError("");
 
-    window.location.href = `mailto:hello@vernix.app?subject=${subject}&body=${body}`;
-    setSubmitted(true);
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          email,
+          name: name || undefined,
+          company: company || undefined,
+          message,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Failed to send. Please try again.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setSending(false);
+    }
   };
 
   if (submitted) {
     return (
       <div className="py-12 text-center">
         <Check className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-        <h2 className="mb-2 text-lg font-medium">
-          Your email client should have opened
-        </h2>
+        <h2 className="mb-2 text-lg font-medium">Message sent</h2>
         <p className="text-muted-foreground text-sm">
-          If it didn&apos;t, send your message directly to{" "}
-          <a
-            href="mailto:hello@vernix.app"
-            className="text-foreground underline"
-          >
-            hello@vernix.app
-          </a>
+          We&apos;ll get back to you within 24 hours.
         </p>
         <Button
           variant="outline"
@@ -112,7 +95,6 @@ export function ContactForm() {
 
   return (
     <div className="space-y-8">
-      {/* Topic selector */}
       <div>
         <Label className="mb-3 block">What can we help with?</Label>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -136,9 +118,11 @@ export function ContactForm() {
         </div>
       </div>
 
-      {/* Form — shown after topic selection */}
       {topic && (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <p className="text-destructive text-center text-sm">{error}</p>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contact-email">Email</Label>
@@ -204,13 +188,13 @@ export function ContactForm() {
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={sending}>
             <Send className="mr-1 h-4 w-4" />
-            Send message
+            {sending ? "Sending..." : "Send message"}
           </Button>
 
           <p className="text-muted-foreground text-center text-xs">
-            Opens your email client. We respond within 24 hours.
+            We typically respond within 24 hours.
           </p>
         </form>
       )}
