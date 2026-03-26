@@ -1,6 +1,9 @@
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+}
 
 export function getWelcomeEmailHtml(name: string): string {
+  const APP_URL = getAppUrl();
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>

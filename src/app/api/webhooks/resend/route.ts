@@ -1,21 +1,8 @@
 import { NextResponse } from "next/server";
+import { Webhook } from "svix";
 import { sendEmail } from "@/lib/email/send";
 import { escapeHtml } from "@/lib/email/templates";
 import { rateLimitByIp } from "@/lib/rate-limit";
-
-// All Resend webhook event types
-// https://resend.com/docs/dashboard/webhooks/event-types
-const HANDLED_EVENTS = ["email.received"] as const;
-const KNOWN_EVENTS = [
-  "email.sent",
-  "email.delivered",
-  "email.delivery_delayed",
-  "email.complained",
-  "email.bounced",
-  "email.opened",
-  "email.clicked",
-  "email.received",
-] as const;
 
 export async function POST(request: Request) {
   const rl = rateLimitByIp(request, "webhook:resend", {
@@ -35,31 +22,47 @@ export async function POST(request: Request) {
     );
   }
 
-  // TODO: Verify Svix signature using webhookSecret
-  // Resend uses Svix for webhook delivery — signature is in svix-id, svix-timestamp, svix-signature headers
+  // Verify Svix signature
+  const svixId = request.headers.get("svix-id");
+  const svixTimestamp = request.headers.get("svix-timestamp");
+  const svixSignature = request.headers.get("svix-signature");
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    return NextResponse.json(
+      { error: "Missing webhook signature headers" },
+      { status: 401 }
+    );
   }
 
-  const payload = body as { type?: string; data?: Record<string, unknown> };
-  const eventType = payload.type;
+  let body: string;
+  try {
+    body = await request.text();
+  } catch {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
 
+  let payload: { type?: string; data?: Record<string, unknown> };
+  try {
+    const wh = new Webhook(webhookSecret);
+    payload = wh.verify(body, {
+      "svix-id": svixId,
+      "svix-timestamp": svixTimestamp,
+      "svix-signature": svixSignature,
+    }) as typeof payload;
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid webhook signature" },
+      { status: 401 }
+    );
+  }
+
+  const eventType = payload.type;
   if (!eventType) {
     return NextResponse.json({ error: "Missing event type" }, { status: 400 });
   }
 
-  // Log all events for observability
-  const isKnown = (KNOWN_EVENTS as readonly string[]).includes(eventType);
-  if (!isKnown) {
-    console.log(`[Webhook:resend] Unknown event type: ${eventType}`);
-  }
-
   // Only process inbound emails — acknowledge everything else with 200
-  if (!HANDLED_EVENTS.includes(eventType as (typeof HANDLED_EVENTS)[number])) {
+  if (eventType !== "email.received") {
     return NextResponse.json({ received: true, event: eventType });
   }
 
@@ -105,12 +108,17 @@ export async function POST(request: Request) {
     `[Webhook:resend] Forwarding inbound email from ${from} to ${recipients.join(", ")}`
   );
 
+  // Add forwarded-from header to distinguish from regular Vernix emails
+  const forwardHeader = `<div style="padding:12px 16px;background:#f5f5f5;border-radius:8px;margin-bottom:16px;font-size:13px;color:#666">Forwarded from <strong>${escapeHtml(from)}</strong> to <strong>${escapeHtml((data?.to ?? []).join(", "))}</strong></div>`;
+
+  const emailBody =
+    data?.html ??
+    `<pre style="font-family:sans-serif;white-space:pre-wrap">${escapeHtml(data?.text ?? "")}</pre>`;
+
   const result = await sendEmail({
     to: recipients,
     subject: `[Fwd] ${subject}`,
-    html:
-      data?.html ??
-      `<pre style="font-family:sans-serif;white-space:pre-wrap">${escapeHtml(data?.text ?? "")}</pre>`,
+    html: forwardHeader + emailBody,
     text: data?.text ?? undefined,
     replyTo: from,
   });

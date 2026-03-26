@@ -32,6 +32,7 @@ vi.mock("@/lib/email/templates", () => ({
 }));
 
 import { POST } from "./route";
+import { sendEmail } from "@/lib/email/send";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
 
 const URL = "http://localhost/api/auth/register";
@@ -82,6 +83,14 @@ describe("POST /api/auth/register", () => {
     expect(status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.user.email).toBe("new@example.com");
+
+    // Welcome email should be sent
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "new@example.com",
+        subject: "Welcome to Vernix",
+      })
+    );
   });
 
   it("returns 409 on duplicate email (unique constraint)", async () => {
