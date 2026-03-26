@@ -155,6 +155,41 @@ describe("POST /api/agent/respond", () => {
     expect(callArgs.messages[0].content).toContain("## Context\nSome context");
   });
 
+  it("includes agenda in system prompt when meeting has one", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      { metadata: { agenda: "Discuss Q1 roadmap" } },
+    ]);
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "test",
+      },
+    });
+    await POST(req);
+
+    const callArgs = mockChatCreate.mock.calls[0][0];
+    expect(callArgs.messages[0].content).toContain("Discuss Q1 roadmap");
+  });
+
+  it("sends user question as the user message", async () => {
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "What decisions were made?",
+      },
+    });
+    await POST(req);
+
+    const callArgs = mockChatCreate.mock.calls[0][0];
+    expect(callArgs.messages[1]).toEqual({
+      role: "user",
+      content: "What decisions were made?",
+    });
+  });
+
   it("returns 500 when chat completion throws", async () => {
     mockChatCreate.mockRejectedValueOnce(new Error("LLM down"));
 

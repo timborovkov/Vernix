@@ -20,21 +20,26 @@ const { mockDb } = vi.hoisted(() => {
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/auth/password-reset", () => ({
-  hashResetToken: () => "hashed-token",
+  hashResetToken: vi.fn().mockReturnValue("hashed-token"),
 }));
 vi.mock("bcryptjs", () => ({
   hash: vi.fn().mockResolvedValue("new-hashed-password"),
 }));
-vi.mock("@/lib/rate-limit", () => ({
-  rateLimitByIp: () => ({ success: true, remaining: 99 }),
-}));
 
 import { POST } from "./route";
 import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
+import { hash } from "bcryptjs";
+import { hashResetToken } from "@/lib/auth/password-reset";
+import { resetRateLimits } from "@/lib/rate-limit";
 
 const URL = "http://localhost/api/auth/reset-password";
 
 describe("POST /api/auth/reset-password", () => {
+  beforeEach(() => {
+    resetRateLimits();
+    vi.clearAllMocks();
+  });
+
   it("resets password with valid token", async () => {
     // Transaction mock: execute the callback with a tx that behaves like db
     mockDb.transaction.mockImplementationOnce(
@@ -54,6 +59,13 @@ describe("POST /api/auth/reset-password", () => {
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(200);
     expect(data.success).toBe(true);
+
+    expect(hashResetToken).toHaveBeenCalledWith("valid-token");
+    expect(hash).toHaveBeenCalledWith("newpass123", 12);
+    expect(mockDb.set).toHaveBeenCalledWith({
+      passwordHash: "new-hashed-password",
+      updatedAt: expect.any(Date),
+    });
   });
 
   it("returns 400 for invalid token (not found)", async () => {
@@ -118,5 +130,26 @@ describe("POST /api/auth/reset-password", () => {
     });
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
+  });
+
+  it("returns 429 after exceeding rate limit", async () => {
+    // First 5 requests should succeed (with validation error, but not 429)
+    for (let i = 0; i < 5; i++) {
+      const req = createJsonRequest(URL, {
+        method: "POST",
+        body: { token: "tok", newPassword: "short" },
+      });
+      const { status } = await parseJsonResponse(await POST(req));
+      expect(status).toBe(400);
+    }
+
+    // 6th request should be rate limited
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { token: "tok", newPassword: "short" },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(429);
+    expect(data.error).toContain("Too many requests");
   });
 });

@@ -148,6 +148,16 @@ export default function MeetingDetailPage() {
     (meeting.metadata as Record<string, unknown>)?.silent
   );
   const isMuted = Boolean((meeting.metadata as Record<string, unknown>)?.muted);
+  const voiceActivation = (meeting.metadata as Record<string, unknown>)
+    ?.voiceActivation as { state?: string } | undefined;
+  const voiceTelemetry = (meeting.metadata as Record<string, unknown>)
+    ?.voiceTelemetry as
+    | {
+        activationCount?: number;
+        totalConnectedSeconds?: number;
+        avgSessionSeconds?: number;
+      }
+    | undefined;
 
   const toggleMute = async () => {
     setMuteSaving(true);
@@ -266,6 +276,22 @@ export default function MeetingDetailPage() {
         <Card className="mt-4 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
           <CardContent className="flex flex-wrap items-center gap-3 py-3">
             <span className="text-sm font-medium">Agent Controls</span>
+            {!isSilent && voiceActivation?.state && (
+              <Badge
+                variant={
+                  voiceActivation.state === "responding"
+                    ? "default"
+                    : voiceActivation.state === "activated"
+                      ? "secondary"
+                      : "outline"
+                }
+              >
+                {voiceActivation.state === "idle" && "Listening"}
+                {voiceActivation.state === "activated" && "Activating"}
+                {voiceActivation.state === "responding" && "Responding"}
+                {voiceActivation.state === "cooldown" && "Cooling down"}
+              </Badge>
+            )}
             <Button
               variant={isMuted ? "default" : "outline"}
               size="sm"
@@ -360,6 +386,39 @@ export default function MeetingDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Voice Telemetry */}
+      {voiceTelemetry &&
+        voiceTelemetry.activationCount != null &&
+        voiceTelemetry.activationCount > 0 && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Voice Agent Stats</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-6 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Activations:</span>{" "}
+                  <span className="font-medium">
+                    {voiceTelemetry.activationCount}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Connected time:</span>{" "}
+                  <span className="font-medium">
+                    {voiceTelemetry.totalConnectedSeconds}s
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Avg session:</span>{" "}
+                  <span className="font-medium">
+                    {voiceTelemetry.avgSessionSeconds}s
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
       {/* Participants */}
       {participants.length > 0 && (

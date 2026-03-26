@@ -98,7 +98,7 @@ export async function generateMeetingSummary(
         },
       ],
       temperature: 0.3,
-      max_tokens: 1000,
+      max_completion_tokens: 1000,
     });
 
     const summary = response.choices[0]?.message?.content?.trim();

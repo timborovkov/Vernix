@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "drizzle-kit push --force && next start",
+    "start": "yes | drizzle-kit push --force && next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "format": "prettier --write .",

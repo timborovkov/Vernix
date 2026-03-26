@@ -53,7 +53,7 @@ describe("GET /api/settings/api-keys", () => {
 describe("POST /api/settings/api-keys", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates a new API key", async () => {
+  it("creates a new API key with hash stored and prefix returned", async () => {
     const key = fakeApiKey();
     mockDb.returning.mockResolvedValueOnce([key]);
 
@@ -64,8 +64,19 @@ describe("POST /api/settings/api-keys", () => {
     const { status, data } = await parseJsonResponse(await POST(req));
 
     expect(status).toBe(201);
+    // The raw key is returned only once to the user
     expect(data.rawKey).toBe("kk_test1234567890abcdef1234567890ab");
+    expect(data.keyPrefix).toBeDefined();
     expect(mockGenerateApiKey).toHaveBeenCalled();
+    // Verify the bcrypt hash (not the raw key) is stored in the DB
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        keyHash: "$2a$10$fakehash",
+        keyPrefix: "kk_test",
+        userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+        name: "Claude Desktop",
+      })
+    );
   });
 
   it("returns 400 for missing name", async () => {

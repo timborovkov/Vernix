@@ -104,6 +104,12 @@ describe("POST /api/meetings/[id]/summarize", () => {
       segments,
       expect.objectContaining({ title: "Test Meeting" })
     );
+    // Verify summary was stored in metadata via mockDb.set
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({ summary: "New summary" }),
+      })
+    );
   });
 
   it("generates summary for processing meeting", async () => {

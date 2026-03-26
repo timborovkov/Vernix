@@ -113,4 +113,27 @@ describe("DELETE /api/knowledge/:id", () => {
 
     expect(status).toBe(404);
   });
+
+  it("uses meeting qdrant collection for meeting-scoped documents", async () => {
+    const doc = fakeDocument({ meetingId: "meeting-123" });
+    mockDb.where
+      .mockResolvedValueOnce([doc]) // SELECT document
+      .mockResolvedValueOnce([{ qdrantCollectionName: "meeting_coll_xyz" }]) // SELECT meeting
+      .mockResolvedValueOnce([]); // DELETE
+
+    const req = new Request(`http://localhost/api/knowledge/${DOC_ID}`, {
+      method: "DELETE",
+    });
+    const { status } = await parseJsonResponse(
+      await DELETE(req, makeParams(DOC_ID))
+    );
+
+    expect(status).toBe(200);
+    // Should use the meeting's collection, not the knowledge collection
+    expect(mockDeleteDocumentChunks).toHaveBeenCalledWith(
+      "meeting_coll_xyz",
+      DOC_ID
+    );
+    expect(mockKnowledgeCollectionName).not.toHaveBeenCalled();
+  });
 });
