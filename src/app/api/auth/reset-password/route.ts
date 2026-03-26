@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { hash } from "bcryptjs";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { users, passwordResetTokens } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
-import { consumePasswordResetToken } from "@/lib/auth/password-reset";
+import { hashResetToken } from "@/lib/auth/password-reset";
 
 const resetSchema = z.object({
   token: z.string().min(1, "Token is required"),
@@ -37,22 +37,41 @@ export async function POST(request: Request) {
   }
 
   const { token, newPassword } = parsed.data;
+  const tokenHash = hashResetToken(token);
 
-  // Validate and consume the token (one-time use)
-  const userId = await consumePasswordResetToken(token);
-  if (!userId) {
+  // Hash password before the transaction (CPU-intensive, no DB dependency)
+  const passwordHash = await hash(newPassword, 12);
+
+  // Atomic: consume token + update password in a single transaction
+  const result = await db.transaction(async (tx) => {
+    // Atomically delete and return the token
+    const deleted = await tx
+      .delete(passwordResetTokens)
+      .where(eq(passwordResetTokens.tokenHash, tokenHash))
+      .returning({
+        userId: passwordResetTokens.userId,
+        expiresAt: passwordResetTokens.expiresAt,
+      });
+
+    const row = deleted[0];
+    if (!row) return { error: "not_found" as const };
+    if (row.expiresAt < new Date()) return { error: "expired" as const };
+
+    // Update password
+    await tx
+      .update(users)
+      .set({ passwordHash, updatedAt: new Date() })
+      .where(eq(users.id, row.userId));
+
+    return { success: true as const };
+  });
+
+  if ("error" in result) {
     return NextResponse.json(
       { error: "Invalid or expired reset link. Please request a new one." },
       { status: 400 }
     );
   }
-
-  // Hash and update password
-  const passwordHash = await hash(newPassword, 12);
-  await db
-    .update(users)
-    .set({ passwordHash, updatedAt: new Date() })
-    .where(eq(users.id, userId));
 
   return NextResponse.json({ success: true });
 }

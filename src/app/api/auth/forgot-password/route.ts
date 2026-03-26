@@ -39,24 +39,26 @@ export async function POST(request: Request) {
   const { email } = parsed.data;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
-  // Look up user — send email only if exists, but always return success (no enumeration)
-  const user = await findUserByEmail(email);
+  // Fire-and-forget: do all work after returning the response.
+  // This eliminates timing side-channels that could reveal whether an email exists.
+  void (async () => {
+    try {
+      const user = await findUserByEmail(email);
+      if (!user) return;
 
-  if (user) {
-    const token = await createPasswordResetToken(user.id);
-    const resetUrl = `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+      const token = await createPasswordResetToken(user.id);
+      const resetUrl = `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
 
-    // Fire-and-forget — don't block response on email delivery
-    sendEmail({
-      to: email,
-      subject: "Reset your Vernix password",
-      html: getPasswordResetEmailHtml(user.name, resetUrl),
-    }).catch((err) =>
-      console.error("[ForgotPassword] Email send failed:", err)
-    );
-  }
+      await sendEmail({
+        to: email,
+        subject: "Reset your Vernix password",
+        html: getPasswordResetEmailHtml(user.name, resetUrl),
+      });
+    } catch (err) {
+      console.error("[ForgotPassword] Error:", err);
+    }
+  })();
 
-  // Generic response — prevents email enumeration
   return NextResponse.json({
     success: true,
     message:

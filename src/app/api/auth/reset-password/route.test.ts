@@ -1,4 +1,4 @@
-const { mockDb, mockConsume } = vi.hoisted(() => {
+const { mockDb } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -11,15 +11,16 @@ const { mockDb, mockConsume } = vi.hoisted(() => {
     "update",
     "set",
     "delete",
+    "transaction",
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return { mockDb: db, mockConsume: vi.fn() };
+  return { mockDb: db };
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/auth/password-reset", () => ({
-  consumePasswordResetToken: mockConsume,
+  hashResetToken: () => "hashed-token",
 }));
 vi.mock("bcryptjs", () => ({
   hash: vi.fn().mockResolvedValue("new-hashed-password"),
@@ -35,29 +36,56 @@ const URL = "http://localhost/api/auth/reset-password";
 
 describe("POST /api/auth/reset-password", () => {
   it("resets password with valid token", async () => {
-    mockConsume.mockResolvedValueOnce("user-1");
+    // Transaction mock: execute the callback with a tx that behaves like db
+    mockDb.transaction.mockImplementationOnce(
+      async (fn: (tx: typeof mockDb) => Promise<unknown>) => {
+        // DELETE ... RETURNING returns the token row
+        mockDb.returning.mockResolvedValueOnce([
+          { userId: "user-1", expiresAt: new Date(Date.now() + 60000) },
+        ]);
+        return fn(mockDb);
+      }
+    );
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: {
-        token: "valid-token",
-        newPassword: "newpass123",
-      },
+      body: { token: "valid-token", newPassword: "newpass123" },
     });
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(200);
     expect(data.success).toBe(true);
   });
 
-  it("returns 400 for invalid/expired token", async () => {
-    mockConsume.mockResolvedValueOnce(null);
+  it("returns 400 for invalid token (not found)", async () => {
+    mockDb.transaction.mockImplementationOnce(
+      async (fn: (tx: typeof mockDb) => Promise<unknown>) => {
+        mockDb.returning.mockResolvedValueOnce([]);
+        return fn(mockDb);
+      }
+    );
 
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: {
-        token: "expired-token",
-        newPassword: "newpass123",
-      },
+      body: { token: "bad-token", newPassword: "newpass123" },
+    });
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(400);
+    expect(data.error).toContain("Invalid or expired");
+  });
+
+  it("returns 400 for expired token", async () => {
+    mockDb.transaction.mockImplementationOnce(
+      async (fn: (tx: typeof mockDb) => Promise<unknown>) => {
+        mockDb.returning.mockResolvedValueOnce([
+          { userId: "user-1", expiresAt: new Date(Date.now() - 60000) },
+        ]);
+        return fn(mockDb);
+      }
+    );
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { token: "expired-token", newPassword: "newpass123" },
     });
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
@@ -67,10 +95,7 @@ describe("POST /api/auth/reset-password", () => {
   it("returns 400 on short password", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",
-      body: {
-        token: "token",
-        newPassword: "short",
-      },
+      body: { token: "token", newPassword: "short" },
     });
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(400);
