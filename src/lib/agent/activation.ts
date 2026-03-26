@@ -56,7 +56,9 @@ async function flushVoiceBuffer(
   if (!buffer || buffer.chunks.length === 0) return;
 
   const chunks = [...buffer.chunks];
-  buffer.chunks = [];
+  const recentTranscript = [...buffer.recentTranscript];
+  // eslint-disable-next-line drizzle/enforce-delete-with-where -- Map.delete
+  buffers.delete(meetingId);
 
   // Only check spoken text (not speaker names) to avoid false positives
   const spokenText = chunks.map((c) => c.text).join("\n");
@@ -74,7 +76,7 @@ async function flushVoiceBuffer(
   }
 
   // Build transcript window from recent chunks
-  const transcriptWindow = buildTranscriptWindow(buffer.recentTranscript);
+  const transcriptWindow = buildTranscriptWindow(recentTranscript);
 
   // Atomically check current state and activate in a single read-then-write
   // to prevent race conditions between concurrent webhook calls
