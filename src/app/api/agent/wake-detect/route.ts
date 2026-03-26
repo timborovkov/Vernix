@@ -119,7 +119,9 @@ export async function POST(request: Request) {
       metadata: { ...metadata, voiceActivation: activation },
       updatedAt: new Date(),
     })
-    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId)));
+    .where(
+      and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
+    );
 
   recordActivation(meetingId);
 

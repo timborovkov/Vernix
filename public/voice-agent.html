@@ -293,7 +293,8 @@
           const idx = Math.floor(srcIdx);
           const frac = srcIdx - idx;
           const a = int16Samples[idx] || 0;
-          const b = int16Samples[Math.min(idx + 1, int16Samples.length - 1)] || 0;
+          const b =
+            int16Samples[Math.min(idx + 1, int16Samples.length - 1)] || 0;
           downsampled[i] = Math.round(a + frac * (b - a));
         }
 
@@ -365,19 +366,26 @@
             }
             registerProcessor("audio-capture", AudioCaptureProcessor);
           `;
-          const blob = new Blob([workletCode], { type: "application/javascript" });
+          const blob = new Blob([workletCode], {
+            type: "application/javascript",
+          });
           const url = URL.createObjectURL(blob);
           await audioContext.audioWorklet.addModule(url);
           URL.revokeObjectURL(url);
           useWorklet = true;
         } catch (e) {
-          console.warn("[VoiceAgent] AudioWorklet not supported, using ScriptProcessor fallback");
+          console.warn(
+            "[VoiceAgent] AudioWorklet not supported, using ScriptProcessor fallback"
+          );
         }
 
         const source = audioContext.createMediaStreamSource(stream);
 
         if (useWorklet) {
-          const workletNode = new AudioWorkletNode(audioContext, "audio-capture");
+          const workletNode = new AudioWorkletNode(
+            audioContext,
+            "audio-capture"
+          );
           workletNode.port.onmessage = (e) => {
             handleAudioFrame(e.data.int16, e.data.speechDetected);
           };
@@ -385,7 +393,11 @@
           workletNode.connect(audioContext.destination);
         } else {
           // Fallback: ScriptProcessor (deprecated but widely supported)
-          const processor = audioContext.createScriptProcessor(CHUNK_SIZE, 1, 1);
+          const processor = audioContext.createScriptProcessor(
+            CHUNK_SIZE,
+            1,
+            1
+          );
           processor.onaudioprocess = (e) => {
             const float32 = e.inputBuffer.getChannelData(0);
             const int16 = new Int16Array(float32.length);
