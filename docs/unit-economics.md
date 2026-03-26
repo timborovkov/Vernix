@@ -10,7 +10,6 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 
 ### Cost of serving free users
 
-
 | User type          | What they consume                          | Cost per user/mo |
 | ------------------ | ------------------------------------------ | ---------------- |
 | Free (active)      | ~18 min silent (avg, cap is 30)            | $0.21            |
@@ -18,9 +17,7 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 | Free (RAG typical) | ~5 queries/day × 20 days × $0.01           | $1.00            |
 | Free trial         | ~30 min voice + ~30 min silent (of 90 cap) | $1.06            |
 
-
 ### Cost of serving Pro users
-
 
 | User type       | Usage pattern              | COGS/mo | Usage $ | Overage beyond $30 credit |
 | --------------- | -------------------------- | ------- | ------- | ------------------------- |
@@ -29,11 +26,9 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 | Heavy (15%)     | 8 hr voice + 25 hr silent  | $28.95  | $61.50  | $31.50                    |
 | Very heavy (5%) | 25 hr voice + 50 hr silent | $70.50  | $150.00 | $120.00                   |
 
-
-*COGS = voice hours × $1.40 + silent hours × $0.71. Usage $ = voice hours × $3 + silent hours × $1.50.*
+_COGS = voice hours × $1.40 + silent hours × $0.71. Usage $ = voice hours × $3 + silent hours × $1.50._
 
 ### Conversion rates
-
 
 | Rate                       | Organic   | Paid traffic | Source                          |
 | -------------------------- | --------- | ------------ | ------------------------------- |
@@ -43,9 +38,7 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 | Meaningful use → Pro       | 20%       | 15%          | Paid users more price-sensitive |
 | **End-to-end visit → Pro** | **0.16%** | **0.045%**   |                                 |
 
-
 ### Other assumptions
-
 
 | Input                 | Value    | Notes                                 |
 | --------------------- | -------- | ------------------------------------- |
@@ -58,13 +51,11 @@ All numbers reference the [pricing model](./pricing.md): Pro at $29/mo, $30 cred
 | B2B CPC (content/SEO) | ~$0      | Organic, no per-click cost            |
 | Free user active rate | 50%      | Half of signups use the product       |
 
-
 ---
 
 ## Organic Funnel (per 1,000 visitors)
 
 No ad spend. Traffic from SEO, word of mouth, social, content.
-
 
 | Stage                | Volume  | Rate |
 | -------------------- | ------- | ---- |
@@ -75,11 +66,9 @@ No ad spend. Traffic from SEO, word of mouth, social, content.
 | Meaningful trial use | 8       | 53%  |
 | **Convert to Pro**   | **1.6** | 20%  |
 
-
 **Per 1,000 organic visitors → ~1.6 Pro users.**
 
 ### Organic cost per 1,000 visitors
-
 
 | Cost                            | Amount  |
 | ------------------------------- | ------- |
@@ -90,13 +79,11 @@ No ad spend. Traffic from SEO, word of mouth, social, content.
 | Pro conversions                 | 1.6     |
 | **Organic CAC**                 | **$14** |
 
-
 The organic CAC is $14 regardless of how many visitors we get — it scales linearly. Whether we get 100 or 100,000 visitors/month, each Pro user costs ~$14 in free tier and trial infrastructure.
 
 ---
 
 ## Paid Funnel (per $1,000 ad spend)
-
 
 | Channel        | CPC   | Visits | Signups (1.5%) | Trials (50%) | Active (40%) | Pro (15%) | CAC per user  |
 | -------------- | ----- | ------ | -------------- | ------------ | ------------ | --------- | ------------- |
@@ -105,13 +92,11 @@ The organic CAC is $14 regardless of how many visitors we get — it scales line
 | Social (cheap) | $0.50 | 2,000  | 30             | 15           | 6            | 0.9       | $1,111        |
 | Content/SEO    | ~$0   | —      | —              | —            | —            | —         | ~$0 (organic) |
 
-
 **Paid ads are not viable at current conversion rates.** Even cheap social traffic at $0.50 CPC produces $1,111 CAC — far above the ~$240 LTV.
 
 ### When paid ads become worth it
 
 For a paid channel to hit 3:1 LTV:CAC, the ad spend CAC must stay under **$80** (LTV $240 / 3). That means:
-
 
 | CPC   | Required visit-to-Pro rate | What that means                                   |
 | ----- | -------------------------- | ------------------------------------------------- |
@@ -121,8 +106,7 @@ For a paid channel to hit 3:1 LTV:CAC, the ad spend CAC must stay under **$80** 
 | $0.50 | 0.63%                      | 1 in 160 visitors. Realistic target.              |
 | $0.20 | 0.25%                      | 1 in 400 visitors. Close to current organic rate. |
 
-
-*Formula: required rate = CPC / $80. At $80 CAC and the given CPC, you need that % of visitors to become Pro.*
+_Formula: required rate = CPC / $80. At $80 CAC and the given CPC, you need that % of visitors to become Pro._
 
 **Realistic path to paid ads:**
 
@@ -143,7 +127,6 @@ For a paid channel to hit 3:1 LTV:CAC, the ad spend CAC must stay under **$80** 
 
 ### Per-user revenue and margin
 
-
 | User type  | % of Pro | Revenue/mo | COGS/mo | Polar/mo | Margin/mo |
 | ---------- | -------- | ---------- | ------- | -------- | --------- |
 | Light      | 45%      | $29.00     | $3.53   | $1.56    | $23.91    |
@@ -151,24 +134,20 @@ For a paid channel to hit 3:1 LTV:CAC, the ad spend CAC must stay under **$80** 
 | Heavy      | 15%      | $60.50     | $28.95  | $3.22    | $28.33    |
 | Very heavy | 5%       | $149.00    | $70.50  | $6.76    | $71.74    |
 
-
-*Heavy/very heavy revenue = $29 base + overage. Heavy Polar = $1.56 base + $1.66 overage. Very heavy Polar = $1.56 base + $5.20 overage.*
+_Heavy/very heavy revenue = $29 base + overage. Heavy Polar = $1.56 base + $1.66 overage. Very heavy Polar = $1.56 base + $5.20 overage._
 
 ### Lifetime value (at 8% monthly churn = 12 month avg lifetime)
-
 
 | Metric         | Median (80% of users) | Mean (all users) |
 | -------------- | --------------------- | ---------------- |
 | Monthly margin | $20.03                | $22.83           |
 | **LTV**        | **$240**              | **$274**         |
 
-
-*Median = weighted avg of light ($23.91) and typical ($16.14) at 56/44 split within the 80%. Mean = weighted avg across all types.*
+_Median = weighted avg of light ($23.91) and typical ($16.14) at 56/44 split within the 80%. Mean = weighted avg across all types._
 
 ---
 
 ## Summary
-
 
 | Metric            | Value          |
 | ----------------- | -------------- |
@@ -178,7 +157,6 @@ For a paid channel to hit 3:1 LTV:CAC, the ad spend CAC must stay under **$80** 
 | Payback period    | < 1 month      |
 | Paid ads viable?  | No (at launch) |
 | Break-even CPC    | < $0.10        |
-
 
 Organic unit economics are strong. Every $14 spent serving free/trial users returns $240 in lifetime margin. The focus at launch should be entirely on driving organic traffic and optimizing the conversion funnel — not paid ads.
 
@@ -210,4 +188,3 @@ Organic unit economics are strong. Every $14 spent serving free/trial users retu
 - Referral program (existing users invite colleagues, reward both)
 - Product-led viral loop: meeting participants see Vernix agent in action → organic signups
 - Revisit paid ads once visit-to-Pro exceeds 1%
-
