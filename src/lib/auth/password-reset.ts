@@ -41,26 +41,6 @@ export async function createPasswordResetToken(
   return token;
 }
 
-/** Validate a token and return the userId if valid, or null if invalid/expired. Does NOT consume the token. */
-export async function validatePasswordResetToken(
-  token: string
-): Promise<string | null> {
-  const tokenHash = hashResetToken(token);
-
-  const [row] = await db
-    .select({
-      userId: passwordResetTokens.userId,
-      expiresAt: passwordResetTokens.expiresAt,
-    })
-    .from(passwordResetTokens)
-    .where(eq(passwordResetTokens.tokenHash, tokenHash));
-
-  if (!row) return null;
-  if (row.expiresAt < new Date()) return null;
-
-  return row.userId;
-}
-
 /** Atomically validate and consume (delete) a token. Returns userId if valid, null otherwise. */
 export async function consumePasswordResetToken(
   token: string
