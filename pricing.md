@@ -245,8 +245,80 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 - Single plan simplifies the funnel: Free → Trial → Pro. No tier comparison needed.
 - $30 credit covers light and typical users — predictable $29/mo bill for 80% of paid users.
 - Heavy users generate overage at ~50% margin. Very heavy users are the most profitable segment.
-- Free trial CAC: $106/mo for 50 users. If 20% convert → 10 new Pro subs → $290/mo payback in month one.
-- 57.5% margin is stronger than the two-tier model — single $29 price captures more from light users who were underpaying at $24.
+- 57.5% margin is stronger than the two-tier model — single $29 price captures more from light users.
+
+---
+
+## CAC & Conversion Funnel
+
+### Organic CAC (no ad spend)
+
+Every free user costs us something — that's our organic customer acquisition cost.
+
+| Metric                          | Value    |
+| ------------------------------- | -------- |
+| Free active users (cost $0.21/mo each) | 270 |
+| Free trial users (cost $2.11/mo each)  | 50  |
+| **Monthly organic CAC spend**   | **$163** |
+
+If 5% of free signups eventually convert to Pro (industry average for freemium):
+- 800 free users × 5% = 40 conversions over time
+- Spread across ~6 months avg conversion time → ~7 new Pro users/month
+- **Organic CAC per Pro user: $163 / 7 = ~$23**
+
+### Pro User Lifetime Value (LTV)
+
+| Metric                     | Conservative | Optimistic |
+| -------------------------- | ------------ | ---------- |
+| Monthly churn              | 8%           | 5%         |
+| Avg lifetime               | 12.5 months  | 20 months  |
+| Avg monthly revenue/user   | $39.73       | $39.73     |
+| Avg monthly cost/user      | $16.90       | $16.90     |
+| Avg monthly margin/user    | $22.83       | $22.83     |
+| **LTV (margin)**           | **$285**     | **$457**   |
+
+*Avg revenue = $7,945 / 200 paid users = $39.73. Avg cost = $2,846+$312+$102 / 200 = $16.30 + $0.60 infra = $16.90.*
+
+### LTV:CAC Ratio
+
+| Scenario           | CAC   | LTV   | LTV:CAC | Healthy? |
+| ------------------ | ----- | ----- | ------- | -------- |
+| Organic only       | $23   | $285  | 12.4:1  | Excellent (>3:1 is good) |
+| With $50 ad spend  | $73   | $285  | 3.9:1   | Good     |
+| With $100 ad spend | $123  | $285  | 2.3:1   | Marginal |
+
+**Max affordable CAC (target 3:1):** $285 / 3 = **$95 per Pro user** → leaves $72 for paid acquisition on top of organic CAC.
+
+### Conversion Funnel (monthly, conservative)
+
+| Stage                    | Users  | Conversion | Notes                              |
+| ------------------------ | ------ | ---------- | ---------------------------------- |
+| **Landing page visits**  | 10,000 | —          | Organic + paid traffic             |
+| **Free signups**         | 500    | 5.0%       | Visitor → signup                   |
+| **Activate trial**       | 250    | 50%        | Signup → start first meeting       |
+| **Complete trial**       | 125    | 50%        | Use 2+ meetings during trial       |
+| **Convert to Pro**       | 25     | 20%        | Trial → paid (of those who complete)|
+| **Monthly churn (Pro)**  | 2      | 8%         | Of existing 25 Pro users           |
+
+**Cost of this funnel:**
+- 500 free signups/mo: ~250 active × $0.21 = $53 (free tier cost)
+- 250 trialists: 250 × $2.11 = $528 (trial cost, biggest expense)
+- **Total organic funnel cost: ~$581/mo → 25 new Pro users → $23/user CAC**
+
+**If we add $2,000/mo ad spend to drive traffic:**
+- Total CAC: ($581 + $2,000) / 25 = **$103/user** → LTV:CAC = 2.8:1
+- Need to improve conversion to justify: at 30 trial completions converting → $86/user → 3.3:1
+
+### What we can afford on ads
+
+| Monthly ad budget | New Pro users needed (target 3:1 LTV:CAC) | Required landing page visits (at 0.25% visit→Pro) |
+| ----------------- | ------------------------------------------ | -------------------------------------------------- |
+| $0 (organic)      | 7                                          | 2,800                                              |
+| $1,000            | 14                                         | 5,600                                              |
+| $2,000            | 22                                         | 8,800                                              |
+| $5,000            | 54                                         | 21,600                                             |
+
+*0.25% = end-to-end visit-to-Pro conversion (5% signup × 50% trial × 50% complete × 20% convert). Each new Pro user needs to generate ≥$95 LTV margin to justify spend.*
 
 ---
 
