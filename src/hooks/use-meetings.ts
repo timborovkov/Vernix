@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Meeting } from "@/lib/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { throwIfBillingError, BillingApiError } from "@/lib/billing/errors";
 
 const TRANSIENT_STATUSES = ["joining", "active", "processing"];
 
@@ -45,7 +46,10 @@ export function useMeetings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
       });
-      if (!res.ok) throw new Error("Failed to create meeting");
+      if (!res.ok) {
+        await throwIfBillingError(res);
+        throw new Error("Failed to create meeting");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -61,7 +65,10 @@ export function useMeetings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ meetingId }),
       });
-      if (!res.ok) throw new Error("Failed to join meeting");
+      if (!res.ok) {
+        await throwIfBillingError(res);
+        throw new Error("Failed to join meeting");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
@@ -126,7 +133,9 @@ export function useMeetings() {
     loading,
     createMeeting,
     joinAgent: async (meetingId: string) => {
-      await joinMutation.mutateAsync(meetingId).catch(() => {});
+      await joinMutation.mutateAsync(meetingId).catch((e) => {
+        if (e instanceof BillingApiError) throw e;
+      });
     },
     stopAgent: async (meetingId: string) => {
       await stopMutation.mutateAsync(meetingId).catch(() => {});

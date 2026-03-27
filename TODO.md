@@ -38,11 +38,7 @@
 - Voice Mode Rewrite (On-Demand Realtime)
 - Internal Agent System Documentation (`docs/agent-architecture.md`)
 - Fast Wake-Word Detection (Client-Side VAD + gpt-4o-mini-transcribe)
-- Billing with Polar (constants, Polar integration, hard caps, usage tracking, billing UI, webhook handler, limit enforcement)
-
-## Billing — Remaining
-
-- **Configure paywalls** — Configure paywalls for the pricing tiers. Claude Code has a paywall skill that can be used to configure paywalls.
+- Billing with Polar (constants, Polar integration, hard caps, usage tracking, billing UI, webhook handler, limit enforcement, paywalls)
 
 ## SEO & Discoverability
 

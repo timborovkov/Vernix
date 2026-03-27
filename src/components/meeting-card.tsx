@@ -15,6 +15,8 @@ import type { Meeting } from "@/lib/db/schema";
 import { statusVariant } from "@/lib/meetings/constants";
 import Link from "next/link";
 import { Play, Square, Trash2, VolumeX } from "lucide-react";
+import { isBillingError, type BillingApiError } from "@/lib/billing/errors";
+import { UpgradeDialog } from "@/components/upgrade-dialog";
 
 interface MeetingCardProps {
   meeting: Meeting;
@@ -31,6 +33,9 @@ export function MeetingCard({
 }: MeetingCardProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<BillingApiError | null>(
+    null
+  );
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const canJoin = meeting.status === "pending" || meeting.status === "failed";
@@ -43,6 +48,11 @@ export function MeetingCard({
     setActionLoading(key);
     try {
       await action();
+    } catch (error) {
+      if (isBillingError(error)) {
+        setUpgradeError(error);
+      }
+      // Other errors handled by hook callbacks
     } finally {
       setActionLoading(null);
     }
@@ -156,6 +166,16 @@ export function MeetingCard({
           setConfirmDelete(false);
           handleAction(() => onDelete(meeting.id), "delete");
         }}
+      />
+
+      <UpgradeDialog
+        open={!!upgradeError}
+        onOpenChange={(v) => !v && setUpgradeError(null)}
+        title={
+          upgradeError?.isFeatureGate ? "Feature requires Pro" : "Limit reached"
+        }
+        description={upgradeError?.message ?? ""}
+        limitType={upgradeError?.isFeatureGate ? "feature" : "quota"}
       />
     </>
   );

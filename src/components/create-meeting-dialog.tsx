@@ -13,6 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { isBillingError, type BillingApiError } from "@/lib/billing/errors";
+import { UpgradeDialog } from "@/components/upgrade-dialog";
 
 interface CreateMeetingDialogProps {
   onCreate: (
@@ -30,6 +32,9 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
   const [agenda, setAgenda] = useState("");
   const [silent, setSilent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<BillingApiError | null>(
+    null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +48,12 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
       setAgenda("");
       setSilent(false);
       setOpen(false);
-    } catch {
-      toast.error("Failed to create meeting");
+    } catch (error) {
+      if (isBillingError(error)) {
+        setUpgradeError(error);
+      } else {
+        toast.error("Failed to create meeting");
+      }
     } finally {
       setLoading(false);
     }
@@ -119,6 +128,15 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
           </Button>
         </form>
       </DialogContent>
+      <UpgradeDialog
+        open={!!upgradeError}
+        onOpenChange={(v) => !v && setUpgradeError(null)}
+        title={
+          upgradeError?.isFeatureGate ? "Feature requires Pro" : "Limit reached"
+        }
+        description={upgradeError?.message ?? ""}
+        limitType={upgradeError?.isFeatureGate ? "feature" : "quota"}
+      />
     </Dialog>
   );
 }

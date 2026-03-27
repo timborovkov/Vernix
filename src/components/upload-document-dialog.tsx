@@ -11,6 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Upload } from "lucide-react";
+import { isBillingError, type BillingApiError } from "@/lib/billing/errors";
+import { UpgradeDialog } from "@/components/upgrade-dialog";
 
 const ACCEPTED_TYPES = ".pdf,.docx,.txt,.md";
 const MAX_SIZE_MB = 10;
@@ -27,6 +29,9 @@ export function UploadDocumentDialog({
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [upgradeError, setUpgradeError] = useState<BillingApiError | null>(
+    null
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,8 +54,11 @@ export function UploadDocumentDialog({
       setSelectedFile(null);
       if (inputRef.current) inputRef.current.value = "";
       setOpen(false);
-    } catch {
-      // Error toast handled by hook
+    } catch (error) {
+      if (isBillingError(error)) {
+        setUpgradeError(error);
+      }
+      // Other errors handled by hook toast
     }
   };
 
@@ -94,6 +102,17 @@ export function UploadDocumentDialog({
           </Button>
         </form>
       </DialogContent>
+      <UpgradeDialog
+        open={!!upgradeError}
+        onOpenChange={(v) => !v && setUpgradeError(null)}
+        title={
+          upgradeError?.isFeatureGate
+            ? "Upload limit reached"
+            : "Upload quota exhausted"
+        }
+        description={upgradeError?.message ?? ""}
+        limitType={upgradeError?.isFeatureGate ? "feature" : "quota"}
+      />
     </Dialog>
   );
 }
