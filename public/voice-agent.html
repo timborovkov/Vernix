@@ -87,8 +87,8 @@
       }
 
       #logo {
-        height: 140px;
-        width: auto;
+        width: 120px;
+        height: 120px;
         opacity: 0.9;
         transition: opacity 0.3s;
         filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
@@ -160,8 +160,15 @@
       const IDLE_TIMEOUT_MS = 15000;
       const AUDIO_BUFFER_SECONDS = 10;
       const FALLBACK_TIMEOUT_MS = 4000;
+      const VAD_RMS_THRESHOLD = 0.015;
+      const VAD_BUFFER_DURATION_MS = 800;
+      const WAKE_DETECT_COOLDOWN_MS = 1500;
+      let activating = false; // mutex to prevent dual activation
       let cachedToken = null;
       let cachedTokenExpiresAt = 0;
+      let lastWakeDetectAt = 0;
+      let vadBuffer = [];
+      let vadBufferStartAt = 0;
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -180,21 +187,27 @@
       let isPlaying = false;
 
       function queueAudio(base64Pcm) {
-        audioDone = false;
-        const binary = atob(base64Pcm);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        const int16 = new Int16Array(bytes.buffer);
+        try {
+          audioDone = false;
+          const binary = atob(base64Pcm);
+          if (binary.length === 0) return;
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++)
+            bytes[i] = binary.charCodeAt(i);
+          const int16 = new Int16Array(bytes.buffer);
 
-        const float32 = new Float32Array(int16.length);
-        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+          const float32 = new Float32Array(int16.length);
+          for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
 
-        audioQueue.push(float32);
-        if (!isPlaying) playNext();
+          audioQueue.push(float32);
+          if (!isPlaying) playNext();
+        } catch (e) {
+          console.warn("[VoiceAgent] Audio decode error:", e);
+        }
       }
 
       function playNext() {
-        if (audioQueue.length === 0) {
+        if (!audioContext || audioQueue.length === 0) {
           isPlaying = false;
           if (audioDone && sessionActive) {
             setStatus("Listening...", "listening");
@@ -218,37 +231,123 @@
       }
 
       // --- Circular audio buffer ---
-      const CHUNK_SIZE = 4096;
-      const MAX_RING_CHUNKS = Math.ceil(
-        (AUDIO_BUFFER_SECONDS * 24000) / CHUNK_SIZE
-      );
+      const CHUNK_SIZE = 4096; // ScriptProcessor fallback chunk size
+      const MAX_RING_SAMPLES = AUDIO_BUFFER_SECONDS * 24000;
       const audioRingBuffer = [];
+      let ringBufferSamples = 0;
 
-      function pushToRingBuffer(base64Chunk) {
-        audioRingBuffer.push(base64Chunk);
-        if (audioRingBuffer.length > MAX_RING_CHUNKS) {
-          audioRingBuffer.shift();
+      function pushToRingBuffer(base64Chunk, sampleCount) {
+        audioRingBuffer.push({ data: base64Chunk, samples: sampleCount });
+        ringBufferSamples += sampleCount;
+        while (
+          ringBufferSamples > MAX_RING_SAMPLES &&
+          audioRingBuffer.length > 1
+        ) {
+          const removed = audioRingBuffer.shift();
+          ringBufferSamples -= removed.samples;
         }
       }
 
       function flushRingBuffer() {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        for (const chunk of audioRingBuffer) {
+        for (const entry of audioRingBuffer) {
           ws.send(
             JSON.stringify({
               type: "input_audio_buffer.append",
-              audio: chunk,
+              audio: entry.data,
             })
           );
         }
         audioRingBuffer.length = 0;
+        ringBufferSamples = 0;
       }
 
-      // --- Audio capture ---
+      // --- WAV encoding for wake-detect ---
+      function encodeWav(int16Samples, sampleRate) {
+        const dataLen = int16Samples.length * 2;
+        const buffer = new ArrayBuffer(44 + dataLen);
+        const view = new DataView(buffer);
+        // RIFF header
+        view.setUint32(0, 0x52494646, false); // "RIFF"
+        view.setUint32(4, 36 + dataLen, true);
+        view.setUint32(8, 0x57415645, false); // "WAVE"
+        // fmt chunk
+        view.setUint32(12, 0x666d7420, false); // "fmt "
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true); // PCM
+        view.setUint16(22, 1, true); // mono
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true); // byte rate
+        view.setUint16(32, 2, true); // block align
+        view.setUint16(34, 16, true); // bits per sample
+        // data chunk
+        view.setUint32(36, 0x64617461, false); // "data"
+        view.setUint32(40, dataLen, true);
+        for (let i = 0; i < int16Samples.length; i++) {
+          view.setInt16(44 + i * 2, int16Samples[i], true);
+        }
+        return new Uint8Array(buffer);
+      }
+
+      // --- Wake-word detection via server ---
+      async function sendWakeDetect(int16Samples) {
+        if (sessionActive || activating || leaving || isMuted) return;
+        const now = Date.now();
+        if (now - lastWakeDetectAt < WAKE_DETECT_COOLDOWN_MS) return;
+        lastWakeDetectAt = now;
+
+        // Downsample 24kHz → 16kHz (take every 1.5th sample via linear interp)
+        const ratio = 24000 / 16000;
+        const outLen = Math.floor(int16Samples.length / ratio);
+        const downsampled = new Int16Array(outLen);
+        for (let i = 0; i < outLen; i++) {
+          const srcIdx = i * ratio;
+          const idx = Math.floor(srcIdx);
+          const frac = srcIdx - idx;
+          const a = int16Samples[idx] || 0;
+          const b =
+            int16Samples[Math.min(idx + 1, int16Samples.length - 1)] || 0;
+          downsampled[i] = Math.round(a + frac * (b - a));
+        }
+
+        const wav = encodeWav(downsampled, 16000);
+        let binary = "";
+        for (let i = 0; i < wav.length; i++)
+          binary += String.fromCharCode(wav[i]);
+        const base64Audio = btoa(binary);
+
+        try {
+          const res = await fetch(`${appUrl}/api/agent/wake-detect`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              meetingId,
+              botSecret,
+              audio: base64Audio,
+            }),
+          });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.activated && !sessionActive && !activating) {
+            log("Wake word detected — activating");
+            activating = true;
+            stopPolling();
+            activateSession(data.transcriptWindow);
+          }
+        } catch {
+          /* best effort — polling fallback handles it */
+        }
+      }
+
+      // --- Audio capture (ScriptProcessor + VAD) ---
       async function startCapture() {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
+        const micTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Microphone timeout")), 5000)
+        );
+        const stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia({ audio: true }),
+          micTimeout,
+        ]);
         audioContext = new AudioContext({ sampleRate: 24000 });
 
         const source = audioContext.createMediaStreamSource(stream);
@@ -257,29 +356,14 @@
         processor.onaudioprocess = (e) => {
           const float32 = e.inputBuffer.getChannelData(0);
           const int16 = new Int16Array(float32.length);
+          let sum = 0;
           for (let i = 0; i < float32.length; i++) {
             const s = Math.max(-1, Math.min(1, float32[i]));
             int16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+            sum += float32[i] * float32[i];
           }
-
-          const bytes = new Uint8Array(int16.buffer);
-          let binary = "";
-          for (let i = 0; i < bytes.length; i++)
-            binary += String.fromCharCode(bytes[i]);
-          const base64 = btoa(binary);
-
-          // Always buffer audio for context on activation
-          pushToRingBuffer(base64);
-
-          // Only stream live audio when session is active
-          if (ws && ws.readyState === WebSocket.OPEN && sessionActive) {
-            ws.send(
-              JSON.stringify({
-                type: "input_audio_buffer.append",
-                audio: base64,
-              })
-            );
-          }
+          const rms = Math.sqrt(sum / float32.length);
+          handleAudioFrame(int16, rms > VAD_RMS_THRESHOLD);
         };
 
         source.connect(processor);
@@ -287,6 +371,72 @@
         silentGain.gain.value = 0;
         processor.connect(silentGain);
         silentGain.connect(audioContext.destination);
+      }
+
+      // --- Handle each audio frame (from worklet or ScriptProcessor) ---
+      function handleAudioFrame(int16Samples, speechDetected) {
+        // Encode to base64 for ring buffer
+        const bytes = new Uint8Array(int16Samples.buffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++)
+          binary += String.fromCharCode(bytes[i]);
+        const base64 = btoa(binary);
+
+        // Always buffer for context on activation
+        pushToRingBuffer(base64, int16Samples.length);
+
+        // Stream live audio when session is active
+        if (ws && ws.readyState === WebSocket.OPEN && sessionActive) {
+          ws.send(
+            JSON.stringify({
+              type: "input_audio_buffer.append",
+              audio: base64,
+            })
+          );
+        }
+
+        // VAD: accumulate speech for wake-word detection
+        if (!sessionActive && !leaving && !isMuted && speechDetected) {
+          if (vadBuffer.length === 0) {
+            vadBufferStartAt = Date.now();
+          }
+          vadBuffer.push(int16Samples);
+
+          // Once we have enough speech, send for transcription
+          const elapsed = Date.now() - vadBufferStartAt;
+          if (elapsed >= VAD_BUFFER_DURATION_MS) {
+            // Concatenate all buffered int16 chunks
+            const totalLen = vadBuffer.reduce((s, c) => s + c.length, 0);
+            const combined = new Int16Array(totalLen);
+            let offset = 0;
+            for (const chunk of vadBuffer) {
+              combined.set(chunk, offset);
+              offset += chunk.length;
+            }
+            vadBuffer = [];
+            vadBufferStartAt = 0;
+            sendWakeDetect(combined);
+          }
+        } else if (!speechDetected && vadBuffer.length > 0) {
+          // Speech ended before buffer was full — still send if we have >0.5s
+          const elapsed = Date.now() - vadBufferStartAt;
+          if (elapsed > 500) {
+            const totalLen = vadBuffer.reduce((s, c) => s + c.length, 0);
+            const combined = new Int16Array(totalLen);
+            let offset = 0;
+            for (const chunk of vadBuffer) {
+              combined.set(chunk, offset);
+              offset += chunk.length;
+            }
+            vadBuffer = [];
+            vadBufferStartAt = 0;
+            sendWakeDetect(combined);
+          } else {
+            // Too short — discard
+            vadBuffer = [];
+            vadBufferStartAt = 0;
+          }
+        }
       }
 
       // --- Idle timer ---
@@ -309,6 +459,7 @@
       function closeSession(reason) {
         clearIdleTimer();
         sessionActive = false;
+        activating = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -316,6 +467,8 @@
         }
         audioQueue.length = 0;
         isPlaying = false;
+        vadBuffer = [];
+        vadBufferStartAt = 0;
         audioDone = true;
 
         // Notify server with session duration for telemetry
@@ -330,7 +483,7 @@
           if (isMuted) {
             setStatus("Muted", "");
           } else {
-            setStatus('Say "Vernix" to ask a question', "idle");
+            setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
             prefetchToken(); // pre-fetch for next activation
           }
           startPolling();
@@ -556,13 +709,14 @@
           if (!data.muted && isMuted) {
             isMuted = false;
             leaving = false;
-            setStatus('Say "Vernix" to ask a question', "idle");
+            setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
           }
 
           if (isMuted) return;
 
           // Handle activation
-          if (data.state === "activated" && !sessionActive) {
+          if (data.state === "activated" && !sessionActive && !activating) {
+            activating = true;
             stopPolling();
             activateSession(data.transcriptWindow);
           }
@@ -601,7 +755,10 @@
       // --- On-demand Realtime session ---
       async function activateSession(transcriptWindow) {
         sessionActive = true;
+        activating = false;
         sessionStartedAt = Date.now();
+        vadBuffer = [];
+        vadBufferStartAt = 0;
         let fallbackFired = false;
         playAcknowledgement();
         setStatus("Connecting...", "connecting");
@@ -784,9 +941,10 @@
         const sessionDurationMs =
           sessionStartedAt > 0 ? Date.now() - sessionStartedAt : 0;
         sessionActive = false;
+        activating = false;
         sessionStartedAt = 0;
         notifyState("idle", { sessionDurationMs });
-        setStatus('Say "Vernix" to ask a question', "idle");
+        setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
         startPolling();
       }
 
@@ -798,19 +956,21 @@
           return;
         }
 
-        // Set logo src using appUrl so it works inside Recall bot
         document.getElementById("logo").src =
-          appUrl + "/brand/combo/vertical-dark-nobg.png";
+          appUrl + "/brand/icon/icon-dark-256.png";
 
         try {
+          log("Starting audio capture...");
           await startCapture();
-          setStatus('Say "Vernix" to ask a question', "idle");
-          prefetchToken(); // pre-fetch token so activation is faster
-          startPolling();
+          log("Audio capture ready");
         } catch (err) {
-          setStatus("Error: " + err.message, "");
+          log("Audio capture failed: " + err.message);
           console.error(err);
         }
+
+        setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
+        prefetchToken();
+        startPolling();
       }
 
       init();

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   recordActivation,
   recordSessionEnd,
+  recordWakeDetectCall,
   flushTelemetry,
   resetTelemetry,
 } from "./telemetry";
@@ -76,6 +77,7 @@ describe("flushTelemetry", () => {
       activationCount: 1,
       totalConnectedSeconds: 6,
       avgSessionSeconds: 6,
+      wakeDetectCalls: 0,
     });
   });
 
@@ -114,7 +116,19 @@ describe("flushTelemetry", () => {
       activationCount: 1,
       totalConnectedSeconds: 12,
       avgSessionSeconds: 6,
+      wakeDetectCalls: 0,
     });
+  });
+});
+
+describe("recordWakeDetectCall", () => {
+  it("tracks wake-detect API calls", async () => {
+    recordActivation("m1");
+    recordWakeDetectCall("m1");
+    recordWakeDetectCall("m1");
+    recordWakeDetectCall("m1");
+    const result = await flushTelemetry("m1", "u1");
+    expect(result!.wakeDetectCalls).toBe(3);
   });
 });
 

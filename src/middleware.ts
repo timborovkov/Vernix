@@ -12,6 +12,7 @@ const PUBLIC_AGENT_PATHS = [
   "/api/agent/mute-self",
   "/api/agent/activation-status",
   "/api/agent/voice-fallback",
+  "/api/agent/wake-detect",
   "/api/mcp",
 ];
 

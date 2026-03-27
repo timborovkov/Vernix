@@ -5,14 +5,13 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { processMeetingEnd } from "@/lib/agent/processing";
 import { generateAgentResponse } from "@/lib/agent/response";
-
-const TRIGGER_KEYWORDS = ["vernix"];
+import { WAKE_WORDS } from "@/lib/agent/activation";
 const DEBOUNCE_MS = 3000;
 const RATE_LIMIT_INTERVAL_MS = 30_000;
 
 export function containsMention(text: string): boolean {
   const lower = text.toLowerCase();
-  return TRIGGER_KEYWORDS.some((kw) => lower.includes(kw));
+  return WAKE_WORDS.some((kw) => lower.includes(kw));
 }
 
 interface BufferedChunk {

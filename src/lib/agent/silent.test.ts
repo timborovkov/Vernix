@@ -46,9 +46,12 @@ describe("containsMention", () => {
     expect(containsMention("ask vernix")).toBe(true);
   });
 
+  it("returns true for agent and assistant wake words", () => {
+    expect(containsMention("what did the agent say")).toBe(true);
+    expect(containsMention("my assistant is here")).toBe(true);
+  });
+
   it("returns false for unrelated text", () => {
-    expect(containsMention("what did the agent say")).toBe(false);
-    expect(containsMention("my assistant is here")).toBe(false);
     expect(containsMention("let us discuss the agenda")).toBe(false);
     expect(containsMention("")).toBe(false);
   });
