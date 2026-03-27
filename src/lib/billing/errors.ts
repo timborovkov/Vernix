@@ -37,11 +37,15 @@ export function isBillingError(error: unknown): error is BillingApiError {
  * Parse an API response and throw BillingApiError if it's a billing error.
  * Call this in mutation functions before throwing a generic Error.
  */
+/**
+ * Parse an API response and throw BillingApiError if it's a billing error.
+ * Uses res.clone() so the original Response body remains consumable by the caller.
+ */
 export async function throwIfBillingError(res: Response): Promise<void> {
   if (res.status !== 403 && res.status !== 429) return;
 
   try {
-    const data = await res.json();
+    const data = await res.clone().json();
     if (data.code && BILLING_CODES.includes(data.code)) {
       throw new BillingApiError(
         data.error || "Limit reached",
