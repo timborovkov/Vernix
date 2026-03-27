@@ -31,10 +31,26 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 // Mock billing enforcement — all routes pass billing checks by default in tests
+const { mockBillingError } = vi.hoisted(() => {
+  const { NextResponse } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require("next/server") as typeof import("next/server");
+  return {
+    mockBillingError: (check: { reason?: string }, status: number = 403) =>
+      NextResponse.json(
+        {
+          error: check.reason,
+          code: status === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+        },
+        { status }
+      ),
+  };
+});
+
 vi.mock("@/lib/billing/enforce", () => ({
   getUserBilling: vi.fn().mockResolvedValue({
     plan: "free",
-    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // active trial
+    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     currentPeriodStart: null,
     currentPeriodEnd: null,
   }),
@@ -62,20 +78,7 @@ vi.mock("@/lib/billing/enforce", () => ({
     },
     plan: "free",
   }),
-  billingError: vi.fn().mockImplementation(
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (check: { reason?: string }, status: number = 403) => {
-      const { NextResponse } =
-        require("next/server") as typeof import("next/server");
-      return NextResponse.json(
-        {
-          error: check.reason,
-          code: status === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
-        },
-        { status }
-      );
-    }
-  ),
+  billingError: vi.fn().mockImplementation(mockBillingError),
 }));
 
 vi.mock("@/lib/billing/usage", () => ({
