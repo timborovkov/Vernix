@@ -207,7 +207,7 @@
       }
 
       function playNext() {
-        if (audioQueue.length === 0) {
+        if (!audioContext || audioQueue.length === 0) {
           isPlaying = false;
           if (audioDone && sessionActive) {
             setStatus("Listening...", "listening");
