@@ -70,13 +70,11 @@ Add a webhook endpoint in Polar settings:
 ### 5. Environment Variables
 
 ```bash
-POLAR_ACCESS_TOKEN=polar_pat_...          # Organization access token
-POLAR_WEBHOOK_SECRET=whsec_...            # Webhook signing secret
-POLAR_PRODUCT_ID_PRO_MONTHLY=prod_...     # Product ID for monthly plan
-POLAR_PRODUCT_ID_PRO_ANNUAL=prod_...      # Product ID for annual plan
-NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY= # Same, for client-side checkout links
-NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL=  # Same, for client-side checkout links
-POLAR_SERVER=sandbox                      # "sandbox" or "production"
+POLAR_ACCESS_TOKEN=polar_pat_...                # Organization access token
+POLAR_WEBHOOK_SECRET=whsec_...                  # Webhook signing secret
+NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY=prod_... # Product ID for monthly plan
+NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL=prod_...  # Product ID for annual plan
+POLAR_SERVER=sandbox                            # "sandbox" or "production"
 ```
 
 ---
@@ -259,7 +257,7 @@ All billing constants live in `src/lib/billing/constants.ts`:
 
 ## Future Work
 
-- [ ] Wire limit enforcement into API route handlers
+- [x] Wire limit enforcement into API route handlers
 - [ ] Spending cap support (optional per-user cap stored in DB)
 - [ ] Spending alerts at 80% and 100% credit usage (via email)
 - [ ] Churned user data retention policy (30-day read-only, 90-day archive, 180-day delete)
