@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { usageEvents, users } from "@/lib/db/schema";
+import { usageEvents, users, meetings, documents } from "@/lib/db/schema";
 import { and, eq, gte, sql, lte } from "drizzle-orm";
 import { USAGE_RATES, MONTHLY_CREDIT, type Plan } from "./constants";
 
@@ -155,6 +155,82 @@ export async function getMonthlyMeetingCount(userId: string): Promise<number> {
     );
 
   return Number(row?.count ?? 0);
+}
+
+// ---------------------------------------------------------------------------
+// Counting queries for limit enforcement
+// ---------------------------------------------------------------------------
+
+export async function getActiveMeetingCount(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<string>`count(*)` })
+    .from(meetings)
+    .where(
+      and(
+        eq(meetings.userId, userId),
+        sql`${meetings.status} in ('joining', 'active')`
+      )
+    );
+  return Number(row?.count ?? 0);
+}
+
+export async function getUsedMinutes(
+  userId: string,
+  periodStart: Date,
+  periodEnd: Date
+): Promise<number> {
+  const [row] = await db
+    .select({
+      total: sql<string>`coalesce(sum(${usageEvents.quantity}), '0')`,
+    })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        sql`${usageEvents.type} in ('voice_meeting', 'silent_meeting')`,
+        gte(usageEvents.createdAt, periodStart),
+        lte(usageEvents.createdAt, periodEnd)
+      )
+    );
+  return Number(row?.total ?? 0);
+}
+
+export async function getDocumentCount(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<string>`count(*)` })
+    .from(documents)
+    .where(eq(documents.userId, userId));
+  return Number(row?.count ?? 0);
+}
+
+export async function getMonthlyDocUploads(userId: string): Promise<number> {
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [row] = await db
+    .select({
+      count: sql<string>`coalesce(sum(${usageEvents.quantity}), '0')`,
+    })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.type, "doc_upload"),
+        gte(usageEvents.createdAt, startOfMonth)
+      )
+    );
+  return Number(row?.count ?? 0);
+}
+
+export async function getTotalStorageMB(userId: string): Promise<number> {
+  const [row] = await db
+    .select({
+      totalBytes: sql<string>`coalesce(sum(${documents.fileSize}), '0')`,
+    })
+    .from(documents)
+    .where(eq(documents.userId, userId));
+  return Number(row?.totalBytes ?? 0) / (1024 * 1024);
 }
 
 // ---------------------------------------------------------------------------

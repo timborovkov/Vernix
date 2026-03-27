@@ -2,6 +2,9 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { randomUUID } from "crypto";
 import { authenticateApiKey } from "@/lib/auth/api-key";
 import { createMcpServer } from "@/lib/mcp/server";
+import { requireLimits } from "@/lib/billing/enforce";
+import { canMakeApiRequest } from "@/lib/billing/limits";
+import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
 
 // Store active transports with their owning userId and last activity time
 const SESSION_TTL = 30 * 60 * 1000; // 30 minutes
@@ -40,6 +43,24 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       headers: { "Content-Type": "application/json" },
     });
   }
+
+  // Billing check
+  const { limits } = await requireLimits(user.id);
+  const dailyApi = await getDailyCount(user.id, "api_request");
+  const apiCheck = canMakeApiRequest(limits, dailyApi);
+  if (!apiCheck.allowed) {
+    return new Response(
+      JSON.stringify({
+        error: apiCheck.reason,
+        code: limits.apiEnabled ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+      }),
+      {
+        status: limits.apiEnabled ? 429 : 403,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+  recordUsageEvent(user.id, "api_request").catch(() => {});
 
   // Check for existing session — verify userId matches to prevent cross-user access
   const sessionId = request.headers.get("mcp-session-id");

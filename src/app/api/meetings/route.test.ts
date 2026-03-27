@@ -1,8 +1,10 @@
+import { vi } from "vitest";
 import {
   createJsonRequest,
   parseJsonResponse,
   fakeMeeting,
 } from "@/test/helpers";
+import { canStartMeeting } from "@/lib/billing/limits";
 
 const { mockDb, mockCreateMeetingCollection } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
@@ -162,5 +164,74 @@ describe("POST /api/meetings", () => {
         metadata: expect.objectContaining({ silent: true }),
       })
     );
+  });
+
+  it("returns 429 when billing limit blocks meeting creation", async () => {
+    vi.mocked(canStartMeeting).mockReturnValueOnce({
+      allowed: false,
+      reason: "Monthly meeting minutes exhausted",
+    });
+
+    const req = createJsonRequest("http://localhost/api/meetings", {
+      method: "POST",
+      body: { title: "Test", joinLink: "https://meet.google.com/abc" },
+    });
+
+    const response = await POST(req);
+    const { status, data } = await parseJsonResponse(response);
+
+    expect(status).toBe(429);
+    expect(data.error).toBe("Monthly meeting minutes exhausted");
+    expect(data.code).toBe("RATE_LIMITED");
+    expect(mockCreateMeetingCollection).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when voice is disabled on free plan", async () => {
+    // Override requireLimits to return limits with voice disabled
+    const { requireLimits } = await import("@/lib/billing/enforce");
+    vi.mocked(requireLimits).mockResolvedValueOnce({
+      limits: {
+        meetingMinutesPerMonth: 30,
+        voiceEnabled: false,
+        documentsCount: 5,
+        maxDocumentSizeMB: 10,
+        docUploadsPerMonth: 5,
+        totalStorageMB: 50,
+        ragQueriesPerDay: 20,
+        meetingScopedDocs: 1,
+        concurrentMeetings: 1,
+        meetingsPerMonth: 5,
+        apiEnabled: false,
+        mcpEnabled: false,
+        apiRequestsPerDay: 0,
+        mcpServerConnections: 0,
+        mcpClientConnections: 0,
+      },
+      period: {
+        start: new Date(),
+        end: new Date(),
+      },
+      plan: "free" as const,
+    });
+    vi.mocked(canStartMeeting).mockReturnValueOnce({
+      allowed: false,
+      reason: "Voice meetings require a Pro plan",
+    });
+
+    const req = createJsonRequest("http://localhost/api/meetings", {
+      method: "POST",
+      body: {
+        title: "Test",
+        joinLink: "https://meet.google.com/abc",
+        silent: false,
+      },
+    });
+
+    const response = await POST(req);
+    const { status, data } = await parseJsonResponse(response);
+
+    expect(status).toBe(403);
+    expect(data.error).toBe("Voice meetings require a Pro plan");
+    expect(data.code).toBe("LIMIT_EXCEEDED");
   });
 });

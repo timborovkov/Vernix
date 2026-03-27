@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth/session";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canMakeRagQuery } from "@/lib/billing/limits";
+import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
 import { z } from "zod/v4";
 import {
   getRAGContext,
@@ -17,6 +20,12 @@ const searchSchema = z.object({
 export async function GET(request: Request) {
   const user = await requireSessionUser();
   if (user instanceof NextResponse) return user;
+
+  // Billing check
+  const { limits } = await requireLimits(user.id);
+  const dailyRag = await getDailyCount(user.id, "rag_query");
+  const ragCheck = canMakeRagQuery(limits, dailyRag);
+  if (!ragCheck.allowed) return billingError(ragCheck, 429);
 
   const { searchParams } = new URL(request.url);
   const parsed = searchSchema.safeParse({
@@ -52,6 +61,7 @@ export async function GET(request: Request) {
       documentId: r.documentId,
     }));
 
+    recordUsageEvent(user.id, "rag_query").catch(() => {});
     return NextResponse.json({ results });
   } catch (error) {
     if (error instanceof MeetingNotFoundError) {

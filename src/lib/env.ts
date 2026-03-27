@@ -50,8 +50,8 @@ const envSchema = z
     // Polar (billing)
     POLAR_ACCESS_TOKEN: z.string().optional(),
     POLAR_WEBHOOK_SECRET: z.string().optional(),
-    POLAR_PRODUCT_ID_PRO_MONTHLY: z.string().optional(),
-    POLAR_PRODUCT_ID_PRO_ANNUAL: z.string().optional(),
+    NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY: z.string().optional(),
+    NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL: z.string().optional(),
     POLAR_SERVER: z.enum(["sandbox", "production"]).default("sandbox"),
 
     // S3

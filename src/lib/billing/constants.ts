@@ -89,6 +89,6 @@ export const TRIAL_LIMITS = {
 // These correspond to products created in the Polar dashboard.
 // ---------------------------------------------------------------------------
 export const POLAR_PRODUCTS = {
-  proMonthly: () => process.env.POLAR_PRODUCT_ID_PRO_MONTHLY!,
-  proAnnual: () => process.env.POLAR_PRODUCT_ID_PRO_ANNUAL!,
+  proMonthly: () => process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY!,
+  proAnnual: () => process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL!,
 } as const;

@@ -3,6 +3,9 @@ import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { requireSessionUser } from "@/lib/auth/session";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canMakeRagQuery } from "@/lib/billing/limits";
+import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
 import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
 import {
   getAgentSystemPrompt,
@@ -16,6 +19,13 @@ import { McpClientManager } from "@/lib/mcp/client";
 export async function POST(request: Request) {
   const user = await requireSessionUser();
   if (user instanceof NextResponse) return user;
+
+  // Billing check
+  const { limits } = await requireLimits(user.id);
+  const dailyRag = await getDailyCount(user.id, "rag_query");
+  const ragCheck = canMakeRagQuery(limits, dailyRag);
+  if (!ragCheck.allowed) return billingError(ragCheck, 429);
+  recordUsageEvent(user.id, "rag_query").catch(() => {});
 
   const { messages, meetingId } = await request.json();
 
