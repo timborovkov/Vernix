@@ -46,9 +46,10 @@ export default function PricingPage() {
   const proProductId = annual
     ? process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL
     : process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-  const checkoutUrl = proProductId
-    ? `/api/checkout?products=${proProductId}`
-    : null;
+  const checkoutUrl =
+    proProductId && session?.user
+      ? `/api/checkout?products=${proProductId}&customerExternalId=${session.user.id}&customerEmail=${encodeURIComponent(session.user.email ?? "")}`
+      : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-24">
