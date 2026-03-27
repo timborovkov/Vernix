@@ -1,4 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Use real implementations, not the global mocks
+vi.unmock("@/lib/billing/limits");
+vi.unmock("@/lib/billing/constants");
+
 import {
   getEffectiveLimits,
   isTrialActive,
