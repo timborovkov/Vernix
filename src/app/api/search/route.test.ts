@@ -258,4 +258,22 @@ describe("GET /api/search", () => {
 
     expect(data.results).toEqual([]);
   });
+
+  it("returns 429 when daily RAG query limit is reached", async () => {
+    const { canMakeRagQuery } = await import("@/lib/billing/limits");
+    vi.mocked(canMakeRagQuery).mockReturnValueOnce({
+      allowed: false,
+      reason: "Daily RAG query limit reached",
+    });
+
+    const { status, data } = await parseJsonResponse(
+      await GET(searchRequest("?q=test"))
+    );
+
+    expect(status).toBe(429);
+    expect(data.error).toBe("Daily RAG query limit reached");
+    expect(data.code).toBe("RATE_LIMITED");
+    // Verify the search was never executed
+    expect(mockQdrantClient.search).not.toHaveBeenCalled();
+  });
 });

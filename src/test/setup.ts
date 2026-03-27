@@ -62,13 +62,20 @@ vi.mock("@/lib/billing/enforce", () => ({
     },
     plan: "free",
   }),
-  billingError: vi.fn().mockImplementation((check, status = 403) => {
-    const { NextResponse } = require("next/server");
-    return NextResponse.json(
-      { error: check.reason, code: status === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED" },
-      { status }
-    );
-  }),
+  billingError: vi.fn().mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    (check: { reason?: string }, status: number = 403) => {
+      const { NextResponse } =
+        require("next/server") as typeof import("next/server");
+      return NextResponse.json(
+        {
+          error: check.reason,
+          code: status === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+        },
+        { status }
+      );
+    }
+  ),
 }));
 
 vi.mock("@/lib/billing/usage", () => ({
@@ -83,8 +90,14 @@ vi.mock("@/lib/billing/usage", () => ({
   recordMeetingUsage: vi.fn().mockResolvedValue(undefined),
   syncUsageToPolar: vi.fn().mockResolvedValue(undefined),
   getUsageSummary: vi.fn().mockResolvedValue({
-    voiceMinutes: 0, silentMinutes: 0, totalCostEur: 0,
-    creditEur: 0, overageEur: 0, ragQueries: 0, apiRequests: 0, docUploads: 0,
+    voiceMinutes: 0,
+    silentMinutes: 0,
+    totalCostEur: 0,
+    creditEur: 0,
+    overageEur: 0,
+    ragQueries: 0,
+    apiRequests: 0,
+    docUploads: 0,
   }),
   getEffectivePeriod: vi.fn().mockReturnValue({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1),

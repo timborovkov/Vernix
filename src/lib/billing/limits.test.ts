@@ -8,7 +8,7 @@ import {
   canMakeRagQuery,
   canMakeApiRequest,
 } from "./limits";
-import { LIMITS, PLANS, TRIAL_LIMITS } from "./constants";
+import { LIMITS, PLANS } from "./constants";
 
 describe("getEffectiveLimits", () => {
   it("returns free limits for free plan with no trial", () => {
