@@ -3,7 +3,15 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
 import { Toaster } from "sonner";
-import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import dynamic from "next/dynamic";
+
+const CookieConsentBanner = dynamic(
+  () =>
+    import("@/components/cookie-consent-banner").then(
+      (mod) => mod.CookieConsentBanner
+    ),
+  { ssr: false }
+);
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
