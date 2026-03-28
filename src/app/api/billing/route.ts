@@ -17,7 +17,7 @@ export async function GET() {
   if (sessionUser instanceof NextResponse) return sessionUser;
 
   // Reconcile local state with Polar before returning billing data
-  await syncBillingFromPolar(sessionUser.id);
+  const syncResult = await syncBillingFromPolar(sessionUser.id);
 
   const [user] = await db
     .select({
@@ -62,5 +62,6 @@ export async function GET() {
     },
     usage,
     limits,
+    billingDataSynced: syncResult.synced,
   });
 }
