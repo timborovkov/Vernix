@@ -119,6 +119,48 @@ export default function IntegrationsPage() {
         </div>
       </div>
 
+      {/* Custom MCP server */}
+      <Card className="mb-6">
+        <CardContent className="flex items-center justify-between p-4">
+          <div>
+            <p className="text-sm font-medium">Connect any MCP server</p>
+            <p className="text-muted-foreground text-xs">
+              Vernix works with any MCP-compatible server.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (!mcpEnabled) {
+                setPaywallTrigger("api_access");
+                return;
+              }
+              setConnectingIntegration({
+                id: "custom",
+                name: "Custom MCP Server",
+                description: "",
+                logo: "",
+                category: "other",
+                tags: [],
+                featured: false,
+                status: "available",
+                serverUrl: null,
+                authMode: "api_key",
+                docsUrl: "https://modelcontextprotocol.io/introduction",
+                setupInstructions:
+                  "Enter the MCP server URL and optional API key or token.",
+                examplePrompts: [],
+                sampleResponses: [],
+              });
+            }}
+          >
+            <Plus className="mr-1 h-3 w-3" />
+            Add custom
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Search + filters */}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
@@ -175,51 +217,6 @@ export default function IntegrationsPage() {
           <p className="text-sm">Try a different search or category.</p>
         </div>
       )}
-
-      {/* Custom MCP server section */}
-      <Card className="mt-8">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Connect any MCP server</p>
-              <p className="text-muted-foreground text-xs">
-                Vernix works with any MCP-compatible server. Thousands of
-                integrations available.
-              </p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                if (!mcpEnabled) {
-                  setPaywallTrigger("api_access");
-                  return;
-                }
-                setConnectingIntegration({
-                  id: "custom",
-                  name: "Custom MCP Server",
-                  description: "",
-                  logo: "",
-                  category: "other",
-                  tags: [],
-                  featured: false,
-                  status: "available",
-                  serverUrl: null,
-                  authMode: "api_key",
-                  docsUrl: "https://modelcontextprotocol.io/introduction",
-                  setupInstructions:
-                    "Enter the MCP server URL and optional API key or token.",
-                  examplePrompts: [],
-                  sampleResponses: [],
-                });
-              }}
-            >
-              <Plus className="mr-1 h-3 w-3" />
-              Add custom
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Connect dialog */}
       <IntegrationConnectDialog
