@@ -11,7 +11,44 @@ import { and, eq } from "drizzle-orm";
 import { getEnv } from "@/lib/env";
 
 /**
+ * Pre-registered OAuth app credentials for services that don't support
+ * dynamic client registration (RFC 7591). Keyed by server URL prefix.
+ */
+const PRE_REGISTERED_CLIENTS: Record<
+  string,
+  { clientIdEnv: string; clientSecretEnv: string }
+> = {
+  "https://api.githubcopilot.com": {
+    clientIdEnv: "GITHUB_CLIENT_ID",
+    clientSecretEnv: "GITHUB_CLIENT_SECRET",
+  },
+};
+
+function getPreRegisteredClient(
+  serverUrl: string
+): OAuthClientInformation | undefined {
+  for (const [prefix, { clientIdEnv, clientSecretEnv }] of Object.entries(
+    PRE_REGISTERED_CLIENTS
+  )) {
+    if (serverUrl.startsWith(prefix)) {
+      const clientId = process.env[clientIdEnv];
+      const clientSecret = process.env[clientSecretEnv];
+      if (clientId) {
+        return {
+          client_id: clientId,
+          ...(clientSecret ? { client_secret: clientSecret } : {}),
+        };
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
  * Server-side OAuthClientProvider that persists state in the mcpOauthTokens table.
+ *
+ * For services with pre-registered OAuth apps (GitHub, etc.), returns credentials
+ * from env vars. For services supporting dynamic registration, falls back to DB.
  *
  * Used in two contexts:
  * 1. OAuth start route — initiates auth, captures redirect URL
@@ -57,6 +94,11 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
+    // Check for pre-registered OAuth app credentials (env vars)
+    const preRegistered = getPreRegisteredClient(this.serverUrl);
+    if (preRegistered) return preRegistered;
+
+    // Fall back to dynamically registered credentials from DB
     const [row] = await db
       .select({
         clientId: mcpOauthTokens.clientId,
@@ -79,6 +121,9 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   }
 
   async saveClientInformation(info: OAuthClientInformation): Promise<void> {
+    // Skip saving if using pre-registered credentials from env vars
+    if (getPreRegisteredClient(this.serverUrl)) return;
+
     await this.upsertTokenRow({
       clientId: info.client_id,
       clientSecret:
