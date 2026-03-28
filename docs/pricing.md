@@ -70,9 +70,9 @@ Railway is shared infrastructure (Next.js + Postgres + Qdrant + Minio). Cost is 
 
 ### Free Trial (14 days, on top of Free)
 
-- Full Pro features including voice mode (excludes API/MCP)
+- Full Pro features including voice mode, integrations, API, and MCP
 - 90 minutes total (voice and silent combined, shared pool)
-- Auto-activates on signup
+- Starts when user upgrades to Pro via Polar checkout (not on signup)
 - **Max CAC:** ~$2.25 (1.5 hrs voice × $1.50)
 
 ### Pro — €29/month
@@ -104,17 +104,17 @@ Credits are consumed at these rates. Once exhausted, the same rates apply as met
 | **Voice mode**                  | No            | Yes                            | Yes                                                             |
 | **Knowledge base documents**    | 5             | 200                            | 200                                                             |
 | **Max document size**           | 10 MB         | 25 MB                          | 25 MB                                                           |
-| **Doc uploads/month**           | 5             | 30                             | 50                                                              |
+| **Doc uploads/month**           | 5             | 50                             | 50                                                              |
 | **Total storage**               | 50 MB         | 500 MB                         | 500 MB                                                          |
 | **Max chunks per document**     | 500           | 500                            | 500                                                             |
 | **RAG chat queries/day**        | 20            | 200                            | 200                                                             |
 | **Meeting-scoped documents**    | 1 per meeting | 10 per meeting                 | 10 per meeting                                                  |
 | **Concurrent active meetings**  | 1             | 5                              | 5                                                               |
-| **API requests/day**            | No            | No                             | 1,000                                                           |
-| **MCP server connections**      | No            | No                             | 5                                                               |
-| **MCP client connections**      | No            | No                             | 10                                                              |
+| **API requests/day**            | No            | 1,000                          | 1,000                                                           |
+| **MCP server connections**      | No            | 5                              | 5                                                               |
+| **MCP client connections**      | No            | 10                             | 10                                                              |
 | **Monthly spending cap**        | N/A           | N/A                            | Optional                                                        |
-| **Meetings/month (anti-abuse)** | 5             | 20                             | 500                                                             |
+| **Meetings/month (anti-abuse)** | 5             | 500                            | 500                                                             |
 
 ### Universal Limits
 
@@ -195,7 +195,7 @@ Simulated monthly snapshot at 1,000 registered users. 80% free (including triali
 | **Pro (very heavy)** | 10        | 25 hr    | 50 hr     | $73.10    | €150.00 | €30    | €120    |
 | **Total**            | **1,000** |          |           |           |         |        |         |
 
-_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.50/hr (incl. gpt-4o-mini-transcribe wake-detection), silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get Pro features for 14 days (excluding API/MCP) — cost but no revenue. Light and typical Pro users stay within €30 credit._
+_800 free (480 inactive + 270 active + 50 trial), 200 Pro. Voice at $1.50/hr (incl. gpt-4o-mini-transcribe wake-detection), silent at $0.71/hr. Per-user costs exclude shared infra (separate line item). Trial users get full Pro features for 14 days (including integrations, API, MCP) — cost but no revenue. Light and typical Pro users stay within €30 credit._
 
 ### Revenue
 
