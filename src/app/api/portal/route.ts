@@ -13,7 +13,7 @@ const portalHandler = CustomerPortal({
   accessToken: env.POLAR_ACCESS_TOKEN!,
   returnUrl: `${env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
   server: env.POLAR_SERVER as "sandbox" | "production",
-  getCustomerId: async (_req: NextRequest) => {
+  getCustomerId: async () => {
     // This is only called when we've already verified the customer exists
     const session = await auth();
     if (!session?.user?.id) return "";
