@@ -39,27 +39,33 @@ Create two products in the Polar dashboard:
 
 Enable "Prevent trial abuse" on both products.
 
-### 2. Create Meters
+### 2. Create Meter
 
-Create two meters for usage-based billing:
+Create one meter for all meeting usage, tracked in EUR:
 
-| Meter              | Filter                       | Aggregation             |
-| ------------------ | ---------------------------- | ----------------------- |
-| **Voice Minutes**  | Name equals `voice_minutes`  | Sum of `duration_hours` |
-| **Silent Minutes** | Name equals `silent_minutes` | Sum of `duration_hours` |
+| Meter             | Filter                      | Aggregation       |
+| ----------------- | --------------------------- | ----------------- |
+| **Meeting usage** | Name equals `meeting_usage` | Sum of `cost_eur` |
 
-### 3. Attach Metered Prices
+Each event includes `cost_eur` calculated at €3/hr (voice) or €1.50/hr (silent). The meter aggregates total EUR spent, regardless of meeting type.
 
-On each product, attach metered prices:
+### 3. Attach Metered Price
 
-| Meter          | Price per unit (hour) |
-| -------------- | --------------------- |
-| Voice Minutes  | €3.00/hr              |
-| Silent Minutes | €1.50/hr              |
+On each product, attach one metered price:
 
-The €30 included credit is handled by Polar's credit system — configure a €30/month credit on each product.
+| Meter         | Price per unit | Unit  |
+| ------------- | -------------- | ----- |
+| Meeting usage | €1.00          | 1 EUR |
 
-### 4. Configure Webhook
+Since the meter already aggregates in EUR, the price per unit is €1 (1:1 pass-through).
+
+### 4. Configure Credit
+
+Assign a **€30/month credit** on the Meeting usage meter for each product. This covers the first €30 of usage. Overages beyond €30 are billed at the metered rate.
+
+Trial users don't use Polar credits. Their 90-minute cap is enforced locally via `TRIAL_LIMITS.meetingMinutesPerMonth`. Polar defers payment during the trial period.
+
+### 5. Configure Webhook
 
 Add a webhook endpoint in Polar settings:
 
@@ -67,7 +73,7 @@ Add a webhook endpoint in Polar settings:
 - **Events:** `subscription.created`, `subscription.active`, `subscription.updated`, `subscription.canceled`, `subscription.revoked`, `customer.created`
 - **Secret:** Generate and set as `POLAR_WEBHOOK_SECRET`
 
-### 5. Environment Variables
+### 6. Environment Variables
 
 ```bash
 POLAR_ACCESS_TOKEN=polar_pat_...                # Organization access token
@@ -153,7 +159,7 @@ Every billable action is recorded in the `usageEvents` table:
 
 ### Polar Sync (metered billing)
 
-After recording locally, `syncUsageToPolar()` sends the event to Polar's Events API. Polar accumulates these and invoices at period end. This is fire-and-forget — local tracking is the source of truth for limit enforcement.
+After recording locally, `syncUsageToPolar()` sends a single `meeting_usage` event to Polar with `cost_eur` in metadata. Polar aggregates total EUR on the Meeting usage meter, applies the €30 credit, and bills any overage at period end. This is fire-and-forget — local tracking is the source of truth for limit enforcement.
 
 ### Usage Queries
 
