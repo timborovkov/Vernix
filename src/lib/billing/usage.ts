@@ -114,7 +114,7 @@ export async function getDailyCount(
   type: "rag_query" | "api_request"
 ): Promise<number> {
   const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setUTCHours(0, 0, 0, 0);
 
   const [row] = await db
     .select({
@@ -140,8 +140,8 @@ export async function getMonthlyMeetingCount(userId: string): Promise<number> {
   // Count from the meetings table (not usageEvents) so in-progress meetings
   // that haven't ended yet are included in the anti-abuse cap.
   const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
 
   const [row] = await db
     .select({
@@ -203,8 +203,8 @@ export async function getDocumentCount(userId: string): Promise<number> {
 
 export async function getMonthlyDocUploads(userId: string): Promise<number> {
   const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
 
   const [row] = await db
     .select({
@@ -244,8 +244,8 @@ export function getEffectivePeriod(user: {
   }
   // Default: current calendar month
   const start = new Date();
-  start.setDate(1);
-  start.setHours(0, 0, 0, 0);
+  start.setUTCDate(1);
+  start.setUTCHours(0, 0, 0, 0);
   const end = new Date(start);
   end.setMonth(end.getMonth() + 1);
   return { start, end };
