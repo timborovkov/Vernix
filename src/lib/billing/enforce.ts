@@ -11,6 +11,7 @@ export async function getUserBilling(userId: string) {
     .select({
       plan: users.plan,
       trialEndsAt: users.trialEndsAt,
+      polarSubscriptionId: users.polarSubscriptionId,
       currentPeriodStart: users.currentPeriodStart,
       currentPeriodEnd: users.currentPeriodEnd,
     })
@@ -24,7 +25,11 @@ export async function getUserBilling(userId: string) {
 export async function requireLimits(userId: string) {
   const billing = await getUserBilling(userId);
   const plan = billing.plan as Plan;
-  const limits = getEffectiveLimits(plan, billing.trialEndsAt);
+  // Trial requires a Polar subscription (trial is Polar-only, not internal)
+  const effectiveTrialEndsAt = billing.polarSubscriptionId
+    ? billing.trialEndsAt
+    : null;
+  const limits = getEffectiveLimits(plan, effectiveTrialEndsAt);
   const period = getEffectivePeriod(billing);
   return { limits, period, plan };
 }
