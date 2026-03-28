@@ -173,6 +173,9 @@ Tests must verify **real behavior**, not just confirm that mocks return what you
 - [ ] Update `README.md` env table and any relevant sections
 - [ ] Update `docker-compose.yml` if adding new services
 - [ ] Keep webhook endpoints (`/api/webhooks/*`) public — no auth middleware
+- [ ] Keep `CLAUDE.md` and `AGENTS.md` in sync — they should have identical content
+- [ ] Update internal docs in `docs/` when changing related features (billing, architecture, pricing, cron jobs, etc.)
+- [ ] Mark completed items as done in `TODO.md` when shipping changes
 
 ## Environment
 
