@@ -4,7 +4,83 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LogOut, BookOpen, Settings, Download } from "lucide-react";
+import { LogOut, BookOpen, Settings, Download, Zap, Clock } from "lucide-react";
+import { useBilling } from "@/hooks/use-billing";
+import { PLANS, PRICING } from "@/lib/billing/constants";
+
+function PlanBanner() {
+  const { billing, loading } = useBilling();
+
+  if (loading || !billing) return null;
+
+  const isPro = billing.plan === PLANS.PRO;
+
+  // Pro users don't need a banner
+  if (isPro && !billing.trialing) return null;
+
+  const productId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
+  const checkoutUrl = productId
+    ? `/api/checkout?products=${productId}`
+    : "/pricing";
+
+  // Trial active
+  if (billing.trialing && billing.trialDaysRemaining > 0) {
+    const totalMin = billing.usage.voiceMinutes + billing.usage.silentMinutes;
+    return (
+      <div className="bg-ring/10 border-ring/20 border-b px-4 py-1.5">
+        <div className="container mx-auto flex max-w-6xl items-center justify-between">
+          <div className="flex items-center gap-2 text-xs">
+            <Clock className="h-3.5 w-3.5" />
+            <span>
+              Pro trial: <strong>{billing.trialDaysRemaining}d left</strong>,{" "}
+              {Math.round(totalMin)} of 90 min used
+            </span>
+          </div>
+          <Button
+            size="xs"
+            variant="accent"
+            onClick={() => {
+              window.location.href = checkoutUrl;
+            }}
+          >
+            <Zap className="mr-1 h-3 w-3" />
+            Upgrade
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Trial expired or free plan
+  const meetingsUsed = billing.usage.voiceMinutes + billing.usage.silentMinutes;
+  const meetingLimit = billing.limits.meetingMinutesPerMonth;
+
+  return (
+    <div className="bg-muted/50 border-b px-4 py-1.5">
+      <div className="container mx-auto flex max-w-6xl items-center justify-between">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="text-muted-foreground">
+            Free plan: {Math.round(meetingsUsed)}
+            {meetingLimit !== null ? ` of ${meetingLimit}` : ""} min used
+            {billing.trialDaysRemaining === 0 &&
+              billing.trialEndsAt &&
+              " (trial ended)"}
+          </span>
+        </div>
+        <Button
+          size="xs"
+          variant="accent"
+          onClick={() => {
+            window.location.href = checkoutUrl;
+          }}
+        >
+          <Zap className="mr-1 h-3 w-3" />
+          Upgrade — €{PRICING[PLANS.PRO].monthly}/mo
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function DashboardHeader() {
   return (
@@ -55,6 +131,7 @@ export function DashboardHeader() {
           </Button>
         </div>
       </div>
+      <PlanBanner />
     </header>
   );
 }
