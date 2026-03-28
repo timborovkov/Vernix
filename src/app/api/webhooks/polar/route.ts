@@ -150,21 +150,10 @@ export const POST = Webhooks({
   },
 
   onSubscriptionRevoked: async (payload) => {
+    // Polar sends revoked when the subscription is fully terminated.
+    // Always downgrade immediately. The sync will also catch this as a fallback.
     const externalId = payload.data.customer?.externalId;
     if (!externalId) return;
-
-    const now = new Date();
-    const periodEnd = payload.data.currentPeriodEnd
-      ? new Date(payload.data.currentPeriodEnd)
-      : null;
-
-    // Defensive guard: don't downgrade before access period actually ends.
-    if (periodEnd && periodEnd > now) {
-      console.log(
-        `[Polar Webhook] Skipping early revoke for user ${externalId}, current period ends ${periodEnd.toISOString()}`
-      );
-      return;
-    }
 
     await db
       .update(users)
@@ -174,7 +163,7 @@ export const POST = Webhooks({
         trialEndsAt: null,
         currentPeriodStart: null,
         currentPeriodEnd: null,
-        updatedAt: now,
+        updatedAt: new Date(),
       })
       .where(eq(users.id, externalId));
 

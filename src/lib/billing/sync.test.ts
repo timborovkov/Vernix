@@ -3,19 +3,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.unmock("@/lib/billing/sync");
 vi.unmock("@/lib/billing/constants");
 
-// Mock DB
-const mockDb = vi.hoisted(() => {
+const { mockDb, mockGetState } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of ["select", "from", "where", "update", "set"]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return db;
+  const mockGetState = vi.fn();
+  return { mockDb: db, mockGetState };
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
-
-// Mock Polar
-const mockGetState = vi.fn();
 vi.mock("@/lib/polar", () => ({
   isPolarEnabled: vi.fn().mockReturnValue(true),
   getPolar: vi.fn().mockReturnValue({

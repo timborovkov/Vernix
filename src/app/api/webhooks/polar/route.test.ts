@@ -235,15 +235,16 @@ describe("Polar webhook: onSubscriptionRevoked", () => {
     );
   });
 
-  it("does not downgrade early when period end is in the future", async () => {
+  it("always downgrades even when period end is in the future", async () => {
     const futureEnd = new Date(Date.now() + 1000 * 60 * 60).toISOString();
 
     await capturedHandlers.onSubscriptionRevoked(
       subscriptionPayload({ currentPeriodEnd: futureEnd })
     );
 
-    expect(mockDb.update).not.toHaveBeenCalled();
-    expect(mockDb.set).not.toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({ plan: "free" })
+    );
   });
 
   it("skips when no externalId", async () => {
