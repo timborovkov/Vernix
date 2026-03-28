@@ -10,10 +10,14 @@ import {
   getTrialDaysRemaining,
 } from "@/lib/billing/limits";
 import type { Plan } from "@/lib/billing/constants";
+import { syncBillingFromPolar } from "@/lib/billing/sync";
 
 export async function GET() {
   const sessionUser = await requireSessionUser();
   if (sessionUser instanceof NextResponse) return sessionUser;
+
+  // Reconcile local state with Polar before returning billing data
+  await syncBillingFromPolar(sessionUser.id);
 
   const [user] = await db
     .select({
