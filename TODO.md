@@ -49,34 +49,39 @@
 - **Integration Library** - Quickly connect to predefined MCP servers like Linear, Calendar, Notion, Jira, Github, Slack, etc.
 - **Pro users only** - Only Pro users should be able to connect to MCP servers. This is our key selling point, so we should make sure we have proper CTA and messaging around it.
 
-## Task list page
+## Task Management
 
-- **Task list page** - Add a new Task list page to the dashboard that shows all tasks for all meetings. Similar to the knowledge page, but for tasks.
-- **Update pending task view on the dashboard** - Link to the task list page from the dashboard tasks widget. Limit amount of tasks shown on the dashboard to 3.
-- **Allow marking tasks as completed** - Add a checkbox to the task list page to mark tasks as completed.
-- **Link to meeting from task list page** - Link to the meeting from the task list page.
-- **Track why a task was created** - Remember what was said in the meeting that created the task, and show it in the task list page, linking to the relevant transcript segment.
+- **Build `/dashboard/tasks` (cross-call task list)** — Add a dedicated page that lists tasks across all calls (similar information density to the Knowledge page).
+- **Enable task completion from list view** — Add checkbox/toggle controls so users can mark tasks complete/incomplete directly from the task list.
+- **Improve dashboard tasks widget navigation** — Show only top 3 pending tasks on the dashboard and link the widget to `/dashboard/tasks`.
+- **Add "open related call" actions** — Include a direct link from each task to its source call detail page.
+- **Add task source context** — Store and display the transcript snippet/timestamp that created each task, linking to the relevant transcript anchor.
 
-## Empty states for user experience
+## Empty States & Onboarding UX
 
-- **Dashboard calls empty state** - The dashboard should show a big notice thing to start a first meeting when there are no meetings yet. Like a "hop on your first call" card.
-- **Knowledge page empty state** - The knowledge page should show a big notice thing to upload your first document when there are no documents yet. Like a "upload your first document" card.
-- **Notice on the dashboard when there are no documents in the knowledge base** - Show a big notice thing to upload your first document when there are no documents yet. Like a "upload your first document for agent to have context" card.
-- **Notice on the integrations page when there are no integrations** - Show a big notice thing to connect your first integration when there are no integrations yet. Like a "connect your first integration" card.
-- **Notice on the dashboard when there are no integrations connected** - Show a big notice thing to connect your first integration when there are no integrations yet. Like "connect your first integration to start using Vernix" card. Point out that the agent would be able to then use "tools during the call", like "get the latest sales data from your CRM", "check the calendar for your next meeting", "send a Slack message to the #important-project channel with the summary of the call", etc.
+- **Dashboard calls empty state** — Add a primary "Start your first call" card when the user has no calls.
+- **Knowledge page empty state** — Add a primary "Upload your first document" card when there are no knowledge files.
+- **Integrations page empty state** — Add a primary "Connect your first integration" card when no integrations are configured.
+- **Dashboard knowledge nudge** — Add a dashboard notice when no documents exist, with CTA copy focused on giving the agent business context.
+- **Dashboard integrations nudge** — Add a dashboard notice when no integrations exist, with tool-use examples (CRM lookup, calendar checks, Slack follow-up actions).
 
-## Off topic tasks
+## Call Detail Page UX
 
-- **Rename "meetings" to "calls" everywhere in the app** - "calls" is more accurate and less specific than "meetings".
-- **Rework single call page** - The single call page can get way too long - too much to scroll. Let's split it in to tabs, each tab could be a separate page, like "transcript", "knowledge", "tasks", "summary", "recording", "participants", "summary", "recording", "participants", "summary", "recording", "participants".
-- **Single call pages and anchor links** - Certain parts of the single call page tabs could be anchor links, like "call/12345#recording", while some could be regular pages, like "call/12345/transcript".
-- **Call transcripts should scroll** - The transcript should have a max height with a scroll bar, so the user can scroll through the transcript, instead of scrolling the whole page.
-- **Call page agent chat should be more prevelant** - The agent chat should be more prevelant on the call page, like a sidebar. Essentially all the call information should be available in the chat. If something, like an audio recording, is not renderable in chat, the chat could give a full clickable anchor link to the thing, like "call/12345/transcript#audio-recording".
-- **Call link on the call page** - The call page should have a link to the call. Meeting cards on the dashboard currently have those.
-- **Call meeting link styling** - The call meeting link should be styled as a button, with an icon, and open in a new tab.
-- **Call export should include all the call data** - The call export should include all the call data, like the transcript, knowledge base, tasks, and recording. Stuff like media (e.g. audio recordings or whatever) should be exportable as separate files, and in PDFs or MD files be available as links to the app, like https://vernix.app/api/meetings/[id]/transcript#recording, where they could then be downloaded and shared.
-- **Clearer timezone management** - I'm not sure which timezone are transcripts, meeting times, etc. in the app. It should be clearer. Maybe we should specify in settings what we use by default, but allow the user to pick their own setting, eg. "use UTC", "use my local timezone", "pick a timezone from a list of timezones". After this all times in the app would follow the timezone setting.
-- **Calls miss summaries** - Calls currently sometimes miss summaries. This can be due to many things, but essentially when a user navigates to the call page and a summary etc. are missing, we could re-run all the post call jobs, like the summary generation, the task extraction, the knowledge base processing, etc, so the user could always have access to the latest information, with no missing bits.
+- **Restructure call detail into tabs/routes** — Split the long call page into focused sections (transcript, knowledge, tasks, summary, recording, participants).
+- **Define deep-link strategy for call pages** — Use route segments for major sections (e.g. `/call/:id/transcript`) and anchors for intra-section jumps (e.g. `#recording`).
+- **Improve transcript readability** — Add a bounded transcript panel with internal scroll to reduce full-page scroll fatigue.
+- **Promote agent chat on call page** — Make chat a more prominent panel/sidebar and provide contextual deep links for non-renderable assets (e.g. recordings).
+- **Improve call link UX** — Add a dedicated call link action on call detail, styled as a button with icon and opening in a new tab.
+
+## Call Reliability, Export & Recovery
+
+- **Expand call export completeness** — Include transcript, knowledge, tasks, and recording references in exports; ship media as separate files where applicable.
+- **Add missing-summary recovery flow** — Detect missing post-call artifacts and allow re-running summary/task/knowledge post-processing from the call view.
+
+## Product Terminology & Time Display
+
+- **Rename "meetings" to "calls" in product UI copy** — Update user-facing labels for consistency while keeping internal API/schema naming unchanged unless explicitly migrated.
+- **Add timezone preference + global formatting** — Introduce a user timezone setting (UTC/local/custom) and ensure all call timestamps honor it consistently.
 
 ## SEO & Discoverability
 
