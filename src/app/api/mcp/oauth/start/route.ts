@@ -85,7 +85,7 @@ export async function POST(request: Request) {
           parsed.data.integrationId === "custom"
             ? null
             : parsed.data.integrationId,
-        enabled: true,
+        enabled: false, // enabled after OAuth callback succeeds
       })
       .returning({ id: mcpServers.id });
     serverId = created.id;
