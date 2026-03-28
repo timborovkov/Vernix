@@ -73,7 +73,11 @@ export function useMeetings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
     },
-    onError: () => toast.error("Failed to join meeting"),
+    onError: (err) => {
+      if (!(err instanceof BillingApiError)) {
+        toast.error("Failed to join meeting");
+      }
+    },
   });
 
   const stopMutation = useMutation({
