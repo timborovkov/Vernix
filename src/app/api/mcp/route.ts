@@ -60,8 +60,6 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       }
     );
   }
-  recordUsageEvent(user.id, "api_request").catch(() => {});
-
   // Check for existing session — verify userId matches to prevent cross-user access
   const sessionId = request.headers.get("mcp-session-id");
   if (sessionId) {
@@ -86,6 +84,8 @@ async function handleMcpRequest(request: Request): Promise<Response> {
         userId: user.id,
         lastActivity: Date.now(),
       });
+      // Record usage only on new session creation, not session resumptions
+      recordUsageEvent(user.id, "api_request").catch(() => {});
     },
   });
 

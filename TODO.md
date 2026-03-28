@@ -42,6 +42,7 @@
 
 ## Integrations
 
+- **Landing page rework for Integrations-first positioning** - Rework hero and conversion sections to position Vernix as your in-call assistant that joins meetings and answers live business questions from integrated systems (e.g. "what were sales yesterday?", "which location performed best this quarter?"). Add clear Pro-focused CTAs, integration proof blocks, and upgrade banners throughout the page.
 - **Add a new Integrations page** - Basically we would only support MCPs, like we already do, but we could predefine a list of MCPs that users can choose from to quickly connect to, with logos, descriptions, and links to the MCP server documentation.
 - **Move MCPs from Settings to separate Integrations page**
 - **MCP Client OAuth** - Implement OAuth-based authentication for the MCP server endpoint per the [MCP auth spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization). Allow tools like Claude Desktop and Cursor to authenticate via OAuth flow instead of manually copying API keys. Requires authorization server endpoints (authorize, token, register), PKCE support, and dynamic client registration.
