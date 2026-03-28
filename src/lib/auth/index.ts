@@ -8,7 +8,6 @@ import { db } from "@/lib/db";
 import { users, accounts } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { authConfig } from "./config";
-import { FREE_TRIAL } from "@/lib/billing/constants";
 
 // Build providers array conditionally
 const providers: Provider[] = [];
@@ -154,8 +153,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // New user — create account
       const image = getOAuthImage(oauthProfile);
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + FREE_TRIAL.days);
 
       const [newUser] = await db
         .insert(users)
@@ -164,7 +161,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name ?? email.split("@")[0],
           passwordHash: null,
           image,
-          trialEndsAt,
         })
         .returning({ id: users.id });
 

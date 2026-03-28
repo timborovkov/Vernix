@@ -133,9 +133,7 @@ export default function DashboardPage() {
 
       {/* Single CRO banner: picks the right variant based on user state */}
       <TrialPromptBanner
-        hasCompletedMeetings={meetings.some(
-          (m) => m.status === "completed"
-        )}
+        hasCompletedMeetings={meetings.some((m) => m.status === "completed")}
       />
 
       {loading ? (

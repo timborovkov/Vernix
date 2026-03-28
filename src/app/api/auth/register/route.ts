@@ -6,7 +6,6 @@ import { users } from "@/lib/db/schema";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email/send";
 import { getWelcomeEmailHtml } from "@/lib/email/templates";
-import { FREE_TRIAL } from "@/lib/billing/constants";
 
 const registerSchema = z.object({
   email: z.email(),
@@ -51,12 +50,9 @@ export async function POST(request: Request) {
   const passwordHash = await hash(password, 12);
 
   try {
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + FREE_TRIAL.days);
-
     const [user] = await db
       .insert(users)
-      .values({ email, name, passwordHash, trialEndsAt })
+      .values({ email, name, passwordHash })
       .returning({ id: users.id, email: users.email, name: users.name });
 
     // Fire-and-forget welcome email — don't block registration

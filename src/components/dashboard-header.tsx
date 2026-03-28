@@ -21,8 +21,8 @@ function PlanBanner() {
 
   const checkoutUrl = getCheckoutUrl();
 
-  // Trial active
-  if (billing.trialing && billing.trialDaysRemaining > 0) {
+  // Polar trial active (user subscribed, payment deferred)
+  if (billing.trialing && billing.hasSubscription) {
     const totalMin = billing.usage.voiceMinutes + billing.usage.silentMinutes;
     return (
       <div className="bg-ring/10 border-ring/20 border-b px-4 py-1.5">
@@ -34,16 +34,6 @@ function PlanBanner() {
               {Math.round(totalMin)} of 90 min used
             </span>
           </div>
-          <Button
-            size="xs"
-            variant="accent"
-            onClick={() => {
-              window.location.href = checkoutUrl;
-            }}
-          >
-            <Zap className="mr-1 h-3 w-3" />
-            Upgrade
-          </Button>
         </div>
       </div>
     );
