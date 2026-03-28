@@ -69,8 +69,8 @@ export const LIMITS = {
     apiEnabled: true,
     mcpEnabled: true,
     apiRequestsPerDay: 1000,
-    mcpServerConnections: 5,
-    mcpClientConnections: 10,
+    mcpServerConnections: null, // unlimited
+    mcpClientConnections: null, // unlimited
   },
 } as const;
 
