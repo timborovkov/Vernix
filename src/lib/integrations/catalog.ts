@@ -446,7 +446,10 @@ for (const entry of CATALOG) {
 }
 
 // ---------------------------------------------------------------------------
-// Loader functions (stable interface for future DB migration)
+// Loader functions — stable interface for future DB migration.
+// Some functions are not yet called but are part of the public API
+// so the source can move from code to DB/admin tooling later.
+// See docs/integrations.md for rationale.
 // ---------------------------------------------------------------------------
 
 export function getIntegrations(): Integration[] {

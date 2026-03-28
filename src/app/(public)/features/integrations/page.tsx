@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
 import {
   Plug,
@@ -154,6 +155,16 @@ export default function IntegrationsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </ScrollReveal>
+
+      {/* Integration Cloud */}
+      <ScrollReveal>
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
+            Tools you can connect
+          </h2>
+          <IntegrationCloud showCta={false} />
         </div>
       </ScrollReveal>
 
