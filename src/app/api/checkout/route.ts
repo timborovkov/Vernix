@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { Checkout } from "@polar-sh/nextjs";
+import { Polar } from "@polar-sh/sdk";
+import { SDKError } from "@polar-sh/sdk/models/errors/sdkerror.js";
 
 export async function GET(request: NextRequest) {
   const accessToken = process.env.POLAR_ACCESS_TOKEN;
@@ -10,11 +11,50 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const handler = Checkout({
-    accessToken,
-    successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?billing=success&checkout_id={CHECKOUT_ID}`,
-    server: (process.env.POLAR_SERVER as "sandbox" | "production") ?? "sandbox",
-  });
+  const url = new URL(request.url);
+  const products = url.searchParams.getAll("products");
+  if (products.length === 0) {
+    return NextResponse.json(
+      { error: "Missing products query param" },
+      { status: 400 }
+    );
+  }
 
-  return handler(request);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+  const server =
+    (process.env.POLAR_SERVER as "sandbox" | "production") ?? "sandbox";
+
+  try {
+    const polar = new Polar({ accessToken, server });
+
+    const result = await polar.checkouts.create({
+      products,
+      successUrl: `${appUrl}/dashboard/settings?billing=success&checkout_id={CHECKOUT_ID}`,
+      externalCustomerId:
+        url.searchParams.get("customerExternalId") ?? undefined,
+      customerEmail: url.searchParams.get("customerEmail") ?? undefined,
+    });
+
+    return NextResponse.redirect(result.url);
+  } catch (error) {
+    if (error instanceof SDKError && error.statusCode === 401) {
+      console.error(
+        "[Checkout] Polar access token is invalid or expired. Regenerate at polar.sh.",
+        { status: error.statusCode, body: error.body }
+      );
+      return NextResponse.json(
+        {
+          error: "Billing authentication failed",
+          details:
+            "The Polar access token is invalid or expired. Contact support.",
+        },
+        { status: 502 }
+      );
+    }
+
+    console.error("[Checkout] Failed to create checkout session:", error);
+    return NextResponse.redirect(
+      new URL("/pricing?error=checkout_failed", appUrl)
+    );
+  }
 }
