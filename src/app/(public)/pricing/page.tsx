@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ArrowRight } from "lucide-react";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 const FREE_FEATURES = [
   "30 minutes of silent meetings per month",
@@ -46,10 +47,13 @@ export default function PricingPage() {
   const proProductId = annual
     ? process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL
     : process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-  const checkoutUrl =
-    proProductId && session?.user
-      ? `/api/checkout?products=${proProductId}&customerExternalId=${session.user.id}&customerEmail=${encodeURIComponent(session.user.email ?? "")}`
-      : null;
+  const checkoutUrl = session?.user
+    ? getCheckoutUrl({
+        userId: session.user.id,
+        email: session.user.email ?? undefined,
+        productId: proProductId ?? undefined,
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-24">

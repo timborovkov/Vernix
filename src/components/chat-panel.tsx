@@ -11,6 +11,8 @@ import { SendHorizontal, MessageSquare, Gauge } from "lucide-react";
 import Link from "next/link";
 import { PRICING, PLANS, LIMITS } from "@/lib/billing/constants";
 import { useBilling } from "@/hooks/use-billing";
+import { useProfile } from "@/hooks/use-profile";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 interface ChatPanelProps {
   meetingId?: string;
@@ -24,6 +26,7 @@ export function ChatPanel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
   const { billing } = useBilling();
+  const { profile } = useProfile();
 
   const transport = useMemo(
     () =>
@@ -63,10 +66,10 @@ export function ChatPanel({
     setInputValue("");
   };
 
-  const checkoutUrl = (() => {
-    const productId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-    return productId ? `/api/checkout?products=${productId}` : "/pricing";
-  })();
+  const checkoutUrl = getCheckoutUrl({
+    userId: profile?.id,
+    email: profile?.email,
+  });
 
   return (
     <Card>

@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { PRICING, PLANS, LIMITS } from "@/lib/billing/constants";
 import { useBilling } from "@/hooks/use-billing";
+import { useProfile } from "@/hooks/use-profile";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 // ---------------------------------------------------------------------------
 // Paywall trigger types — each one maps to specific copy and value props
@@ -202,13 +204,14 @@ export function UpgradeDialog({
   errorMessage,
 }: UpgradeDialogProps) {
   const { billing } = useBilling();
+  const { profile } = useProfile();
   const copy = TRIGGER_COPY[trigger];
   const Icon = copy.icon;
 
-  const productId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-  const checkoutUrl = productId
-    ? `/api/checkout?products=${productId}`
-    : "/pricing";
+  const checkoutUrl = getCheckoutUrl({
+    userId: profile?.id,
+    email: profile?.email,
+  });
 
   const isPro = billing?.plan === PLANS.PRO;
   const isTrialing = billing?.trialing;

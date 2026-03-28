@@ -6,10 +6,13 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen, Settings, Download, Zap, Clock } from "lucide-react";
 import { useBilling } from "@/hooks/use-billing";
+import { useProfile } from "@/hooks/use-profile";
 import { PLANS, PRICING } from "@/lib/billing/constants";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 function PlanBanner() {
   const { billing, loading } = useBilling();
+  const { profile } = useProfile();
 
   if (loading || !billing) return null;
 
@@ -18,10 +21,10 @@ function PlanBanner() {
   // Pro users don't need a banner
   if (isPro && !billing.trialing) return null;
 
-  const productId = process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-  const checkoutUrl = productId
-    ? `/api/checkout?products=${productId}`
-    : "/pricing";
+  const checkoutUrl = getCheckoutUrl({
+    userId: profile?.id,
+    email: profile?.email,
+  });
 
   // Trial active
   if (billing.trialing && billing.trialDaysRemaining > 0) {

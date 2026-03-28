@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
 import { PLANS, MONTHLY_CREDIT, PRICING } from "@/lib/billing/constants";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 import type { BillingData } from "@/hooks/use-billing";
 
 function UsageBar({
@@ -186,13 +187,10 @@ export function BillingCard({
               size="sm"
               variant="accent"
               onClick={() => {
-                const params = new URLSearchParams({
-                  products:
-                    process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY ?? "",
-                  ...(userId ? { customerExternalId: userId } : {}),
-                  ...(userEmail ? { customerEmail: userEmail } : {}),
+                window.location.href = getCheckoutUrl({
+                  userId,
+                  email: userEmail,
                 });
-                window.location.href = `/api/checkout?${params.toString()}`;
               }}
             >
               Upgrade to Pro — €{PRICING[PLANS.PRO].monthly}/mo

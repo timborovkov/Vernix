@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useMeetings } from "@/hooks/use-meetings";
 import { useAllTasks } from "@/hooks/use-all-tasks";
 import { useBilling } from "@/hooks/use-billing";
+import { useProfile } from "@/hooks/use-profile";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 import { MeetingList } from "@/components/meeting-list";
 import { CreateMeetingDialog } from "@/components/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,7 @@ export default function DashboardPage() {
 
   const { tasks: pendingTasks } = useAllTasks();
   const { billing } = useBilling();
+  const { profile } = useProfile();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -175,11 +178,10 @@ export default function DashboardPage() {
                 size="sm"
                 variant="accent"
                 onClick={() => {
-                  const productId =
-                    process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
-                  window.location.href = productId
-                    ? `/api/checkout?products=${productId}`
-                    : "/pricing";
+                  window.location.href = getCheckoutUrl({
+                    userId: profile?.id,
+                    email: profile?.email,
+                  });
                 }}
               >
                 Upgrade — €{PRICING[PLANS.PRO].monthly}/mo
