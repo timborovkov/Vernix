@@ -135,11 +135,11 @@ We pass the user's UUID as `customerExternalId` in checkout. This links the Pola
 
 | Event                   | Action                                                            |
 | ----------------------- | ----------------------------------------------------------------- |
-| `subscription.created`  | Set plan=pro, store polarCustomerId, subscriptionId, period dates |
-| `subscription.active`   | Update period dates (renewal)                                     |
+| `subscription.created`  | If trialing: keep plan=free, set trialEndsAt from Polar (trial limits apply via `getEffectiveLimits`: 90 min, voice, no API/MCP). If active: set plan=pro. Store Polar IDs and period dates. |
+| `subscription.active`   | Set plan=pro, update period dates. Fires when trial ends and payment succeeds, or on renewal. |
 | `subscription.updated`  | Update period dates                                               |
-| `subscription.canceled` | Log (subscription stays active until period end)                  |
-| `subscription.revoked`  | Set plan=free, clear subscription fields                          |
+| `subscription.canceled` | Send retention email, do NOT downgrade (user keeps access until period ends) |
+| `subscription.revoked`  | Set plan=free, clear subscription + trial fields. Always downgrade immediately. Polar only fires this AFTER the access period has ended ([docs](https://docs.polar.sh/api-reference/webhooks/subscription.revoked)). |
 | `customer.created`      | Store polarCustomerId                                             |
 
 Webhook signature verification is handled by `@polar-sh/nextjs` `Webhooks` helper using `POLAR_WEBHOOK_SECRET`.
