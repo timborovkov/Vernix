@@ -71,7 +71,7 @@ export function IntegrationCard({
             <Button
               size="xs"
               variant="ghost"
-              onClick={() => onDisconnect(integration)}
+              onClick={() => setConfirmDisconnect(true)}
             >
               Disconnect
             </Button>
