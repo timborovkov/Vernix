@@ -70,7 +70,7 @@ export function RegisterForm({
     <div className="w-full max-w-sm">
       <h1 className="mb-1 text-2xl font-bold">Start using Vernix free</h1>
       <p className="text-muted-foreground mb-8 text-sm">
-        5 meetings included. No credit card required.
+        14-day Pro trial. No credit card required.
       </p>
 
       {hasSso && (
