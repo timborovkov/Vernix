@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 import { useMcpServers } from "@/hooks/use-mcp-servers";
 import { useBilling } from "@/hooks/use-billing";
 import { IntegrationCard } from "@/components/integration-card";
@@ -22,8 +24,24 @@ import {
 } from "@/lib/integrations/catalog";
 
 export default function IntegrationsPage() {
-  const { servers, addServer, deleteServer } = useMcpServers();
+  const { servers, addServer, deleteServer, startOAuth, oauthLoading } =
+    useMcpServers();
   const { billing, loading: billingLoading } = useBilling();
+  const searchParams = useSearchParams();
+
+  // Handle OAuth callback results
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    const error = searchParams.get("error");
+    if (connected) {
+      toast.success(`Connected to ${connected}`);
+      // Clean up URL params
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    } else if (error) {
+      toast.error(`Connection failed: ${error}`);
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    }
+  }, [searchParams]);
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
@@ -220,6 +238,8 @@ export default function IntegrationsPage() {
         open={!!connectingIntegration}
         onOpenChange={(v) => !v && setConnectingIntegration(null)}
         onConnect={handleAddServer}
+        onStartOAuth={startOAuth}
+        oauthLoading={oauthLoading}
       />
 
       {/* Paywall dialog */}

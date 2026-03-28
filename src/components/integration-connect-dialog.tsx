@@ -21,6 +21,8 @@ interface IntegrationConnectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConnect: (params: AddServerParams) => Promise<void>;
+  onStartOAuth?: (integrationId: string, serverUrl?: string) => Promise<void>;
+  oauthLoading?: boolean;
 }
 
 const AUTH_OPTIONS: { value: McpAuthType; label: string }[] = [
@@ -35,6 +37,8 @@ export function IntegrationConnectDialog({
   open,
   onOpenChange,
   onConnect,
+  onStartOAuth,
+  oauthLoading,
 }: IntegrationConnectDialogProps) {
   const [serverUrl, setServerUrl] = useState("");
   const [authType, setAuthType] = useState<McpAuthType>("none");
@@ -66,9 +70,22 @@ export function IntegrationConnectDialog({
 
   const isCustom = !integration.serverUrl && integration.id === "custom";
   const hasPrefilledUrl = !!integration.serverUrl;
+  const isCatalogOAuth =
+    !isCustom && integration.authMode === "oauth" && hasPrefilledUrl;
   const isCatalogToken =
     !isCustom &&
+    !isCatalogOAuth &&
     (integration.authMode === "api_key" || integration.authMode === "token");
+
+  const handleOAuth = async () => {
+    if (!onStartOAuth) return;
+    try {
+      await onStartOAuth(integration.id, integration.serverUrl ?? undefined);
+      // Don't close — browser will redirect to OAuth provider
+    } catch {
+      // Error handled by hook toast
+    }
+  };
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +104,6 @@ export function IntegrationConnectDialog({
       };
 
       if (isCustom) {
-        // Custom server: use the selected auth type
         params.authType = authType;
         switch (authType) {
           case "bearer":
@@ -103,12 +119,8 @@ export function IntegrationConnectDialog({
             break;
         }
       } else if (isCatalogToken) {
-        // Catalog integration that needs a token/key
         params.authType = "bearer";
         params.authHeaderValue = token;
-      } else {
-        // Catalog OAuth integration — just save with oauth type, no credentials
-        params.authType = "oauth";
       }
 
       await onConnect(params);
@@ -131,134 +143,152 @@ export function IntegrationConnectDialog({
           {integration.setupInstructions}
         </p>
 
-        <form onSubmit={handleConnect} className="space-y-4">
-          {/* URL field: only for custom servers without prefilled URL */}
-          {!hasPrefilledUrl && (
-            <div className="space-y-2">
-              <Label htmlFor="server-url">MCP Server URL</Label>
-              <Input
-                id="server-url"
-                type="url"
-                placeholder="https://mcp.example.com"
-                value={serverUrl}
-                onChange={(e) => setServerUrl(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {/* Auth type selector: only for custom servers */}
-          {isCustom && (
-            <div className="space-y-2">
-              <Label>Authentication</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {AUTH_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
-                      authType === opt.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted"
-                    }`}
-                    onClick={() => setAuthType(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bearer token field */}
-          {((isCustom && authType === "bearer") || isCatalogToken) && (
-            <div className="space-y-2">
-              <Label htmlFor="token">
-                {integration.authMode === "api_key"
-                  ? "API Key"
-                  : "Access Token"}
-              </Label>
-              <Input
-                id="token"
-                type="password"
-                placeholder={`Paste your ${integration.authMode === "api_key" ? "API key" : "access token"}`}
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-              />
-            </div>
-          )}
-
-          {/* Custom header fields */}
-          {isCustom && authType === "header" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="header-name">Header Name</Label>
-                <Input
-                  id="header-name"
-                  placeholder="X-API-Key"
-                  value={headerName}
-                  onChange={(e) => setHeaderName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="header-value">Header Value</Label>
-                <Input
-                  id="header-value"
-                  type="password"
-                  placeholder="Paste your key or token"
-                  value={headerValue}
-                  onChange={(e) => setHeaderValue(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-
-          {/* Basic auth fields */}
-          {isCustom && authType === "basic" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </>
-          )}
-
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
+        {isCatalogOAuth ? (
+          <div className="space-y-4">
             <Button
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto"
+              className="w-full"
+              disabled={oauthLoading}
+              onClick={handleOAuth}
             >
-              {loading ? "Connecting..." : "Connect"}
+              {oauthLoading
+                ? "Redirecting..."
+                : `Connect with ${integration.name}`}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() =>
-                window.open(integration.docsUrl, "_blank", "noopener")
-              }
-            >
-              <ExternalLink className="mr-1 h-3 w-3" />
-              Setup docs
-            </Button>
-          </DialogFooter>
-        </form>
+            <p className="text-muted-foreground text-center text-xs">
+              You&apos;ll be redirected to {integration.name} to authorize
+              access.
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleConnect} className="space-y-4">
+            {/* URL field: only for custom servers without prefilled URL */}
+            {!hasPrefilledUrl && (
+              <div className="space-y-2">
+                <Label htmlFor="server-url">MCP Server URL</Label>
+                <Input
+                  id="server-url"
+                  type="url"
+                  placeholder="https://mcp.example.com"
+                  value={serverUrl}
+                  onChange={(e) => setServerUrl(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {/* Auth type selector: only for custom servers */}
+            {isCustom && (
+              <div className="space-y-2">
+                <Label>Authentication</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {AUTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
+                        authType === opt.value
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted"
+                      }`}
+                      onClick={() => setAuthType(opt.value)}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bearer token field */}
+            {((isCustom && authType === "bearer") || isCatalogToken) && (
+              <div className="space-y-2">
+                <Label htmlFor="token">
+                  {integration.authMode === "api_key"
+                    ? "API Key"
+                    : "Access Token"}
+                </Label>
+                <Input
+                  id="token"
+                  type="password"
+                  placeholder={`Paste your ${integration.authMode === "api_key" ? "API key" : "access token"}`}
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                />
+              </div>
+            )}
+
+            {/* Custom header fields */}
+            {isCustom && authType === "header" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="header-name">Header Name</Label>
+                  <Input
+                    id="header-name"
+                    placeholder="X-API-Key"
+                    value={headerName}
+                    onChange={(e) => setHeaderName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="header-value">Header Value</Label>
+                  <Input
+                    id="header-value"
+                    type="password"
+                    placeholder="Paste your key or token"
+                    value={headerValue}
+                    onChange={(e) => setHeaderValue(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Basic auth fields */}
+            {isCustom && authType === "basic" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            <DialogFooter className="flex-col gap-2 sm:flex-row">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                {loading ? "Connecting..." : "Connect"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() =>
+                  window.open(integration.docsUrl, "_blank", "noopener")
+                }
+              >
+                <ExternalLink className="mr-1 h-3 w-3" />
+                Setup docs
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
