@@ -43,10 +43,10 @@ Enable "Prevent trial abuse" on both products.
 
 Create two meters for usage-based billing:
 
-| Meter              | Event Name       | Aggregation             | Filter |
-| ------------------ | ---------------- | ----------------------- | ------ |
-| **Voice Minutes**  | `voice_minutes`  | Sum of `duration_hours` | —      |
-| **Silent Minutes** | `silent_minutes` | Sum of `duration_hours` | —      |
+| Meter              | Filter                       | Aggregation             |
+| ------------------ | ---------------------------- | ----------------------- |
+| **Voice Minutes**  | Name equals `voice_minutes`  | Sum of `duration_hours` |
+| **Silent Minutes** | Name equals `silent_minutes` | Sum of `duration_hours` |
 
 ### 3. Attach Metered Prices
 
