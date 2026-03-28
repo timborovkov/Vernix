@@ -121,6 +121,10 @@
 
 - **Use billing constants everywhere** — `src/lib/billing/constants.ts` defines all prices, limits, and rates, but many files hardcode `€29`, `€30`, `200`, `€3/hr`, etc. Affected: pricing page, FAQ, upgrade-dialog trigger copy, trial-prompt-banner, feature pages, email templates, welcome page, SEO meta descriptions. Sweep all hardcoded values and replace with imports from constants. Email templates (HTML strings) need a helper function to inject values since they can't import TS directly.
 
+## New users should accept the terms
+
+- Users should be required to accept the terms of use and the privacy policy
+
 ## Product Terminology & Time Display
 
 - **Rename "meetings" to "calls" in product UI copy** — Update user-facing labels for consistency while keeping internal API/schema naming unchanged unless explicitly migrated.
