@@ -84,12 +84,3 @@ export const TRIAL_LIMITS = {
   mcpServerConnections: 0,
   mcpClientConnections: 0,
 } as const;
-
-// ---------------------------------------------------------------------------
-// Polar product IDs — set via environment variables.
-// These correspond to products created in the Polar dashboard.
-// ---------------------------------------------------------------------------
-export const POLAR_PRODUCTS = {
-  proMonthly: () => process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY!,
-  proAnnual: () => process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL!,
-} as const;
