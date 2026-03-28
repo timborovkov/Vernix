@@ -7,6 +7,13 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { randomUUID } from "crypto";
 import { requireSessionUser } from "@/lib/auth/session";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canStartMeeting } from "@/lib/billing/limits";
+import {
+  getActiveMeetingCount,
+  getUsedMinutes,
+  getMonthlyMeetingCount,
+} from "@/lib/billing/usage";
 
 const createMeetingSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -43,6 +50,24 @@ export async function POST(request: Request) {
   }
 
   const { title, joinLink, agenda, silent } = parsed.data;
+
+  // Billing check
+  const { limits, period } = await requireLimits(user.id);
+  const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
+    getActiveMeetingCount(user.id),
+    getUsedMinutes(user.id, period.start, period.end),
+    getMonthlyMeetingCount(user.id),
+  ]);
+  const check = canStartMeeting(
+    limits,
+    !silent,
+    usedMinutes,
+    activeMeetings,
+    monthlyCount
+  );
+  if (!check.allowed)
+    return billingError(check, !silent && !limits.voiceEnabled ? 403 : 429);
+
   const collectionName = `meeting_${randomUUID().replace(/-/g, "")}`;
 
   await createMeetingCollection(collectionName);

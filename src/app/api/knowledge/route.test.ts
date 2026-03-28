@@ -220,4 +220,53 @@ describe("POST /api/knowledge", () => {
     const { status } = await parseJsonResponse(await POST(req));
     expect(status).toBe(201);
   });
+
+  it("returns 403 when document count limit is reached", async () => {
+    const { canUploadDocument } = await import("@/lib/billing/limits");
+    vi.mocked(canUploadDocument).mockReturnValueOnce({
+      allowed: false,
+      reason: "Maximum 5 documents",
+    });
+
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new File(["test"], "doc.txt", { type: "text/plain" })
+    );
+
+    const req = new Request("http://localhost/api/knowledge", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(403);
+    expect(data.error).toBe("Maximum 5 documents");
+    expect(data.code).toBe("LIMIT_EXCEEDED");
+    expect(mockUploadFile).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 when storage limit is exceeded", async () => {
+    const { canUploadDocument } = await import("@/lib/billing/limits");
+    vi.mocked(canUploadDocument).mockReturnValueOnce({
+      allowed: false,
+      reason: "Storage limit reached",
+    });
+
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new File(["test"], "doc.txt", { type: "text/plain" })
+    );
+
+    const req = new Request("http://localhost/api/knowledge", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(403);
+    expect(data.error).toBe("Storage limit reached");
+    expect(mockEnsureBucket).not.toHaveBeenCalled();
+  });
 });

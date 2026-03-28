@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ArrowRight } from "lucide-react";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 const FREE_FEATURES = [
   "30 minutes of silent meetings per month",
@@ -36,10 +38,15 @@ const USAGE_RATES = [
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
+  const { data: session } = useSession();
 
   const price = annual ? "€24" : "€29";
   const period = annual ? "/ mo, billed annually" : "/ month";
   const savings = annual ? "Save €60/year" : null;
+
+  const checkoutUrl = session?.user
+    ? getCheckoutUrl(annual ? "annual" : "monthly")
+    : null;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-24">
@@ -148,9 +155,13 @@ export default function PricingPage() {
             <Button
               className="w-full"
               variant="accent"
-              render={<Link href="/register" />}
+              render={
+                <Link
+                  href={session && checkoutUrl ? checkoutUrl : "/register"}
+                />
+              }
             >
-              Start 14-Day Free Trial
+              {session ? "Upgrade to Pro" : "Start 14-Day Free Trial"}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-muted-foreground mt-3 text-center text-xs">

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth/session";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canMakeRagQuery } from "@/lib/billing/limits";
+import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
 import { z } from "zod/v4";
 import { getOpenAIClient } from "@/lib/openai/client";
 import {
@@ -36,6 +39,12 @@ export async function POST(request: Request) {
 
   const user = await requireSessionUser();
   if (user instanceof NextResponse) return user;
+
+  // Billing check
+  const { limits } = await requireLimits(user.id);
+  const dailyRag = await getDailyCount(user.id, "rag_query");
+  const ragCheck = canMakeRagQuery(limits, dailyRag);
+  if (!ragCheck.allowed) return billingError(ragCheck, 429);
 
   const { meetingId, question } = parsed.data;
 
@@ -74,6 +83,7 @@ export async function POST(request: Request) {
       max_completion_tokens: 1024,
     });
 
+    recordUsageEvent(user.id, "rag_query").catch(() => {});
     return NextResponse.json({
       answer: completion.choices[0].message.content,
       sources: ragResults,

@@ -47,7 +47,7 @@ vi.mock("@/lib/mcp/client", () => ({
 }));
 
 import { POST } from "./route";
-import { createJsonRequest } from "@/test/helpers";
+import { createJsonRequest, parseJsonResponse } from "@/test/helpers";
 
 const URL = "http://localhost/api/agent/chat";
 
@@ -215,5 +215,24 @@ describe("POST /api/agent/chat", () => {
 
     const res = await POST(req);
     expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+  });
+
+  it("returns 429 when daily RAG query limit is reached", async () => {
+    const { canMakeRagQuery } = await import("@/lib/billing/limits");
+    vi.mocked(canMakeRagQuery).mockReturnValueOnce({
+      allowed: false,
+      reason: "Daily RAG query limit reached",
+    });
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: { messages: [{ role: "user", content: "hi" }] },
+    });
+
+    const res = await POST(req);
+    const { status, data } = await parseJsonResponse(res);
+    expect(status).toBe(429);
+    expect(data.error).toBe("Daily RAG query limit reached");
+    expect(data.code).toBe("RATE_LIMITED");
   });
 });

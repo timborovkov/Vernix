@@ -8,7 +8,10 @@ import {
   integer,
   boolean,
   unique,
+  numeric,
 } from "drizzle-orm/pg-core";
+
+export const planEnum = pgEnum("plan", ["free", "pro"]);
 
 export const meetingStatusEnum = pgEnum("meeting_status", [
   "pending",
@@ -25,6 +28,21 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   passwordHash: text("password_hash"),
   image: text("image"),
+  // Billing
+  plan: planEnum("plan").default("free").notNull(),
+  polarCustomerId: text("polar_customer_id"),
+  polarSubscriptionId: text("polar_subscription_id"),
+  trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+  lastUpgradeReminderSentAt: timestamp("last_upgrade_reminder_sent_at", {
+    withTimezone: true,
+  }),
+  lastRetentionEmailSentAt: timestamp("last_retention_email_sent_at", {
+    withTimezone: true,
+  }),
+  currentPeriodStart: timestamp("current_period_start", {
+    withTimezone: true,
+  }),
+  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -181,3 +199,40 @@ export const mcpServers = pgTable("mcp_servers", {
 });
 
 export type McpServer = typeof mcpServers.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// Usage tracking
+// ---------------------------------------------------------------------------
+
+export const usageEventTypeEnum = pgEnum("usage_event_type", [
+  "voice_meeting",
+  "silent_meeting",
+  "rag_query",
+  "api_request",
+  "doc_upload",
+]);
+
+export const usageEvents = pgTable("usage_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  meetingId: uuid("meeting_id").references(() => meetings.id, {
+    onDelete: "set null",
+  }),
+  type: usageEventTypeEnum("type").notNull(),
+  /** Duration in minutes (for meetings) or count (for queries/requests) */
+  quantity: numeric("quantity", { precision: 10, scale: 2 })
+    .default("0")
+    .notNull(),
+  /** Cost in EUR for this event */
+  costEur: numeric("cost_eur", { precision: 10, scale: 4 })
+    .default("0")
+    .notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type UsageEvent = typeof usageEvents.$inferSelect;

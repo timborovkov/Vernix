@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import Script from "next/script";
 import { Toaster } from "sonner";
-import { CookieConsentBanner } from "@/components/cookie-consent-banner";
+import { CookieConsentWrapper } from "@/components/cookie-consent-wrapper";
 import { QueryProvider } from "@/components/query-provider";
 import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ),
-  title: "Vernix — AI Video Call Agent",
+  title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
   description:
-    "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions using context from current and past meetings.",
+    "An AI agent that joins Zoom, Meet, Teams, and Webex. Connects to Slack, Linear, GitHub. Answers questions with live data during calls. Free to start.",
   icons: {
     icon: [
       {
@@ -46,18 +46,18 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   openGraph: {
-    title: "Vernix — AI Video Call Agent",
+    title: "Vernix — AI Assistant for Video Calls",
     description:
-      "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions.",
+      "Connects to your tools. Answers questions with live data during calls. Transcripts, summaries, and action items included.",
     images: [
       { url: "/brand/og/og-with-subtitle.png", width: 1200, height: 630 },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Vernix — AI Video Call Agent",
+    title: "Vernix — AI Assistant for Video Calls",
     description:
-      "AI-powered meeting assistant that joins your video calls, transcribes conversations, and answers questions.",
+      "Connects to your tools. Answers questions with live data during calls. Transcripts, summaries, and action items included.",
     images: ["/brand/og/og-with-subtitle.png"],
   },
 };
@@ -80,7 +80,7 @@ export default function RootLayout({
           <QueryProvider>
             {children}
             <Toaster richColors position="bottom-right" />
-            <CookieConsentBanner analyticsEnabled={isAnalyticsEnabled} />
+            <CookieConsentWrapper analyticsEnabled={isAnalyticsEnabled} />
           </QueryProvider>
         </SessionProvider>
         {gaMeasurementId ? (

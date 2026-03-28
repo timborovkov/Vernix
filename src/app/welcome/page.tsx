@@ -1,0 +1,139 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Mic,
+  FileText,
+  MessageSquare,
+  Search,
+  Plug,
+  Clock,
+} from "lucide-react";
+import { PRICING, PLANS } from "@/lib/billing/constants";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+
+const PRO_FEATURES = [
+  {
+    icon: Plug,
+    label: "Connect tools like Slack, Linear, or CRM for live data in meetings",
+  },
+  { icon: Mic, label: "Voice agent answers and takes action during calls" },
+  { icon: Search, label: "Search across all your meetings and documents" },
+  { icon: FileText, label: "200 knowledge base documents for context" },
+  { icon: MessageSquare, label: "200 AI queries per day" },
+  { icon: Clock, label: "Unlimited meetings with monthly credit" },
+];
+
+export default function WelcomePage() {
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+      <div className="mb-8">
+        <Image
+          src="/brand/combo/horizontal-nobg.png"
+          alt="Vernix"
+          width={130}
+          height={36}
+          className="dark:hidden"
+        />
+        <Image
+          src="/brand/combo/horizontal-dark-nobg.png"
+          alt="Vernix"
+          width={130}
+          height={36}
+          className="hidden dark:block"
+        />
+      </div>
+
+      <div className="w-full max-w-lg">
+        <h1 className="mb-2 text-center text-2xl font-bold">
+          Welcome to Vernix
+        </h1>
+        <p className="text-muted-foreground mb-8 text-center text-sm">
+          Your account is ready. Try Pro free for 14 days, or start with the
+          free plan.
+        </p>
+
+        {/* Pro trial card */}
+        <Card className="border-ring/30 ring-ring/10 mb-4 ring-1">
+          <CardContent className="p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Start Pro free</h2>
+                <p className="text-muted-foreground text-xs">
+                  14 days free. Cancel anytime before trial ends.
+                </p>
+              </div>
+              <Badge variant="default">Recommended</Badge>
+            </div>
+
+            <ul className="mb-5 space-y-2.5">
+              {PRO_FEATURES.map((f) => (
+                <li key={f.label} className="flex items-center gap-2.5 text-sm">
+                  <f.icon className="text-muted-foreground h-4 w-4 shrink-0" />
+                  {f.label}
+                </li>
+              ))}
+            </ul>
+
+            <p className="text-muted-foreground mb-3 text-xs font-medium">
+              Pick a plan for after the trial:
+            </p>
+            <div className="mb-4 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = getCheckoutUrl("monthly");
+                }}
+                className="border-border hover:border-ring flex-1 rounded-lg border p-3 text-left transition-colors"
+              >
+                <p className="text-sm font-medium">
+                  €{PRICING[PLANS.PRO].monthly}/mo
+                </p>
+                <p className="text-muted-foreground text-xs">Monthly</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = getCheckoutUrl("annual");
+                }}
+                className="border-ring/50 bg-ring/5 hover:border-ring flex-1 rounded-lg border p-3 text-left transition-colors"
+              >
+                <p className="text-sm font-medium">
+                  €{Math.round(PRICING[PLANS.PRO].annual / 12)}/mo
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  Annual (save €
+                  {PRICING[PLANS.PRO].monthly * 12 - PRICING[PLANS.PRO].annual}
+                  /yr)
+                </p>
+              </button>
+            </div>
+
+            <p className="text-muted-foreground text-center text-xs">
+              No charge for 14 days. Cancel before the trial ends and you
+              won&apos;t be billed.
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Free plan option */}
+        <div className="text-center">
+          <Button
+            variant="ghost"
+            className="text-muted-foreground"
+            render={<Link href="/dashboard" />}
+          >
+            Continue with Free plan
+          </Button>
+          <p className="text-muted-foreground mt-1 text-xs">
+            5 silent meetings/month, 30 minutes, 20 queries/day
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

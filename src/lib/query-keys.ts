@@ -14,4 +14,5 @@ export const queryKeys = {
   apiKeys: { all: ["api-keys"] as const },
   mcpServers: { all: ["mcp-servers"] as const },
   profile: { all: ["profile"] as const },
+  billing: { all: ["billing"] as const },
 };

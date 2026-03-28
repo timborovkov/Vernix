@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "FAQ — Vernix",
+  title: "Frequently Asked Questions | Vernix AI Meeting Assistant",
   description:
-    "Frequently asked questions about Vernix — platform support, voice agent, silent mode, pricing, data security, and more.",
+    "How does Vernix work? What platforms are supported? Is my data safe? Answers to common questions about the AI meeting assistant.",
 };
 
 const QUESTIONS = [

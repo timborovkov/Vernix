@@ -6,13 +6,16 @@ import { signIn } from "next-auth/react";
 import { useApiKeys } from "@/hooks/use-api-keys";
 import { useMcpServers } from "@/hooks/use-mcp-servers";
 import { useProfile } from "@/hooks/use-profile";
+import { useBilling } from "@/hooks/use-billing";
 import { ApiKeyList } from "@/components/api-key-list";
 import { McpServerList } from "@/components/mcp-server-list";
+import { BillingCard } from "@/components/billing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, User, Link2, Lock } from "lucide-react";
+import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 interface SettingsFormProps {
   enableGoogle: boolean;
@@ -25,6 +28,7 @@ export function SettingsForm({
 }: SettingsFormProps) {
   const { keys, createKey, deleteKey } = useApiKeys();
   const { servers, addServer, toggleServer, deleteServer } = useMcpServers();
+  const { billing, loading: billingLoading } = useBilling();
   const {
     profile,
     loading: profileLoading,
@@ -155,6 +159,9 @@ export function SettingsForm({
             ) : null}
           </CardContent>
         </Card>
+
+        {/* Billing */}
+        <BillingCard billing={billing} loading={billingLoading} />
 
         {/* Connected Accounts */}
         <Card>
@@ -317,15 +324,40 @@ export function SettingsForm({
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-                Server URL
-              </p>
-              <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
-                {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/mcp`}
-              </code>
-            </div>
-            <ApiKeyList keys={keys} onCreate={createKey} onDelete={deleteKey} />
+            {billing && !billing.limits.apiEnabled ? (
+              <div className="space-y-3 py-2">
+                <p className="text-muted-foreground text-sm">
+                  Access your meetings, transcripts, and search from Claude
+                  Desktop, Cursor, or any MCP client. Ask questions about your
+                  meetings from your favorite AI tools.
+                </p>
+                <Button
+                  size="sm"
+                  variant="accent"
+                  onClick={() => {
+                    window.location.href = getCheckoutUrl();
+                  }}
+                >
+                  Upgrade to Pro for API access
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                    Server URL
+                  </p>
+                  <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
+                    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/mcp`}
+                  </code>
+                </div>
+                <ApiKeyList
+                  keys={keys}
+                  onCreate={createKey}
+                  onDelete={deleteKey}
+                />
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -339,12 +371,41 @@ export function SettingsForm({
             </p>
           </CardHeader>
           <CardContent>
-            <McpServerList
-              servers={servers}
-              onAdd={addServer}
-              onToggle={toggleServer}
-              onDelete={deleteServer}
-            />
+            {billing && !billing.limits.mcpEnabled ? (
+              <div className="space-y-3 py-2">
+                <div className="text-muted-foreground space-y-2 text-sm">
+                  <p>
+                    Connect tools like Slack, Linear, GitHub, or custom servers.
+                    The AI agent uses them to answer questions and take actions
+                    during your meetings.
+                  </p>
+                  <ul className="list-inside list-disc space-y-1 text-xs">
+                    <li>
+                      Up to {billing.limits.mcpClientConnections || 10} MCP
+                      connections on Pro
+                    </li>
+                    <li>Agent uses tools automatically during calls</li>
+                    <li>Works with any MCP-compatible server</li>
+                  </ul>
+                </div>
+                <Button
+                  size="sm"
+                  variant="accent"
+                  onClick={() => {
+                    window.location.href = getCheckoutUrl();
+                  }}
+                >
+                  Upgrade to Pro to connect integrations
+                </Button>
+              </div>
+            ) : (
+              <McpServerList
+                servers={servers}
+                onAdd={addServer}
+                onToggle={toggleServer}
+                onDelete={deleteServer}
+              />
+            )}
           </CardContent>
         </Card>
       </div>

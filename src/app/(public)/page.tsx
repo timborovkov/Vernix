@@ -19,35 +19,29 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Vernix — AI Video Call Agent",
+  title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
   description:
-    "Vernix joins your video calls, transcribes conversations, writes summaries, extracts action items, and answers questions live. Works with Zoom, Meet, Teams, and Webex. Free to start.",
+    "An AI agent that joins Zoom, Meet, Teams, and Webex. Connects to Slack, Linear, GitHub. Answers questions with live data during calls. Free to start.",
 };
 
 const FEATURES = [
   {
-    icon: Mic,
-    title: "Never miss a word",
+    icon: Plug,
+    title: "Connect your tools, get live answers",
     description:
-      "Real-time, speaker-identified transcription. Every participant, every sentence — searchable the moment your call ends.",
+      "Hook up Slack, Linear, GitHub, or your CRM. During the call, ask Vernix to look up a customer, check sprint status, or pull a report. Real data, no tab-switching.",
+  },
+  {
+    icon: Mic,
+    title: "A voice agent that answers and acts",
+    description:
+      'Say "Vernix, what\'s the status of the Q3 launch?" and get an answer from your connected tools. It listens, understands context, and responds live.',
   },
   {
     icon: FileText,
     title: "Summaries that write themselves",
     description:
       "Walk out of every meeting with a summary, key decisions, and action items — without writing a single note.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Ask your meetings anything",
-    description:
-      'A voice agent that listens live and answers questions on the spot. Say "Vernix, what did we decide about pricing?" and get an answer.',
-  },
-  {
-    icon: VolumeX,
-    title: "Silent when you need it",
-    description:
-      "Prefer text? Silent mode monitors the call and responds via meeting chat. No audio, no disruption — just answers when you need them.",
   },
   {
     icon: BookOpen,
@@ -62,16 +56,22 @@ const FEATURES = [
       '"Who mentioned the Q3 deadline?" Find what was said, when it was said, and who said it — across all your calls at once.',
   },
   {
+    icon: VolumeX,
+    title: "Silent when you need it",
+    description:
+      "Prefer text? Silent mode monitors the call and responds via meeting chat. No audio, no disruption — just answers when you need them.",
+  },
+  {
     icon: ListChecks,
     title: "Action items, tracked",
     description:
       "Tasks are pulled directly from conversations and tracked per meeting. No more digging through notes to find who committed to what.",
   },
   {
-    icon: Plug,
-    title: "Plug into your tools",
+    icon: MessageSquare,
+    title: "Ask your meetings anything",
     description:
-      "Connect your meeting data to Claude Desktop, Cursor, or other AI tools. Your meetings become queryable from anywhere you work.",
+      "Chat with your meeting history after the call. Ask follow-up questions, search for decisions, or revisit what was discussed weeks ago.",
   },
 ];
 
@@ -97,9 +97,9 @@ const STEPS = [
 ];
 
 const PAIN_POINTS = [
+  "Switching tabs to look up a number while everyone waits",
   "Writing meeting notes while trying to pay attention",
   "Searching Slack for something someone definitely said on a call",
-  "Asking 'can you repeat that?' because you were typing",
   "Spending 20 minutes after every meeting writing a recap no one reads",
 ];
 
@@ -128,12 +128,12 @@ export default function LandingPage() {
           />
         </div>
         <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
-          An AI agent that joins your calls and does the rest
+          An AI assistant in every meeting that knows your business
         </h1>
         <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
-          Vernix transcribes your video calls, writes the summary, extracts
-          action items, and answers questions live — so you can actually focus
-          on the conversation.
+          Vernix joins your video calls, connects to your tools, and answers
+          questions with real data. Transcripts, summaries, and action items
+          happen automatically.
         </p>
         <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
           <Button variant="accent" size="lg" render={<Link href="/register" />}>

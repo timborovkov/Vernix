@@ -42,11 +42,13 @@ function GitHubIcon({ className }: { className?: string }) {
 interface SsoButtonsProps {
   enableGoogle?: boolean;
   enableGithub?: boolean;
+  callbackUrl?: string;
 }
 
 export function SsoButtons({
   enableGoogle = false,
   enableGithub = false,
+  callbackUrl = "/dashboard",
 }: SsoButtonsProps) {
   if (!enableGoogle && !enableGithub) return null;
 
@@ -57,7 +59,7 @@ export function SsoButtons({
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+          onClick={() => signIn("google", { callbackUrl })}
         >
           <GoogleIcon className="mr-2 h-4 w-4" />
           Continue with Google
@@ -68,7 +70,7 @@ export function SsoButtons({
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+          onClick={() => signIn("github", { callbackUrl })}
         >
           <GitHubIcon className="mr-2 h-4 w-4" />
           Continue with GitHub

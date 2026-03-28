@@ -11,6 +11,7 @@ import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, ListChecks, CheckCircle2 } from "lucide-react";
+import { TrialPromptBanner } from "@/components/trial-prompt-banner";
 
 const STATUS_FILTERS = [
   "all",
@@ -129,6 +130,11 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Single CRO banner: picks the right variant based on user state */}
+      <TrialPromptBanner
+        hasCompletedMeetings={meetings.some((m) => m.status === "completed")}
+      />
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

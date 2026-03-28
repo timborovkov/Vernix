@@ -4,6 +4,13 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { requireSessionUser } from "@/lib/auth/session";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canStartMeeting } from "@/lib/billing/limits";
+import {
+  getActiveMeetingCount,
+  getUsedMinutes,
+  getMonthlyMeetingCount,
+} from "@/lib/billing/usage";
 import { z } from "zod/v4";
 
 const joinSchema = z.object({
@@ -48,6 +55,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // Billing check
+  const silent = Boolean((meeting.metadata as Record<string, unknown>)?.silent);
+  const { limits, period } = await requireLimits(user.id);
+  const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
+    getActiveMeetingCount(user.id),
+    getUsedMinutes(user.id, period.start, period.end),
+    getMonthlyMeetingCount(user.id),
+  ]);
+  const check = canStartMeeting(
+    limits,
+    !silent,
+    usedMinutes,
+    activeMeetings,
+    monthlyCount
+  );
+  if (!check.allowed)
+    return billingError(check, !silent && !limits.voiceEnabled ? 403 : 429);
+
   await db
     .update(meetings)
     .set({ status: "joining", updatedAt: new Date() })
@@ -55,7 +80,6 @@ export async function POST(request: Request) {
 
   const provider = getMeetingBotProvider();
   const existingMetadata = (meeting.metadata as Record<string, unknown>) ?? {};
-  const silent = Boolean(existingMetadata.silent);
 
   try {
     const { botId, voiceSecret } = await provider.joinMeeting(

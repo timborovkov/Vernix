@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Document } from "@/lib/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { throwIfBillingError } from "@/lib/billing/errors";
 
 export interface DocumentWithMeeting extends Document {
   meetingTitle?: string | null;
@@ -42,6 +43,7 @@ export function useKnowledge(meetingId?: string) {
         body: formData,
       });
       if (!res.ok) {
+        await throwIfBillingError(res);
         const data = await res.json();
         throw new Error(data.error || "Upload failed");
       }
