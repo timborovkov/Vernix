@@ -13,8 +13,9 @@ import { getTrialExpiryWarningHtml } from "@/lib/email/templates";
  * Sends warnings at 3 days and 1 day before trial expires.
  */
 export async function GET(request: Request) {
+  const cronSecret = process.env.CRON_SECRET;
   const secret = request.headers.get("authorization");
-  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!cronSecret || secret !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
