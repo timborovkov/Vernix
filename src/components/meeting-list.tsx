@@ -45,9 +45,9 @@ function TrialEmptyState() {
           Try the voice agent on your next call
         </p>
         <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm">
-          Paste a Zoom, Meet, Teams, or Webex link above. Vernix joins your
-          call, transcribes everything, and answers questions out loud when you
-          say its name.
+          Click &quot;New Meeting&quot; and paste a Zoom, Meet, Teams, or Webex
+          link. Vernix joins your call, transcribes everything, and answers
+          questions out loud when you say &quot;Vernix.&quot;
         </p>
         <div className="text-muted-foreground mx-auto mt-6 grid max-w-lg gap-3 text-left text-sm sm:grid-cols-3">
           <div className="flex items-start gap-2">
