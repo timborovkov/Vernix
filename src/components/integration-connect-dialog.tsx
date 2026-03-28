@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,12 @@ export function IntegrationConnectDialog({
   const [serverUrl, setServerUrl] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setServerUrl(integration?.serverUrl ?? "");
+    setApiKey("");
+    setLoading(false);
+  }, [integration?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!integration) return null;
 
