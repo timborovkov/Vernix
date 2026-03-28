@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Check, Clock } from "lucide-react";
 import type { Integration } from "@/lib/integrations/catalog";
 
@@ -21,8 +23,10 @@ export function IntegrationCard({
   onDisconnect,
 }: IntegrationCardProps) {
   const isComingSoon = integration.status === "coming-soon";
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   return (
+    <>
     <Card className={`transition-colors ${connected ? "border-ring/30" : ""}`}>
       <CardContent className="flex items-start gap-3 p-4">
         <div className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
