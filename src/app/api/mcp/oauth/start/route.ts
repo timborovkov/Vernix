@@ -59,6 +59,10 @@ export async function POST(request: Request) {
   }
 
   // Find or create MCP server record
+  // Include catalogIntegrationId in lookup so integrations sharing a URL
+  // (e.g. Jira and Confluence both use mcp.atlassian.com) get separate records
+  const catalogId =
+    parsed.data.integrationId === "custom" ? null : parsed.data.integrationId;
   let serverId: string;
   const [existing] = await db
     .select({ id: mcpServers.id })
@@ -67,7 +71,8 @@ export async function POST(request: Request) {
       and(
         eq(mcpServers.userId, user.id),
         eq(mcpServers.url, serverUrl),
-        eq(mcpServers.authType, "oauth")
+        eq(mcpServers.authType, "oauth"),
+        catalogId ? eq(mcpServers.catalogIntegrationId, catalogId) : undefined
       )
     );
 
@@ -81,10 +86,7 @@ export async function POST(request: Request) {
         name: integrationName,
         url: serverUrl,
         authType: "oauth",
-        catalogIntegrationId:
-          parsed.data.integrationId === "custom"
-            ? null
-            : parsed.data.integrationId,
+        catalogIntegrationId: catalogId,
         enabled: false, // enabled after OAuth callback succeeds
       })
       .returning({ id: mcpServers.id });
