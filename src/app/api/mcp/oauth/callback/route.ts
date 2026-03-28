@@ -89,6 +89,12 @@ export async function GET(request: Request) {
     );
   }
 
+  // Enable the server now that OAuth succeeded
+  await db
+    .update(mcpServers)
+    .set({ enabled: true, updatedAt: new Date() })
+    .where(and(eq(mcpServers.id, mcpServerId), eq(mcpServers.userId, userId)));
+
   // Invalidate MCP cache so the new tokens are used on next connection
   invalidateMcpCache(userId);
 
