@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Mic } from "lucide-react";
 import { isBillingError } from "@/lib/billing/errors";
+import { useBilling } from "@/hooks/use-billing";
 import {
   UpgradeDialog,
   detectPaywallTrigger,
@@ -30,6 +31,9 @@ interface CreateMeetingDialogProps {
 }
 
 export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
+  const { billing } = useBilling();
+  const voiceDisabled = billing ? !billing.limits.voiceEnabled : false;
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [joinLink, setJoinLink] = useState("");
@@ -116,8 +120,9 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
             <input
               type="checkbox"
               id="silent"
-              checked={silent}
-              onChange={(e) => setSilent(e.target.checked)}
+              checked={voiceDisabled ? true : silent}
+              onChange={(e) => !voiceDisabled && setSilent(e.target.checked)}
+              disabled={voiceDisabled}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
             />
             <div>
@@ -127,9 +132,24 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               </p>
             </div>
           </div>
+          {voiceDisabled && (
+            <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
+              <Mic className="text-muted-foreground h-4 w-4 shrink-0" />
+              <p className="text-muted-foreground text-xs">
+                Want the agent to answer out loud?{" "}
+                <a
+                  href="/pricing"
+                  className="text-foreground underline underline-offset-2"
+                >
+                  Upgrade to Pro
+                </a>{" "}
+                for the voice agent.
+              </p>
+            </div>
+          )}
           <p className="text-muted-foreground text-xs">
             Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}
-            {silent
+            {silent || voiceDisabled
               ? "The agent will listen passively and respond via meeting chat when called by name (Vernix)."
               : "The AI agent will join and respond when called by name (Vernix, Agent, or Assistant)."}
           </p>
