@@ -83,8 +83,9 @@ export function useMcpServers() {
   return {
     servers,
     loading,
-    addServer: (name: string, url: string, apiKey?: string) =>
-      addMutation.mutate({ name, url, apiKey }),
+    addServer: async (name: string, url: string, apiKey?: string) => {
+      await addMutation.mutateAsync({ name, url, apiKey });
+    },
     toggleServer: (id: string, enabled: boolean) =>
       toggleMutation.mutate({ id, enabled }),
     deleteServer: (id: string) => deleteMutation.mutate(id),
