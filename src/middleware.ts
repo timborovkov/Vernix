@@ -42,6 +42,7 @@ export const config = {
     "/api/tasks/:path*",
     "/api/settings/:path*",
     "/api/user/:path*",
+    "/api/billing",
     "/api/export",
     "/api/mcp",
   ],

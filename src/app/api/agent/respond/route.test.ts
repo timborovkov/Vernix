@@ -205,4 +205,26 @@ describe("POST /api/agent/respond", () => {
     expect(status).toBe(500);
     expect(data.error).toMatch(/failed/i);
   });
+
+  it("returns 429 when daily RAG query limit is reached", async () => {
+    const { canMakeRagQuery } = await import("@/lib/billing/limits");
+    vi.mocked(canMakeRagQuery).mockReturnValueOnce({
+      allowed: false,
+      reason: "Daily RAG query limit reached",
+    });
+
+    const req = createJsonRequest(URL, {
+      method: "POST",
+      body: {
+        meetingId: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        question: "test",
+      },
+    });
+
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(429);
+    expect(data.error).toBe("Daily RAG query limit reached");
+    expect(data.code).toBe("RATE_LIMITED");
+    expect(mockChatCreate).not.toHaveBeenCalled();
+  });
 });

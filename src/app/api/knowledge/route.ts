@@ -6,8 +6,15 @@ import { db } from "@/lib/db";
 import { documents, meetings } from "@/lib/db/schema";
 import { ensureBucket, uploadFile } from "@/lib/storage/operations";
 import { processDocument } from "@/lib/knowledge/process";
+import { requireLimits, billingError } from "@/lib/billing/enforce";
+import { canUploadDocument } from "@/lib/billing/limits";
+import {
+  getDocumentCount,
+  getMonthlyDocUploads,
+  getTotalStorageMB,
+  recordUsageEvent,
+} from "@/lib/billing/usage";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILENAME_LENGTH = 255;
 
 const ALLOWED_TYPES: Record<string, string> = {
@@ -71,15 +78,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "File is empty" }, { status: 400 });
   }
 
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      {
-        error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-      },
-      { status: 400 }
-    );
-  }
-
   const fileType = ALLOWED_TYPES[file.type];
   if (!fileType) {
     return NextResponse.json(
@@ -94,6 +92,23 @@ export async function POST(request: Request) {
   if (safeName.length === 0 || safeName.length > MAX_FILENAME_LENGTH) {
     return NextResponse.json({ error: "Invalid filename" }, { status: 400 });
   }
+
+  // Billing check
+  const { limits } = await requireLimits(user.id);
+  const fileSizeMB = file.size / (1024 * 1024);
+  const [docCount, monthlyUploads, totalStorageMB] = await Promise.all([
+    getDocumentCount(user.id),
+    getMonthlyDocUploads(user.id),
+    getTotalStorageMB(user.id),
+  ]);
+  const uploadCheck = canUploadDocument(
+    limits,
+    docCount,
+    monthlyUploads,
+    totalStorageMB,
+    fileSizeMB
+  );
+  if (!uploadCheck.allowed) return billingError(uploadCheck);
 
   // Optional meeting scoping
   const meetingIdStr = formData.get("meetingId");
@@ -132,6 +147,8 @@ export async function POST(request: Request) {
         status: "processing",
       })
       .returning();
+
+    recordUsageEvent(user.id, "doc_upload").catch(() => {});
 
     // Process synchronously — files ≤10MB complete in seconds
     try {

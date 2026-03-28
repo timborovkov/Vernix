@@ -47,6 +47,13 @@ const envSchema = z
     RESEND_WEBHOOK_SECRET: z.string().optional(),
     EMAIL_FORWARD_TO: z.string().optional(),
 
+    // Polar (billing)
+    POLAR_ACCESS_TOKEN: z.string().optional(),
+    POLAR_WEBHOOK_SECRET: z.string().optional(),
+    NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY: z.string().optional(),
+    NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL: z.string().optional(),
+    POLAR_SERVER: z.enum(["sandbox", "production"]).default("sandbox"),
+
     // S3
     S3_ENDPOINT: z.string().optional(),
     S3_ACCESS_KEY: z.string().optional(),

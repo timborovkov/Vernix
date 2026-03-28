@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing — Vernix",
+  title: "Vernix Pricing | Free Plan + Pro from €24/mo",
   description:
-    "Simple pricing for Vernix. Free forever for silent meetings. Pro at €29/mo with €30 usage credit for voice agent, API, and MCP access.",
+    "Free plan with 5 silent meetings/month. Pro from €24/mo with voice agent, tool integrations, and €30 usage credit. 14-day free trial.",
 };
 
 export default function PricingLayout({

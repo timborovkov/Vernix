@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   escapeHtml,
+  getFreePlanUpgradeReminderHtml,
+  getLastChanceRetentionHtml,
   getWelcomeEmailHtml,
   getContactNotificationHtml,
 } from "./templates";
@@ -34,7 +36,8 @@ describe("getWelcomeEmailHtml", () => {
     const html = getWelcomeEmailHtml("Alice");
     expect(html).toContain("Hi Alice");
     expect(html).toContain("Welcome to Vernix");
-    expect(html).toContain("Go to Dashboard");
+    expect(html).toContain("Start Your First Meeting");
+    expect(html).toContain("Start a free Pro trial");
   });
 
   it("escapes HTML in user name", () => {
@@ -77,5 +80,31 @@ describe("getContactNotificationHtml", () => {
       message: "Hello",
     });
     expect(html).not.toContain("Company");
+  });
+});
+
+describe("getFreePlanUpgradeReminderHtml", () => {
+  it("includes upgrade CTA and escaped name", () => {
+    const html = getFreePlanUpgradeReminderHtml(
+      '<script>alert("xss")</script>'
+    );
+    expect(html).toContain("Want Vernix to do more in your calls?");
+    expect(html).toContain("Upgrade to Pro");
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain("<script>");
+  });
+});
+
+describe("getLastChanceRetentionHtml", () => {
+  it("includes period end date when provided", () => {
+    const html = getLastChanceRetentionHtml("Alice", new Date("2026-05-01"));
+    expect(html).toContain("Last chance to keep your Pro benefits");
+    expect(html).toContain("Alice");
+    expect(html).toContain("2026");
+  });
+
+  it("falls back to generic period copy without date", () => {
+    const html = getLastChanceRetentionHtml("Alice");
+    expect(html).toContain("current period ends");
   });
 });

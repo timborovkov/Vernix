@@ -12,7 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { Plus, Mic } from "lucide-react";
+import { isBillingError } from "@/lib/billing/errors";
+import { useBilling } from "@/hooks/use-billing";
+import {
+  UpgradeDialog,
+  detectPaywallTrigger,
+  type PaywallTrigger,
+} from "@/components/upgrade-dialog";
 
 interface CreateMeetingDialogProps {
   onCreate: (
@@ -24,12 +31,19 @@ interface CreateMeetingDialogProps {
 }
 
 export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
+  const { billing } = useBilling();
+  const voiceDisabled = billing ? !billing.limits.voiceEnabled : false;
+
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [joinLink, setJoinLink] = useState("");
   const [agenda, setAgenda] = useState("");
   const [silent, setSilent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
+    null
+  );
+  const [paywallMessage, setPaywallMessage] = useState<string>("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +57,17 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
       setAgenda("");
       setSilent(false);
       setOpen(false);
-    } catch {
-      toast.error("Failed to create meeting");
+    } catch (error) {
+      if (isBillingError(error)) {
+        const trigger = detectPaywallTrigger(
+          error.message,
+          error.isFeatureGate
+        );
+        setPaywallTrigger(trigger);
+        setPaywallMessage(error.message);
+      } else {
+        toast.error("Failed to create meeting");
+      }
     } finally {
       setLoading(false);
     }
@@ -97,8 +120,9 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
             <input
               type="checkbox"
               id="silent"
-              checked={silent}
-              onChange={(e) => setSilent(e.target.checked)}
+              checked={voiceDisabled ? true : silent}
+              onChange={(e) => !voiceDisabled && setSilent(e.target.checked)}
+              disabled={voiceDisabled}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
             />
             <div>
@@ -108,9 +132,25 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               </p>
             </div>
           </div>
+          {voiceDisabled && (
+            <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
+              <Mic className="text-muted-foreground h-4 w-4 shrink-0" />
+              <p className="text-muted-foreground text-xs">
+                Want the agent to answer out loud, pull live data, and take
+                action?{" "}
+                <a
+                  href="/pricing"
+                  className="text-foreground underline underline-offset-2"
+                >
+                  Start a Pro trial
+                </a>{" "}
+                to connect your tools and unlock the voice agent.
+              </p>
+            </div>
+          )}
           <p className="text-muted-foreground text-xs">
             Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}
-            {silent
+            {silent || voiceDisabled
               ? "The agent will listen passively and respond via meeting chat when called by name (Vernix)."
               : "The AI agent will join and respond when called by name (Vernix, Agent, or Assistant)."}
           </p>
@@ -119,6 +159,14 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
           </Button>
         </form>
       </DialogContent>
+      {paywallTrigger && (
+        <UpgradeDialog
+          open
+          onOpenChange={(v) => !v && setPaywallTrigger(null)}
+          trigger={paywallTrigger}
+          errorMessage={paywallMessage}
+        />
+      )}
     </Dialog>
   );
 }

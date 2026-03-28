@@ -15,6 +15,13 @@ import type { Meeting } from "@/lib/db/schema";
 import { statusVariant } from "@/lib/meetings/constants";
 import Link from "next/link";
 import { Play, Square, Trash2, VolumeX } from "lucide-react";
+import { toast } from "sonner";
+import { isBillingError } from "@/lib/billing/errors";
+import {
+  UpgradeDialog,
+  detectPaywallTrigger,
+  type PaywallTrigger,
+} from "@/components/upgrade-dialog";
 
 interface MeetingCardProps {
   meeting: Meeting;
@@ -31,6 +38,10 @@ export function MeetingCard({
 }: MeetingCardProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
+    null
+  );
+  const [paywallMessage, setPaywallMessage] = useState<string>("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const canJoin = meeting.status === "pending" || meeting.status === "failed";
@@ -43,6 +54,19 @@ export function MeetingCard({
     setActionLoading(key);
     try {
       await action();
+    } catch (error) {
+      if (isBillingError(error)) {
+        const trigger = detectPaywallTrigger(
+          error.message,
+          error.isFeatureGate
+        );
+        setPaywallTrigger(trigger);
+        setPaywallMessage(error.message);
+      } else {
+        const msg =
+          error instanceof Error ? error.message : "Something went wrong";
+        toast.error(msg);
+      }
     } finally {
       setActionLoading(null);
     }
@@ -157,6 +181,15 @@ export function MeetingCard({
           handleAction(() => onDelete(meeting.id), "delete");
         }}
       />
+
+      {paywallTrigger && (
+        <UpgradeDialog
+          open
+          onOpenChange={(v) => !v && setPaywallTrigger(null)}
+          trigger={paywallTrigger}
+          errorMessage={paywallMessage}
+        />
+      )}
     </>
   );
 }

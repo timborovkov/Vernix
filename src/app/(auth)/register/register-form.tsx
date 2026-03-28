@@ -56,7 +56,7 @@ export function RegisterForm({
       if (result?.error) {
         setError("Account created but sign-in failed. Try logging in.");
       } else {
-        router.push("/dashboard");
+        router.push("/welcome");
         router.refresh();
       }
     } catch {
@@ -70,12 +70,16 @@ export function RegisterForm({
     <div className="w-full max-w-sm">
       <h1 className="mb-1 text-2xl font-bold">Start using Vernix free</h1>
       <p className="text-muted-foreground mb-8 text-sm">
-        5 meetings included. No credit card required.
+        14-day Pro trial. No credit card required.
       </p>
 
       {hasSso && (
         <>
-          <SsoButtons enableGoogle={enableGoogle} enableGithub={enableGithub} />
+          <SsoButtons
+            enableGoogle={enableGoogle}
+            enableGithub={enableGithub}
+            callbackUrl="/welcome"
+          />
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="border-border w-full border-t" />
