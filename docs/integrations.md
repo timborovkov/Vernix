@@ -58,20 +58,45 @@ Legacy: if the old `apiKey` field is set but `authType` is still `none`, it's tr
 
 For catalog integrations with `authMode: "oauth"`, Vernix uses the MCP SDK's built-in OAuth 2.1 support.
 
-### How it works
+### Pre-registered OAuth apps
 
-1. User clicks Connect on a catalog integration (e.g. Slack)
-2. Frontend calls `POST /api/mcp/oauth/start` with `{ integrationId: "slack" }`
-3. Backend creates/finds `mcpServers` row with `authType: "oauth"`
-4. `VernixOAuthProvider` (`src/lib/mcp/oauth-provider.ts`) is created and `auth()` from the MCP SDK is called
-5. SDK discovers the server's OAuth metadata, generates PKCE, builds auth URL
+Most MCP servers don't support dynamic client registration (RFC 7591). Each OAuth integration requires a pre-registered OAuth app on the service's developer console.
+
+`VernixOAuthProvider` checks `PRE_REGISTERED_CLIENTS` in `src/lib/mcp/oauth-provider.ts` for credentials from env vars before falling back to dynamic registration. Currently registered:
+
+| Service | Env Vars | Status |
+| ------- | -------- | ------ |
+| GitHub  | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Available |
+
+### Adding a new OAuth integration
+
+1. Register Vernix as an OAuth app on the service's developer console
+2. Set the callback URL to `https://vernix.app/api/mcp/oauth/callback`
+3. Add env vars for the client ID and secret
+4. Add an entry to `PRE_REGISTERED_CLIENTS` in `src/lib/mcp/oauth-provider.ts`:
+   ```ts
+   "https://mcp.slack.com": {
+     clientIdEnv: "SLACK_MCP_CLIENT_ID",
+     clientSecretEnv: "SLACK_MCP_CLIENT_SECRET",
+   },
+   ```
+5. Change the catalog entry's `status` from `"coming-soon"` to `"available"`
+6. Add the env vars to `.env.example` and `src/lib/env.ts`
+
+### How the flow works
+
+1. User clicks Connect on a catalog integration (e.g. GitHub)
+2. Frontend calls `POST /api/mcp/oauth/start` with `{ integrationId: "github" }`
+3. Backend creates `mcpServers` row with `authType: "oauth"`, `enabled: false`
+4. `VernixOAuthProvider` is created, returns pre-registered `client_id` from env vars
+5. MCP SDK's `auth()` discovers OAuth metadata, generates PKCE, builds auth URL
 6. Provider stores the auth URL (doesn't redirect server-side), returns it to frontend
 7. Frontend redirects browser to the auth URL
 8. User authorizes on the external service
 9. Service redirects to `GET /api/mcp/oauth/callback?code=xxx&state=yyy`
-10. Backend verifies the state JWT (signed with `AUTH_SECRET`, contains userId + serverId)
-11. SDK exchanges the code for tokens, `saveTokens()` persists to `mcpOauthTokens` table
-12. Redirect to `/dashboard/integrations?connected=slack`
+10. Backend verifies the state JWT, exchanges the code for tokens via SDK
+11. Tokens persisted to `mcpOauthTokens`, server `enabled` set to `true`
+12. Redirect to `/dashboard/integrations?connected=github`
 
 ### Token management
 
