@@ -35,19 +35,18 @@ export async function syncBillingFromPolar(userId: string): Promise<void> {
     const activeSub = customerState.activeSubscriptions?.[0];
 
     if (!activeSub) {
-      // No active subscription, ensure user is on free
-      if (user.plan !== PLANS.FREE) {
-        await db
-          .update(users)
-          .set({
-            plan: PLANS.FREE,
-            polarSubscriptionId: null,
-            currentPeriodStart: null,
-            currentPeriodEnd: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, userId));
-      }
+      // No active subscription, ensure user is on free with no trial
+      await db
+        .update(users)
+        .set({
+          plan: PLANS.FREE,
+          polarSubscriptionId: null,
+          trialEndsAt: null,
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
       return;
     }
 
