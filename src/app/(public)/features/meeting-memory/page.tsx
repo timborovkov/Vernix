@@ -67,7 +67,7 @@ const STEPS = [
 
 export default function MeetingMemoryPage() {
   return (
-    <div className="mx-auto max-w-5xl px-4 py-28 lg:py-32">
+    <div className="mx-auto max-w-5xl px-4 pt-10 pb-28 lg:pt-12 lg:pb-32">
       {/* Hero */}
       <div className="relative mb-24 px-6 py-10 text-center lg:mb-28">
         <HeroBg />
