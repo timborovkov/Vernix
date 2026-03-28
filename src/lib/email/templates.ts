@@ -14,10 +14,20 @@ export function getWelcomeEmailHtml(name: string): string {
     </div>
     <div style="padding:32px">
       <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
-      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">
-        Thanks for signing up. Vernix joins your video calls, transcribes everything,
-        and gives you searchable, actionable meeting intelligence.
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px">
+        Thanks for signing up. You have <strong>14 days of full Pro access</strong>
+        with 90 minutes of meeting time to try the voice agent, summaries,
+        and cross-meeting search.
       </p>
+      <div style="background:#f0f0ff;border-radius:8px;padding:16px;margin:0 0 24px">
+        <p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">Your trial includes:</p>
+        <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:18px;margin:0">
+          <li>Voice agent that answers questions live on calls</li>
+          <li>Silent text agent for quiet meetings</li>
+          <li>Summaries, action items, and searchable transcripts</li>
+          <li>Knowledge base with up to 200 documents</li>
+        </ul>
+      </div>
       <p style="font-size:14px;font-weight:600;color:#333;margin:0 0 12px">Get started in 3 steps:</p>
       <ol style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0 0 24px">
         <li>Paste a Zoom, Meet, Teams, or Webex link</li>
@@ -26,16 +36,64 @@ export function getWelcomeEmailHtml(name: string): string {
       </ol>
       <div style="text-align:center;margin:32px 0">
         <a href="${APP_URL}/dashboard" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
-          Go to Dashboard
+          Start Your First Meeting
         </a>
       </div>
-      <p style="font-size:12px;color:#999;margin:0;text-align:center">
+      <p style="font-size:12px;color:#999;line-height:1.6;margin:0;text-align:center">
+        After 14 days you keep free access with silent meetings.
+        Upgrade anytime to keep Pro features.
+      </p>
+      <p style="font-size:12px;color:#999;margin:8px 0 0;text-align:center">
         Questions? Reply to this email or visit <a href="${APP_URL}/contact" style="color:#666">vernix.app/contact</a>
       </p>
     </div>
   </div>
 </body>
 </html>`;
+}
+
+export function getTrialExpiryWarningHtml(
+  name: string,
+  daysLeft: number
+): string {
+  const APP_URL = getAppUrl();
+  const urgency =
+    daysLeft <= 1 ? "expires tomorrow" : "expires in " + daysLeft + " days";
+  return (
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>' +
+    "<body style=\"margin:0;padding:0;background:#f7f7f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif\">" +
+    '<div style="max-width:560px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden">' +
+    '<div style="background:#242424;padding:32px;text-align:center">' +
+    '<h1 style="color:#fff;font-size:24px;margin:0">Your Pro trial ' +
+    urgency +
+    "</h1></div>" +
+    '<div style="padding:32px">' +
+    '<p style="font-size:16px;color:#333;margin:0 0 16px">Hi ' +
+    escapeHtml(name) +
+    ",</p>" +
+    '<p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">' +
+    "Your Vernix Pro trial " +
+    urgency +
+    ". After that, your account switches to the Free plan.</p>" +
+    '<div style="background:#fff5f5;border-radius:8px;padding:16px;margin:0 0 24px">' +
+    '<p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">What changes on Free:</p>' +
+    '<ul style="font-size:13px;color:#555;line-height:1.8;padding-left:18px;margin:0">' +
+    "<li>No voice agent (silent mode only)</li>" +
+    "<li>30 minutes of meetings per month</li>" +
+    "<li>5 knowledge base documents</li>" +
+    "<li>20 AI queries per day</li></ul></div>" +
+    '<p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">' +
+    "Upgrade to Pro to keep voice agent access, unlimited meetings with " +
+    "&euro;30 monthly credit, and 200 documents.</p>" +
+    '<div style="text-align:center;margin:32px 0">' +
+    '<a href="' +
+    APP_URL +
+    '/pricing" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">' +
+    "Upgrade to Pro &mdash; &euro;29/mo</a></div>" +
+    '<p style="font-size:12px;color:#999;margin:0;text-align:center">' +
+    "Your existing meetings, transcripts, and data stay accessible on the Free plan.</p>" +
+    "</div></div></body></html>"
+  );
 }
 
 interface ContactNotificationData {
