@@ -13,6 +13,19 @@ export async function recordMeetingUsage(
   type: "voice_meeting" | "silent_meeting",
   durationMinutes: number
 ) {
+  // Idempotency: skip if usage was already recorded for this meeting
+  const [existing] = await db
+    .select({ id: usageEvents.id })
+    .from(usageEvents)
+    .where(
+      and(
+        eq(usageEvents.userId, userId),
+        eq(usageEvents.meetingId, meetingId),
+        eq(usageEvents.type, type)
+      )
+    );
+  if (existing) return;
+
   const hours = durationMinutes / 60;
   const rate =
     type === "voice_meeting" ? USAGE_RATES.voice : USAGE_RATES.silent;
