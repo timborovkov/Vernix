@@ -20,18 +20,22 @@ These routes are not in the middleware matcher, so they bypass session auth. Aut
 CRON_SECRET=your-secret-here  # Generate with: openssl rand -base64 32
 ```
 
-### Scheduler
+### Scheduler (Railway)
 
-Call each endpoint on its schedule using any cron runner:
+Each cron job runs as a **separate Railway service** that starts on a schedule, calls the API endpoint via `curl`, and exits. Railway only charges for the seconds it runs.
 
-**Railway (recommended):**
-Add a cron service in `railway.json` or via the Railway dashboard. Each job runs `curl` against the endpoint.
+**Setup per job:**
 
-**External (Upstash QStash, cron-job.org, etc.):**
+1. In your Railway project canvas, click **"+ Add"** > **"Empty Service"**
+2. Name it (e.g. "Cron - Trial Warnings")
+3. In the service **Settings**:
+   - **Start Command**: the `curl` command for that job (see job table below)
+   - **Cron Schedule**: set to the job's schedule (e.g. Daily / `0 9 * * *`)
+4. In the service **Variables**: add `CRON_SECRET` (same value as the main Vernix service)
 
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://vernix.app/api/cron/trial-warnings
-```
+The cron service has no source code, no build step, and no networking. Railway's default nixpacks image includes `curl`. The service spins up, makes one HTTP request to the main Vernix app, and exits.
+
+**Important:** Do NOT set a cron schedule on the main Vernix service. It's a web server that must run continuously. Cron schedules are only for these lightweight helper services.
 
 **Local development:**
 
@@ -45,11 +49,13 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 
 ### Trial Expiry Warnings
 
-| Field        | Value                                      |
-| ------------ | ------------------------------------------ |
-| **Endpoint** | `GET /api/cron/trial-warnings`             |
-| **Schedule** | Daily (once per day, any time)             |
-| **Source**   | `src/app/api/cron/trial-warnings/route.ts` |
+| Field             | Value                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| **Endpoint**      | `GET /api/cron/trial-warnings`                                                      |
+| **Schedule**      | Daily (`0 9 * * *`)                                                                 |
+| **Start command** | `curl -sf -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/trial-warnings` |
+| **Variables**     | `CRON_SECRET`, `APP_URL` (e.g. `https://vernix.app`)                                |
+| **Source**        | `src/app/api/cron/trial-warnings/route.ts`                                          |
 
 **What it does:**
 
