@@ -40,7 +40,7 @@ export async function GET() {
     period.end
   );
   const limits = getEffectiveLimits(plan, user.trialEndsAt);
-  const trialing = isTrialActive(user.trialEndsAt);
+  const trialing = isTrialActive(plan, user.trialEndsAt);
   const trialDaysRemaining = getTrialDaysRemaining(user.trialEndsAt);
 
   return NextResponse.json({
