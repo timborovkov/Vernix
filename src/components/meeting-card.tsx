@@ -15,6 +15,7 @@ import type { Meeting } from "@/lib/db/schema";
 import { statusVariant } from "@/lib/meetings/constants";
 import Link from "next/link";
 import { Play, Square, Trash2, VolumeX } from "lucide-react";
+import { toast } from "sonner";
 import { isBillingError } from "@/lib/billing/errors";
 import {
   UpgradeDialog,
@@ -61,8 +62,11 @@ export function MeetingCard({
         );
         setPaywallTrigger(trigger);
         setPaywallMessage(error.message);
+      } else {
+        const msg =
+          error instanceof Error ? error.message : "Something went wrong";
+        toast.error(msg);
       }
-      // Other errors handled by hook callbacks
     } finally {
       setActionLoading(null);
     }
