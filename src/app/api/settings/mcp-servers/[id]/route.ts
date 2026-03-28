@@ -38,7 +38,9 @@ export async function PATCH(
   }
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
   if (typeof enabled === "boolean") updates.enabled = enabled;
-  if (typeof authType === "string") updates.authType = authType;
+  const validAuthTypes = ["none", "bearer", "header", "basic", "oauth"];
+  if (typeof authType === "string" && validAuthTypes.includes(authType))
+    updates.authType = authType;
   if (typeof authHeaderName === "string")
     updates.authHeaderName = authHeaderName || null;
   if (typeof authHeaderValue === "string")

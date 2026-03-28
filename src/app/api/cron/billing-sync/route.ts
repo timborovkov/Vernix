@@ -33,8 +33,12 @@ export async function GET(request: Request) {
     );
 
   for (const user of staleProUsers) {
-    await syncBillingFromPolar(user.id);
-    syncedCount++;
+    try {
+      await syncBillingFromPolar(user.id);
+      syncedCount++;
+    } catch (err) {
+      console.error(`[Billing Sync] Failed for pro user ${user.id}:`, err);
+    }
   }
 
   // Find free users with stale trialEndsAt (trial expired, needs cleanup)
@@ -51,8 +55,12 @@ export async function GET(request: Request) {
     );
 
   for (const user of staleTrialUsers) {
-    await syncBillingFromPolar(user.id);
-    syncedCount++;
+    try {
+      await syncBillingFromPolar(user.id);
+      syncedCount++;
+    } catch (err) {
+      console.error(`[Billing Sync] Failed for trial user ${user.id}:`, err);
+    }
   }
 
   console.log(`[Billing Sync Cron] Synced ${syncedCount} users`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -29,15 +29,18 @@ export default function IntegrationsPage() {
   const { billing, loading: billingLoading } = useBilling();
   const searchParams = useSearchParams();
 
-  // Handle OAuth callback results
+  // Handle OAuth callback results (run once)
+  const handledParams = useRef(false);
   useEffect(() => {
+    if (handledParams.current) return;
     const connected = searchParams.get("connected");
     const error = searchParams.get("error");
     if (connected) {
+      handledParams.current = true;
       toast.success(`Connected to ${connected}`);
-      // Clean up URL params
       window.history.replaceState({}, "", "/dashboard/integrations");
     } else if (error) {
+      handledParams.current = true;
       toast.error(`Connection failed: ${error}`);
       window.history.replaceState({}, "", "/dashboard/integrations");
     }
@@ -59,11 +62,12 @@ export default function IntegrationsPage() {
     ? true
     : (billing?.limits.mcpEnabled ?? false);
 
-  // Match connected servers to catalog entries by name
+  // Match connected servers to catalog entries by catalogIntegrationId first, then name/URL fallback
   const connectedIds = new Set(
     servers
       .filter((s) => s.enabled)
       .map((s) => {
+        if (s.catalogIntegrationId) return s.catalogIntegrationId;
         const match = integrations.find(
           (i) =>
             s.name.toLowerCase() === i.name.toLowerCase() ||
@@ -108,6 +112,7 @@ export default function IntegrationsPage() {
   const handleDisconnect = (integration: Integration) => {
     const server = servers.find(
       (s) =>
+        s.catalogIntegrationId === integration.id ||
         s.name.toLowerCase() === integration.name.toLowerCase() ||
         s.url.toLowerCase().includes(integration.id)
     );

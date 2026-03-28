@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { auth } from "@modelcontextprotocol/sdk/client/auth.js";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       catalogIntegrationId: mcpServers.catalogIntegrationId,
     })
     .from(mcpServers)
-    .where(eq(mcpServers.id, mcpServerId));
+    .where(and(eq(mcpServers.id, mcpServerId), eq(mcpServers.userId, userId)));
 
   if (!server) {
     return NextResponse.redirect(
@@ -84,10 +84,9 @@ export async function GET(request: Request) {
     }
   } catch (err) {
     console.error("[OAuth Callback] Token exchange failed:", err);
-    const message =
-      err instanceof Error ? err.message : "Token exchange failed";
+    console.error("[OAuth Callback] Token exchange failed:", err);
     return NextResponse.redirect(
-      `${integrationsUrl}?error=${encodeURIComponent(message)}`
+      `${integrationsUrl}?error=${encodeURIComponent("Token exchange failed")}`
     );
   }
 
