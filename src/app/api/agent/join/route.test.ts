@@ -212,9 +212,32 @@ describe("POST /api/agent/join", () => {
   });
 
   it("returns 403 when billing blocks voice meeting join", async () => {
-    const meeting = fakeMeeting({ metadata: {} });
+    const meeting = fakeMeeting({ metadata: {} }); // not silent = voice
     mockDb.where.mockResolvedValueOnce([meeting]);
 
+    // Override limits to have voice disabled (free plan)
+    const { requireLimits } = await import("@/lib/billing/enforce");
+    vi.mocked(requireLimits).mockResolvedValueOnce({
+      limits: {
+        meetingMinutesPerMonth: 30,
+        voiceEnabled: false,
+        documentsCount: 5,
+        maxDocumentSizeMB: 10,
+        docUploadsPerMonth: 5,
+        totalStorageMB: 50,
+        ragQueriesPerDay: 20,
+        meetingScopedDocs: 1,
+        concurrentMeetings: 1,
+        meetingsPerMonth: 5,
+        apiEnabled: false,
+        mcpEnabled: false,
+        apiRequestsPerDay: 0,
+        mcpServerConnections: 0,
+        mcpClientConnections: 0,
+      },
+      period: { start: new Date(), end: new Date() },
+      plan: "free" as const,
+    });
     vi.mocked(canStartMeeting).mockReturnValueOnce({
       allowed: false,
       reason: "Voice meetings require a Pro plan",
@@ -247,8 +270,9 @@ describe("POST /api/agent/join", () => {
     });
 
     const { status, data } = await parseJsonResponse(await POST(req));
-    expect(status).toBe(403);
+    expect(status).toBe(429);
     expect(data.error).toBe("Monthly meeting minutes exhausted");
+    expect(data.code).toBe("RATE_LIMITED");
     expect(mockProvider.joinMeeting).not.toHaveBeenCalled();
   });
 });
