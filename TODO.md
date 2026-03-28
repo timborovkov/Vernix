@@ -71,6 +71,8 @@
 
 - **Show dashboard-first navigation for logged-in users on public pages** — On landing and other public pages, replace Login/Sign up CTAs with a primary "Go to dashboard" action when a session exists.
 - **Redirect authenticated users away from auth pages** — If a logged-in user visits `/login` or `/register`, immediately redirect them to `/dashboard`.
+- **Users should be required to accept the terms of use and the privacy policy** — Add a checkbox to the signup form and the login form to accept the terms of use and the privacy policy.
+- **SSO users should be required to accept the terms of use and the privacy policy** — Require them to accept the terms of use and the privacy policy after they sign up with SSO.
 - **Dashboard calls empty state** — Add a primary "Start your first call" card when the user has no calls.
 - **Knowledge page empty state** — Add a primary "Upload your first document" card when there are no knowledge files.
 - **Integrations page empty state** — Add a primary "Connect your first integration" card when no integrations are configured.
@@ -120,10 +122,6 @@
 ## Pricing Constants Sweep
 
 - **Use billing constants everywhere** — `src/lib/billing/constants.ts` defines all prices, limits, and rates, but many files hardcode `€29`, `€30`, `200`, `€3/hr`, etc. Affected: pricing page, FAQ, upgrade-dialog trigger copy, trial-prompt-banner, feature pages, email templates, welcome page, SEO meta descriptions. Sweep all hardcoded values and replace with imports from constants. Email templates (HTML strings) need a helper function to inject values since they can't import TS directly.
-
-## New users should accept the terms
-
-- Users should be required to accept the terms of use and the privacy policy
 
 ## Product Terminology & Time Display
 
