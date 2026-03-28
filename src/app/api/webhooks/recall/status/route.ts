@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import { Webhook } from "svix";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { processMeetingEnd } from "@/lib/agent/processing";
-import { verifyRecallSignature } from "@/lib/webhooks/verify";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { flushTelemetry } from "@/lib/agent/telemetry";
 import { clearMcpToolCache } from "@/lib/agent/mcp-cache";
@@ -30,26 +30,48 @@ export async function POST(request: Request) {
 
   const webhookSecret = process.env.RECALL_WEBHOOK_SECRET;
   let body: unknown;
+  let rawBody: string;
+
+  try {
+    rawBody = await request.text();
+  } catch {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
 
   if (webhookSecret) {
-    const { valid, body: rawBody } = await verifyRecallSignature(
-      request,
-      webhookSecret
-    );
-    if (!valid) {
+    // Recall uses Svix for webhook delivery (accepts both header naming conventions)
+    const svixId =
+      request.headers.get("svix-id") ?? request.headers.get("webhook-id");
+    const svixTimestamp =
+      request.headers.get("svix-timestamp") ??
+      request.headers.get("webhook-timestamp");
+    const svixSignature =
+      request.headers.get("svix-signature") ??
+      request.headers.get("webhook-signature");
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      return NextResponse.json(
+        { error: "Missing webhook signature headers" },
+        { status: 401 }
+      );
+    }
+
+    try {
+      const wh = new Webhook(webhookSecret);
+      body = wh.verify(rawBody, {
+        "svix-id": svixId,
+        "svix-timestamp": svixTimestamp,
+        "svix-signature": svixSignature,
+      });
+    } catch {
       return NextResponse.json(
         { error: "Invalid webhook signature" },
         { status: 401 }
       );
     }
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
   } else {
     try {
-      body = await request.json();
+      body = JSON.parse(rawBody);
     } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
@@ -59,8 +81,10 @@ export async function POST(request: Request) {
 
   const parsed = statusEventSchema.safeParse(body);
   if (!parsed.success) {
-    console.log("[Webhook:status] Invalid payload");
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    // Return 200 for events we don't understand — Recall sends many event types
+    // and we only handle a subset. Returning non-200 causes Recall to retry.
+    console.log("[Webhook:status] Unhandled event format, acknowledging");
+    return NextResponse.json({ skipped: true });
   }
 
   const { event, data } = parsed.data;
