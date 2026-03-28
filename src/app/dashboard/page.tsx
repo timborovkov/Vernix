@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useMeetings } from "@/hooks/use-meetings";
 import { useAllTasks } from "@/hooks/use-all-tasks";
+import { useBilling } from "@/hooks/use-billing";
 import { MeetingList } from "@/components/meeting-list";
 import { CreateMeetingDialog } from "@/components/create-meeting-dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,16 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, ListChecks, CheckCircle2 } from "lucide-react";
+import {
+  MessageSquare,
+  ListChecks,
+  CheckCircle2,
+  Mic,
+  Search,
+  Zap,
+  X,
+} from "lucide-react";
+import { PLANS, PRICING } from "@/lib/billing/constants";
 
 const STATUS_FILTERS = [
   "all",
@@ -31,10 +41,12 @@ export default function DashboardPage() {
   } = useMeetings();
 
   const { tasks: pendingTasks } = useAllTasks();
+  const { billing } = useBilling();
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showChat, setShowChat] = useState(false);
+  const [dismissedNudge, setDismissedNudge] = useState(false);
 
   const filtered = meetings.filter((m) => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
@@ -129,6 +141,60 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Post-first-meeting upgrade nudge */}
+      {!dismissedNudge &&
+        billing &&
+        billing.plan !== PLANS.PRO &&
+        meetings.some((m) => m.status === "completed") && (
+          <Card className="border-ring/20 bg-ring/5 mb-6">
+            <CardContent className="flex items-center gap-4 py-4">
+              <div className="bg-ring/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                <Zap className="text-ring h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  Your first meeting is done. Unlock more with Pro.
+                </p>
+                <div className="text-muted-foreground mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <span className="flex items-center gap-1">
+                    <Mic className="h-3 w-3" />
+                    Voice agent answers live
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Search className="h-3 w-3" />
+                    Cross-meeting search
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MessageSquare className="h-3 w-3" />
+                    200 queries/day
+                  </span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="accent"
+                onClick={() => {
+                  const productId =
+                    process.env.NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY;
+                  window.location.href = productId
+                    ? `/api/checkout?products=${productId}`
+                    : "/pricing";
+                }}
+              >
+                Upgrade — €{PRICING[PLANS.PRO].monthly}/mo
+              </Button>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setDismissedNudge(true)}
+                className="text-muted-foreground shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
