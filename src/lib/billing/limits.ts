@@ -34,8 +34,11 @@ export function getEffectiveLimits(
   return LIMITS[plan];
 }
 
-export function isTrialActive(trialEndsAt: Date | null): boolean {
-  return !!trialEndsAt && trialEndsAt > new Date();
+export function isTrialActive(
+  plan: Plan,
+  trialEndsAt: Date | null
+): boolean {
+  return plan === PLANS.FREE && !!trialEndsAt && trialEndsAt > new Date();
 }
 
 export function getTrialDaysRemaining(trialEndsAt: Date | null): number {
