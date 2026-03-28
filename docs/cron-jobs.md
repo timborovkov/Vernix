@@ -27,13 +27,14 @@ Each cron job runs as a **separate Railway service** that starts on a schedule, 
 **Setup per job:**
 
 1. In your Railway project canvas, click **"+ Add"** > **"Empty Service"**
-2. Name it (e.g. "Cron - Trial Warnings")
-3. In the service **Settings**:
+2. Name it (e.g. "trial-warnings-cron-job")
+3. In the service **Settings > Source**: click **"Connect Image"** and enter `curlimages/curl:latest` (a minimal ~5MB image with just curl)
+4. In **Settings > Deploy**:
    - **Start Command**: the `curl` command for that job (see job table below)
    - **Cron Schedule**: set to the job's schedule (e.g. Daily / `0 9 * * *`)
-4. In the service **Variables**: add `CRON_SECRET` (same value as the main Vernix service)
+5. In the service **Variables**: add `CRON_SECRET` and `APP_URL` (e.g. `https://vernix.app`)
 
-The cron service has no source code, no build step, and no networking. Railway's default nixpacks image includes `curl`. The service spins up, makes one HTTP request to the main Vernix app, and exits.
+The cron service spins up, makes one HTTP request to the main Vernix app, and exits. Railway only charges for the seconds it runs.
 
 **Important:** Do NOT set a cron schedule on the main Vernix service. It's a web server that must run continuously. Cron schedules are only for these lightweight helper services.
 
