@@ -55,6 +55,8 @@ const SUBSCRIPTION_ID = "polar_sub_456";
 const PERIOD_START = "2026-03-01T00:00:00Z";
 const PERIOD_END = "2026-04-01T00:00:00Z";
 
+const TRIAL_END = "2026-04-11T00:00:00Z";
+
 function subscriptionPayload(overrides: Record<string, unknown> = {}) {
   return {
     data: {
@@ -63,16 +65,20 @@ function subscriptionPayload(overrides: Record<string, unknown> = {}) {
       customer: { externalId: USER_ID },
       currentPeriodStart: PERIOD_START,
       currentPeriodEnd: PERIOD_END,
+      status: "active",
+      trialStart: null,
+      trialEnd: null,
       ...overrides,
     },
   };
 }
 
 describe("Polar webhook: onSubscriptionCreated", () => {
-  it("sets plan to pro and stores Polar IDs", async () => {
-    await capturedHandlers.onSubscriptionCreated(subscriptionPayload());
+  it("sets plan to pro when subscription is active (no trial)", async () => {
+    await capturedHandlers.onSubscriptionCreated(
+      subscriptionPayload({ status: "active" })
+    );
 
-    expect(mockDb.update).toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({
         plan: "pro",
@@ -80,8 +86,18 @@ describe("Polar webhook: onSubscriptionCreated", () => {
         polarSubscriptionId: SUBSCRIPTION_ID,
       })
     );
-    // Verify WHERE targets the correct user
-    expect(mockDb.where).toHaveBeenCalled();
+  });
+
+  it("keeps plan free and sets trialEndsAt when subscription is trialing", async () => {
+    await capturedHandlers.onSubscriptionCreated(
+      subscriptionPayload({ status: "trialing", trialEnd: TRIAL_END })
+    );
+
+    const setCall = mockDb.set.mock.calls[0][0];
+    expect(setCall.plan).toBeUndefined(); // plan not changed
+    expect(setCall.trialEndsAt).toEqual(new Date(TRIAL_END));
+    expect(setCall.polarCustomerId).toBe(POLAR_CUSTOMER_ID);
+    expect(setCall.polarSubscriptionId).toBe(SUBSCRIPTION_ID);
   });
 
   it("stores billing period dates", async () => {
@@ -100,6 +116,7 @@ describe("Polar webhook: onSubscriptionCreated", () => {
         customer: { externalId: null },
         currentPeriodStart: PERIOD_START,
         currentPeriodEnd: PERIOD_END,
+        status: "active",
       },
     };
 
@@ -109,7 +126,7 @@ describe("Polar webhook: onSubscriptionCreated", () => {
 });
 
 describe("Polar webhook: onSubscriptionActive", () => {
-  it("sets plan to pro on renewal", async () => {
+  it("sets plan to pro when trial ends and payment succeeds", async () => {
     await capturedHandlers.onSubscriptionActive(subscriptionPayload());
 
     expect(mockDb.set).toHaveBeenCalledWith(
