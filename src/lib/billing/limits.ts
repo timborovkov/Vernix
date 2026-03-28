@@ -19,8 +19,8 @@ export interface EffectiveLimits {
   apiEnabled: boolean;
   mcpEnabled: boolean;
   apiRequestsPerDay: number;
-  mcpServerConnections: number;
-  mcpClientConnections: number;
+  mcpServerConnections: number | null;
+  mcpClientConnections: number | null;
 }
 
 export function getEffectiveLimits(
