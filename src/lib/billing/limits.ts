@@ -34,10 +34,7 @@ export function getEffectiveLimits(
   return LIMITS[plan];
 }
 
-export function isTrialActive(
-  plan: Plan,
-  trialEndsAt: Date | null
-): boolean {
+export function isTrialActive(plan: Plan, trialEndsAt: Date | null): boolean {
   return plan === PLANS.FREE && !!trialEndsAt && trialEndsAt > new Date();
 }
 
