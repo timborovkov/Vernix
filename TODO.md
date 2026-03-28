@@ -85,12 +85,20 @@
 - **Promote agent chat on call page** — Make chat a more prominent panel/sidebar and provide contextual deep links for non-renderable assets (e.g. recordings).
 - **Improve call link UX** — Add a dedicated call link action on call detail, styled as a button with icon and opening in a new tab.
 
-## Call Reliability, Export & Recovery
+## Call Reliability, Recording Sync & Recovery
 
-- **Expand call export completeness** — Include transcript, knowledge, tasks, and recording references in exports; ship media as separate files where applicable.
-- **Add missing-summary recovery flow** — Detect missing post-call artifacts and allow re-running summary/task/knowledge post-processing from the call view.
-- **Cron: recover stale `active` / `processing` calls** — Add scheduled reconciliation that finds calls stuck in `active` or `processing` (missed Recall webhooks) and re-drives status/artifact processing.
-- **Cron: recover stale `joining` calls** — Mark calls stuck in `joining` beyond a safe timeout as `failed` so they don’t block concurrency limits.
+- **Recall data audit** — Investigate what Recall provides after a call: recording MP4, participant events, meeting metadata, and speaker timeline. Map available API fields and lifecycle timing.
+- **Recall webhook fallback + reconciliation cron** — Add reliability fallback that actively fetches meeting/recording/transcript status when webhooks are delayed or missing, and re-drives stuck artifact processing.
+- **On-demand Recall refresh on call open** — When a user opens call detail, if artifacts are missing/stale, trigger a bounded Recall fetch/reconciliation and refresh the page state so late data appears without waiting for cron.
+- **Recover stale `active` / `processing` calls** — In the reconciliation flow, detect calls stuck in `active` or `processing` and safely re-run status progression + artifact generation.
+- **Recover stale `joining` calls** — Mark calls stuck in `joining` beyond a safe timeout as `failed` so they do not block concurrency limits.
+- **Copy recordings to our storage** — After `recording_done`, download Recall's expiring S3 MP4 URL (6h) and upload to our S3/Minio bucket, storing the persisted key in meeting metadata.
+- **Persist participant/speaker data** — Fetch participant events and speaker timeline from Recall and store them in meeting metadata (currently inferred only from transcript speaker names).
+- **Video playback UI** — Add a meeting detail video player and sync transcript timeline with playback (click transcript line -> seek to timestamp).
+- **Recording retention policy** — Decide keep/expire/user-configurable retention rules and estimate storage cost per meeting minute.
+- **Recording privacy controls** — Let users disable recording storage per call, and ensure meeting deletion also deletes stored media from S3/Minio.
+- **Expand export completeness** — Include transcript, knowledge, tasks, participant metadata, and recording references in exports; ship media as separate files where applicable.
+- **Missing-artifact recovery from call view** — Detect missing post-call artifacts and provide re-run actions for summary/task/knowledge generation.
 
 ## Cron Jobs & Background Reconciliation
 
@@ -122,16 +130,6 @@
 - **Canonical URLs** — Ensure all pages have proper canonical tags via metadataBase
 - **Dynamic robots.txt and sitemap** — Move `robots.txt` from static `public/` to a Next.js route handler (`src/app/robots.ts`) so it generates at build time from config. Same for `llms.txt`. Sitemap already generates dynamically. All should auto-include new pages without manual updates.
 - **Search indexing kill switch** — Add `NEXT_PUBLIC_DISABLE_INDEXING=true` env var. When set, `robots.txt` returns `Disallow: /` for all bots and all pages get `<meta name="robots" content="noindex">`. For staging/preview environments.
-
-## Meeting Recordings & Recall Data Sync
-
-- **Audit Recall data** — Investigate what data Recall provides after a meeting: video recording (MP4), participant events, meeting metadata, speaker timeline. Map what's available via their API.
-- **Webhook fallback fetch** — Implement a reliability fallback that actively fetches meeting/recording/transcript status from Recall when expected webhooks are delayed or missing (scheduled retries + reconciliation job).
-- **Copy recordings to our storage** — After `recording_done`, download the video MP4 from Recall's S3 URL (expires after 6h) and upload to our S3/Minio bucket. Store the S3 key in meeting metadata.
-- **Participant data** — Fetch participant events and speaker timeline from Recall, store in meeting metadata (currently only populated from transcript speaker names).
-- **Video playback UI** — Add a video player to the meeting detail page. Sync transcript timeline with video position (click a transcript line → seek to that timestamp).
-- **Recording retention** — Decide on storage policy: keep forever, expire after N days, or let user choose. Estimate storage costs per meeting minute.
-- **Privacy controls** — Let users disable recording storage per meeting. Delete recording when meeting is deleted. Clear deletion from S3 bucket.
 
 ## Public REST API & Documentation
 
