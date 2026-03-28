@@ -50,16 +50,20 @@ describe("getEffectiveLimits", () => {
 });
 
 describe("isTrialActive", () => {
-  it("returns false for null", () => {
-    expect(isTrialActive(null)).toBe(false);
+  it("returns false for null trialEndsAt", () => {
+    expect(isTrialActive("free", null)).toBe(false);
   });
 
-  it("returns true for future date", () => {
-    expect(isTrialActive(new Date(Date.now() + 60_000))).toBe(true);
+  it("returns true for free plan with future trialEndsAt", () => {
+    expect(isTrialActive("free", new Date(Date.now() + 60_000))).toBe(true);
   });
 
-  it("returns false for past date", () => {
-    expect(isTrialActive(new Date(Date.now() - 60_000))).toBe(false);
+  it("returns false for free plan with past trialEndsAt", () => {
+    expect(isTrialActive("free", new Date(Date.now() - 60_000))).toBe(false);
+  });
+
+  it("returns false for pro plan even with future trialEndsAt", () => {
+    expect(isTrialActive("pro", new Date(Date.now() + 60_000))).toBe(false);
   });
 });
 
