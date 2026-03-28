@@ -446,32 +446,15 @@ for (const entry of CATALOG) {
 }
 
 // ---------------------------------------------------------------------------
-// Loader functions — stable interface for future DB migration.
-// Some functions are not yet called but are part of the public API
-// so the source can move from code to DB/admin tooling later.
-// See docs/integrations.md for rationale.
+// Loader functions
 // ---------------------------------------------------------------------------
 
 export function getIntegrations(): Integration[] {
   return CATALOG;
 }
 
-export function getIntegration(id: string): Integration | undefined {
-  return CATALOG.find((i) => i.id === id);
-}
-
 export function getFeaturedIntegrations(): Integration[] {
   return CATALOG.filter((i) => i.featured);
-}
-
-export function getIntegrationsByCategory(
-  category: IntegrationCategory
-): Integration[] {
-  return CATALOG.filter((i) => i.category === category);
-}
-
-export function getAvailableIntegrations(): Integration[] {
-  return CATALOG.filter((i) => i.status === "available");
 }
 
 export const CATEGORIES: { value: IntegrationCategory; label: string }[] = [

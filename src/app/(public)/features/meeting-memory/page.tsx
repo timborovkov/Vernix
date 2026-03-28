@@ -69,13 +69,13 @@ export default function MeetingMemoryPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-28 lg:pb-32">
       {/* Hero */}
-      <div className="relative mb-24 py-28 text-center lg:mb-28 lg:py-32">
+      <div className="relative mb-24 py-24 text-center lg:mb-28">
         <HeroBg />
         <div className="relative z-10">
           <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
             <Search className="text-ring h-8 w-8" />
           </div>
-          <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
             Your in-call AI assistant with perfect meeting memory.
           </h1>
           <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg leading-relaxed">
