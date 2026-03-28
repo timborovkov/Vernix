@@ -284,6 +284,7 @@ export async function syncUsageToPolar(
         {
           name: "meeting_usage",
           externalCustomerId: userId,
+          externalId: `meeting_${meetingId}`,
           metadata: {
             meeting_id: meetingId,
             meeting_type: type === "voice_meeting" ? "voice" : "silent",
