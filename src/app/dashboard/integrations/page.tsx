@@ -123,14 +123,20 @@ export default function IntegrationsPage() {
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input
           placeholder="Search integrations..."
+          aria-label="Search integrations"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        <div className="flex flex-wrap gap-1">
+        <div
+          className="flex flex-wrap gap-1"
+          role="group"
+          aria-label="Filter by category"
+        >
           <Button
             size="sm"
             variant={categoryFilter === "all" ? "accent" : "outline"}
+            aria-pressed={categoryFilter === "all"}
             onClick={() => setCategoryFilter("all")}
           >
             All
@@ -140,6 +146,7 @@ export default function IntegrationsPage() {
               key={cat.value}
               size="sm"
               variant={categoryFilter === cat.value ? "accent" : "outline"}
+              aria-pressed={categoryFilter === cat.value}
               onClick={() => setCategoryFilter(cat.value)}
             >
               {cat.label}
