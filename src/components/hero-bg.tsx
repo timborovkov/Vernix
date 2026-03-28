@@ -9,7 +9,7 @@ export function HeroBg() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 overflow-hidden"
+      className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2 overflow-hidden"
     >
       {/* Radial gradient glow from center */}
       <div className="absolute top-1/2 left-1/2 h-[900px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,oklch(0.55_0.15_290/0.13)_0%,transparent_72%)] motion-reduce:opacity-100" />
