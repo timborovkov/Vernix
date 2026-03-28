@@ -23,7 +23,7 @@ import {
 
 export default function IntegrationsPage() {
   const { servers, addServer, deleteServer } = useMcpServers();
-  const { billing } = useBilling();
+  const { billing, loading: billingLoading } = useBilling();
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<
@@ -36,7 +36,10 @@ export default function IntegrationsPage() {
   );
 
   const integrations = getIntegrations();
-  const mcpEnabled = billing?.limits.mcpEnabled ?? false;
+  // Default to true while billing loads so Pro users don't see a flash of disabled buttons
+  const mcpEnabled = billingLoading
+    ? true
+    : (billing?.limits.mcpEnabled ?? false);
 
   // Match connected servers to catalog entries by name
   const connectedIds = new Set(
