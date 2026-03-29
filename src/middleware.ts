@@ -40,6 +40,26 @@ export default auth((req) => {
     }
     return NextResponse.redirect(new URL("/login", req.url));
   }
+
+  // Enforce terms acceptance for authenticated users on protected routes
+  // Skip for: accept-terms page itself, its API, welcome page, and API routes
+  const termsExempt = [
+    "/accept-terms",
+    "/api/auth/accept-terms",
+    "/welcome",
+    "/welcome-to-pro",
+  ];
+  const isApi = req.nextUrl.pathname.startsWith("/api/");
+  if (
+    !isApi &&
+    !termsExempt.includes(req.nextUrl.pathname) &&
+    !req.nextUrl.pathname.startsWith("/api/auth/")
+  ) {
+    if (req.auth?.user && !req.auth.user.termsAcceptedAt) {
+      return NextResponse.redirect(new URL("/accept-terms", req.url));
+    }
+  }
+
   return NextResponse.next();
 });
 
@@ -49,6 +69,8 @@ export const config = {
     "/welcome-to-pro",
     "/login",
     "/register",
+    "/accept-terms",
+    "/welcome",
     "/api/meetings/:path*",
     "/api/agent/:path*",
     "/api/search/:path*",
