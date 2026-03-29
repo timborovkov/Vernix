@@ -47,6 +47,7 @@ export function IntegrationConnectDialog({
   const [token, setToken] = useState("");
   const [headerName, setHeaderName] = useState("");
   const [headerValue, setHeaderValue] = useState("");
+  const [paramName, setParamName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -64,6 +65,7 @@ export function IntegrationConnectDialog({
     setToken("");
     setHeaderName("");
     setHeaderValue("");
+    setParamName("");
     setUsername("");
     setPassword("");
     setLoading(false);
@@ -123,7 +125,7 @@ export function IntegrationConnectDialog({
             params.authPassword = password;
             break;
           case "url_key":
-            params.authKeyParam = headerName;
+            params.authKeyParam = paramName;
             params.authHeaderValue = token;
             break;
         }
@@ -304,8 +306,8 @@ export function IntegrationConnectDialog({
                   <Input
                     id="param-name"
                     placeholder="apiKey"
-                    value={headerName}
-                    onChange={(e) => setHeaderName(e.target.value)}
+                    value={paramName}
+                    onChange={(e) => setParamName(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">

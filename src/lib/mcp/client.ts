@@ -120,10 +120,9 @@ export class McpClientManager {
           ),
         ]);
       } catch (error) {
-        console.error(
-          `Failed to connect to MCP server "${server.name}":`,
-          error
-        );
+        // Don't log full error (may contain URLs with embedded API keys)
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        console.error(`[MCP] Failed to connect to "${server.name}": ${msg}`);
       }
     }
 
