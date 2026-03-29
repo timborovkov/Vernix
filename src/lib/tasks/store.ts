@@ -33,6 +33,8 @@ export async function storeExtractedTasks(
         userId,
         title: item.title,
         assignee: item.assignee,
+        sourceText: item.sourceText ?? null,
+        sourceTimestampMs: item.sourceTimestampMs ?? null,
         autoExtracted: true,
       }))
     );

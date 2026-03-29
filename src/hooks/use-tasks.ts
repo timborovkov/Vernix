@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Task } from "@/lib/db/schema";
 import { queryKeys } from "@/lib/query-keys";
+import { optimisticTaskUpdate, rollbackTaskUpdate } from "./task-cache";
 
 async function fetchTasks(meetingId: string): Promise<Task[]> {
   const res = await fetch(`/api/meetings/${meetingId}/tasks`);
@@ -56,30 +57,26 @@ export function useMeetingTasks(meetingId: string) {
       return res.json();
     },
     onMutate: async ({ taskId, updates }) => {
-      // Cancel both per-meeting and all-tasks queries
-      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.all });
       const previousMeeting = queryClient.getQueryData<Task[]>(qk);
-      const previousAll = queryClient.getQueryData(queryKeys.tasks.all);
-
       // Optimistic update on per-meeting tasks
+      await queryClient.cancelQueries({ queryKey: qk });
       queryClient.setQueryData<Task[]>(qk, (old) =>
         old?.map((t) => (t.id === taskId ? { ...t, ...updates } : t))
       );
-      // Optimistic update on all-tasks (dashboard widget)
-      queryClient.setQueryData(queryKeys.tasks.all, (old: unknown) =>
-        Array.isArray(old)
-          ? old.map((t: Record<string, unknown>) =>
-              t.id === taskId ? { ...t, ...updates } : t
-            )
-          : old
+      // Optimistic update on all cross-meeting task caches
+      const previousAll = await optimisticTaskUpdate(
+        queryClient,
+        taskId,
+        updates as Record<string, unknown>
       );
       return { previousMeeting, previousAll };
     },
     onError: (_err, _vars, context) => {
       if (context?.previousMeeting)
         queryClient.setQueryData(qk, context.previousMeeting);
-      if (context?.previousAll)
-        queryClient.setQueryData(queryKeys.tasks.all, context.previousAll);
+      if (context?.previousAll) {
+        rollbackTaskUpdate(queryClient, context.previousAll);
+      }
       toast.error("Failed to update task");
     },
     onSettled: invalidateTasks,

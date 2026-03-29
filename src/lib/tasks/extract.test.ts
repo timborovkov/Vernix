@@ -49,8 +49,11 @@ describe("extractActionItems", () => {
     const result = await extractActionItems(segments);
 
     expect(result).toEqual([
-      { title: "Review proposal", assignee: "Alice" },
-      { title: "Schedule follow-up", assignee: null },
+      expect.objectContaining({ title: "Review proposal", assignee: "Alice" }),
+      expect.objectContaining({
+        title: "Schedule follow-up",
+        assignee: null,
+      }),
     ]);
     expect(mockChatCreate).toHaveBeenCalledWith(
       expect.objectContaining({

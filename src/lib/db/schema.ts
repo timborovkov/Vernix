@@ -153,6 +153,8 @@ export const tasks = pgTable("tasks", {
   title: text("title").notNull(),
   assignee: text("assignee"),
   autoExtracted: boolean("auto_extracted").default(false).notNull(),
+  sourceText: text("source_text"), // transcript snippet that triggered the task
+  sourceTimestampMs: integer("source_timestamp_ms"), // ms from meeting start
   dueDate: timestamp("due_date", { withTimezone: true }),
   status: taskStatusEnum("status").default("open").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

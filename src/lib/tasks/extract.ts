@@ -6,11 +6,13 @@ const MAX_ITEMS = 50;
 export interface ExtractedTask {
   title: string;
   assignee: string | null;
+  sourceText: string | null;
+  sourceTimestampMs: number | null;
 }
 
 /**
  * Extract action items from meeting transcript segments using LLM.
- * Returns structured task data ready for storage.
+ * Returns structured task data with source context ready for storage.
  */
 export async function extractActionItems(
   segments: TranscriptPoint[]
@@ -27,7 +29,7 @@ export async function extractActionItems(
       {
         role: "system",
         content:
-          'Extract action items, decisions, and follow-ups from this meeting transcript. Return a JSON object with an "items" array. Each item has "title" (string, concise action description) and "assignee" (string or null — the person responsible if mentioned). Only include clear, actionable items.',
+          'Extract action items, decisions, and follow-ups from this meeting transcript. Return a JSON object with an "items" array. Each item has: "title" (string, concise action description), "assignee" (string or null — the person responsible if mentioned), and "sourceQuote" (string or null — the exact transcript line that triggered this action item, copied verbatim from the input). Only include clear, actionable items.',
       },
       { role: "user", content: transcript },
     ],
@@ -45,17 +47,42 @@ export async function extractActionItems(
 
     return items
       .filter(
-        (item: unknown): item is { title: string; assignee: string | null } =>
+        (item: unknown): item is Record<string, unknown> =>
           typeof item === "object" &&
           item !== null &&
           "title" in item &&
           typeof (item as Record<string, unknown>).title === "string"
       )
       .slice(0, MAX_ITEMS)
-      .map((item: { title: string; assignee: string | null }) => ({
-        title: item.title,
-        assignee: typeof item.assignee === "string" ? item.assignee : null,
-      }));
+      .map((item: Record<string, unknown>) => {
+        const sourceQuote =
+          typeof item.sourceQuote === "string" ? item.sourceQuote : null;
+
+        // Match the source quote back to a segment to get the timestamp
+        let sourceTimestampMs: number | null = null;
+        if (sourceQuote) {
+          // Match priority: exact format match > exact text > substring (with length guard)
+          const match =
+            sorted.find((s) => `[${s.speaker}]: ${s.text}` === sourceQuote) ??
+            sorted.find((s) => s.text === sourceQuote) ??
+            sorted.find(
+              (s) =>
+                s.text.length > 10 &&
+                (sourceQuote.includes(s.text) || s.text.includes(sourceQuote))
+            );
+          if (match) sourceTimestampMs = match.timestampMs;
+        }
+
+        return {
+          title: item.title as string,
+          assignee:
+            typeof item.assignee === "string"
+              ? (item.assignee as string)
+              : null,
+          sourceText: sourceQuote,
+          sourceTimestampMs,
+        };
+      });
   } catch {
     return [];
   }

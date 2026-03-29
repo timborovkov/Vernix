@@ -50,8 +50,18 @@ describe("storeExtractedTasks", () => {
     });
 
     await storeExtractedTasks(MEETING_ID, USER_ID, [
-      { title: "Task A", assignee: "Alice" },
-      { title: "Task B", assignee: null },
+      {
+        title: "Task A",
+        assignee: "Alice",
+        sourceText: "Alice should review",
+        sourceTimestampMs: 1000,
+      },
+      {
+        title: "Task B",
+        assignee: null,
+        sourceText: null,
+        sourceTimestampMs: null,
+      },
     ]);
 
     expect(mockDb.transaction).toHaveBeenCalled();
@@ -67,6 +77,8 @@ describe("storeExtractedTasks", () => {
         userId: USER_ID,
         title: "Task A",
         assignee: "Alice",
+        sourceText: "Alice should review",
+        sourceTimestampMs: 1000,
         autoExtracted: true,
       },
       {
@@ -74,6 +86,8 @@ describe("storeExtractedTasks", () => {
         userId: USER_ID,
         title: "Task B",
         assignee: null,
+        sourceText: null,
+        sourceTimestampMs: null,
         autoExtracted: true,
       },
     ]);

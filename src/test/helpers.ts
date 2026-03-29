@@ -69,6 +69,8 @@ export function fakeTask(overrides: Partial<Task> = {}): Task {
     title: "Follow up with client",
     assignee: "Alice",
     autoExtracted: false,
+    sourceText: null,
+    sourceTimestampMs: null,
     dueDate: null,
     status: "open",
     createdAt: new Date("2026-01-01"),

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, ListChecks, CheckCircle2 } from "lucide-react";
+import { MessageSquare, ListChecks, Circle, CheckCircle2 } from "lucide-react";
 import { TrialPromptBanner } from "@/components/trial-prompt-banner";
 
 const STATUS_FILTERS = [
@@ -31,7 +31,7 @@ export default function DashboardPage() {
     deleteMeeting,
   } = useMeetings();
 
-  const { tasks: pendingTasks } = useAllTasks();
+  const { tasks: pendingTasks, updateTask } = useAllTasks("open");
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,19 +97,42 @@ export default function DashboardPage() {
       {pendingTasks.length > 0 && (
         <Card className="mb-6">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <ListChecks className="h-4 w-4" />
-              Pending Tasks
-              <span className="bg-ring ml-1 rounded-full px-2 py-0.5 text-xs text-white">
-                {pendingTasks.length}
-              </span>
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ListChecks className="h-4 w-4" />
+                Pending Tasks
+                <span className="bg-ring ml-1 rounded-full px-2 py-0.5 text-xs text-white">
+                  {pendingTasks.length}
+                </span>
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="xs"
+                render={<Link href="/dashboard/tasks" />}
+              >
+                View all
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {pendingTasks.slice(0, 10).map((task) => (
+              {pendingTasks.slice(0, 3).map((task) => (
                 <div key={task.id} className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 className="text-muted-foreground h-4 w-4 shrink-0" />
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                    onClick={() =>
+                      updateTask(task.meetingId, task.id, {
+                        status: "completed",
+                      })
+                    }
+                  >
+                    {task.status === "completed" ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
+                  </button>
                   <span className="flex-1 truncate">{task.title}</span>
                   {task.meetingTitle && (
                     <Link
@@ -121,10 +144,13 @@ export default function DashboardPage() {
                   )}
                 </div>
               ))}
-              {pendingTasks.length > 10 && (
-                <p className="text-muted-foreground text-xs">
-                  +{pendingTasks.length - 10} more
-                </p>
+              {pendingTasks.length > 3 && (
+                <Link
+                  href="/dashboard/tasks"
+                  className="text-muted-foreground block text-xs hover:underline"
+                >
+                  +{pendingTasks.length - 3} more
+                </Link>
               )}
             </div>
           </CardContent>

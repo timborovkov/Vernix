@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   LogOut,
   BookOpen,
+  ListChecks,
   Settings,
   Download,
   Zap,
@@ -106,6 +107,14 @@ export function DashboardHeader() {
           >
             <Plug className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Integrations</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/dashboard/tasks" />}
+          >
+            <ListChecks className="mr-1 h-4 w-4" />
+            <span className="hidden sm:inline">Tasks</span>
           </Button>
           <Button
             variant="outline"

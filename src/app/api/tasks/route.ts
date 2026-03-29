@@ -23,6 +23,8 @@ export async function GET(request: Request) {
       title: tasks.title,
       assignee: tasks.assignee,
       status: tasks.status,
+      sourceText: tasks.sourceText,
+      sourceTimestampMs: tasks.sourceTimestampMs,
       dueDate: tasks.dueDate,
       createdAt: tasks.createdAt,
       meetingTitle: meetings.title,
