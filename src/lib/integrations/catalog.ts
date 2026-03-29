@@ -13,7 +13,7 @@ const categoryEnum = z.enum([
   "other",
 ]);
 
-const authModeEnum = z.enum(["api_key", "token", "oauth", "none"]);
+const authModeEnum = z.enum(["api_key", "token", "oauth", "none", "url_key"]);
 
 const integrationSchema = z.object({
   id: z.string(),
@@ -94,11 +94,10 @@ const CATALOG: Integration[] = [
     tags: ["search", "ai", "web"],
     featured: true,
     status: "available",
-    serverUrl: null,
-    authMode: "api_key",
+    serverUrl: "https://mcp.exa.ai/mcp",
+    authMode: "url_key",
     docsUrl: "https://exa.ai/docs/reference/exa-mcp",
-    setupInstructions:
-      "Paste your Exa MCP URL from dashboard.exa.ai. It includes your API key.",
+    setupInstructions: "Enter your Exa API key from dashboard.exa.ai/api-keys.",
     examplePrompts: ["Find recent articles about our competitor"],
     sampleResponses: [
       "Found 5 articles from the last week discussing their Series B and new product launch.",
@@ -113,11 +112,10 @@ const CATALOG: Integration[] = [
     tags: ["search", "research", "ai"],
     featured: true,
     status: "available",
-    serverUrl: null,
-    authMode: "api_key",
+    serverUrl: "https://mcp.tavily.com/mcp/",
+    authMode: "url_key",
     docsUrl: "https://docs.tavily.com/documentation/mcp",
-    setupInstructions:
-      "Paste your Tavily MCP URL from app.tavily.com. It includes your API key.",
+    setupInstructions: "Enter your Tavily API key from app.tavily.com.",
     examplePrompts: ["Research the latest trends in AI meeting assistants"],
     sampleResponses: [
       "Top trends: real-time transcription, voice agents, and MCP integrations.",
@@ -132,11 +130,11 @@ const CATALOG: Integration[] = [
     tags: ["browser", "automation", "testing"],
     featured: true,
     status: "available",
-    serverUrl: null,
-    authMode: "api_key",
+    serverUrl: "https://mcp.browserbase.com/mcp",
+    authMode: "url_key",
     docsUrl: "https://docs.browserbase.com/integrations/mcp/setup",
     setupInstructions:
-      "Paste your Browserbase MCP URL from browserbase.com/dashboard. It includes your API key.",
+      "Enter your Browserbase API key from browserbase.com/dashboard.",
     examplePrompts: ["Open our landing page and check if the CTA is visible"],
     sampleResponses: [
       "Page loaded in 1.2s. CTA button is visible above the fold.",
