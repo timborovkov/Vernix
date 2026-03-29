@@ -34,16 +34,17 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
-function getInitialTab(): TabId {
-  if (typeof window === "undefined") return "overview";
-  const hash = window.location.hash.slice(1);
-  if (TABS.some((t) => t.id === hash)) return hash as TabId;
-  return "overview";
-}
-
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
+
+  // Sync tab from URL hash after mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (TABS.some((t) => t.id === hash)) {
+      setActiveTab(hash as TabId);
+    }
+  }, []);
 
   const {
     meeting,
