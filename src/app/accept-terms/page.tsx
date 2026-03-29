@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function AcceptTermsPage() {
-  const { data: session, update: updateSession } = useSession();
+  const { data: session } = useSession();
   const router = useRouter();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,17 +31,16 @@ export default function AcceptTermsPage() {
     try {
       const res = await fetch("/api/auth/accept-terms", { method: "POST" });
       if (!res.ok) {
+        setLoading(false);
         setError("Failed to save. Please try again.");
         return;
       }
-      // Refresh JWT with updated termsAcceptedAt from DB
-      await updateSession();
-      // Hard redirect ensures the browser uses the new JWT cookie
+      // The API sets a terms_accepted cookie that bypasses the middleware check
+      // until the JWT refreshes on next sign-in
       window.location.href = "/dashboard";
     } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
   };
 

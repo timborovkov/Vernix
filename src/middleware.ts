@@ -49,7 +49,9 @@ export default auth((req) => {
   const termsExempt = ["/accept-terms", "/welcome", "/welcome-to-pro"];
   const isApi = req.nextUrl.pathname.startsWith("/api/");
   if (!isApi && !termsExempt.includes(req.nextUrl.pathname)) {
-    if (req.auth?.user && !req.auth.user.termsAcceptedAt) {
+    const termsInJwt = req.auth?.user?.termsAcceptedAt;
+    const termsCookie = req.cookies.get("terms_accepted")?.value === "1";
+    if (req.auth?.user && !termsInJwt && !termsCookie) {
       return NextResponse.redirect(new URL("/accept-terms", req.url));
     }
   }
