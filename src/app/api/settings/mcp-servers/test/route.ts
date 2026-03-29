@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { connectMcpClient, isSsrfUrl } from "@/lib/mcp/transport";
 import { buildAuthHeaders } from "@/lib/mcp/auth";
+import { VernixOAuthProvider } from "@/lib/mcp/oauth-provider";
 
 // Accept either an existing server ID or raw connection params for testing before saving
 const testSchema = z.union([
@@ -24,12 +26,13 @@ const testSchema = z.union([
 
 async function probe(
   url: string,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  authProvider?: OAuthClientProvider
 ): Promise<{
   toolCount: number;
   tools: { name: string; description: string }[];
 }> {
-  const client = await connectMcpClient(url, headers);
+  const client = await connectMcpClient(url, headers, authProvider);
 
   try {
     const { tools } = await client.listTools();
@@ -66,6 +69,7 @@ export async function POST(request: Request) {
 
   let url: string;
   let headers: Record<string, string>;
+  let authProvider: OAuthClientProvider | undefined;
 
   if ("id" in parsed.data) {
     const [server] = await db
@@ -81,6 +85,9 @@ export async function POST(request: Request) {
 
     url = server.url;
     headers = buildAuthHeaders(server);
+    if (server.authType === "oauth") {
+      authProvider = new VernixOAuthProvider(user.id, server.id, server.url);
+    }
   } else {
     url = parsed.data.url;
     headers = buildAuthHeaders({
@@ -115,7 +122,10 @@ export async function POST(request: Request) {
   });
 
   try {
-    const result = await Promise.race([probe(url, headers), timeout]);
+    const result = await Promise.race([
+      probe(url, headers, authProvider),
+      timeout,
+    ]);
     clearTimeout(timeoutId!);
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
