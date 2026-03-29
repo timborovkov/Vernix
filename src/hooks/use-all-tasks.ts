@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
+import { optimisticTaskUpdate, rollbackTaskUpdate } from "./task-cache";
 
 export interface TaskWithMeeting {
   id: string;
@@ -55,38 +56,16 @@ export function useAllTasks(status?: "open" | "completed") {
       return res.json();
     },
     onMutate: async ({ taskId, updates }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.all });
-      const previousData = queryClient.getQueriesData<TaskWithMeeting[]>({
-        queryKey: queryKeys.tasks.all,
-      });
-      // Update all task caches. For filtered caches (e.g. ["tasks","open"]),
-      // remove tasks whose status no longer matches the filter.
-      for (const [key] of previousData) {
-        queryClient.setQueryData<TaskWithMeeting[]>(key, (old) => {
-          if (!old) return old;
-          const updated = old.map((t) =>
-            t.id === taskId ? { ...t, ...updates } : t
-          );
-          // If this cache has a status filter, remove non-matching tasks
-          const filterStatus = key.length > 1 ? key[key.length - 1] : null;
-          if (
-            updates.status &&
-            typeof filterStatus === "string" &&
-            (filterStatus === "open" || filterStatus === "completed")
-          ) {
-            return updated.filter((t) => t.status === filterStatus);
-          }
-          return updated;
-        });
-      }
+      const previousData = await optimisticTaskUpdate(
+        queryClient,
+        taskId,
+        updates
+      );
       return { previousData };
     },
     onError: (_err, _vars, context) => {
-      // Rollback on error
       if (context?.previousData) {
-        for (const [key, data] of context.previousData) {
-          queryClient.setQueryData(key, data);
-        }
+        rollbackTaskUpdate(queryClient, context.previousData);
       }
       toast.error("Failed to update task");
     },
