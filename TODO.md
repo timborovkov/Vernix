@@ -51,18 +51,11 @@
 - Task management: `/dashboard/tasks` cross-call task list with filter tabs (open/all/completed), inline task completion with optimistic updates, dashboard widget limited to 3 tasks with "View all" link, Tasks nav button in header, meeting title links to source call, task source context (transcript snippet + timestamp from extraction)
 - Empty states and onboarding UX: auth page redirects for logged-in users (middleware), public site header shows "Dashboard" when authenticated, landing page auth-aware CTAs, dashboard "Start your first call" empty state with knowledge/integrations nudges, integrations page first-connection banner
 - Terms of use acceptance: checkbox on credentials signup form, SSO post-auth acceptance page (`/accept-terms`), middleware enforcement (`termsAcceptedAt` in JWT), schema column on users table
+- Call detail page restructure: tab-based layout (Overview, Transcript, Tasks, Documents, Chat), URL hash deep linking, bounded transcript scroll, meeting link button, extracted into 5 component files
 
 ## Integrations
 
 - **Register OAuth apps for more services** — Currently only GitHub has a pre-registered OAuth app. To enable more OAuth integrations (Slack, Linear, Notion, etc.): register Vernix on each service's developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, change catalog status to `available`.
-
-## Call Detail Page UX
-
-- **Restructure call detail into tabs/routes** — Split the long call page into focused sections (transcript, knowledge, tasks, summary, recording, participants).
-- **Define deep-link strategy for call pages** — Use route segments for major sections (e.g. `/call/:id/transcript`) and anchors for intra-section jumps (e.g. `#recording`).
-- **Improve transcript readability** — Add a bounded transcript panel with internal scroll to reduce full-page scroll fatigue.
-- **Promote agent chat on call page** — Make chat a more prominent panel/sidebar and provide contextual deep links for non-renderable assets (e.g. recordings).
-- **Improve call link UX** — Add a dedicated call link action on call detail, styled as a button with icon and opening in a new tab.
 
 ## Call Reliability, Recording Sync & Recovery
 
