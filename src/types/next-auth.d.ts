@@ -4,6 +4,7 @@ import "next-auth/jwt";
 declare module "next-auth" {
   interface User {
     image?: string | null;
+    termsAcceptedAt?: Date | string | null;
   }
 
   interface Session {
@@ -12,6 +13,7 @@ declare module "next-auth" {
       email: string;
       name?: string | null;
       image?: string | null;
+      termsAcceptedAt?: string | null;
     };
   }
 }
@@ -20,5 +22,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     image?: string | null;
+    termsAcceptedAt?: string | null;
   }
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
@@ -106,7 +107,11 @@ const PAIN_POINTS = [
 
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+  const ctaHref = isLoggedIn ? "/dashboard" : "/register";
+  const ctaText = isLoggedIn ? "Go to Dashboard" : "Try Vernix Free";
   return (
     <>
       {/* Hero */}
@@ -137,8 +142,8 @@ export default function LandingPage() {
           happen automatically.
         </p>
         <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
-          <Button variant="accent" size="lg" render={<Link href="/register" />}>
-            Try Vernix Free
+          <Button variant="accent" size="lg" render={<Link href={ctaHref} />}>
+            {ctaText}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
           <Button variant="outline" size="lg" render={<a href="#how" />}>
@@ -297,8 +302,8 @@ export default function LandingPage() {
           <p className="text-muted-foreground mb-8">
             No credit card required. 14-day Pro trial when you upgrade.
           </p>
-          <Button size="lg" variant="accent" render={<Link href="/register" />}>
-            Try Vernix on Your Next Call
+          <Button size="lg" variant="accent" render={<Link href={ctaHref} />}>
+            {isLoggedIn ? "Go to Dashboard" : "Try Vernix on Your Next Call"}
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
           <p className="text-muted-foreground mt-4 text-xs">

@@ -58,6 +58,7 @@ providers.push(
         email: user.email,
         name: user.name,
         image: user.image,
+        termsAcceptedAt: user.termsAcceptedAt,
       };
     },
   })
@@ -109,7 +110,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
       if (existingAccount) {
+        // Returning SSO user — load termsAcceptedAt from DB
+        const [dbUser] = await db
+          .select({
+            termsAcceptedAt: users.termsAcceptedAt,
+            image: users.image,
+          })
+          .from(users)
+          .where(eq(users.id, existingAccount.userId));
         user.id = existingAccount.userId;
+        user.image = dbUser?.image ?? user.image;
+        user.termsAcceptedAt = dbUser?.termsAcceptedAt ?? null;
         return true;
       }
 
@@ -148,6 +159,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             .where(eq(users.id, existingUser.id));
         }
         user.image = existingUser.image ?? oauthImage;
+        user.termsAcceptedAt = existingUser.termsAcceptedAt ?? null;
         return true;
       }
 
@@ -175,7 +187,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       user.id = newUser.id;
       user.image = image;
+      user.termsAcceptedAt = null; // new OAuth user, terms not yet accepted
       return true;
+    },
+    async jwt({ token, user, trigger }) {
+      // Delegate to base callback for initial sign-in
+      const base =
+        (baseCallbacks.jwt
+          ? await baseCallbacks.jwt({ token, user, trigger } as Parameters<
+              NonNullable<typeof baseCallbacks.jwt>
+            >[0])
+          : token) ?? token;
+
+      // On session update, re-read termsAcceptedAt from DB
+      if (trigger === "update" && base.id) {
+        const [dbUser] = await db
+          .select({ termsAcceptedAt: users.termsAcceptedAt })
+          .from(users)
+          .where(eq(users.id, base.id as string));
+        if (dbUser) {
+          base.termsAcceptedAt = dbUser.termsAcceptedAt
+            ? dbUser.termsAcceptedAt.toISOString()
+            : null;
+        }
+      }
+
+      return base;
     },
   },
 });

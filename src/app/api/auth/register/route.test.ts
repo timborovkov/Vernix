@@ -86,6 +86,7 @@ describe("POST /api/auth/register", () => {
         email: "new@example.com",
         password: "password123",
         name: "New User",
+        termsAccepted: true,
       },
     });
     const { status, data } = await parseJsonResponse(await POST(req));
@@ -129,6 +130,7 @@ describe("POST /api/auth/register", () => {
         email: "existing@example.com",
         password: "password123",
         name: "Dupe",
+        termsAccepted: true,
       },
     });
     const { status } = await parseJsonResponse(await POST(req));
@@ -164,6 +166,7 @@ describe("POST /api/auth/register", () => {
           email: "rl@example.com",
           password: "password123",
           name: "RL User",
+          termsAccepted: true,
         }),
       });
 

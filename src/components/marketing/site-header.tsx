@@ -3,9 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu, X, ChevronDown, Plug, Search, BookOpen } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronDown,
+  Plug,
+  Search,
+  BookOpen,
+  LayoutDashboard,
+} from "lucide-react";
 
 const FEATURE_LINKS = [
   {
@@ -35,6 +44,8 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated" && !!session;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [featuresOpen, setFeaturesOpen] = useState(false);
 
@@ -115,12 +126,29 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" render={<Link href="/login" />}>
-            Sign In
-          </Button>
-          <Button variant="accent" size="sm" render={<Link href="/register" />}>
-            Get Started
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              variant="accent"
+              size="sm"
+              render={<Link href="/dashboard" />}
+            >
+              <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
+              Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+                Sign In
+              </Button>
+              <Button
+                variant="accent"
+                size="sm"
+                render={<Link href="/register" />}
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
 
         <Button
@@ -172,16 +200,33 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2">
-            <Button variant="outline" size="sm" render={<Link href="/login" />}>
-              Sign In
-            </Button>
-            <Button
-              variant="accent"
-              size="sm"
-              render={<Link href="/register" />}
-            >
-              Get Started
-            </Button>
+            {isLoggedIn ? (
+              <Button
+                variant="accent"
+                size="sm"
+                render={<Link href="/dashboard" />}
+              >
+                <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
+                Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link href="/login" />}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="accent"
+                  size="sm"
+                  render={<Link href="/register" />}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

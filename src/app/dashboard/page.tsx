@@ -10,7 +10,15 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, ListChecks, Circle, CheckCircle2 } from "lucide-react";
+import {
+  MessageSquare,
+  ListChecks,
+  Circle,
+  CheckCircle2,
+  Video,
+  FileText,
+  Plug,
+} from "lucide-react";
 import { TrialPromptBanner } from "@/components/trial-prompt-banner";
 
 const STATUS_FILTERS = [
@@ -162,7 +170,76 @@ export default function DashboardPage() {
         hasCompletedMeetings={meetings.some((m) => m.status === "completed")}
       />
 
-      {loading ? (
+      {/* Empty state for new users */}
+      {!loading && meetings.length === 0 && (
+        <div className="space-y-4">
+          <Card className="border-ring/20">
+            <CardContent className="flex flex-col items-center py-12 text-center">
+              <div className="bg-ring/10 mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+                <Video className="text-ring h-7 w-7" />
+              </div>
+              <h2 className="mb-2 text-lg font-semibold">
+                Start your first call
+              </h2>
+              <p className="text-muted-foreground mb-6 max-w-sm text-sm">
+                Paste a meeting link and Vernix joins your call, transcribes the
+                conversation, and generates a summary with action items.
+              </p>
+              <CreateMeetingDialog
+                onCreate={async (title, joinLink, agenda, silent) => {
+                  await createMeeting(title, joinLink, agenda, silent);
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Card>
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                  <FileText className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Give the agent context</p>
+                  <p className="text-muted-foreground text-xs">
+                    Upload docs about your business, team, or projects
+                  </p>
+                </div>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  render={<Link href="/dashboard/knowledge" />}
+                >
+                  Upload
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className="bg-muted flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                  <Plug className="text-muted-foreground h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Connect your tools</p>
+                  <p className="text-muted-foreground text-xs">
+                    Slack, GitHub, CRM — get live data during calls
+                  </p>
+                </div>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  render={<Link href="/dashboard/integrations" />}
+                >
+                  Connect
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {!loading && meetings.length === 0 ? null : loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border p-4">

@@ -1,8 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useBilling } from "@/hooks/use-billing";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +32,25 @@ const PRO_FEATURES = [
 ];
 
 export default function WelcomePage() {
+  const { billing, loading } = useBilling();
+  const router = useRouter();
+
+  // Pro or trialing users don't need the welcome/upgrade page
+  useEffect(() => {
+    if (!loading && billing) {
+      if (
+        billing.plan === "pro" ||
+        billing.trialing ||
+        billing.hasSubscription
+      ) {
+        router.replace("/dashboard");
+      }
+    }
+  }, [loading, billing, router]);
+
+  if (!loading && billing?.plan === "pro") return null;
+  if (!loading && (billing?.trialing || billing?.hasSubscription)) return null;
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
       <div className="mb-8">

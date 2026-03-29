@@ -216,6 +216,19 @@ export default function IntegrationsPage() {
         </div>
       )}
 
+      {/* First integration nudge */}
+      {customServers.length === 0 && connectedIds.size === 0 && (
+        <Card className="border-ring/20 bg-ring/5 mb-6">
+          <CardContent className="flex items-center gap-3 p-4">
+            <Plug className="text-ring h-5 w-5 shrink-0" />
+            <p className="text-sm">
+              Connect your first integration to get live data during calls.
+              Browse the catalog below or add a custom MCP server.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Search + filters */}
       <div className="mb-6 space-y-3">
         <Input

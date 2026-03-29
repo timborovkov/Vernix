@@ -11,6 +11,9 @@ const registerSchema = z.object({
   email: z.email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
   name: z.string().min(1, "Name is required"),
+  termsAccepted: z.literal(true, {
+    message: "You must accept the Terms of Use and Privacy Policy",
+  }),
 });
 
 function isUniqueViolation(error: unknown): boolean {
@@ -52,7 +55,7 @@ export async function POST(request: Request) {
   try {
     const [user] = await db
       .insert(users)
-      .values({ email, name, passwordHash })
+      .values({ email, name, passwordHash, termsAcceptedAt: new Date() })
       .returning({ id: users.id, email: users.email, name: users.name });
 
     // Fire-and-forget welcome email — don't block registration

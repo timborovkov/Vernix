@@ -24,12 +24,36 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Redirect authenticated users away from auth pages
+  const authPages = ["/login", "/register"];
+  if (req.auth && authPages.includes(req.nextUrl.pathname)) {
+    const dest = req.auth.user?.termsAcceptedAt
+      ? "/dashboard"
+      : "/accept-terms";
+    return NextResponse.redirect(new URL(dest, req.url));
+  }
+
   if (!req.auth) {
     if (req.nextUrl.pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    // Don't redirect auth pages to login (they ARE the login)
+    if (authPages.includes(req.nextUrl.pathname)) {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/login", req.url));
   }
+
+  // Enforce terms acceptance for authenticated users on protected routes
+  // Skip for: accept-terms page itself, its API, welcome page, and API routes
+  const termsExempt = ["/accept-terms", "/welcome", "/welcome-to-pro"];
+  const isApi = req.nextUrl.pathname.startsWith("/api/");
+  if (!isApi && !termsExempt.includes(req.nextUrl.pathname)) {
+    if (req.auth?.user && !req.auth.user.termsAcceptedAt) {
+      return NextResponse.redirect(new URL("/accept-terms", req.url));
+    }
+  }
+
   return NextResponse.next();
 });
 
@@ -37,6 +61,10 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/welcome-to-pro",
+    "/login",
+    "/register",
+    "/accept-terms",
+    "/welcome",
     "/api/meetings/:path*",
     "/api/agent/:path*",
     "/api/search/:path*",
