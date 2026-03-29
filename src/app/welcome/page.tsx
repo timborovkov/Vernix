@@ -24,7 +24,7 @@ const PRO_FEATURES = [
   { icon: Mic, label: "Voice agent answers and takes action during calls" },
   { icon: Search, label: "Search across all your meetings and documents" },
   { icon: FileText, label: "200 knowledge base documents for context" },
-  { icon: MessageSquare, label: "200 AI queries per day" },
+  { icon: MessageSquare, label: "AI chat across all your meetings" },
   { icon: Clock, label: "Unlimited meetings with monthly credit" },
 ];
 
