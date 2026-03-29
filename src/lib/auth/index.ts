@@ -178,5 +178,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.image = image;
       return true;
     },
+    async jwt({ token, user, trigger }) {
+      // Delegate to base callback for initial sign-in
+      const base =
+        (baseCallbacks.jwt
+          ? await baseCallbacks.jwt({ token, user, trigger } as Parameters<
+              NonNullable<typeof baseCallbacks.jwt>
+            >[0])
+          : token) ?? token;
+
+      // On session update, re-read termsAcceptedAt from DB
+      if (trigger === "update" && base.id) {
+        const [dbUser] = await db
+          .select({ termsAcceptedAt: users.termsAcceptedAt })
+          .from(users)
+          .where(eq(users.id, base.id as string));
+        if (dbUser) {
+          base.termsAcceptedAt = dbUser.termsAcceptedAt
+            ? dbUser.termsAcceptedAt.toISOString()
+            : null;
+        }
+      }
+
+      return base;
+    },
   },
 });
