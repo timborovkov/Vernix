@@ -36,6 +36,7 @@ export default auth((req) => {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/welcome-to-pro",
     "/api/meetings/:path*",
     "/api/agent/:path*",
     "/api/search/:path*",
