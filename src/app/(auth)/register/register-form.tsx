@@ -24,6 +24,7 @@ export function RegisterForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +39,7 @@ export function RegisterForm({
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, termsAccepted }),
       });
 
       if (!res.ok) {
@@ -78,7 +79,7 @@ export function RegisterForm({
           <SsoButtons
             enableGoogle={enableGoogle}
             enableGithub={enableGithub}
-            callbackUrl="/welcome"
+            callbackUrl="/accept-terms"
           />
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
@@ -148,11 +149,38 @@ export function RegisterForm({
             </button>
           </div>
         </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            required
+            className="mt-1 shrink-0"
+          />
+          <span className="text-muted-foreground">
+            I agree to the{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              className="text-foreground underline"
+            >
+              Terms of Use
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              target="_blank"
+              className="text-foreground underline"
+            >
+              Privacy Policy
+            </Link>
+          </span>
+        </label>
         <Button
           type="submit"
           variant="accent"
           className="w-full"
-          disabled={loading}
+          disabled={loading || !termsAccepted}
         >
           {loading ? "Creating account..." : "Create free account"}
         </Button>
