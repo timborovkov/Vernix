@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function AcceptTermsPage() {
-  const { data: session } = useSession();
+  const { data: session, update: updateSession } = useSession();
   const router = useRouter();
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,8 +35,9 @@ export default function AcceptTermsPage() {
         setError("Failed to save. Please try again.");
         return;
       }
-      // The API sets a terms_accepted cookie that bypasses the middleware check
-      // until the JWT refreshes on next sign-in
+      // Try to refresh JWT (triggers jwt callback with trigger:"update" which re-reads DB)
+      // The API also sets a terms_accepted cookie as fallback in case JWT doesn't refresh
+      await updateSession().catch(() => {});
       window.location.href = "/dashboard";
     } catch {
       setLoading(false);
