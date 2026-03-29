@@ -23,6 +23,7 @@ export async function PATCH(
     authType,
     authHeaderName,
     authHeaderValue,
+    authKeyParam,
     authUsername,
     authPassword,
   } = body as Record<string, unknown>;
@@ -52,6 +53,8 @@ export async function PATCH(
     updates.authHeaderName = authHeaderName || null;
   if (typeof authHeaderValue === "string")
     updates.authHeaderValue = authHeaderValue || null;
+  if (typeof authKeyParam === "string")
+    updates.authKeyParam = authKeyParam || null;
   if (typeof authUsername === "string")
     updates.authUsername = authUsername || null;
   if (typeof authPassword === "string")

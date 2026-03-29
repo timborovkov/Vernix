@@ -123,12 +123,13 @@ export function IntegrationConnectDialog({
             params.authPassword = password;
             break;
           case "url_key":
-            params.authHeaderName = headerName;
+            params.authKeyParam = headerName;
             params.authHeaderValue = token;
             break;
         }
       } else if (isCatalogUrlKey) {
         params.authType = "url_key";
+        params.authKeyParam = integration.authKeyParam;
         params.authHeaderValue = token;
       } else if (isCatalogToken) {
         params.authType = "bearer";

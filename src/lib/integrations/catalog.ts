@@ -28,6 +28,7 @@ const integrationSchema = z.object({
   // Connection
   serverUrl: z.string().nullable(),
   authMode: authModeEnum,
+  authKeyParam: z.string().optional(), // for url_key: the query param name (e.g. "exaApiKey")
   docsUrl: z.string(),
   setupInstructions: z.string(),
 
@@ -86,6 +87,25 @@ const CATALOG: Integration[] = [
     sampleResponses: ["12 new leads added, 4 from the webinar campaign."],
   },
   {
+    id: "firecrawl",
+    name: "Firecrawl",
+    description: "Scrape and extract content from any website.",
+    logo: "/integrations/firecrawl.svg",
+    category: "dev-tools",
+    tags: ["scraping", "web", "extraction"],
+    featured: true,
+    status: "available",
+    serverUrl: "https://mcp.firecrawl.dev/v2/mcp",
+    authMode: "token",
+    docsUrl: "https://docs.firecrawl.dev/mcp-server",
+    setupInstructions:
+      "Enter your Firecrawl API key from firecrawl.dev/app/api-keys.",
+    examplePrompts: ["Scrape the homepage of our competitor"],
+    sampleResponses: [
+      "Found 3 key sections: pricing at $49/mo, 2 new features, and a case study.",
+    ],
+  },
+  {
     id: "exa",
     name: "Exa",
     description: "AI-powered web search with real-time results.",
@@ -96,6 +116,7 @@ const CATALOG: Integration[] = [
     status: "available",
     serverUrl: "https://mcp.exa.ai/mcp",
     authMode: "url_key",
+    authKeyParam: "exaApiKey",
     docsUrl: "https://exa.ai/docs/reference/exa-mcp",
     setupInstructions: "Enter your Exa API key from dashboard.exa.ai/api-keys.",
     examplePrompts: ["Find recent articles about our competitor"],
@@ -114,6 +135,7 @@ const CATALOG: Integration[] = [
     status: "available",
     serverUrl: "https://mcp.tavily.com/mcp/",
     authMode: "url_key",
+    authKeyParam: "tavilyApiKey",
     docsUrl: "https://docs.tavily.com/documentation/mcp",
     setupInstructions: "Enter your Tavily API key from app.tavily.com.",
     examplePrompts: ["Research the latest trends in AI meeting assistants"],
@@ -132,6 +154,7 @@ const CATALOG: Integration[] = [
     status: "available",
     serverUrl: "https://mcp.browserbase.com/mcp",
     authMode: "url_key",
+    authKeyParam: "browserbaseApiKey",
     docsUrl: "https://docs.browserbase.com/integrations/mcp/setup",
     setupInstructions:
       "Enter your Browserbase API key from browserbase.com/dashboard.",
@@ -551,25 +574,6 @@ const CATALOG: Integration[] = [
     setupInstructions: "Coming soon.",
     examplePrompts: ["How many cards are in the 'In Progress' column?"],
     sampleResponses: ["There are 7 cards in progress, 3 due this week."],
-  },
-  {
-    id: "firecrawl",
-    name: "Firecrawl",
-    description: "Scrape and extract content from any website.",
-    logo: "/integrations/firecrawl.svg",
-    category: "dev-tools",
-    tags: ["scraping", "web", "extraction"],
-    featured: true,
-    status: "available",
-    serverUrl: null,
-    authMode: "api_key",
-    docsUrl: "https://docs.firecrawl.dev/mcp-server",
-    setupInstructions:
-      "Paste your Firecrawl MCP URL from firecrawl.dev/app/mcp. It includes your API key.",
-    examplePrompts: ["Scrape the homepage of our competitor"],
-    sampleResponses: [
-      "Found 3 key sections: pricing at $49/mo, 2 new features, and a case study.",
-    ],
   },
   {
     id: "sentry",

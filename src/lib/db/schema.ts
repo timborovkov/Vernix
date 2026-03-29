@@ -189,9 +189,10 @@ export const mcpServers = pgTable("mcp_servers", {
   name: text("name").notNull(),
   url: text("url").notNull(),
   apiKey: text("api_key"), // legacy — use authHeaderValue instead
-  authType: text("auth_type").default("none").notNull(), // none | bearer | header | basic | oauth
+  authType: text("auth_type").default("none").notNull(), // none | bearer | header | basic | oauth | url_key
   authHeaderName: text("auth_header_name"), // for 'header' mode (e.g. "X-API-Key")
-  authHeaderValue: text("auth_header_value"), // for 'bearer' and 'header' modes
+  authHeaderValue: text("auth_header_value"), // for 'bearer', 'header', and 'url_key' modes
+  authKeyParam: text("auth_key_param"), // for 'url_key' mode: URL query param name (e.g. "exaApiKey")
   authUsername: text("auth_username"), // for 'basic' mode
   authPassword: text("auth_password"), // for 'basic' mode
   catalogIntegrationId: text("catalog_integration_id"), // links to catalog id (e.g. "slack")

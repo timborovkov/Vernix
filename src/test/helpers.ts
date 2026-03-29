@@ -100,6 +100,7 @@ export function fakeMcpServer(overrides: Partial<McpServer> = {}): McpServer {
     authType: "none",
     authHeaderName: null,
     authHeaderValue: null,
+    authKeyParam: null,
     authUsername: null,
     authPassword: null,
     catalogIntegrationId: null,

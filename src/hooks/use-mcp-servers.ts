@@ -29,6 +29,7 @@ export interface AddServerParams {
   authType?: McpAuthType;
   authHeaderName?: string;
   authHeaderValue?: string;
+  authKeyParam?: string;
   authUsername?: string;
   authPassword?: string;
   catalogIntegrationId?: string;

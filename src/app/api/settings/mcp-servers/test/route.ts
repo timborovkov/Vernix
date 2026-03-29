@@ -19,6 +19,7 @@ const testSchema = z.union([
       .default("none"),
     authHeaderName: z.string().optional(),
     authHeaderValue: z.string().optional(),
+    authKeyParam: z.string().optional(),
     authUsername: z.string().optional(),
     authPassword: z.string().optional(),
     // Legacy
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
     if (server.authType === "url_key" && server.authHeaderValue) {
       const u = new URL(server.url);
       u.searchParams.set(
-        server.authHeaderName ?? "apiKey",
+        server.authKeyParam ?? "apiKey",
         server.authHeaderValue
       );
       url = u.toString();
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
     if (parsed.data.authType === "url_key" && parsed.data.authHeaderValue) {
       const u = new URL(parsed.data.url);
       u.searchParams.set(
-        parsed.data.authHeaderName ?? "apiKey",
+        parsed.data.authKeyParam ?? "apiKey",
         parsed.data.authHeaderValue
       );
       url = u.toString();

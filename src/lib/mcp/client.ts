@@ -142,7 +142,7 @@ export class McpClientManager {
     if (server.authType === "url_key" && server.authHeaderValue) {
       const u = new URL(server.url);
       u.searchParams.set(
-        server.authHeaderName ?? "apiKey",
+        server.authKeyParam ?? "apiKey",
         server.authHeaderValue
       );
       connectUrl = u.toString();
