@@ -30,6 +30,7 @@ const AUTH_OPTIONS: { value: McpAuthType; label: string }[] = [
   { value: "bearer", label: "Bearer token" },
   { value: "header", label: "Custom header" },
   { value: "basic", label: "HTTP Basic" },
+  { value: "url_key", label: "API key in URL" },
 ];
 
 export function IntegrationConnectDialog({
@@ -78,6 +79,8 @@ export function IntegrationConnectDialog({
     !isCustom &&
     !isCatalogOAuth &&
     (integration.authMode === "api_key" || integration.authMode === "token");
+  const isCatalogUrlKey =
+    !isCustom && integration.authMode === "url_key" && hasPrefilledUrl;
 
   const handleOAuth = async () => {
     if (!onStartOAuth) return;
@@ -119,7 +122,14 @@ export function IntegrationConnectDialog({
             params.authUsername = username;
             params.authPassword = password;
             break;
+          case "url_key":
+            params.authHeaderName = headerName;
+            params.authHeaderValue = token;
+            break;
         }
+      } else if (isCatalogUrlKey) {
+        params.authType = "url_key";
+        params.authHeaderValue = token;
       } else if (isCatalogToken) {
         params.authType = "bearer";
         params.authHeaderValue = token;
@@ -215,7 +225,9 @@ export function IntegrationConnectDialog({
             )}
 
             {/* Bearer token field */}
-            {((isCustom && authType === "bearer") || isCatalogToken) && (
+            {((isCustom && authType === "bearer") ||
+              isCatalogToken ||
+              isCatalogUrlKey) && (
               <div className="space-y-2">
                 <Label htmlFor="token">
                   {integration.authMode === "api_key"
@@ -277,6 +289,31 @@ export function IntegrationConnectDialog({
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* URL key fields */}
+            {isCustom && authType === "url_key" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="param-name">URL Parameter Name</Label>
+                  <Input
+                    id="param-name"
+                    placeholder="apiKey"
+                    value={headerName}
+                    onChange={(e) => setHeaderName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url-key">API Key</Label>
+                  <Input
+                    id="url-key"
+                    type="password"
+                    placeholder="Paste your API key"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
                   />
                 </div>
               </>
