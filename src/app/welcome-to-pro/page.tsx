@@ -55,16 +55,16 @@ export default function WelcomeToProPage() {
   const { billing, loading, error } = useBilling();
   const router = useRouter();
 
-  // Redirect if not Pro/trialing or billing fails
+  // Allow access if Pro, trialing, or has a Polar subscription (webhook may not have synced yet)
   const isPro = billing?.plan === "pro";
-  const isTrialOrPro = isPro || billing?.trialing;
+  const hasAccess = isPro || billing?.trialing || billing?.hasSubscription;
   useEffect(() => {
-    if (!loading && (!billing || error || !isTrialOrPro)) {
+    if (!loading && (!billing || error || !hasAccess)) {
       router.replace("/dashboard");
     }
-  }, [loading, billing, error, isTrialOrPro, router]);
+  }, [loading, billing, error, hasAccess, router]);
 
-  if (!loading && (!billing || error || !isTrialOrPro)) return null;
+  if (!loading && (!billing || error || !hasAccess)) return null;
 
   const isTrialing = billing?.trialing ?? false;
   const heading = isTrialing
