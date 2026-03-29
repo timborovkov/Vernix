@@ -61,12 +61,15 @@ export async function extractActionItems(
         // Match the source quote back to a segment to get the timestamp
         let sourceTimestampMs: number | null = null;
         if (sourceQuote) {
-          const match = sorted.find(
-            (s) =>
-              sourceQuote.includes(s.text) ||
-              s.text.includes(sourceQuote) ||
-              `[${s.speaker}]: ${s.text}` === sourceQuote
-          );
+          // Match priority: exact format match > exact text > substring (with length guard)
+          const match =
+            sorted.find((s) => `[${s.speaker}]: ${s.text}` === sourceQuote) ??
+            sorted.find((s) => s.text === sourceQuote) ??
+            sorted.find(
+              (s) =>
+                s.text.length > 10 &&
+                (sourceQuote.includes(s.text) || s.text.includes(sourceQuote))
+            );
           if (match) sourceTimestampMs = match.timestampMs;
         }
 
