@@ -137,6 +137,17 @@ export class McpClientManager {
   ): Promise<void> {
     const headers = buildAuthHeaders(server);
 
+    // For url_key auth, embed the API key as a query parameter in the URL
+    let connectUrl = server.url;
+    if (server.authType === "url_key" && server.authHeaderValue) {
+      const u = new URL(server.url);
+      u.searchParams.set(
+        server.authHeaderName ?? "apiKey",
+        server.authHeaderValue
+      );
+      connectUrl = u.toString();
+    }
+
     // OAuth servers use the SDK's authProvider for automatic token management
     const authProvider =
       server.authType === "oauth"
@@ -145,7 +156,7 @@ export class McpClientManager {
 
     let client: Client;
     try {
-      client = await connectMcpClient(server.url, headers, authProvider);
+      client = await connectMcpClient(connectUrl, headers, authProvider);
     } catch (err) {
       if (err instanceof UnauthorizedError) {
         console.warn(
