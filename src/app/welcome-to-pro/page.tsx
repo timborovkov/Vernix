@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -50,7 +52,17 @@ const UNLOCKED_FEATURES = [
 ];
 
 export default function WelcomeToProPage() {
-  const { billing, loading } = useBilling();
+  const { billing, loading, error } = useBilling();
+  const router = useRouter();
+
+  // Redirect to dashboard if billing fails to load
+  useEffect(() => {
+    if (!loading && (!billing || error)) {
+      router.replace("/dashboard");
+    }
+  }, [loading, billing, error, router]);
+
+  if (!loading && (!billing || error)) return null;
 
   const isTrialing = billing?.trialing;
   const heading = isTrialing
