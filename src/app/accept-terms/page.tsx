@@ -31,17 +31,17 @@ export default function AcceptTermsPage() {
     try {
       const res = await fetch("/api/auth/accept-terms", { method: "POST" });
       if (!res.ok) {
+        setLoading(false);
         setError("Failed to save. Please try again.");
         return;
       }
-      // Refresh JWT with updated termsAcceptedAt from DB
-      await updateSession();
-      // Hard redirect ensures the browser uses the new JWT cookie
+      // Try to refresh JWT (triggers jwt callback with trigger:"update" which re-reads DB)
+      // The API also sets a terms_accepted cookie as fallback in case JWT doesn't refresh
+      await updateSession().catch(() => {});
       window.location.href = "/dashboard";
     } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
       setLoading(false);
+      setError("Something went wrong. Please try again.");
     }
   };
 

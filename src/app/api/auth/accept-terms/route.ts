@@ -13,5 +13,15 @@ export async function POST() {
     .set({ termsAcceptedAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  return NextResponse.json({ success: true });
+  // Set a short-lived cookie to bypass the middleware terms check
+  // until the JWT is refreshed on next sign-in
+  const res = NextResponse.json({ success: true });
+  res.cookies.set("terms_accepted", "1", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30, // 30 days (matches JWT session lifetime)
+    path: "/",
+  });
+  return res;
 }
