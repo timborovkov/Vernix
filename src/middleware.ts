@@ -27,7 +27,10 @@ export default auth((req) => {
   // Redirect authenticated users away from auth pages
   const authPages = ["/login", "/register"];
   if (req.auth && authPages.includes(req.nextUrl.pathname)) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    const dest = req.auth.user?.termsAcceptedAt
+      ? "/dashboard"
+      : "/accept-terms";
+    return NextResponse.redirect(new URL(dest, req.url));
   }
 
   if (!req.auth) {
