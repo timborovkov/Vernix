@@ -161,7 +161,7 @@ export function TrialPromptBanner({
               </span>
               <span className="flex items-center gap-1">
                 <MessageSquare className="h-3 w-3" />
-                200 queries/day
+                AI chat
               </span>
             </div>
           </div>

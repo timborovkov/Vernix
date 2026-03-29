@@ -24,7 +24,7 @@ export function getWelcomeEmailHtml(name: string): string {
           <li>Connect tools like Slack, Linear, or your CRM for live data in meetings</li>
           <li>Voice agent that answers questions and takes action during calls</li>
           <li>Search across all your meetings and uploaded documents</li>
-          <li>200 AI queries per day</li>
+          <li>AI chat across all your meetings</li>
         </ul>
         <p style="font-size:12px;color:#888;margin:8px 0 0">14 days free, then &euro;29/mo. Cancel anytime.</p>
       </div>
