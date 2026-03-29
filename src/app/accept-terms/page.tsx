@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
@@ -17,10 +17,13 @@ export default function AcceptTermsPage() {
 
   // If terms already accepted, skip to welcome
   const termsAccepted = session?.user?.termsAcceptedAt;
-  if (termsAccepted) {
-    router.replace("/welcome");
-    return null;
-  }
+  useEffect(() => {
+    if (termsAccepted) {
+      router.replace("/welcome");
+    }
+  }, [termsAccepted, router]);
+
+  if (termsAccepted) return null;
 
   const handleAccept = async () => {
     setLoading(true);
