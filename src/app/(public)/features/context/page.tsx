@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { HeroBg } from "@/components/hero-bg";
 import { BookOpen, ArrowRight, FileText, Plug } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -47,47 +48,58 @@ const SUPPORTED_FORMATS = [
 
 export default function ContextPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-5xl px-4 pb-28 lg:pb-32">
       {/* Hero */}
-      <div className="mb-20 text-center">
-        <div className="bg-ring/10 mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
-          <BookOpen className="text-ring h-8 w-8" />
-        </div>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          An agent that actually read the brief.
-        </h1>
-        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
-          Upload your docs, specs, and reports. During calls, Vernix answers
-          using your actual data, not generic AI responses.
-        </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button variant="accent" size="lg" render={<Link href="/register" />}>
-            Try free for 14 days
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/pricing" />}>
-            See pricing
-          </Button>
+      <div className="relative mb-24 py-24 text-center lg:mb-28">
+        <HeroBg />
+        <div className="relative z-10">
+          <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
+            <BookOpen className="text-ring h-8 w-8" />
+          </div>
+          <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+            Your in-call AI assistant that knows your docs.
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg leading-relaxed">
+            Upload your docs, specs, and reports. During the call, Vernix
+            answers from your actual data, not generic AI responses.
+          </p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button
+              variant="accent"
+              size="lg"
+              render={<Link href="/register" />}
+            >
+              Try free for 14 days
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+            >
+              See pricing
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Use cases */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
             Your data, answering questions live
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-8">
             {USE_CASES.map((uc) => (
               <Card key={uc.scenario}>
-                <CardContent className="p-6">
-                  <p className="mb-4 text-sm font-semibold">{uc.scenario}</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <CardContent className="p-8">
+                  <p className="mb-5 text-base font-semibold">{uc.scenario}</p>
+                  <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <p className="text-muted-foreground mb-1 text-xs font-medium uppercase">
                         Without Vernix
                       </p>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm leading-relaxed">
                         {uc.before}
                       </p>
                     </div>
@@ -95,7 +107,7 @@ export default function ContextPage() {
                       <p className="mb-1 text-xs font-medium text-green-600 uppercase">
                         With Vernix
                       </p>
-                      <p className="text-sm">{uc.after}</p>
+                      <p className="text-sm leading-relaxed">{uc.after}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -107,35 +119,39 @@ export default function ContextPage() {
 
       {/* How it works */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">How it works</h2>
-          <div className="grid gap-6 sm:grid-cols-3">
-            <div className="text-center">
-              <div className="bg-ring text-ring-foreground mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
+            How it works
+          </h2>
+          <div className="grid gap-10 sm:grid-cols-3">
+            <div className="mx-auto max-w-xs text-center">
+              <div className="bg-ring text-ring-foreground mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold">
                 1
               </div>
-              <h3 className="mb-1 font-semibold">Upload your docs</h3>
-              <p className="text-muted-foreground text-sm">
+              <h3 className="mb-2 text-base font-semibold">Upload your docs</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 PDFs, DOCX, TXT, or Markdown. Drag and drop into your knowledge
                 base.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-ring text-ring-foreground mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+            <div className="mx-auto max-w-xs text-center">
+              <div className="bg-ring text-ring-foreground mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold">
                 2
               </div>
-              <h3 className="mb-1 font-semibold">Start a meeting</h3>
-              <p className="text-muted-foreground text-sm">
+              <h3 className="mb-2 text-base font-semibold">Start a meeting</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 Vernix automatically has access to your documents. You can also
                 attach docs to specific meetings.
               </p>
             </div>
-            <div className="text-center">
-              <div className="bg-ring text-ring-foreground mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+            <div className="mx-auto max-w-xs text-center">
+              <div className="bg-ring text-ring-foreground mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold">
                 3
               </div>
-              <h3 className="mb-1 font-semibold">Ask during the call</h3>
-              <p className="text-muted-foreground text-sm">
+              <h3 className="mb-2 text-base font-semibold">
+                Ask during the call
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">
                 The agent combines your documents with the live conversation to
                 give accurate, grounded answers.
               </p>
@@ -146,27 +162,29 @@ export default function ContextPage() {
 
       {/* Supported formats */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-6 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
             Upload anything your team reads
           </h2>
-          <div className="mx-auto grid max-w-md gap-3 sm:grid-cols-2">
+          <div className="mx-auto grid max-w-2xl gap-4 sm:grid-cols-2">
             {SUPPORTED_FORMATS.map((f) => (
               <div
                 key={f.format}
-                className="border-border flex items-center gap-3 rounded-lg border px-4 py-3"
+                className="border-border flex items-center gap-4 rounded-lg border px-5 py-4"
               >
                 <FileText className="text-muted-foreground h-4 w-4 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">{f.format}</p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-sm leading-relaxed font-medium">
+                    {f.format}
+                  </p>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     {f.description}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-muted-foreground mt-4 text-center text-xs">
+          <p className="text-muted-foreground mt-6 text-center text-xs leading-relaxed">
             Free: 5 documents, 50MB. Pro: 200 documents, 500MB.
           </p>
         </div>
@@ -174,10 +192,10 @@ export default function ContextPage() {
 
       {/* Cross-sell */}
       <ScrollReveal>
-        <div className="bg-muted/30 mb-20 rounded-xl p-6 text-center">
-          <Plug className="text-muted-foreground mx-auto mb-3 h-6 w-6" />
-          <p className="mb-1 text-sm font-medium">Docs are just the start</p>
-          <p className="text-muted-foreground mb-3 text-xs">
+        <div className="bg-muted/30 mb-24 rounded-xl p-8 text-center lg:mb-28">
+          <Plug className="text-muted-foreground mx-auto mb-4 h-6 w-6" />
+          <p className="mb-2 text-sm font-medium">Docs are just the start</p>
+          <p className="text-muted-foreground mx-auto mb-5 max-w-xl text-xs leading-relaxed">
             Pro users also connect live tools like Slack, Linear, and GitHub for
             real-time data during calls.
           </p>
@@ -192,11 +210,11 @@ export default function ContextPage() {
       </ScrollReveal>
 
       {/* Bottom CTA */}
-      <div className="text-center">
-        <h2 className="mb-3 text-2xl font-bold">
+      <div className="pb-2 text-center">
+        <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
           Your docs deserve to be heard
         </h2>
-        <p className="text-muted-foreground mb-6 text-sm">
+        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
           14-day free trial. No charge until the trial ends.
         </p>
         <Button variant="accent" size="lg" render={<Link href="/register" />}>

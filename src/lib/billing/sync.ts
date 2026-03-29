@@ -11,8 +11,10 @@ import { PLANS, FREE_TRIAL } from "./constants";
  *
  * Call this on billing page load to reconcile stale state.
  */
-export async function syncBillingFromPolar(userId: string): Promise<void> {
-  if (!isPolarEnabled()) return;
+export async function syncBillingFromPolar(
+  userId: string
+): Promise<{ synced: boolean }> {
+  if (!isPolarEnabled()) return { synced: false };
 
   const [user] = await db
     .select({
@@ -22,7 +24,7 @@ export async function syncBillingFromPolar(userId: string): Promise<void> {
     .from(users)
     .where(eq(users.id, userId));
 
-  if (!user?.polarCustomerId) return;
+  if (!user?.polarCustomerId) return { synced: false };
 
   try {
     const polar = getPolar();
@@ -47,7 +49,7 @@ export async function syncBillingFromPolar(userId: string): Promise<void> {
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
-      return;
+      return { synced: true };
     }
 
     const isTrialing = activeSub.status === "trialing";
@@ -85,8 +87,9 @@ export async function syncBillingFromPolar(userId: string): Promise<void> {
         })
         .where(eq(users.id, userId));
     }
+    return { synced: true };
   } catch (err) {
-    // Non-blocking: if Polar is unreachable, use cached DB state
     console.error("[Billing Sync] Failed to sync from Polar:", err);
+    return { synced: false };
   }
 }

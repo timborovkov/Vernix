@@ -1,4 +1,5 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import {
   StreamableHTTPClientTransport,
   StreamableHTTPError,
@@ -83,7 +84,8 @@ const CONNECT_TIMEOUT_MS = 10_000;
  */
 export async function connectMcpClient(
   url: string,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  authProvider?: OAuthClientProvider
 ): Promise<Client> {
   if (isSsrfUrl(url)) {
     throw new Error("URL resolves to a private or restricted address");
@@ -93,6 +95,7 @@ export async function connectMcpClient(
   const streamableClient = new Client(CLIENT_INFO);
   try {
     const transport = new StreamableHTTPClientTransport(new URL(url), {
+      authProvider,
       requestInit: { headers, signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) },
     });
     await streamableClient.connect(transport);
@@ -114,6 +117,7 @@ export async function connectMcpClient(
   // --- SSE fallback (fresh Client) ---
   const sseClient = new Client(CLIENT_INFO);
   const sseTransport = new SSEClientTransport(new URL(url), {
+    authProvider,
     requestInit: { headers, signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS) },
     eventSourceInit: {
       fetch: (u, init) =>

@@ -30,7 +30,7 @@ describe("getEffectiveLimits", () => {
     expect(limits.voiceEnabled).toBe(true);
     expect(limits.meetingMinutesPerMonth).toBe(90); // 90-minute trial cap
     expect(limits.documentsCount).toBe(200);
-    expect(limits.apiEnabled).toBe(false); // trial doesn't include API
+    expect(limits.apiEnabled).toBe(true); // trial includes full Pro features
   });
 
   it("returns free limits when trial has expired", () => {

@@ -4,7 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { LogOut, BookOpen, Settings, Download, Zap, Clock } from "lucide-react";
+import {
+  LogOut,
+  BookOpen,
+  Settings,
+  Download,
+  Zap,
+  Clock,
+  Plug,
+} from "lucide-react";
 import { useBilling } from "@/hooks/use-billing";
 import { PLANS, PRICING } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
@@ -16,8 +24,8 @@ function PlanBanner() {
 
   const isPro = billing.plan === PLANS.PRO;
 
-  // Pro users don't need a banner
-  if (isPro && !billing.trialing) return null;
+  // Pro users don't need a banner (non-trialing)
+  if (isPro) return null;
 
   const checkoutUrl = getCheckoutUrl();
 
@@ -91,6 +99,14 @@ export function DashboardHeader() {
           />
         </Link>
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            render={<Link href="/dashboard/integrations" />}
+          >
+            <Plug className="mr-1 h-4 w-4" />
+            <span className="hidden sm:inline">Integrations</span>
+          </Button>
           <Button
             variant="outline"
             size="sm"

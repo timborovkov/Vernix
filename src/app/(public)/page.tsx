@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
 import {
   Mic,
@@ -145,7 +146,7 @@ export default function LandingPage() {
           </Button>
         </div>
         <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
-          No credit card required. 14-day free trial.
+          No credit card required. Free forever, upgrade anytime.
         </p>
         <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
           <Video className="mr-1 h-4 w-4" />
@@ -245,6 +246,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Integration Cloud */}
+      <section className="border-border border-t py-24">
+        <div className="mx-auto max-w-4xl px-4">
+          <h2 className="mb-4 text-center text-2xl font-bold">
+            Connect your tools. Ask during calls.
+          </h2>
+          <p className="text-muted-foreground mx-auto mb-12 max-w-md text-center">
+            Vernix connects to the tools your team already uses. Ask questions
+            and get live answers without leaving the call.
+          </p>
+          <IntegrationCloud />
+        </div>
+      </section>
+
       {/* How it works */}
       <section id="how" className="border-border border-t py-24">
         <div className="mx-auto max-w-4xl px-4">
@@ -273,24 +288,20 @@ export default function LandingPage() {
       </section>
 
       {/* CTA — Loss aversion + Regret aversion + Present bias */}
-      <section className="bg-[oklch(0.145_0_0)] py-24 text-white">
+      <section className="bg-ring/10 border-border border-t border-b py-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="mb-4 text-2xl font-bold">
             Your next meeting could be the first one you never have to
             summarize.
           </h2>
-          <p className="mb-8 opacity-80">
-            14-day free trial. No credit card. Cancel anytime.
+          <p className="text-muted-foreground mb-8">
+            No credit card required. 14-day Pro trial when you upgrade.
           </p>
-          <Button
-            size="lg"
-            variant="secondary"
-            render={<Link href="/register" />}
-          >
+          <Button size="lg" variant="accent" render={<Link href="/register" />}>
             Try Vernix on Your Next Call
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
-          <p className="mt-4 text-xs opacity-60">
+          <p className="text-muted-foreground mt-4 text-xs">
             Set up in under 60 seconds. Your data stays after the trial.
           </p>
         </div>

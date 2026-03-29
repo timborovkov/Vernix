@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 const QUESTIONS = [
   {
     q: "What is Vernix?",
-    a: "Vernix is an AI meeting agent that joins your video calls as a participant. It transcribes conversations in real time, generates summaries, extracts action items, and provides a voice agent that can answer questions using context from your meetings and uploaded documents.",
+    a: "Vernix is an AI assistant that joins your video calls. It connects to your tools (Slack, Linear, GitHub, CRM) and answers questions with live business data during the call. It also transcribes conversations, generates summaries, and extracts action items automatically.",
   },
   {
     q: "Which video platforms are supported?",
@@ -29,7 +29,7 @@ const QUESTIONS = [
   },
   {
     q: "How does the free trial work?",
-    a: "When you sign up, you get a 14-day trial of Pro with 90 minutes of meeting time (voice or silent). After the trial ends or you use up the 90 minutes, you fall back to the free plan. No credit card required.",
+    a: "When you upgrade to Pro, you get a 14-day trial with full Pro features and 90 minutes of meeting time (voice or silent). After the trial, your subscription activates automatically. You can cancel anytime during the trial.",
   },
   {
     q: "How does pricing work?",

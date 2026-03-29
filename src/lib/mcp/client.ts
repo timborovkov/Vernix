@@ -1,6 +1,9 @@
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { jsonSchema } from "ai";
 import { connectMcpClient } from "./transport";
+import { buildAuthHeaders } from "./auth";
+import { VernixOAuthProvider } from "./oauth-provider";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
@@ -103,7 +106,7 @@ export class McpClientManager {
     for (const server of enabled) {
       try {
         await Promise.race([
-          manager.connectToServer(server),
+          manager.connectToServer(server, userId),
           new Promise<never>((_, reject) =>
             setTimeout(
               () =>
@@ -128,13 +131,30 @@ export class McpClientManager {
     return manager;
   }
 
-  private async connectToServer(server: McpServer): Promise<void> {
-    const headers: Record<string, string> = {};
-    if (server.apiKey) {
-      headers["Authorization"] = `Bearer ${server.apiKey}`;
-    }
+  private async connectToServer(
+    server: McpServer,
+    userId: string
+  ): Promise<void> {
+    const headers = buildAuthHeaders(server);
 
-    const client = await connectMcpClient(server.url, headers);
+    // OAuth servers use the SDK's authProvider for automatic token management
+    const authProvider =
+      server.authType === "oauth"
+        ? new VernixOAuthProvider(userId, server.id, server.url)
+        : undefined;
+
+    let client: Client;
+    try {
+      client = await connectMcpClient(server.url, headers, authProvider);
+    } catch (err) {
+      if (err instanceof UnauthorizedError) {
+        console.warn(
+          `[MCP] OAuth server "${server.name}" needs re-authorization`
+        );
+        return; // Skip this server — user needs to re-authorize via UI
+      }
+      throw err;
+    }
 
     const { tools } = await client.listTools();
     for (const tool of tools) {

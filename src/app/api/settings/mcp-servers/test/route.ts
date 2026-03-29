@@ -5,26 +5,30 @@ import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { connectMcpClient, isSsrfUrl } from "@/lib/mcp/transport";
+import { buildAuthHeaders } from "@/lib/mcp/auth";
 
-// Accept either an existing server ID (apiKey looked up server-side)
-// or a raw url+apiKey pair (for testing before saving)
+// Accept either an existing server ID or raw connection params for testing before saving
 const testSchema = z.union([
   z.object({ id: z.uuid() }),
-  z.object({ url: z.url(), apiKey: z.string().optional() }),
+  z.object({
+    url: z.url(),
+    authType: z.enum(["none", "bearer", "header", "basic"]).default("none"),
+    authHeaderName: z.string().optional(),
+    authHeaderValue: z.string().optional(),
+    authUsername: z.string().optional(),
+    authPassword: z.string().optional(),
+    // Legacy
+    apiKey: z.string().optional(),
+  }),
 ]);
 
 async function probe(
   url: string,
-  apiKey?: string | null
+  headers: Record<string, string>
 ): Promise<{
   toolCount: number;
   tools: { name: string; description: string }[];
 }> {
-  const headers: Record<string, string> = {};
-  if (apiKey) {
-    headers["Authorization"] = `Bearer ${apiKey}`;
-  }
-
   const client = await connectMcpClient(url, headers);
 
   try {
@@ -61,7 +65,7 @@ export async function POST(request: Request) {
   }
 
   let url: string;
-  let apiKey: string | null | undefined;
+  let headers: Record<string, string>;
 
   if ("id" in parsed.data) {
     const [server] = await db
@@ -76,10 +80,20 @@ export async function POST(request: Request) {
     }
 
     url = server.url;
-    apiKey = server.apiKey;
+    headers = buildAuthHeaders(server);
   } else {
     url = parsed.data.url;
-    apiKey = parsed.data.apiKey;
+    headers = buildAuthHeaders({
+      authType:
+        parsed.data.apiKey && parsed.data.authType === "none"
+          ? "bearer"
+          : parsed.data.authType,
+      authHeaderName: parsed.data.authHeaderName ?? null,
+      authHeaderValue: parsed.data.authHeaderValue ?? null,
+      authUsername: parsed.data.authUsername ?? null,
+      authPassword: parsed.data.authPassword ?? null,
+      apiKey: parsed.data.apiKey ?? null,
+    });
   }
 
   if (isSsrfUrl(url)) {
@@ -101,7 +115,7 @@ export async function POST(request: Request) {
   });
 
   try {
-    const result = await Promise.race([probe(url, apiKey), timeout]);
+    const result = await Promise.race([probe(url, headers), timeout]);
     clearTimeout(timeoutId!);
     return NextResponse.json({ success: true, ...result });
   } catch (error) {

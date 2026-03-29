@@ -148,7 +148,9 @@ export async function POST(request: Request) {
       })
       .returning();
 
-    recordUsageEvent(user.id, "doc_upload").catch(() => {});
+    recordUsageEvent(user.id, "doc_upload").catch((e) =>
+      console.error("[Billing] Usage recording failed:", e)
+    );
 
     // Process synchronously — files ≤10MB complete in seconds
     try {

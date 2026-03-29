@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { IntegrationCloud } from "@/components/integration-cloud";
+import { HeroBg } from "@/components/hero-bg";
 import {
   Plug,
   ArrowRight,
@@ -65,47 +67,58 @@ const STEPS = [
 
 export default function IntegrationsPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-5xl px-4 pb-28 lg:pb-32">
       {/* Hero */}
-      <div className="mb-20 text-center">
-        <div className="bg-ring/10 mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
-          <Plug className="text-ring h-8 w-8" />
-        </div>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Stop switching tabs. Ask Vernix.
-        </h1>
-        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
-          Connect Slack, Linear, GitHub, or your CRM. Get real answers during
-          calls, not after.
-        </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button variant="accent" size="lg" render={<Link href="/register" />}>
-            Try free for 14 days
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/pricing" />}>
-            See pricing
-          </Button>
+      <div className="relative mb-24 py-24 text-center lg:mb-28">
+        <HeroBg />
+        <div className="relative z-10">
+          <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
+            <Plug className="text-ring h-8 w-8" />
+          </div>
+          <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+            Stop switching tabs. Ask your in-call AI assistant for every tool.
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg leading-relaxed">
+            Connect Slack, Linear, GitHub, or your CRM. Ask Vernix during the
+            call and get real answers in seconds.
+          </p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button
+              variant="accent"
+              size="lg"
+              render={<Link href="/register" />}
+            >
+              Try free for 14 days
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+            >
+              See pricing
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Use cases */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
             What it looks like in practice
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-8">
             {USE_CASES.map((uc) => (
               <Card key={uc.scenario}>
-                <CardContent className="p-6">
-                  <p className="mb-4 text-sm font-semibold">{uc.scenario}</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <CardContent className="p-8">
+                  <p className="mb-5 text-base font-semibold">{uc.scenario}</p>
+                  <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <p className="text-muted-foreground mb-1 text-xs font-medium uppercase">
                         Without Vernix
                       </p>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm leading-relaxed">
                         {uc.before}
                       </p>
                     </div>
@@ -113,7 +126,7 @@ export default function IntegrationsPage() {
                       <p className="mb-1 text-xs font-medium text-green-600 uppercase">
                         With Vernix
                       </p>
-                      <p className="text-sm">{uc.after}</p>
+                      <p className="text-sm leading-relaxed">{uc.after}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -125,29 +138,43 @@ export default function IntegrationsPage() {
 
       {/* How it works */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">How it works</h2>
-          <div className="grid gap-6 sm:grid-cols-3">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
+            How it works
+          </h2>
+          <div className="grid gap-10 sm:grid-cols-3">
             {STEPS.map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="bg-ring text-ring-foreground mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+              <div key={s.step} className="mx-auto max-w-xs text-center">
+                <div className="bg-ring text-ring-foreground mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold">
                   {s.step}
                 </div>
-                <h3 className="mb-1 font-semibold">{s.title}</h3>
-                <p className="text-muted-foreground text-sm">{s.description}</p>
+                <h3 className="mb-2 text-base font-semibold">{s.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {s.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </ScrollReveal>
 
+      {/* Integration Cloud */}
+      <ScrollReveal>
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
+            Tools you can connect
+          </h2>
+          <IntegrationCloud showCta={false} />
+        </div>
+      </ScrollReveal>
+
       {/* Plus section */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-6 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
             Plus, everything else
           </h2>
-          <div className="text-muted-foreground mx-auto grid max-w-lg gap-3 text-sm sm:grid-cols-2">
+          <div className="text-muted-foreground mx-auto grid max-w-2xl gap-4 text-sm sm:grid-cols-2">
             <div className="flex items-center gap-2">
               <Mic className="h-4 w-4 shrink-0" />
               Voice agent answers live
@@ -169,11 +196,11 @@ export default function IntegrationsPage() {
       </ScrollReveal>
 
       {/* Bottom CTA */}
-      <div className="text-center">
-        <h2 className="mb-3 text-2xl font-bold">
+      <div className="pb-2 text-center">
+        <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
           Ready to stop switching tabs?
         </h2>
-        <p className="text-muted-foreground mb-6 text-sm">
+        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
           14-day free trial. No charge until the trial ends.
         </p>
         <Button variant="accent" size="lg" render={<Link href="/register" />}>

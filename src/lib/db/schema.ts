@@ -188,7 +188,13 @@ export const mcpServers = pgTable("mcp_servers", {
     .notNull(),
   name: text("name").notNull(),
   url: text("url").notNull(),
-  apiKey: text("api_key"),
+  apiKey: text("api_key"), // legacy — use authHeaderValue instead
+  authType: text("auth_type").default("none").notNull(), // none | bearer | header | basic | oauth
+  authHeaderName: text("auth_header_name"), // for 'header' mode (e.g. "X-API-Key")
+  authHeaderValue: text("auth_header_value"), // for 'bearer' and 'header' modes
+  authUsername: text("auth_username"), // for 'basic' mode
+  authPassword: text("auth_password"), // for 'basic' mode
+  catalogIntegrationId: text("catalog_integration_id"), // links to catalog id (e.g. "slack")
   enabled: boolean("enabled").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -199,6 +205,40 @@ export const mcpServers = pgTable("mcp_servers", {
 });
 
 export type McpServer = typeof mcpServers.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// OAuth tokens for MCP servers
+// ---------------------------------------------------------------------------
+
+export const mcpOauthTokens = pgTable("mcp_oauth_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  mcpServerId: uuid("mcp_server_id")
+    .references(() => mcpServers.id, { onDelete: "cascade" })
+    .notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  tokenType: text("token_type").default("Bearer"),
+  scope: text("scope"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  clientId: text("client_id"),
+  clientSecret: text("client_secret"),
+  clientIdIssuedAt: timestamp("client_id_issued_at", { withTimezone: true }),
+  clientSecretExpiresAt: timestamp("client_secret_expires_at", {
+    withTimezone: true,
+  }),
+  codeVerifier: text("code_verifier"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export type McpOauthToken = typeof mcpOauthTokens.$inferSelect;
 
 // ---------------------------------------------------------------------------
 // Usage tracking

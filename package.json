@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "drizzle-kit push --force || echo 'Schema push failed (may be OK if already applied)' && next start",
+    "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
     "format": "prettier --write .",
@@ -21,9 +21,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:integration": "vitest run -c vitest.integration.config.ts",
+    "test:network": "vitest run -c vitest.network.config.ts",
     "test:all": "vitest run && vitest run -c vitest.integration.config.ts",
     "test:coverage": "vitest run --coverage",
-    "validate": "pnpm format && pnpm lint --fix && pnpm typecheck && pnpm test"
+    "validate": "pnpm test && pnpm format && pnpm lint --fix && pnpm typecheck"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.47",
@@ -44,6 +45,7 @@
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.1",
+    "jose": "^6.2.2",
     "lucide-react": "^0.577.0",
     "mammoth": "^1.12.0",
     "next": "16.2.1",

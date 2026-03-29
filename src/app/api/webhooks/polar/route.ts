@@ -24,6 +24,18 @@ export const POST = Webhooks({
     const isTrialing = payload.data.status === "trialing";
 
     if (isTrialing) {
+      // Guard: don't downgrade if user is already Pro (race with subscription.active)
+      const [currentUser] = await db
+        .select({ plan: users.plan })
+        .from(users)
+        .where(eq(users.id, externalId));
+      if (currentUser?.plan === PLANS.PRO) {
+        console.log(
+          `[Polar Webhook] Skipping trialing event, user ${externalId} is already Pro`
+        );
+        return;
+      }
+
       // Polar trial: store Polar IDs and set/extend trial, but keep plan as free.
       // Our trial limits (90 min, Pro features minus API/MCP) apply.
       const trialEndsAt = payload.data.trialEnd

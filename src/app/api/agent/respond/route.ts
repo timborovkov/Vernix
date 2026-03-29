@@ -83,7 +83,9 @@ export async function POST(request: Request) {
       max_completion_tokens: 1024,
     });
 
-    recordUsageEvent(user.id, "rag_query").catch(() => {});
+    recordUsageEvent(user.id, "rag_query").catch((e) =>
+      console.error("[Billing] Usage recording failed:", e)
+    );
     return NextResponse.json({
       answer: completion.choices[0].message.content,
       sources: ragResults,

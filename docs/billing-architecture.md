@@ -115,17 +115,20 @@ createdAt  timestamp
 
 ## Checkout Flow
 
-1. User clicks "Upgrade to Pro" on pricing page or settings
-2. Redirected to `GET /api/checkout?products=<product_id>&customerExternalId=<userId>&customerEmail=<email>`
-3. Polar handles checkout (payment info, trial activation)
-4. On success: redirected to `/dashboard/settings?billing=success`
-5. Polar fires `subscription.created` webhook → updates user's plan to `pro`
+1. User clicks "Upgrade to Pro" (pricing page, settings, or paywall dialog)
+2. Frontend calls `GET /api/checkout?interval=monthly|annual`
+3. Server reads session via `auth()` — no user IDs in query params (prevents impersonation)
+4. Server creates Polar checkout with `customerExternalId` from session
+5. Returns redirect URL to Polar's hosted checkout
+6. Polar handles checkout (payment info, trial activation)
+7. On success: redirected to `/dashboard/settings?billing=success`
+8. Polar fires `subscription.created` webhook → starts trial or activates Pro
 
-The checkout route uses `@polar-sh/nextjs` `Checkout` helper — it handles the redirect to Polar's hosted checkout.
+The checkout route uses Polar SDK directly (not `@polar-sh/nextjs` Checkout helper) for more control over error handling. SDKError 401 returns a specific "Polar configuration error" message.
 
 ### Customer External ID
 
-We pass the user's UUID as `customerExternalId` in checkout. This links the Polar customer to our user record, enabling webhook handlers to find the right user via `payload.data.customer.externalId`.
+The user's UUID is passed as `customerExternalId` during checkout via server-side session. This links the Polar customer to our user record, enabling webhook handlers to find the right user via `payload.data.customer.externalId`.
 
 ---
 
@@ -133,14 +136,14 @@ We pass the user's UUID as `customerExternalId` in checkout. This links the Pola
 
 `src/app/api/webhooks/polar/route.ts` handles:
 
-| Event                   | Action                                                            |
-| ----------------------- | ----------------------------------------------------------------- |
-| `subscription.created`  | Set plan=pro, store polarCustomerId, subscriptionId, period dates |
-| `subscription.active`   | Update period dates (renewal)                                     |
-| `subscription.updated`  | Update period dates                                               |
-| `subscription.canceled` | Log (subscription stays active until period end)                  |
-| `subscription.revoked`  | Set plan=free, clear subscription fields                          |
-| `customer.created`      | Store polarCustomerId                                             |
+| Event                   | Action                                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `subscription.created`  | If trialing: keep plan=free, set trialEndsAt from Polar (trial limits apply via `getEffectiveLimits`: full Pro features capped at 90 min). If active: set plan=pro. Store Polar IDs and period dates. Guards against race condition with `subscription.active` — won't downgrade a user already on Pro. |
+| `subscription.active`   | Set plan=pro, update period dates. Fires when trial ends and payment succeeds, or on renewal.                                                                                                                                                                                                           |
+| `subscription.updated`  | Update period dates                                                                                                                                                                                                                                                                                     |
+| `subscription.canceled` | Send retention email, do NOT downgrade (user keeps access until period ends)                                                                                                                                                                                                                            |
+| `subscription.revoked`  | Set plan=free, clear subscription + trial fields. Always downgrade immediately. Polar only fires this AFTER the access period has ended ([docs](https://docs.polar.sh/api-reference/webhooks/subscription.revoked)).                                                                                    |
+| `customer.created`      | Store polarCustomerId                                                                                                                                                                                                                                                                                   |
 
 Webhook signature verification is handled by `@polar-sh/nextjs` `Webhooks` helper using `POLAR_WEBHOOK_SECRET`.
 
@@ -178,7 +181,7 @@ getEffectiveLimits(plan, trialEndsAt) → EffectiveLimits
 ```
 
 - **Free plan, no trial:** `LIMITS.free` (30 min silent, no voice, 5 docs, etc.)
-- **Free plan, active trial:** `TRIAL_LIMITS` (Pro limits minus API/MCP)
+- **Free plan, active trial:** `TRIAL_LIMITS` (full Pro features, capped at 90 minutes)
 - **Pro plan:** `LIMITS.pro` (unlimited minutes via credits, 200 docs, API/MCP)
 
 ### Check Functions
@@ -208,10 +211,12 @@ Enforcement should be added at the API route level:
 
 ## Trial System
 
-- On signup (both email/password and OAuth), `trialEndsAt` is set to `now + 14 days`
-- Trial gives Pro-level limits except API/MCP access
-- When trial expires, user falls back to Free limits
-- Trial is checked via `isTrialActive(trialEndsAt)` — simple date comparison
+- Trial starts when user subscribes to Pro via Polar checkout (NOT on signup)
+- `trialEndsAt` is set from Polar's `subscription.created` webhook (status: trialing)
+- Trial gives full Pro features including voice, integrations, API, and MCP, capped at 90 total minutes
+- Trial state requires both `plan === "free"` AND `polarSubscriptionId` exists — prevents stale trial state
+- When trial expires, user falls back to Free limits until payment succeeds
+- `isTrialActive(plan, trialEndsAt)` checks both plan and date
 - Polar's trial abuse prevention (email + payment fingerprinting) handles duplicate prevention at checkout
 
 ---
@@ -256,8 +261,7 @@ All billing constants live in `src/lib/billing/constants.ts`:
 - `MONTHLY_CREDIT` — included credit per plan
 - `FREE_TRIAL` — trial duration and minute cap
 - `LIMITS` — per-plan hard caps (meetings, docs, queries, API, MCP)
-- `TRIAL_LIMITS` — trial-specific limits
-- `POLAR_PRODUCTS` — env-backed product ID accessors
+- `TRIAL_LIMITS` — trial limits (full Pro features, 90-minute meeting cap)
 
 ---
 

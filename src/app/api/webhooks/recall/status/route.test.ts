@@ -71,13 +71,14 @@ describe("POST /api/webhooks/recall/status", () => {
     expect(status).toBe(400);
   });
 
-  it("returns 400 on invalid payload", async () => {
+  it("acknowledges unrecognized event formats with 200", async () => {
     const req = createJsonRequest(URL, {
       method: "POST",
       body: { foo: "bar" },
     });
-    const { status } = await parseJsonResponse(await POST(req));
-    expect(status).toBe(400);
+    const { status, data } = await parseJsonResponse(await POST(req));
+    expect(status).toBe(200);
+    expect(data.skipped).toBe(true);
   });
 
   it("skips unhandled events", async () => {

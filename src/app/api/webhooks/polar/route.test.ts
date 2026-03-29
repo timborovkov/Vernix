@@ -98,6 +98,12 @@ describe("Polar webhook: onSubscriptionCreated", () => {
   });
 
   it("keeps plan free and sets trialEndsAt when subscription is trialing", async () => {
+    // First where() call is the plan check (returns user with plan: free)
+    // Subsequent where() calls are for the update
+    mockDb.where
+      .mockResolvedValueOnce([{ plan: "free" }])
+      .mockImplementation(() => mockDb);
+
     await capturedHandlers.onSubscriptionCreated(
       subscriptionPayload({ status: "trialing", trialEnd: TRIAL_END })
     );

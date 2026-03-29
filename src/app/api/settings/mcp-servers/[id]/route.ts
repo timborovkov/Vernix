@@ -15,7 +15,17 @@ export async function PATCH(
   const { id } = await params;
   const body = await request.json();
 
-  const { name, url, apiKey, enabled } = body as Record<string, unknown>;
+  const {
+    name,
+    url,
+    apiKey,
+    enabled,
+    authType,
+    authHeaderName,
+    authHeaderValue,
+    authUsername,
+    authPassword,
+  } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof name === "string" && name.length > 0) updates.name = name;
   if (typeof url === "string" && url.length > 0) {
@@ -28,6 +38,17 @@ export async function PATCH(
   }
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
   if (typeof enabled === "boolean") updates.enabled = enabled;
+  const validAuthTypes = ["none", "bearer", "header", "basic", "oauth"];
+  if (typeof authType === "string" && validAuthTypes.includes(authType))
+    updates.authType = authType;
+  if (typeof authHeaderName === "string")
+    updates.authHeaderName = authHeaderName || null;
+  if (typeof authHeaderValue === "string")
+    updates.authHeaderValue = authHeaderValue || null;
+  if (typeof authUsername === "string")
+    updates.authUsername = authUsername || null;
+  if (typeof authPassword === "string")
+    updates.authPassword = authPassword || null;
 
   const [updated] = await db
     .update(mcpServers)
@@ -37,6 +58,7 @@ export async function PATCH(
       id: mcpServers.id,
       name: mcpServers.name,
       url: mcpServers.url,
+      authType: mcpServers.authType,
       enabled: mcpServers.enabled,
       createdAt: mcpServers.createdAt,
       updatedAt: mcpServers.updatedAt,
