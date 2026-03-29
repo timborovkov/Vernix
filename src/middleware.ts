@@ -43,18 +43,9 @@ export default auth((req) => {
 
   // Enforce terms acceptance for authenticated users on protected routes
   // Skip for: accept-terms page itself, its API, welcome page, and API routes
-  const termsExempt = [
-    "/accept-terms",
-    "/api/auth/accept-terms",
-    "/welcome",
-    "/welcome-to-pro",
-  ];
+  const termsExempt = ["/accept-terms", "/welcome", "/welcome-to-pro"];
   const isApi = req.nextUrl.pathname.startsWith("/api/");
-  if (
-    !isApi &&
-    !termsExempt.includes(req.nextUrl.pathname) &&
-    !req.nextUrl.pathname.startsWith("/api/auth/")
-  ) {
+  if (!isApi && !termsExempt.includes(req.nextUrl.pathname)) {
     if (req.auth?.user && !req.auth.user.termsAcceptedAt) {
       return NextResponse.redirect(new URL("/accept-terms", req.url));
     }
