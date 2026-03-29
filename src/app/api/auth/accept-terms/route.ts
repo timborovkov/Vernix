@@ -20,7 +20,7 @@ export async function POST() {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days (JWT refreshes within this window)
+    maxAge: 60 * 60 * 24 * 30, // 30 days (matches JWT session lifetime)
     path: "/",
   });
   return res;
