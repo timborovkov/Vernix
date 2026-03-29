@@ -58,6 +58,7 @@ providers.push(
         email: user.email,
         name: user.name,
         image: user.image,
+        termsAcceptedAt: user.termsAcceptedAt,
       };
     },
   })
