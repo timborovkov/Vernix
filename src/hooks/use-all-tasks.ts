@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 
-interface TaskWithMeeting {
+export interface TaskWithMeeting {
   id: string;
   meetingId: string;
   title: string;
@@ -14,23 +15,57 @@ interface TaskWithMeeting {
   meetingTitle: string | null;
 }
 
-async function fetchAllTasks(): Promise<TaskWithMeeting[]> {
-  const res = await fetch("/api/tasks?status=open");
+async function fetchAllTasks(status?: string): Promise<TaskWithMeeting[]> {
+  const params = status ? `?status=${status}` : "";
+  const res = await fetch(`/api/tasks${params}`);
   if (!res.ok) throw new Error("Failed to load tasks");
   const data = await res.json();
   return data.tasks;
 }
 
-export function useAllTasks() {
+export function useAllTasks(status?: "open" | "completed") {
   const queryClient = useQueryClient();
+  const queryKey = status
+    ? [...queryKeys.tasks.all, status]
+    : queryKeys.tasks.all;
+
   const { data: tasks = [], isLoading: loading } = useQuery({
-    queryKey: queryKeys.tasks.all,
-    queryFn: fetchAllTasks,
+    queryKey,
+    queryFn: () => fetchAllTasks(status),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      meetingId,
+      taskId,
+      updates,
+    }: {
+      meetingId: string;
+      taskId: string;
+      updates: { status?: string; title?: string; assignee?: string | null };
+    }) => {
+      const res = await fetch(`/api/meetings/${meetingId}/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error("Failed to update task");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
+    },
+    onError: () => toast.error("Failed to update task"),
   });
 
   return {
     tasks,
     loading,
+    updateTask: (
+      meetingId: string,
+      taskId: string,
+      updates: { status?: string; title?: string; assignee?: string | null }
+    ) => updateMutation.mutate({ meetingId, taskId, updates }),
     refresh: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all }),
   };
