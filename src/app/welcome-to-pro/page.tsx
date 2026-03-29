@@ -141,7 +141,7 @@ export default function WelcomeToProPage() {
         </div>
 
         <div className="mt-8 flex items-center justify-center gap-2 text-xs">
-          <Check className="text-green-500 h-3.5 w-3.5" />
+          <Check className="h-3.5 w-3.5 text-green-500" />
           <span className="text-muted-foreground">
             {isTrialing
               ? "Cancel anytime before the trial ends"
