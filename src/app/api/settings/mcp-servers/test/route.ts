@@ -14,7 +14,9 @@ const testSchema = z.union([
   z.object({ id: z.uuid() }),
   z.object({
     url: z.url(),
-    authType: z.enum(["none", "bearer", "header", "basic"]).default("none"),
+    authType: z
+      .enum(["none", "bearer", "header", "basic", "url_key"])
+      .default("none"),
     authHeaderName: z.string().optional(),
     authHeaderValue: z.string().optional(),
     authUsername: z.string().optional(),
@@ -84,12 +86,30 @@ export async function POST(request: Request) {
     }
 
     url = server.url;
+    // url_key: embed API key as query param
+    if (server.authType === "url_key" && server.authHeaderValue) {
+      const u = new URL(server.url);
+      u.searchParams.set(
+        server.authHeaderName ?? "apiKey",
+        server.authHeaderValue
+      );
+      url = u.toString();
+    }
     headers = buildAuthHeaders(server);
     if (server.authType === "oauth") {
       authProvider = new VernixOAuthProvider(user.id, server.id, server.url);
     }
   } else {
     url = parsed.data.url;
+    // url_key: embed API key as query param
+    if (parsed.data.authType === "url_key" && parsed.data.authHeaderValue) {
+      const u = new URL(parsed.data.url);
+      u.searchParams.set(
+        parsed.data.authHeaderName ?? "apiKey",
+        parsed.data.authHeaderValue
+      );
+      url = u.toString();
+    }
     headers = buildAuthHeaders({
       authType:
         parsed.data.apiKey && parsed.data.authType === "none"

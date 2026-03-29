@@ -6,7 +6,14 @@ import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { invalidateMcpCache } from "@/lib/mcp/client";
 
-const authTypeEnum = z.enum(["none", "bearer", "header", "basic", "oauth"]);
+const authTypeEnum = z.enum([
+  "none",
+  "bearer",
+  "header",
+  "basic",
+  "oauth",
+  "url_key",
+]);
 
 const createServerSchema = z.object({
   name: z.string().min(1).max(100),
