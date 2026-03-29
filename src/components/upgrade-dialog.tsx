@@ -223,8 +223,11 @@ export function UpgradeDialog({
               <DialogTitle className="text-base">{copy.title}</DialogTitle>
               {billing && (
                 <Badge variant="outline" className="mt-1">
-                  {isPro ? "Pro" : "Free"}
-                  {isTrialing ? ` (trial, ${trialDays}d left)` : ""}
+                  {isTrialing
+                    ? `Pro Trial: ${trialDays}d left`
+                    : isPro
+                      ? "Pro"
+                      : "Free"}
                 </Badge>
               )}
             </div>
@@ -245,8 +248,9 @@ export function UpgradeDialog({
           {/* Trial context */}
           {isTrialing && trialDays > 0 && (
             <p className="text-muted-foreground text-xs">
-              Your trial ends in {trialDays} day{trialDays !== 1 ? "s" : ""}.
-              Upgrade now to keep full access.
+              You have Pro access for {trialDays} more day
+              {trialDays !== 1 ? "s" : ""}. Your subscription will activate
+              automatically after the trial.
             </p>
           )}
           {isTrialing && trialDays === 0 && (
@@ -263,7 +267,7 @@ export function UpgradeDialog({
           )}
         </div>
 
-        {!isPro && (
+        {!isPro && !isTrialing && (
           <div className="flex gap-2">
             <button
               type="button"

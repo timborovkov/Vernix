@@ -61,7 +61,9 @@ export async function GET(request: Request) {
       documentId: r.documentId,
     }));
 
-    recordUsageEvent(user.id, "rag_query").catch(() => {});
+    recordUsageEvent(user.id, "rag_query").catch((e) =>
+      console.error("[Billing] Usage recording failed:", e)
+    );
     return NextResponse.json({ results });
   } catch (error) {
     if (error instanceof MeetingNotFoundError) {

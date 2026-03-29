@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { HeroBg } from "@/components/hero-bg";
 import {
   Search,
   ArrowRight,
@@ -66,50 +67,61 @@ const STEPS = [
 
 export default function MeetingMemoryPage() {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-5xl px-4 pb-28 lg:pb-32">
       {/* Hero */}
-      <div className="mb-20 text-center">
-        <div className="bg-ring/10 mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full">
-          <Search className="text-ring h-8 w-8" />
+      <div className="relative mb-24 py-24 text-center lg:mb-28">
+        <HeroBg />
+        <div className="relative z-10">
+          <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
+            <Search className="text-ring h-8 w-8" />
+          </div>
+          <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
+            Your in-call AI assistant with perfect meeting memory.
+          </h1>
+          <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg leading-relaxed">
+            During the call and after it ends, Vernix captures every decision,
+            summarizes key points, and tracks action items automatically.
+          </p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button
+              variant="accent"
+              size="lg"
+              render={<Link href="/register" />}
+            >
+              Start free
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              render={<Link href="/pricing" />}
+            >
+              See pricing
+            </Button>
+          </div>
+          <p className="text-muted-foreground mt-4 text-xs leading-relaxed">
+            Free plan includes 5 meetings per month. No credit card.
+          </p>
         </div>
-        <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
-          Find what was said. In any meeting. In seconds.
-        </h1>
-        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-lg">
-          Every call transcribed, summarized, and searchable. Action items
-          tracked automatically.
-        </p>
-        <div className="flex flex-col justify-center gap-3 sm:flex-row">
-          <Button variant="accent" size="lg" render={<Link href="/register" />}>
-            Start free
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="lg" render={<Link href="/pricing" />}>
-            See pricing
-          </Button>
-        </div>
-        <p className="text-muted-foreground mt-3 text-xs">
-          Free plan includes 5 meetings per month. No credit card.
-        </p>
       </div>
 
       {/* Use cases */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
             Sound familiar?
           </h2>
-          <div className="space-y-6">
+          <div className="space-y-8">
             {USE_CASES.map((uc) => (
               <Card key={uc.scenario}>
-                <CardContent className="p-6">
-                  <p className="mb-4 text-sm font-semibold">{uc.scenario}</p>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                <CardContent className="p-8">
+                  <p className="mb-5 text-base font-semibold">{uc.scenario}</p>
+                  <div className="grid gap-6 sm:grid-cols-2">
                     <div>
                       <p className="text-muted-foreground mb-1 text-xs font-medium uppercase">
                         Without Vernix
                       </p>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground text-sm leading-relaxed">
                         {uc.before}
                       </p>
                     </div>
@@ -117,7 +129,7 @@ export default function MeetingMemoryPage() {
                       <p className="mb-1 text-xs font-medium text-green-600 uppercase">
                         With Vernix
                       </p>
-                      <p className="text-sm">{uc.after}</p>
+                      <p className="text-sm leading-relaxed">{uc.after}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -129,16 +141,20 @@ export default function MeetingMemoryPage() {
 
       {/* How it works */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-8 text-center text-2xl font-bold">How it works</h2>
-          <div className="grid gap-6 sm:grid-cols-3">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-10 text-center text-2xl font-bold sm:text-3xl">
+            How it works
+          </h2>
+          <div className="grid gap-10 sm:grid-cols-3">
             {STEPS.map((s) => (
-              <div key={s.step} className="text-center">
-                <div className="bg-ring text-ring-foreground mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold">
+              <div key={s.step} className="mx-auto max-w-xs text-center">
+                <div className="bg-ring text-ring-foreground mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full text-sm font-bold">
                   {s.step}
                 </div>
-                <h3 className="mb-1 font-semibold">{s.title}</h3>
-                <p className="text-muted-foreground text-sm">{s.description}</p>
+                <h3 className="mb-2 text-base font-semibold">{s.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {s.description}
+                </p>
               </div>
             ))}
           </div>
@@ -147,19 +163,19 @@ export default function MeetingMemoryPage() {
 
       {/* What you get */}
       <ScrollReveal>
-        <div className="mb-20">
-          <h2 className="mb-6 text-center text-2xl font-bold">
+        <div className="mb-24 lg:mb-28">
+          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
             What every meeting gives you
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-5 sm:grid-cols-2">
             <Card>
-              <CardContent className="flex items-start gap-3 p-4">
+              <CardContent className="flex items-start gap-4 p-5">
                 <FileText className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">
                     Summary and key decisions
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     AI-generated summary with the important points, not a wall
                     of text.
                   </p>
@@ -167,13 +183,13 @@ export default function MeetingMemoryPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="flex items-start gap-3 p-4">
+              <CardContent className="flex items-start gap-4 p-5">
                 <ListChecks className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">
                     Action items with assignees
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     Tasks pulled from the conversation. No more &quot;who was
                     going to do that?&quot;
                   </p>
@@ -181,24 +197,24 @@ export default function MeetingMemoryPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="flex items-start gap-3 p-4">
+              <CardContent className="flex items-start gap-4 p-5">
                 <Mic className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">
                     Full transcript with speakers
                   </p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     Every word, identified by speaker. Searchable immediately.
                   </p>
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="flex items-start gap-3 p-4">
+              <CardContent className="flex items-start gap-4 p-5">
                 <Search className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">Cross-meeting search</p>
-                  <p className="text-muted-foreground text-xs">
+                  <p className="text-muted-foreground text-xs leading-relaxed">
                     Find what was said across all your calls at once. Semantic
                     search, not just keyword matching.
                   </p>
@@ -211,10 +227,10 @@ export default function MeetingMemoryPage() {
 
       {/* Upgrade nudge */}
       <ScrollReveal>
-        <div className="bg-muted/30 mb-20 rounded-xl p-6 text-center">
-          <Plug className="text-muted-foreground mx-auto mb-3 h-6 w-6" />
-          <p className="mb-1 text-sm font-medium">Want more than memory?</p>
-          <p className="text-muted-foreground mb-3 text-xs">
+        <div className="bg-muted/30 mb-24 rounded-xl p-8 text-center lg:mb-28">
+          <Plug className="text-muted-foreground mx-auto mb-4 h-6 w-6" />
+          <p className="mb-2 text-sm font-medium">Want more than memory?</p>
+          <p className="text-muted-foreground mx-auto mb-5 max-w-xl text-xs leading-relaxed">
             Pro users connect tools like Slack, Linear, and GitHub. The agent
             answers with live data during calls.
           </p>
@@ -229,11 +245,11 @@ export default function MeetingMemoryPage() {
       </ScrollReveal>
 
       {/* Bottom CTA */}
-      <div className="text-center">
-        <h2 className="mb-3 text-2xl font-bold">
+      <div className="pb-2 text-center">
+        <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
           Never forget a meeting again
         </h2>
-        <p className="text-muted-foreground mb-6 text-sm">
+        <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
           Start free. No credit card required.
         </p>
         <Button variant="accent" size="lg" render={<Link href="/register" />}>

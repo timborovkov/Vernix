@@ -69,18 +69,13 @@ export const LIMITS = {
     apiEnabled: true,
     mcpEnabled: true,
     apiRequestsPerDay: 1000,
-    mcpServerConnections: 5,
-    mcpClientConnections: 10,
+    mcpServerConnections: null, // unlimited
+    mcpClientConnections: null, // unlimited
   },
 } as const;
 
-/** Trial limits (same as Pro except API/MCP and capped at 90 total minutes) */
+/** Trial limits (same as Pro, capped at 90 total minutes) */
 export const TRIAL_LIMITS = {
   ...LIMITS[PLANS.PRO],
   meetingMinutesPerMonth: FREE_TRIAL.totalMinutes,
-  apiEnabled: false,
-  mcpEnabled: false,
-  apiRequestsPerDay: 0,
-  mcpServerConnections: 0,
-  mcpClientConnections: 0,
 } as const;

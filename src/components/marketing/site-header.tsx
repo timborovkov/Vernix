@@ -72,28 +72,32 @@ export function SiteHeader() {
               type="button"
               className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm transition-colors"
               onClick={() => setFeaturesOpen(!featuresOpen)}
+              aria-expanded={featuresOpen}
+              aria-haspopup="menu"
             >
               Features
               <ChevronDown className="h-3 w-3" />
             </button>
             {featuresOpen && (
-              <div className="border-border bg-background absolute top-full left-0 mt-2 w-72 rounded-lg border p-2 shadow-lg">
-                {FEATURE_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="hover:bg-muted flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors"
-                    onClick={() => setFeaturesOpen(false)}
-                  >
-                    <link.icon className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">{link.label}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {link.description}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+              <div className="absolute top-full left-0 z-10 w-72 pt-2">
+                <div className="border-border bg-background rounded-lg border p-2 shadow-lg">
+                  {FEATURE_LINKS.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="hover:bg-muted flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors"
+                      onClick={() => setFeaturesOpen(false)}
+                    >
+                      <link.icon className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">{link.label}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {link.description}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

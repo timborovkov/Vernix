@@ -4,11 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useApiKeys } from "@/hooks/use-api-keys";
-import { useMcpServers } from "@/hooks/use-mcp-servers";
 import { useProfile } from "@/hooks/use-profile";
 import { useBilling } from "@/hooks/use-billing";
 import { ApiKeyList } from "@/components/api-key-list";
-import { McpServerList } from "@/components/mcp-server-list";
 import { BillingCard } from "@/components/billing-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +25,6 @@ export function SettingsForm({
   enableGithub,
 }: SettingsFormProps) {
   const { keys, createKey, deleteKey } = useApiKeys();
-  const { servers, addServer, toggleServer, deleteServer } = useMcpServers();
   const { billing, loading: billingLoading } = useBilling();
   const {
     profile,
@@ -361,51 +358,22 @@ export function SettingsForm({
           </CardContent>
         </Card>
 
-        {/* External MCP Servers */}
+        {/* Integrations link */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">External MCP Servers</CardTitle>
-            <p className="text-muted-foreground text-sm">
-              Connect external MCP servers to give the AI agent access to
-              additional tools.
-            </p>
-          </CardHeader>
-          <CardContent>
-            {billing && !billing.limits.mcpEnabled ? (
-              <div className="space-y-3 py-2">
-                <div className="text-muted-foreground space-y-2 text-sm">
-                  <p>
-                    Connect tools like Slack, Linear, GitHub, or custom servers.
-                    The AI agent uses them to answer questions and take actions
-                    during your meetings.
-                  </p>
-                  <ul className="list-inside list-disc space-y-1 text-xs">
-                    <li>
-                      Up to {billing.limits.mcpClientConnections || 10} MCP
-                      connections on Pro
-                    </li>
-                    <li>Agent uses tools automatically during calls</li>
-                    <li>Works with any MCP-compatible server</li>
-                  </ul>
-                </div>
-                <Button
-                  size="sm"
-                  variant="accent"
-                  onClick={() => {
-                    window.location.href = getCheckoutUrl();
-                  }}
-                >
-                  Upgrade to Pro to connect integrations
-                </Button>
-              </div>
-            ) : (
-              <McpServerList
-                servers={servers}
-                onAdd={addServer}
-                onToggle={toggleServer}
-                onDelete={deleteServer}
-              />
-            )}
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-sm font-medium">Integrations</p>
+              <p className="text-muted-foreground text-xs">
+                Connect Slack, Linear, GitHub, and more to your meetings.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              render={<Link href="/dashboard/integrations" />}
+            >
+              Manage
+            </Button>
           </CardContent>
         </Card>
       </div>

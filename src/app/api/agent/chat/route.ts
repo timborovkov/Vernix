@@ -27,7 +27,9 @@ export async function POST(request: Request) {
   if (!ragCheck.allowed) return billingError(ragCheck, 429);
 
   const { messages, meetingId } = await request.json();
-  recordUsageEvent(user.id, "rag_query").catch(() => {});
+  recordUsageEvent(user.id, "rag_query").catch((e) =>
+    console.error("[Billing] Usage recording failed:", e)
+  );
 
   // Fetch agenda if scoped to a meeting
   let agenda: string | null = null;

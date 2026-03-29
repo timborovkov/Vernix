@@ -4,13 +4,30 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 
+export type McpAuthType = "none" | "bearer" | "header" | "basic" | "oauth";
+
 interface McpServerInfo {
   id: string;
   name: string;
   url: string;
+  authType: McpAuthType;
+  catalogIntegrationId: string | null;
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AddServerParams {
+  name: string;
+  url: string;
+  authType?: McpAuthType;
+  authHeaderName?: string;
+  authHeaderValue?: string;
+  authUsername?: string;
+  authPassword?: string;
+  catalogIntegrationId?: string;
+  // Legacy
+  apiKey?: string;
 }
 
 async function fetchServers(): Promise<McpServerInfo[]> {
@@ -30,11 +47,7 @@ export function useMcpServers() {
   });
 
   const addMutation = useMutation({
-    mutationFn: async (params: {
-      name: string;
-      url: string;
-      apiKey?: string;
-    }) => {
+    mutationFn: async (params: AddServerParams) => {
       const res = await fetch("/api/settings/mcp-servers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,11 +93,67 @@ export function useMcpServers() {
     onError: () => toast.error("Failed to delete server"),
   });
 
+  const oauthMutation = useMutation({
+    mutationFn: async (params: {
+      integrationId: string;
+      serverUrl?: string;
+    }) => {
+      const res = await fetch("/api/mcp/oauth/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to start OAuth");
+      }
+      return res.json() as Promise<{
+        authorizationUrl?: string;
+        authorized?: boolean;
+        serverId: string;
+      }>;
+    },
+    onSuccess: (data) => {
+      if (data.authorizationUrl) {
+        // Redirect to OAuth provider
+        window.location.href = data.authorizationUrl;
+      } else if (data.authorized) {
+        // Already authorized (tokens still valid)
+        queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
+        toast.success("Already connected");
+      }
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "OAuth failed"),
+  });
+
+  const testServer = async (
+    id: string
+  ): Promise<{
+    success: boolean;
+    toolCount?: number;
+    tools?: { name: string; description: string }[];
+    error?: string;
+  }> => {
+    const res = await fetch("/api/settings/mcp-servers/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    return res.json();
+  };
+
   return {
     servers,
     loading,
-    addServer: (name: string, url: string, apiKey?: string) =>
-      addMutation.mutate({ name, url, apiKey }),
+    addServer: async (params: AddServerParams) => {
+      await addMutation.mutateAsync(params);
+    },
+    startOAuth: async (integrationId: string, serverUrl?: string) => {
+      await oauthMutation.mutateAsync({ integrationId, serverUrl });
+    },
+    oauthLoading: oauthMutation.isPending,
+    testServer,
     toggleServer: (id: string, enabled: boolean) =>
       toggleMutation.mutate({ id, enabled }),
     deleteServer: (id: string) => deleteMutation.mutate(id),

@@ -14,6 +14,7 @@ const PUBLIC_AGENT_PATHS = [
   "/api/agent/voice-fallback",
   "/api/agent/wake-detect",
   "/api/mcp",
+  "/api/mcp/oauth/callback",
 ];
 
 const { auth } = NextAuth(authConfig);
@@ -45,5 +46,6 @@ export const config = {
     "/api/billing",
     "/api/export",
     "/api/mcp",
+    "/api/mcp/:path*",
   ],
 };

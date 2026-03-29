@@ -99,6 +99,7 @@ export async function POST(request: Request) {
       ...metadata,
       title: meeting.title,
       startedAt: meeting.startedAt,
+      endedAt: meeting.endedAt ?? new Date(),
       participants: (meeting.participants as string[]) ?? [],
     }
   );

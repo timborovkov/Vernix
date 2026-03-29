@@ -85,7 +85,9 @@ async function handleMcpRequest(request: Request): Promise<Response> {
         lastActivity: Date.now(),
       });
       // Record usage only on new session creation, not session resumptions
-      recordUsageEvent(user.id, "api_request").catch(() => {});
+      recordUsageEvent(user.id, "api_request").catch((e) =>
+        console.error("[Billing] Usage recording failed:", e)
+      );
     },
   });
 

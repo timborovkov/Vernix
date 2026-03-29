@@ -92,14 +92,15 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
             Plan & Usage
           </CardTitle>
           <div className="flex items-center gap-2">
-            {billing.trialing && (
-              <Badge variant="secondary">
-                Trial: {billing.trialDaysRemaining}d left
+            {billing.trialing ? (
+              <Badge variant="default">
+                Pro Trial: {billing.trialDaysRemaining}d left
+              </Badge>
+            ) : (
+              <Badge variant={isPro ? "default" : "outline"}>
+                {isPro ? "Pro" : "Free"}
               </Badge>
             )}
-            <Badge variant={isPro ? "default" : "outline"}>
-              {isPro ? "Pro" : "Free"}
-            </Badge>
           </div>
         </div>
       </CardHeader>
@@ -168,7 +169,7 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
 
         {/* Actions */}
         <div className="flex flex-wrap gap-2 pt-1">
-          {!isPro && (
+          {!isPro && !billing.trialing && (
             <Button
               size="sm"
               variant="accent"

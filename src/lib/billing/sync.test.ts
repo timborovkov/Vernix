@@ -126,7 +126,8 @@ describe("syncBillingFromPolar", () => {
   it("does not crash when Polar API fails", async () => {
     mockGetState.mockRejectedValueOnce(new Error("Polar unreachable"));
 
-    await expect(syncBillingFromPolar(USER_ID)).resolves.toBeUndefined();
+    const result = await syncBillingFromPolar(USER_ID);
+    expect(result.synced).toBe(false);
   });
 
   it("skips sync when Polar is not enabled", async () => {
