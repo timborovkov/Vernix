@@ -3,40 +3,48 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/query-keys";
-import { toast } from "sonner";
 import { useMeetingDetail } from "@/hooks/use-meeting-detail";
 import { useKnowledge } from "@/hooks/use-knowledge";
 import { useMeetingTasks } from "@/hooks/use-tasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { statusVariant } from "@/lib/meetings/constants";
-import { ChatPanel } from "@/components/chat-panel";
-import { KnowledgeList } from "@/components/knowledge-list";
-import { UploadDocumentDialog } from "@/components/upload-document-dialog";
-import { TaskList } from "@/components/task-list";
-import { formatTime, renderMarkdown } from "@/lib/format";
+import { OverviewTab } from "@/components/meeting/overview-tab";
+import { TranscriptTab } from "@/components/meeting/transcript-tab";
+import { TasksTab } from "@/components/meeting/tasks-tab";
+import { DocumentsTab } from "@/components/meeting/documents-tab";
+import { ChatTab } from "@/components/meeting/chat-tab";
 import {
   ArrowLeft,
-  Search,
-  Clock,
-  Users,
-  FileText,
-  Save,
-  ListChecks,
   Download,
-  VolumeX,
-  Volume2,
-  OctagonX,
+  LayoutList,
+  MessageSquare,
+  FileText,
+  ListChecks,
+  ScrollText,
 } from "lucide-react";
+
+const TABS = [
+  { id: "overview", label: "Overview", icon: LayoutList },
+  { id: "transcript", label: "Transcript", icon: ScrollText },
+  { id: "tasks", label: "Tasks", icon: ListChecks },
+  { id: "documents", label: "Documents", icon: FileText },
+  { id: "chat", label: "Chat", icon: MessageSquare },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+function getInitialTab(): TabId {
+  if (typeof window === "undefined") return "overview";
+  const hash = window.location.hash.slice(1);
+  if (TABS.some((t) => t.id === hash)) return hash as TabId;
+  return "overview";
+}
 
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
+
   const {
     meeting,
     transcript,
@@ -46,17 +54,26 @@ export default function MeetingDetailPage() {
     error,
     search,
   } = useMeetingDetail(id);
-  const [query, setQuery] = useState("");
-  const [hideCompleted, setHideCompleted] = useState(true);
 
+  const {
+    documents: meetingDocs,
+    uploading: docsUploading,
+    uploadDocument: uploadMeetingDoc,
+    deleteDocument: deleteMeetingDoc,
+    downloadDocument: downloadMeetingDoc,
+  } = useKnowledge(id);
+
+  const {
+    tasks: meetingTasks,
+    loading: tasksLoading,
+    addTask,
+    updateTask,
+    deleteTask,
+  } = useMeetingTasks(id);
+
+  // Agenda state
   const [agenda, setAgenda] = useState("");
-  const [agendaSaving, setAgendaSaving] = useState(false);
-  const [silentSaving, setSilentSaving] = useState(false);
-  const [muteSaving, setMuteSaving] = useState(false);
-  const [stopping, setStopping] = useState(false);
   const syncedMeetingId = useRef<string | null>(null);
-
-  // Sync agenda from meeting metadata once per meeting load
   const meetingId = meeting?.id;
   const meetingAgenda = meeting
     ? ((((meeting.metadata ?? {}) as Record<string, unknown>).agenda as
@@ -71,44 +88,14 @@ export default function MeetingDetailPage() {
     }
   }, [meetingId, meetingAgenda]);
 
-  const {
-    documents: meetingDocs,
-    uploading: docsUploading,
-    uploadDocument: uploadMeetingDoc,
-    deleteDocument: deleteMeetingDoc,
-    downloadDocument: downloadMeetingDoc,
-  } = useKnowledge(id);
-
-  // Agenda is editable until the meeting becomes active — the voice agent
-  // only receives its instructions when the token is issued (status: "active").
-  const isEditable =
-    meeting?.status === "pending" ||
-    meeting?.status === "joining" ||
-    meeting?.status === "failed";
-
-  const {
-    tasks: meetingTasks,
-    loading: tasksLoading,
-    addTask,
-    updateTask,
-    deleteTask,
-  } = useMeetingTasks(id);
-
-  const saveAgenda = async () => {
-    setAgendaSaving(true);
-    try {
-      const res = await fetch(`/api/meetings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agenda }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Agenda saved");
-    } catch {
-      toast.error("Failed to save agenda");
-    } finally {
-      setAgendaSaving(false);
-    }
+  // Update URL hash when tab changes
+  const handleTabChange = (tab: TabId) => {
+    setActiveTab(tab);
+    window.history.replaceState(
+      null,
+      "",
+      tab === "overview" ? window.location.pathname : `#${tab}`
+    );
   };
 
   if (loading) {
@@ -119,15 +106,17 @@ export default function MeetingDetailPage() {
           <div className="bg-muted h-8 w-64 animate-pulse rounded-md" />
           <div className="bg-muted h-5 w-20 animate-pulse rounded-full" />
         </div>
-        <div className="mb-6 rounded-xl border p-4">
-          <div className="bg-muted mb-3 h-5 w-20 animate-pulse rounded-md" />
-          <div className="bg-muted h-20 w-full animate-pulse rounded-md" />
+        <div className="mb-6 flex gap-1 border-b pb-2">
+          {TABS.map((t) => (
+            <div
+              key={t.id}
+              className="bg-muted h-8 w-24 animate-pulse rounded-md"
+            />
+          ))}
         </div>
-        <div className="mb-6 rounded-xl border p-4">
-          <div className="bg-muted mb-3 h-5 w-24 animate-pulse rounded-md" />
-          <div className="bg-muted mb-2 h-4 w-full animate-pulse rounded-md" />
-          <div className="bg-muted mb-2 h-4 w-full animate-pulse rounded-md" />
-          <div className="bg-muted h-4 w-3/4 animate-pulse rounded-md" />
+        <div className="space-y-4">
+          <div className="bg-muted h-32 animate-pulse rounded-xl" />
+          <div className="bg-muted h-48 animate-pulse rounded-xl" />
         </div>
       </div>
     );
@@ -141,89 +130,9 @@ export default function MeetingDetailPage() {
     );
   }
 
-  const summary = (meeting.metadata as Record<string, unknown>)?.summary as
-    | string
-    | undefined;
   const isSilent = Boolean(
     (meeting.metadata as Record<string, unknown>)?.silent
   );
-  const isMuted = Boolean((meeting.metadata as Record<string, unknown>)?.muted);
-  const voiceActivation = (meeting.metadata as Record<string, unknown>)
-    ?.voiceActivation as { state?: string } | undefined;
-  const voiceTelemetry = (meeting.metadata as Record<string, unknown>)
-    ?.voiceTelemetry as
-    | {
-        activationCount?: number;
-        totalConnectedSeconds?: number;
-        avgSessionSeconds?: number;
-      }
-    | undefined;
-
-  const toggleMute = async () => {
-    setMuteSaving(true);
-    try {
-      const res = await fetch(`/api/meetings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ muted: !isMuted }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(`Agent ${!isMuted ? "muted" : "unmuted"}`);
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.meetings.detail(id),
-      });
-    } catch {
-      toast.error("Failed to update mute state");
-    } finally {
-      setMuteSaving(false);
-    }
-  };
-
-  const handleStopAgent = async () => {
-    setStopping(true);
-    try {
-      const res = await fetch("/api/agent/stop", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ meetingId: id }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success("Agent stopped");
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.meetings.detail(id),
-      });
-    } catch {
-      toast.error("Failed to stop agent");
-    } finally {
-      setStopping(false);
-    }
-  };
-
-  const toggleSilent = async () => {
-    setSilentSaving(true);
-    try {
-      const res = await fetch(`/api/meetings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ silent: !isSilent }),
-      });
-      if (!res.ok) throw new Error();
-      toast.success(`Silent mode ${!isSilent ? "enabled" : "disabled"}`);
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.meetings.detail(id),
-      });
-    } catch {
-      toast.error("Failed to update silent mode");
-    } finally {
-      setSilentSaving(false);
-    }
-  };
-  const participants = (meeting.participants as string[]) ?? [];
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    search(query);
-  };
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-8">
@@ -244,7 +153,7 @@ export default function MeetingDetailPage() {
             render={<a href={`/api/meetings/${id}/export?format=md`} />}
           >
             <Download className="mr-1 h-3.5 w-3.5" />
-            Export MD
+            MD
           </Button>
           <Button
             variant="outline"
@@ -252,7 +161,7 @@ export default function MeetingDetailPage() {
             render={<a href={`/api/meetings/${id}/export?format=pdf`} />}
           >
             <Download className="mr-1 h-3.5 w-3.5" />
-            Export PDF
+            PDF
           </Button>
           {isSilent && <Badge variant="secondary">Silent</Badge>}
           <Badge variant={statusVariant[meeting.status] ?? "outline"}>
@@ -271,318 +180,71 @@ export default function MeetingDetailPage() {
         )}
       </div>
 
-      {/* Agent Controls */}
-      {meeting.status === "active" && (
-        <Card className="mt-4 border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
-          <CardContent className="flex flex-wrap items-center gap-3 py-3">
-            <span className="text-sm font-medium">Agent Controls</span>
-            {!isSilent && voiceActivation?.state && (
-              <Badge
-                variant={
-                  voiceActivation.state === "responding"
-                    ? "default"
-                    : voiceActivation.state === "activated"
-                      ? "secondary"
-                      : "outline"
-                }
-              >
-                {voiceActivation.state === "idle" && "Listening"}
-                {voiceActivation.state === "activated" && "Activating"}
-                {voiceActivation.state === "responding" && "Responding"}
-                {voiceActivation.state === "cooldown" && "Cooling down"}
-              </Badge>
-            )}
-            <Button
-              variant={isMuted ? "default" : "outline"}
-              size="sm"
-              onClick={toggleMute}
-              disabled={muteSaving}
+      {/* Tab Bar */}
+      <div className="mt-6 flex gap-1 overflow-x-auto border-b">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm transition-colors ${
+                activeTab === tab.id
+                  ? "border-primary text-foreground border-b-2 font-medium"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => handleTabChange(tab.id)}
             >
-              {isMuted ? (
-                <VolumeX className="mr-1 h-3.5 w-3.5" />
-              ) : (
-                <Volume2 className="mr-1 h-3.5 w-3.5" />
-              )}
-              {muteSaving
-                ? "Saving..."
-                : isMuted
-                  ? "Unmute Agent"
-                  : "Mute Agent"}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleStopAgent}
-              disabled={stopping}
-            >
-              <OctagonX className="mr-1 h-3.5 w-3.5" />
-              {stopping ? "Stopping..." : "Stop Agent"}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Agenda */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Agenda</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <textarea
-            value={agenda}
-            onChange={(e) => setAgenda(e.target.value)}
-            placeholder="Meeting goals, topics to discuss, prep notes..."
-            rows={3}
-            disabled={!isEditable}
-            className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
-          />
-          {isEditable && (
-            <div className="mt-3 flex flex-wrap items-center gap-4">
-              <Button size="sm" onClick={saveAgenda} disabled={agendaSaving}>
-                <Save className="mr-1 h-3 w-3" />
-                {agendaSaving ? "Saving..." : "Save Agenda"}
-              </Button>
-              {(meeting.status === "pending" ||
-                meeting.status === "failed") && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="silent-mode"
-                    checked={isSilent}
-                    onChange={toggleSilent}
-                    disabled={silentSaving}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="silent-mode" className="cursor-pointer">
-                    Silent Mode
-                  </Label>
-                  <span className="text-muted-foreground text-xs">
-                    Text-only — responds via meeting chat, no voice
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Summary */}
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {meeting.status === "processing" && !summary ? (
-            <p className="text-muted-foreground italic">
-              Generating summary...
-            </p>
-          ) : summary ? (
-            <div
-              className="space-y-2 text-sm [&_li]:mt-1 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(summary) }}
-            />
-          ) : (
-            <p className="text-muted-foreground italic">No summary available</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Voice Telemetry */}
-      {voiceTelemetry &&
-        voiceTelemetry.activationCount != null &&
-        voiceTelemetry.activationCount > 0 && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Voice Agent Stats</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-6 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Activations:</span>{" "}
-                  <span className="font-medium">
-                    {voiceTelemetry.activationCount}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Connected time:</span>{" "}
-                  <span className="font-medium">
-                    {voiceTelemetry.totalConnectedSeconds}s
-                  </span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Avg session:</span>{" "}
-                  <span className="font-medium">
-                    {voiceTelemetry.avgSessionSeconds}s
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-      {/* Participants */}
-      {participants.length > 0 && (
-        <div className="mt-6">
-          <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
-            <Users className="h-4 w-4" />
-            Participants
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {participants.map((name) => (
-              <Badge key={name} variant="secondary">
-                {name}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Action Items */}
-      <Card className="mt-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <ListChecks className="h-4 w-4" />
-              Action Items
-            </CardTitle>
-            {(() => {
-              const completedCount = meetingTasks.filter(
-                (t) => t.status === "completed"
-              ).length;
-              return (
-                completedCount > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setHideCompleted(!hideCompleted)}
-                    className="text-muted-foreground text-xs"
-                  >
-                    {hideCompleted
-                      ? `Show ${completedCount} completed`
-                      : "Hide completed"}
-                  </Button>
-                )
-              );
-            })()}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {tasksLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <div className="bg-muted h-4 w-4 animate-pulse rounded" />
-                  <div className="bg-muted h-4 flex-1 animate-pulse rounded-md" />
-                </div>
-              ))}
-            </div>
-          ) : meeting.status === "processing" && meetingTasks.length === 0 ? (
-            <p className="text-muted-foreground italic">
-              Extracting action items...
-            </p>
-          ) : (
-            <TaskList
-              tasks={
-                hideCompleted
-                  ? meetingTasks.filter((t) => t.status === "open")
-                  : meetingTasks
-              }
-              onToggle={(taskId, status) =>
-                updateTask(taskId, { status: status as "open" | "completed" })
-              }
-              onDelete={deleteTask}
-              onAdd={(title) => addTask(title)}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Search */}
-      <div className="mt-6">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder="Search transcript..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <Button type="submit" size="sm" disabled={searching}>
-            <Search className="mr-1 h-4 w-4" />
-            {searching ? "Searching..." : "Search"}
-          </Button>
-        </form>
-
-        {searchResults.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <h3 className="text-sm font-medium">
-              {searchResults.length} results
-            </h3>
-            {searchResults.map((result, i) => (
-              <Card key={i}>
-                <CardContent className="py-3">
-                  <div className="text-muted-foreground mb-1 flex items-center gap-2 text-xs">
-                    <span className="font-medium">{result.speaker}</span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatTime(result.timestamp_ms)}
-                    </span>
-                    <span className="ml-auto">
-                      Score: {result.score.toFixed(2)}
-                    </span>
-                  </div>
-                  <p className="text-sm">{result.text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+              <Icon className="h-3.5 w-3.5" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Meeting Documents */}
+      {/* Tab Content */}
       <div className="mt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-semibold">
-            <FileText className="h-4 w-4" />
-            Documents
-          </h2>
-          <UploadDocumentDialog
-            onUpload={uploadMeetingDoc}
+        {activeTab === "overview" && (
+          <OverviewTab
+            meeting={meeting}
+            agenda={agenda}
+            onAgendaChange={setAgenda}
+          />
+        )}
+
+        {activeTab === "transcript" && (
+          <TranscriptTab
+            transcript={transcript}
+            searchResults={searchResults}
+            searching={searching}
+            onSearch={search}
+          />
+        )}
+
+        {activeTab === "tasks" && (
+          <TasksTab
+            tasks={meetingTasks}
+            loading={tasksLoading}
+            meetingStatus={meeting.status}
+            onAdd={(title) => addTask(title)}
+            onToggle={(taskId, status) =>
+              updateTask(taskId, { status: status as "open" | "completed" })
+            }
+            onDelete={deleteTask}
+          />
+        )}
+
+        {activeTab === "documents" && (
+          <DocumentsTab
+            documents={meetingDocs}
             uploading={docsUploading}
+            onUpload={uploadMeetingDoc}
+            onDelete={deleteMeetingDoc}
+            onDownload={downloadMeetingDoc}
           />
-        </div>
-        <KnowledgeList
-          documents={meetingDocs}
-          onDelete={deleteMeetingDoc}
-          onDownload={downloadMeetingDoc}
-        />
-      </div>
-
-      {/* Chat */}
-      <div className="mt-6">
-        <ChatPanel meetingId={id} placeholder="Ask about this meeting..." />
-      </div>
-
-      {/* Transcript Timeline */}
-      <div className="mt-6">
-        <h2 className="mb-4 text-lg font-semibold">Transcript</h2>
-        {transcript.length === 0 ? (
-          <p className="text-muted-foreground italic">
-            No transcript available
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {transcript.map((segment, i) => (
-              <div key={i} className="flex gap-3">
-                <div className="text-muted-foreground w-12 shrink-0 pt-0.5 text-right text-xs">
-                  {formatTime(segment.timestampMs)}
-                </div>
-                <div>
-                  <span className="text-sm font-medium">{segment.speaker}</span>
-                  <p className="text-sm">{segment.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         )}
+
+        {activeTab === "chat" && <ChatTab meetingId={id} />}
       </div>
     </div>
   );
