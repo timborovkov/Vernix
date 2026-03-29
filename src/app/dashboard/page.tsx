@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { ChatPanel } from "@/components/chat-panel";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, ListChecks, Circle } from "lucide-react";
+import { MessageSquare, ListChecks, Circle, CheckCircle2 } from "lucide-react";
 import { TrialPromptBanner } from "@/components/trial-prompt-banner";
 
 const STATUS_FILTERS = [
@@ -127,7 +127,11 @@ export default function DashboardPage() {
                       })
                     }
                   >
-                    <Circle className="h-4 w-4" />
+                    {task.status === "completed" ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
                   </button>
                   <span className="flex-1 truncate">{task.title}</span>
                   {task.meetingTitle && (
