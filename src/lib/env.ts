@@ -42,6 +42,10 @@ const envSchema = z
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
 
+    // MCP OAuth apps (separate from login OAuth — different redirect URLs)
+    GITHUB_MCP_CLIENT_ID: z.string().optional(),
+    GITHUB_MCP_CLIENT_SECRET: z.string().optional(),
+
     // Resend (email provider — optional, emails disabled without it)
     RESEND_API_KEY: z.string().optional(),
     RESEND_WEBHOOK_SECRET: z.string().optional(),
