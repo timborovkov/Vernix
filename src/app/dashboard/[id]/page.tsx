@@ -188,7 +188,7 @@ export default function MeetingDetailPage() {
             <button
               key={tab.id}
               type="button"
-              className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? "border-primary text-foreground border-b-2 font-medium"
                   : "text-muted-foreground hover:text-foreground"
