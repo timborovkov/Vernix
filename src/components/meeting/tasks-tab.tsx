@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TaskList } from "@/components/task-list";
@@ -11,6 +10,8 @@ interface TasksTabProps {
   tasks: Task[];
   loading: boolean;
   meetingStatus: string;
+  hideCompleted: boolean;
+  onHideCompletedChange: (value: boolean) => void;
   onAdd: (title: string) => void;
   onToggle: (taskId: string, status: string) => void;
   onDelete: (taskId: string) => void;
@@ -20,11 +21,12 @@ export function TasksTab({
   tasks,
   loading,
   meetingStatus,
+  hideCompleted,
+  onHideCompletedChange,
   onAdd,
   onToggle,
   onDelete,
 }: TasksTabProps) {
-  const [hideCompleted, setHideCompleted] = useState(true);
   const completedCount = tasks.filter((t) => t.status === "completed").length;
 
   return (
@@ -39,7 +41,7 @@ export function TasksTab({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setHideCompleted(!hideCompleted)}
+              onClick={() => onHideCompletedChange(!hideCompleted)}
               className="text-muted-foreground text-xs"
             >
               {hideCompleted
