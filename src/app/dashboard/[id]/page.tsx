@@ -188,10 +188,10 @@ export default function MeetingDetailPage() {
             <button
               key={tab.id}
               type="button"
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap transition-colors ${
+              className={`-mb-px flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? "border-primary text-foreground border-b-2 font-medium"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground border-b-2 border-transparent"
               }`}
               onClick={() => handleTabChange(tab.id)}
             >
@@ -244,7 +244,10 @@ export default function MeetingDetailPage() {
           />
         )}
 
-        {activeTab === "chat" && <ChatTab meetingId={id} />}
+        {/* Chat stays mounted to preserve conversation state */}
+        <div className={activeTab === "chat" ? "" : "hidden"}>
+          <ChatTab meetingId={id} />
+        </div>
       </div>
     </div>
   );
