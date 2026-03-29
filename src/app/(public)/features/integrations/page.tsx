@@ -189,7 +189,7 @@ export default function IntegrationsPage() {
             </div>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 shrink-0" />
-              200 AI queries per day
+              AI chat across all meetings
             </div>
           </div>
         </div>
