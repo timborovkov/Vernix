@@ -43,6 +43,7 @@ export const users = pgTable("users", {
     withTimezone: true,
   }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
