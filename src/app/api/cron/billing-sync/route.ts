@@ -34,8 +34,8 @@ export async function GET(request: Request) {
 
   for (const user of staleProUsers) {
     try {
-      await syncBillingFromPolar(user.id);
-      syncedCount++;
+      const result = await syncBillingFromPolar(user.id);
+      if (result.synced) syncedCount++;
     } catch (err) {
       console.error(`[Billing Sync] Failed for pro user ${user.id}:`, err);
     }
@@ -56,8 +56,8 @@ export async function GET(request: Request) {
 
   for (const user of staleTrialUsers) {
     try {
-      await syncBillingFromPolar(user.id);
-      syncedCount++;
+      const result = await syncBillingFromPolar(user.id);
+      if (result.synced) syncedCount++;
     } catch (err) {
       console.error(`[Billing Sync] Failed for trial user ${user.id}:`, err);
     }
