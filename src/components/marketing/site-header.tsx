@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import {
@@ -14,6 +14,7 @@ import {
   Search,
   BookOpen,
   LayoutDashboard,
+  LogOut,
 } from "lucide-react";
 
 const FEATURE_LINKS = [
@@ -127,14 +128,23 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 md:flex">
           <ThemeToggle />
           {isLoggedIn ? (
-            <Button
-              variant="accent"
-              size="sm"
-              render={<Link href="/dashboard" />}
-            >
-              <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
-              Dashboard
-            </Button>
+            <>
+              <Button
+                variant="accent"
+                size="sm"
+                render={<Link href="/dashboard" />}
+              >
+                <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
+                Dashboard
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="ghost" size="sm" render={<Link href="/login" />}>
@@ -201,14 +211,24 @@ export function SiteHeader() {
           </nav>
           <div className="mt-3 flex flex-col gap-2">
             {isLoggedIn ? (
-              <Button
-                variant="accent"
-                size="sm"
-                render={<Link href="/dashboard" />}
-              >
-                <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
-                Dashboard
-              </Button>
+              <>
+                <Button
+                  variant="accent"
+                  size="sm"
+                  render={<Link href="/dashboard" />}
+                >
+                  <LayoutDashboard className="mr-1 h-3.5 w-3.5" />
+                  Dashboard
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                >
+                  <LogOut className="mr-1 h-3.5 w-3.5" />
+                  Log out
+                </Button>
+              </>
             ) : (
               <>
                 <Button
