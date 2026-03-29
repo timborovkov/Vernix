@@ -15,11 +15,11 @@ export default function AcceptTermsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // If terms already accepted, skip to welcome
+  // If terms already accepted, skip to dashboard
   const termsAccepted = session?.user?.termsAcceptedAt;
   useEffect(() => {
     if (termsAccepted) {
-      router.replace("/welcome");
+      router.replace("/dashboard");
     }
   }, [termsAccepted, router]);
 
@@ -34,9 +34,10 @@ export default function AcceptTermsPage() {
         setError("Failed to save. Please try again.");
         return;
       }
-      // Refresh the session so termsAcceptedAt propagates to JWT
+      // Refresh JWT with updated termsAcceptedAt from DB
       await updateSession();
-      router.push("/welcome");
+      // Hard redirect ensures the browser uses the new JWT cookie
+      window.location.href = "/dashboard";
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
