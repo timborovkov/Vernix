@@ -1,20 +1,25 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { connectMcpClient, isSsrfUrl } from "@/lib/mcp/transport";
-import { buildAuthHeaders } from "@/lib/mcp/auth";
+import { buildAuthHeaders, buildAuthUrl } from "@/lib/mcp/auth";
+import { VernixOAuthProvider } from "@/lib/mcp/oauth-provider";
 
 // Accept either an existing server ID or raw connection params for testing before saving
 const testSchema = z.union([
   z.object({ id: z.uuid() }),
   z.object({
     url: z.url(),
-    authType: z.enum(["none", "bearer", "header", "basic"]).default("none"),
+    authType: z
+      .enum(["none", "bearer", "header", "basic", "url_key"])
+      .default("none"),
     authHeaderName: z.string().optional(),
     authHeaderValue: z.string().optional(),
+    authKeyParam: z.string().optional(),
     authUsername: z.string().optional(),
     authPassword: z.string().optional(),
     // Legacy
@@ -24,12 +29,13 @@ const testSchema = z.union([
 
 async function probe(
   url: string,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  authProvider?: OAuthClientProvider
 ): Promise<{
   toolCount: number;
   tools: { name: string; description: string }[];
 }> {
-  const client = await connectMcpClient(url, headers);
+  const client = await connectMcpClient(url, headers, authProvider);
 
   try {
     const { tools } = await client.listTools();
@@ -66,6 +72,7 @@ export async function POST(request: Request) {
 
   let url: string;
   let headers: Record<string, string>;
+  let authProvider: OAuthClientProvider | undefined;
 
   if ("id" in parsed.data) {
     const [server] = await db
@@ -79,10 +86,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Server not found" }, { status: 404 });
     }
 
-    url = server.url;
+    url = buildAuthUrl(server.url, server);
     headers = buildAuthHeaders(server);
+    if (server.authType === "oauth") {
+      authProvider = new VernixOAuthProvider(user.id, server.id, server.url);
+    }
   } else {
-    url = parsed.data.url;
+    url = buildAuthUrl(parsed.data.url, {
+      authType: parsed.data.authType,
+      authHeaderValue: parsed.data.authHeaderValue ?? null,
+      authKeyParam: parsed.data.authKeyParam ?? null,
+    });
     headers = buildAuthHeaders({
       authType:
         parsed.data.apiKey && parsed.data.authType === "none"
@@ -115,13 +129,22 @@ export async function POST(request: Request) {
   });
 
   try {
-    const result = await Promise.race([probe(url, headers), timeout]);
+    const result = await Promise.race([
+      probe(url, headers, authProvider),
+      timeout,
+    ]);
     clearTimeout(timeoutId!);
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     clearTimeout(timeoutId!);
-    const message =
-      error instanceof Error ? error.message : "Connection failed";
+    const raw = error instanceof Error ? error.message : "";
+    console.error("[MCP Test] Connection failed:", raw || "Unknown error");
+    // Don't leak raw error messages (may contain URLs with embedded API keys)
+    const message = raw.includes("timed out")
+      ? "Connection timed out"
+      : raw.includes("SSRF") || raw.includes("private")
+        ? "URL resolves to a private address"
+        : "Connection failed";
     return NextResponse.json({ success: false, error: message });
   }
 }

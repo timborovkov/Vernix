@@ -2,7 +2,7 @@ import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js";
 import { jsonSchema } from "ai";
 import { connectMcpClient } from "./transport";
-import { buildAuthHeaders } from "./auth";
+import { buildAuthHeaders, buildAuthUrl } from "./auth";
 import { VernixOAuthProvider } from "./oauth-provider";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
@@ -120,10 +120,9 @@ export class McpClientManager {
           ),
         ]);
       } catch (error) {
-        console.error(
-          `Failed to connect to MCP server "${server.name}":`,
-          error
-        );
+        // Don't log full error (may contain URLs with embedded API keys)
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        console.error(`[MCP] Failed to connect to "${server.name}": ${msg}`);
       }
     }
 
@@ -136,6 +135,7 @@ export class McpClientManager {
     userId: string
   ): Promise<void> {
     const headers = buildAuthHeaders(server);
+    const connectUrl = buildAuthUrl(server.url, server);
 
     // OAuth servers use the SDK's authProvider for automatic token management
     const authProvider =
@@ -145,7 +145,7 @@ export class McpClientManager {
 
     let client: Client;
     try {
-      client = await connectMcpClient(server.url, headers, authProvider);
+      client = await connectMcpClient(connectUrl, headers, authProvider);
     } catch (err) {
       if (err instanceof UnauthorizedError) {
         console.warn(

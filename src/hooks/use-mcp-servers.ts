@@ -4,7 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/query-keys";
 
-export type McpAuthType = "none" | "bearer" | "header" | "basic" | "oauth";
+export type McpAuthType =
+  | "none"
+  | "bearer"
+  | "header"
+  | "basic"
+  | "oauth"
+  | "url_key";
 
 interface McpServerInfo {
   id: string;
@@ -23,6 +29,7 @@ export interface AddServerParams {
   authType?: McpAuthType;
   authHeaderName?: string;
   authHeaderValue?: string;
+  authKeyParam?: string;
   authUsername?: string;
   authPassword?: string;
   catalogIntegrationId?: string;

@@ -4,6 +4,9 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { invalidateMcpCache } from "@/lib/mcp/client";
+import { isSsrfUrl } from "@/lib/mcp/transport";
+
+const authKeyParamPattern = /^[a-zA-Z0-9_-]+$/;
 
 export async function PATCH(
   request: Request,
@@ -23,6 +26,7 @@ export async function PATCH(
     authType,
     authHeaderName,
     authHeaderValue,
+    authKeyParam,
     authUsername,
     authPassword,
   } = body as Record<string, unknown>;
@@ -31,20 +35,48 @@ export async function PATCH(
   if (typeof url === "string" && url.length > 0) {
     try {
       new URL(url);
-      updates.url = url;
     } catch {
       return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
     }
+    if (isSsrfUrl(url)) {
+      return NextResponse.json(
+        { error: "URL resolves to a private or restricted address" },
+        { status: 400 }
+      );
+    }
+    updates.url = url;
   }
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
   if (typeof enabled === "boolean") updates.enabled = enabled;
-  const validAuthTypes = ["none", "bearer", "header", "basic", "oauth"];
+  const validAuthTypes = [
+    "none",
+    "bearer",
+    "header",
+    "basic",
+    "oauth",
+    "url_key",
+  ];
   if (typeof authType === "string" && validAuthTypes.includes(authType))
     updates.authType = authType;
   if (typeof authHeaderName === "string")
     updates.authHeaderName = authHeaderName || null;
   if (typeof authHeaderValue === "string")
     updates.authHeaderValue = authHeaderValue || null;
+  if (typeof authKeyParam === "string") {
+    if (
+      authKeyParam.length > 0 &&
+      (authKeyParam.length > 50 || !authKeyParamPattern.test(authKeyParam))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid authKeyParam. Use only letters, numbers, underscores, and hyphens (max 50 chars).",
+        },
+        { status: 400 }
+      );
+    }
+    updates.authKeyParam = authKeyParam || null;
+  }
   if (typeof authUsername === "string")
     updates.authUsername = authUsername || null;
   if (typeof authPassword === "string")

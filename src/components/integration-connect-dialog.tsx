@@ -30,6 +30,7 @@ const AUTH_OPTIONS: { value: McpAuthType; label: string }[] = [
   { value: "bearer", label: "Bearer token" },
   { value: "header", label: "Custom header" },
   { value: "basic", label: "HTTP Basic" },
+  { value: "url_key", label: "API key in URL" },
 ];
 
 export function IntegrationConnectDialog({
@@ -46,6 +47,7 @@ export function IntegrationConnectDialog({
   const [token, setToken] = useState("");
   const [headerName, setHeaderName] = useState("");
   const [headerValue, setHeaderValue] = useState("");
+  const [paramName, setParamName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,6 +65,7 @@ export function IntegrationConnectDialog({
     setToken("");
     setHeaderName("");
     setHeaderValue("");
+    setParamName("");
     setUsername("");
     setPassword("");
     setLoading(false);
@@ -78,6 +81,8 @@ export function IntegrationConnectDialog({
     !isCustom &&
     !isCatalogOAuth &&
     (integration.authMode === "api_key" || integration.authMode === "token");
+  const isCatalogUrlKey =
+    !isCustom && integration.authMode === "url_key" && hasPrefilledUrl;
 
   const handleOAuth = async () => {
     if (!onStartOAuth) return;
@@ -119,7 +124,15 @@ export function IntegrationConnectDialog({
             params.authUsername = username;
             params.authPassword = password;
             break;
+          case "url_key":
+            params.authKeyParam = paramName;
+            params.authHeaderValue = token;
+            break;
         }
+      } else if (isCatalogUrlKey) {
+        params.authType = "url_key";
+        params.authKeyParam = integration.authKeyParam;
+        params.authHeaderValue = token;
       } else if (isCatalogToken) {
         params.authType = "bearer";
         params.authHeaderValue = token;
@@ -215,17 +228,20 @@ export function IntegrationConnectDialog({
             )}
 
             {/* Bearer token field */}
-            {((isCustom && authType === "bearer") || isCatalogToken) && (
+            {((isCustom && authType === "bearer") ||
+              isCatalogToken ||
+              isCatalogUrlKey) && (
               <div className="space-y-2">
                 <Label htmlFor="token">
-                  {integration.authMode === "api_key"
+                  {integration.authMode === "api_key" ||
+                  integration.authMode === "url_key"
                     ? "API Key"
                     : "Access Token"}
                 </Label>
                 <Input
                   id="token"
                   type="password"
-                  placeholder={`Paste your ${integration.authMode === "api_key" ? "API key" : "access token"}`}
+                  placeholder={`Paste your ${integration.authMode === "api_key" || integration.authMode === "url_key" ? "API key" : "access token"}`}
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
                 />
@@ -277,6 +293,31 @@ export function IntegrationConnectDialog({
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* URL key fields */}
+            {isCustom && authType === "url_key" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="param-name">URL Parameter Name</Label>
+                  <Input
+                    id="param-name"
+                    placeholder="apiKey"
+                    value={paramName}
+                    onChange={(e) => setParamName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="url-key">API Key</Label>
+                  <Input
+                    id="url-key"
+                    type="password"
+                    placeholder="Paste your API key"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
                   />
                 </div>
               </>

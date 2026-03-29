@@ -34,6 +34,7 @@ const AUTH_LABELS: Record<McpAuthType, string> = {
   header: "Custom header",
   basic: "Basic auth",
   oauth: "OAuth",
+  url_key: "URL key",
 };
 
 export function ConnectedServerCard({
