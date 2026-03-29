@@ -6,6 +6,8 @@ import { mcpServers } from "@/lib/db/schema";
 import { invalidateMcpCache } from "@/lib/mcp/client";
 import { isSsrfUrl } from "@/lib/mcp/transport";
 
+const authKeyParamPattern = /^[a-zA-Z0-9_-]+$/;
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -60,8 +62,21 @@ export async function PATCH(
     updates.authHeaderName = authHeaderName || null;
   if (typeof authHeaderValue === "string")
     updates.authHeaderValue = authHeaderValue || null;
-  if (typeof authKeyParam === "string")
+  if (typeof authKeyParam === "string") {
+    if (
+      authKeyParam.length > 0 &&
+      (authKeyParam.length > 50 || !authKeyParamPattern.test(authKeyParam))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid authKeyParam. Use only letters, numbers, underscores, and hyphens (max 50 chars).",
+        },
+        { status: 400 }
+      );
+    }
     updates.authKeyParam = authKeyParam || null;
+  }
   if (typeof authUsername === "string")
     updates.authUsername = authUsername || null;
   if (typeof authPassword === "string")
