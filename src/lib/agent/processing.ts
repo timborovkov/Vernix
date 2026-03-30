@@ -105,9 +105,7 @@ async function captureRecordingAndParticipants(
     try {
       const res = await fetch(recordingUrl);
       if (res.ok) {
-        const contentLength = Number(
-          res.headers.get("content-length") ?? "0"
-        );
+        const contentLength = Number(res.headers.get("content-length") ?? "0");
         if (contentLength > MAX_RECORDING_SIZE) {
           console.warn(
             `[Processing] Recording too large (${Math.round(contentLength / 1024 / 1024)}MB), skipping`
