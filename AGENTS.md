@@ -91,6 +91,9 @@ All under `src/app/api/`:
 - `mcp/oauth/start/route.ts` — POST initiate OAuth flow for catalog/custom MCP server (auth required)
 - `mcp/oauth/callback/route.ts` — GET OAuth callback from external provider (public, state JWT provides auth)
 - `cron/billing-sync/route.ts` — GET reconcile billing state for stale subscriptions/trials (CRON_SECRET auth)
+- `cron/meeting-recovery/route.ts` — GET recover stuck meetings (joining/active/processing), capture missing recordings (CRON_SECRET auth)
+- `meetings/[id]/recording/route.ts` — GET signed S3 download URL for meeting recording
+- `auth/accept-terms/route.ts` — POST accept terms of use (sets `termsAcceptedAt` + bridge cookie)
 
 ### Auth & Middleware
 
@@ -98,6 +101,8 @@ All under `src/app/api/`:
 - Public endpoints (no auth): `/api/webhooks/*` (incl. Polar), `/api/checkout`, `/api/portal`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool`, `/api/agent/activation-status`, `/api/agent/wake-detect`, `/api/agent/voice-fallback` (all verified by botSecret), `/api/mcp` (API key auth), `/api/mcp/oauth/callback` (state JWT provides auth)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
+- Terms acceptance enforced in middleware: authenticated users without `termsAcceptedAt` (in JWT or `terms_accepted` cookie) are redirected to `/accept-terms`
+- Authenticated users on `/login` or `/register` are redirected to `/dashboard` (or `/accept-terms` if terms not accepted)
 
 ### Voice Agent (On-Demand Realtime)
 
