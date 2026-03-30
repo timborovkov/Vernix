@@ -204,6 +204,20 @@ export async function GET(request: Request) {
       recovered++;
       continue;
     }
+    // Bump updatedAt atomically to prevent concurrent retries from next cron run
+    const [claimed] = await db
+      .update(meetings)
+      .set({ updatedAt: now })
+      .where(
+        and(
+          eq(meetings.id, m.id),
+          eq(meetings.status, "processing"),
+          lte(meetings.updatedAt, processingTimeout)
+        )
+      )
+      .returning({ id: meetings.id });
+    if (!claimed) continue; // another cron run or webhook already handling it
+
     const metadata = (m.metadata as Record<string, unknown>) ?? {};
     console.log(
       `[Meeting Recovery] Retrying processing for stuck meeting ${m.id}`
