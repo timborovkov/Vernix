@@ -105,19 +105,27 @@ async function captureRecordingAndParticipants(
     try {
       const res = await fetch(recordingUrl);
       if (res.ok) {
-        const contentLength = Number(res.headers.get("content-length") ?? "0");
+        const contentLength = Number(
+          res.headers.get("content-length") ?? "0"
+        );
         if (contentLength > MAX_RECORDING_SIZE) {
           console.warn(
-            `[Processing] Recording too large (${Math.round(contentLength / 1024 / 1024)}MB), skipping capture`
+            `[Processing] Recording too large (${Math.round(contentLength / 1024 / 1024)}MB), skipping`
           );
         } else {
           const buffer = Buffer.from(await res.arrayBuffer());
-          const key = `recordings/${meetingId}.mp4`;
-          await uploadFile(key, buffer, "video/mp4");
-          updates.recordingKey = key;
-          console.log(
-            `[Processing] Recording saved: ${key} (${Math.round(buffer.length / 1024 / 1024)}MB)`
-          );
+          if (buffer.length > MAX_RECORDING_SIZE) {
+            console.warn(
+              `[Processing] Recording too large after download (${Math.round(buffer.length / 1024 / 1024)}MB), skipping`
+            );
+          } else {
+            const key = `recordings/${meetingId}.mp4`;
+            await uploadFile(key, buffer, "video/mp4");
+            updates.recordingKey = key;
+            console.log(
+              `[Processing] Recording saved: ${key} (${Math.round(buffer.length / 1024 / 1024)}MB)`
+            );
+          }
         }
       }
     } catch (err) {
