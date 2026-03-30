@@ -64,12 +64,14 @@ export async function processMeetingEnd(
       console.error("Action item extraction failed:", err);
     }
 
-    // Capture recording and participant data from Recall (non-critical)
+    // Capture recording and participant data from Recall (non-critical, awaited)
     const botId = metadata.botId as string | undefined;
     if (botId) {
-      captureRecordingAndParticipants(meetingId, userId, botId).catch((err) =>
-        console.error("[Processing] Recording/participant capture failed:", err)
-      );
+      try {
+        await captureRecordingAndParticipants(meetingId, userId, botId);
+      } catch (err) {
+        console.error("[Processing] Recording/participant capture failed:", err);
+      }
     }
   } catch (error) {
     console.error("Post-processing failed:", error);
