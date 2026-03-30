@@ -64,18 +64,6 @@ export async function processMeetingEnd(
       console.error("Action item extraction failed:", err);
     }
 
-    // Capture recording and participant data from Recall (non-critical, awaited)
-    const botId = metadata.botId as string | undefined;
-    if (botId) {
-      try {
-        await captureRecordingAndParticipants(meetingId, userId, botId);
-      } catch (err) {
-        console.error(
-          "[Processing] Recording/participant capture failed:",
-          err
-        );
-      }
-    }
   } catch (error) {
     console.error("Post-processing failed:", error);
     // Still complete on failure, just without summary
@@ -83,6 +71,19 @@ export async function processMeetingEnd(
       .update(meetings)
       .set({ status: "completed", updatedAt: new Date() })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+  }
+
+  // Capture recording and participant data from Recall (runs even if summary failed)
+  const botId = metadata.botId as string | undefined;
+  if (botId) {
+    try {
+      await captureRecordingAndParticipants(meetingId, userId, botId);
+    } catch (err) {
+      console.error(
+        "[Processing] Recording/participant capture failed:",
+        err
+      );
+    }
   }
 }
 
