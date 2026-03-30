@@ -54,6 +54,7 @@ export async function GET(request: Request) {
       metadata: meetings.metadata,
       startedAt: meetings.startedAt,
       endedAt: meetings.endedAt,
+      updatedAt: meetings.updatedAt,
       title: meetings.title,
       participants: meetings.participants,
     })
@@ -102,14 +103,17 @@ export async function GET(request: Request) {
         console.log(
           `[Meeting Recovery] Bot ${botId} is ${lastStatus}, processing meeting ${m.id}`
         );
-        await db
+        // Atomic: only transition if still active (webhook may have already handled it)
+        const [updated] = await db
           .update(meetings)
           .set({
             status: "processing",
             endedAt: m.endedAt ?? now,
             updatedAt: now,
           })
-          .where(eq(meetings.id, m.id));
+          .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")))
+          .returning({ id: meetings.id });
+        if (!updated) continue; // webhook already handled it
 
         await processMeetingEnd(m.id, m.userId, m.qdrantCollectionName, {
           ...metadata,
@@ -121,9 +125,9 @@ export async function GET(request: Request) {
         recovered++;
       } else {
         // Bot still in call — check if it's been too long (> 4 hours)
-        const meetingAge = m.startedAt
-          ? now.getTime() - new Date(m.startedAt).getTime()
-          : 0;
+        // Use startedAt, fall back to updatedAt for age
+        const ageRef = m.startedAt ?? m.updatedAt;
+        const meetingAge = now.getTime() - new Date(ageRef).getTime();
         if (meetingAge > 4 * 60 * 60 * 1000) {
           if (!m.userId) {
             await db
@@ -141,14 +145,17 @@ export async function GET(request: Request) {
           } catch {
             // Bot might already be gone
           }
-          await db
+          // Atomic: only transition if still active (webhook may have already handled it)
+          const [updated] = await db
             .update(meetings)
             .set({
               status: "processing",
               endedAt: now,
               updatedAt: now,
             })
-            .where(eq(meetings.id, m.id));
+            .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")))
+            .returning({ id: meetings.id });
+          if (!updated) continue; // webhook already handled it
           await processMeetingEnd(m.id, m.userId, m.qdrantCollectionName, {
             ...metadata,
             title: m.title,
