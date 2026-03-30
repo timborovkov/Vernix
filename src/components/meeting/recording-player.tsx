@@ -15,10 +15,16 @@ export function RecordingPlayer({
 }: RecordingPlayerProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
+  const [prevKey, setPrevKey] = useState(`${meetingId}-${hasRecording}`);
 
-  useEffect(() => {
+  const currentKey = `${meetingId}-${hasRecording}`;
+  if (prevKey !== currentKey) {
+    setPrevKey(currentKey);
     setUrl(null);
     setError(false);
+  }
+
+  useEffect(() => {
     if (!hasRecording) return;
     fetch(`/api/meetings/${meetingId}/recording`)
       .then((res) => (res.ok ? res.json() : null))
