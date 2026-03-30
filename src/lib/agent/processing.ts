@@ -63,7 +63,6 @@ export async function processMeetingEnd(
     } catch (err) {
       console.error("Action item extraction failed:", err);
     }
-
   } catch (error) {
     console.error("Post-processing failed:", error);
     // Still complete on failure, just without summary
@@ -79,10 +78,7 @@ export async function processMeetingEnd(
     try {
       await captureRecordingAndParticipants(meetingId, userId, botId);
     } catch (err) {
-      console.error(
-        "[Processing] Recording/participant capture failed:",
-        err
-      );
+      console.error("[Processing] Recording/participant capture failed:", err);
     }
   }
 }
