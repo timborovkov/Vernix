@@ -36,12 +36,15 @@ export async function GET(request: Request) {
     );
 
   for (const m of staleJoining) {
-    await db
+    const [updated] = await db
       .update(meetings)
       .set({ status: "failed", updatedAt: now })
-      .where(eq(meetings.id, m.id));
-    console.log(`[Meeting Recovery] Marked joining meeting ${m.id} as failed`);
-    recovered++;
+      .where(and(eq(meetings.id, m.id), eq(meetings.status, "joining")))
+      .returning({ id: meetings.id });
+    if (updated) {
+      console.log(`[Meeting Recovery] Marked joining meeting ${m.id} as failed`);
+      recovered++;
+    }
   }
 
   // 2. Stuck in "active" > 30 minutes → check Recall bot status
@@ -73,7 +76,7 @@ export async function GET(request: Request) {
       await db
         .update(meetings)
         .set({ status: "failed", updatedAt: now })
-        .where(eq(meetings.id, m.id));
+        .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")));
       console.log(
         `[Meeting Recovery] Marked active meeting ${m.id} as failed (no botId)`
       );
@@ -92,7 +95,7 @@ export async function GET(request: Request) {
           await db
             .update(meetings)
             .set({ status: "failed", updatedAt: now })
-            .where(eq(meetings.id, m.id));
+            .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")));
           console.warn(
             `[Meeting Recovery] Meeting ${m.id} has no userId, marked failed`
           );
@@ -133,7 +136,7 @@ export async function GET(request: Request) {
             await db
               .update(meetings)
               .set({ status: "failed", updatedAt: now })
-              .where(eq(meetings.id, m.id));
+              .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")));
             recovered++;
             continue;
           }
@@ -200,7 +203,7 @@ export async function GET(request: Request) {
       await db
         .update(meetings)
         .set({ status: "failed", updatedAt: now })
-        .where(eq(meetings.id, m.id));
+        .where(and(eq(meetings.id, m.id), eq(meetings.status, "processing")));
       recovered++;
       continue;
     }
