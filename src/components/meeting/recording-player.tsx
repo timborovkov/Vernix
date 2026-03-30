@@ -17,6 +17,8 @@ export function RecordingPlayer({
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    setUrl(null);
+    setError(false);
     if (!hasRecording) return;
     fetch(`/api/meetings/${meetingId}/recording`)
       .then((res) => (res.ok ? res.json() : null))
