@@ -127,4 +127,100 @@ describe("RecallProvider", () => {
       "Recall API error: 404"
     );
   });
+
+  it("getBot fetches bot status and returns structured data", async () => {
+    const botData = {
+      id: "bot-42",
+      status_changes: [
+        { code: "joining_call", created_at: "2026-01-01T00:00:00Z" },
+        { code: "done", created_at: "2026-01-01T01:00:00Z" },
+      ],
+      recordings: [{ id: "rec-1" }],
+      media_shortcuts: {
+        video_mixed: {
+          data: { download_url: "https://s3.example.com/video.mp4" },
+        },
+        transcript: {
+          data: { download_url: "https://s3.example.com/transcript.json" },
+        },
+      },
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(botData), { status: 200 })
+    );
+
+    const provider = new RecallProvider();
+    const result = await provider.getBot("bot-42");
+
+    expect(result.id).toBe("bot-42");
+    expect(result.status_changes).toHaveLength(2);
+    expect(result.status_changes[1].code).toBe("done");
+    expect(result.recordings[0].id).toBe("rec-1");
+    expect(result.media_shortcuts.video_mixed?.data?.download_url).toBe(
+      "https://s3.example.com/video.mp4"
+    );
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      "https://eu-central-1.recall.ai/api/v1/bot/bot-42/",
+      expect.objectContaining({
+        headers: { Authorization: "Token test-key" },
+      })
+    );
+  });
+
+  it("getBot throws on error response", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response("Not Found", { status: 404 })
+    );
+
+    const provider = new RecallProvider();
+    await expect(provider.getBot("bot-missing")).rejects.toThrow(
+      "Recall API error: 404"
+    );
+  });
+
+  it("getParticipantEvents fetches and returns participant data", async () => {
+    const eventData = {
+      results: [
+        {
+          id: 1,
+          name: "Alice",
+          is_host: true,
+          email: "alice@example.com",
+          platform: "zoom",
+          events: [
+            { type: "participant.join", timestamp: "2026-01-01T00:00:00Z" },
+            { type: "participant.leave", timestamp: "2026-01-01T01:00:00Z" },
+          ],
+        },
+        {
+          id: 2,
+          name: "Bob",
+          is_host: false,
+          email: null,
+          platform: "zoom",
+          events: [
+            { type: "participant.join", timestamp: "2026-01-01T00:05:00Z" },
+          ],
+        },
+      ],
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(eventData), { status: 200 })
+    );
+
+    const provider = new RecallProvider();
+    const result = await provider.getParticipantEvents("rec-1");
+
+    expect(result).toHaveLength(2);
+    expect(result[0].name).toBe("Alice");
+    expect(result[0].is_host).toBe(true);
+    expect(result[0].events).toHaveLength(2);
+    expect(result[1].email).toBeNull();
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      "https://eu-central-1.recall.ai/api/v1/participant_events/?recording_id=rec-1",
+      expect.objectContaining({
+        headers: { Authorization: "Token test-key" },
+      })
+    );
+  });
 });
