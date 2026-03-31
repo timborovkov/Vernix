@@ -6,6 +6,8 @@ import { generateMeetingSummary } from "@/lib/summary/generate";
 import { extractActionItems } from "@/lib/tasks/extract";
 import { storeExtractedTasks } from "@/lib/tasks/store";
 import { recordMeetingUsage, syncUsageToPolar } from "@/lib/billing/usage";
+import { getMeetingBotProvider } from "@/lib/meeting-bot";
+import { uploadFile } from "@/lib/storage/operations";
 
 /**
  * Shared post-meeting processing: generate summary and extract action items.
@@ -68,5 +70,101 @@ export async function processMeetingEnd(
       .update(meetings)
       .set({ status: "completed", updatedAt: new Date() })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+  }
+
+  // Capture recording and participant data from Recall (runs even if summary failed)
+  const botId = metadata.botId as string | undefined;
+  if (botId) {
+    try {
+      await captureRecordingAndParticipants(meetingId, userId, botId);
+    } catch (err) {
+      console.error("[Processing] Recording/participant capture failed:", err);
+    }
+  }
+}
+
+/**
+ * Fetch recording + participant data from Recall and persist.
+ * Fire-and-forget — failure doesn't affect meeting completion.
+ */
+async function captureRecordingAndParticipants(
+  meetingId: string,
+  userId: string,
+  botId: string
+): Promise<void> {
+  const provider = getMeetingBotProvider();
+  if (!provider.getBot) return;
+
+  const bot = await provider.getBot(botId);
+  const updates: Record<string, unknown> = {};
+
+  // Capture recording to S3 (skip files > 200MB to avoid OOM in serverless)
+  const MAX_RECORDING_SIZE = 200 * 1024 * 1024;
+  const recordingUrl = bot.media_shortcuts?.video_mixed?.data?.download_url;
+  if (recordingUrl) {
+    try {
+      const res = await fetch(recordingUrl);
+      if (res.ok) {
+        const contentLength = Number(res.headers.get("content-length") ?? "0");
+        if (contentLength > MAX_RECORDING_SIZE) {
+          console.warn(
+            `[Processing] Recording too large (${Math.round(contentLength / 1024 / 1024)}MB), skipping`
+          );
+        } else {
+          const buffer = Buffer.from(await res.arrayBuffer());
+          if (buffer.length > MAX_RECORDING_SIZE) {
+            console.warn(
+              `[Processing] Recording too large after download (${Math.round(buffer.length / 1024 / 1024)}MB), skipping`
+            );
+          } else {
+            const key = `recordings/${meetingId}.mp4`;
+            await uploadFile(key, buffer, "video/mp4");
+            updates.recordingKey = key;
+            console.log(
+              `[Processing] Recording saved: ${key} (${Math.round(buffer.length / 1024 / 1024)}MB)`
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.error("[Processing] Recording download failed:", err);
+    }
+  }
+
+  // Capture participant events
+  const recordingId = bot.recordings?.[0]?.id;
+  if (recordingId && provider.getParticipantEvents) {
+    try {
+      const events = await provider.getParticipantEvents(recordingId);
+      updates.participantEvents = events.map((p) => ({
+        name: p.name,
+        email: p.email,
+        isHost: p.is_host,
+        events: p.events,
+      }));
+      console.log(`[Processing] Captured ${events.length} participant records`);
+    } catch (err) {
+      console.error("[Processing] Participant capture failed:", err);
+    }
+  }
+
+  // Persist to meeting metadata
+  if (Object.keys(updates).length > 0) {
+    const [current] = await db
+      .select({ metadata: meetings.metadata })
+      .from(meetings)
+      .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+    if (current) {
+      await db
+        .update(meetings)
+        .set({
+          metadata: {
+            ...((current.metadata as Record<string, unknown>) ?? {}),
+            ...updates,
+          },
+          updatedAt: new Date(),
+        })
+        .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+    }
   }
 }

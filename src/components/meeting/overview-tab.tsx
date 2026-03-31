@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { renderMarkdown } from "@/lib/format";
+import { RecordingPlayer } from "./recording-player";
 import {
   Save,
   Users,
@@ -16,6 +17,7 @@ import {
   Volume2,
   OctagonX,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import type { Meeting } from "@/lib/db/schema";
 
@@ -258,10 +260,47 @@ export function OverviewTab({
               dangerouslySetInnerHTML={{ __html: renderMarkdown(summary) }}
             />
           ) : (
-            <p className="text-muted-foreground italic">No summary available</p>
+            <div className="flex items-center gap-3">
+              <p className="text-muted-foreground italic">
+                No summary available
+              </p>
+              {meeting.status === "completed" && (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(
+                        `/api/meetings/${meeting.id}/summarize`,
+                        { method: "POST" }
+                      );
+                      if (res.ok) {
+                        toast.success("Summary generation started");
+                        await queryClient.invalidateQueries({
+                          queryKey: queryKeys.meetings.detail(meeting.id),
+                        });
+                      } else {
+                        toast.error("Failed to generate summary");
+                      }
+                    } catch {
+                      toast.error("Failed to generate summary");
+                    }
+                  }}
+                >
+                  <RefreshCw className="mr-1 h-3 w-3" />
+                  Re-generate
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Recording */}
+      <RecordingPlayer
+        meetingId={meeting.id}
+        hasRecording={!!metadata.recordingKey}
+      />
 
       {/* Voice Telemetry */}
       {voiceTelemetry &&

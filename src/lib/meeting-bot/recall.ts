@@ -1,5 +1,10 @@
 import { randomUUID } from "crypto";
-import type { JoinOptions, MeetingBotProvider } from "./types";
+import type {
+  JoinOptions,
+  MeetingBotProvider,
+  RecallBot,
+  RecallParticipantEvent,
+} from "./types";
 
 export class RecallProvider implements MeetingBotProvider {
   private apiKey: string;
@@ -136,5 +141,35 @@ export class RecallProvider implements MeetingBotProvider {
     callback: (text: string, speaker: string, timestampMs: number) => void
   ): void {
     // Recall.ai sends transcripts via webhook — this is a no-op
+  }
+
+  async getBot(botId: string): Promise<RecallBot> {
+    const response = await fetch(`${this.apiUrl}/bot/${botId}/`, {
+      headers: { Authorization: `Token ${this.apiKey}` },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Recall API error: ${response.status} ${await response.text()}`
+      );
+    }
+    return response.json() as Promise<RecallBot>;
+  }
+
+  async getParticipantEvents(
+    recordingId: string
+  ): Promise<RecallParticipantEvent[]> {
+    const response = await fetch(
+      `${this.apiUrl}/participant_events/?recording_id=${recordingId}`,
+      { headers: { Authorization: `Token ${this.apiKey}` } }
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Recall API error: ${response.status} ${await response.text()}`
+      );
+    }
+    const data = (await response.json()) as {
+      results: RecallParticipantEvent[];
+    };
+    return data.results ?? [];
   }
 }

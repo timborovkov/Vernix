@@ -52,25 +52,18 @@
 - Empty states and onboarding UX: auth page redirects for logged-in users (middleware), public site header shows "Dashboard" when authenticated, landing page auth-aware CTAs, dashboard "Start your first call" empty state with knowledge/integrations nudges, integrations page first-connection banner
 - Terms of use acceptance: checkbox on credentials signup form, SSO post-auth acceptance page (`/accept-terms`), middleware enforcement (`termsAcceptedAt` in JWT), schema column on users table
 - Call detail page restructure: tab-based layout (Overview, Transcript, Tasks, Documents, Chat), URL hash deep linking, bounded transcript scroll, meeting link button, extracted into 5 component files
+- Call reliability and recording: Recall API expansion (getBot, getParticipantEvents), auto-recording capture to S3, participant event persistence, meeting recovery cron (stuck joining/active/processing), video player in overview tab, re-generate summary button
 
 ## Integrations
 
 - **Register OAuth apps for more services** — Currently only GitHub has a pre-registered OAuth app. To enable more OAuth integrations (Slack, Linear, Notion, etc.): register Vernix on each service's developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, change catalog status to `available`.
 
-## Call Reliability, Recording Sync & Recovery
+## Recording Retention & Deletion
 
-- **Recall data audit** — Investigate what Recall provides after a call: recording MP4, participant events, meeting metadata, and speaker timeline. Map available API fields and lifecycle timing.
-- **Recall webhook fallback + reconciliation cron** — Add reliability fallback that actively fetches meeting/recording/transcript status when webhooks are delayed or missing, and re-drives stuck artifact processing.
-- **On-demand Recall refresh on call open** — When a user opens call detail, if artifacts are missing/stale, trigger a bounded Recall fetch/reconciliation and refresh the page state so late data appears without waiting for cron.
-- **Recover stale `active` / `processing` calls** — In the reconciliation flow, detect calls stuck in `active` or `processing` and safely re-run status progression + artifact generation.
-- **Recover stale `joining` calls** — Mark calls stuck in `joining` beyond a safe timeout as `failed` so they do not block concurrency limits.
-- **Copy recordings to our storage** — After `recording_done`, download Recall's expiring S3 MP4 URL (6h) and upload to our S3/Minio bucket, storing the persisted key in meeting metadata.
-- **Persist participant/speaker data** — Fetch participant events and speaker timeline from Recall and store them in meeting metadata (currently inferred only from transcript speaker names).
-- **Video playback UI** — Add a meeting detail video player and sync transcript timeline with playback (click transcript line -> seek to timestamp).
-- **Recording retention policy** — Decide keep/expire/user-configurable retention rules and estimate storage cost per meeting minute.
-- **Recording privacy controls** — Let users disable recording storage per call, and ensure meeting deletion also deletes stored media from S3/Minio.
-- **Expand export completeness** — Include transcript, knowledge, tasks, participant metadata, and recording references in exports; ship media as separate files where applicable.
-- **Missing-artifact recovery from call view** — Detect missing post-call artifacts and provide re-run actions for summary/task/knowledge generation.
+- **Define and enforce default recording retention** — Set a clear launch policy for how long recordings are stored (and when they are deleted), and document expected storage cost per meeting minute.
+- **Ship recording privacy controls** — Allow users to disable recording storage per call.
+- **Guarantee deletion consistency** — When a meeting is deleted, also delete associated recording media from S3/Minio to avoid orphaned private data.
+- **Update legal disclosures** — Reflect final recording retention, storage, and deletion behavior in Terms of Use and Privacy Policy before launch.
 
 ## Cron Jobs & Background Reconciliation
 
@@ -96,7 +89,7 @@
 
 ## SEO & Discoverability
 
-- **Google Search Console** — Verify domain, submit sitemap, monitor indexing
+- **Google Search Console** — Verify domain, submit sitemap, monitor indexing - DONE
 - **Schema markup** — Add JSON-LD structured data: Organization, SoftwareApplication, FAQ schema on the FAQ page
 - **Canonical URLs** — Ensure all pages have proper canonical tags via metadataBase
 - **Dynamic robots.txt and sitemap** — Move `robots.txt` from static `public/` to a Next.js route handler so it generates at build time from config. Same for `llms.txt`.

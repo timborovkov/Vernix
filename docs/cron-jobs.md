@@ -78,6 +78,48 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 }
 ```
 
+### Billing Sync
+
+| Field             | Value                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| **Endpoint**      | `GET /api/cron/billing-sync`                                                              |
+| **Schedule**      | Every 6 hours (`0 */6 * * *`)                                                             |
+| **Start command** | `sh -c 'curl -sf -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/billing-sync'` |
+| **Source**        | `src/app/api/cron/billing-sync/route.ts`                                                  |
+
+**What it does:**
+
+1. Finds Pro users whose billing period has ended (potential missed webhook)
+2. Finds free users with expired trial dates
+3. Calls `syncBillingFromPolar()` for each to reconcile local DB with Polar's state
+4. Returns count of successfully synced users
+
+**Idempotency:** Safe to run multiple times; `syncBillingFromPolar` is idempotent.
+
+---
+
+### Meeting Recovery
+
+| Field             | Value                                                                                         |
+| ----------------- | --------------------------------------------------------------------------------------------- |
+| **Endpoint**      | `GET /api/cron/meeting-recovery`                                                              |
+| **Schedule**      | Every 5 minutes (`*/5 * * * *`)                                                               |
+| **Start command** | `sh -c 'curl -sf -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/meeting-recovery'` |
+| **Source**        | `src/app/api/cron/meeting-recovery/route.ts`                                                  |
+
+**What it does:**
+
+1. **Stuck `joining` > 10 min** → marks as `failed` (bot never connected)
+2. **Stuck `active` > 30 min** → queries Recall bot status via API; if bot is done/fatal, processes the meeting; if still in call > 4h, forces leave
+3. **Stuck `processing` > 2 hours** → retries `processMeetingEnd()` (summary + tasks + recording capture)
+4. **Missing recordings** → logs count of recent completed meetings without recordings
+
+**Idempotency:** Safe to run multiple times; recovery logic checks current status before acting.
+
+**Dependencies:** Requires `CRON_SECRET`, Recall API access (`RECALL_API_KEY`), and S3 for recording storage.
+
+---
+
 ## Adding New Cron Jobs
 
 1. Create a new route at `src/app/api/cron/<job-name>/route.ts`
