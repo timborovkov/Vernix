@@ -4,6 +4,8 @@ const {
   mockGenerateSummary,
   mockExtractActionItems,
   mockStoreExtractedTasks,
+  mockProvider,
+  mockUploadFile,
 } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
@@ -26,6 +28,19 @@ const {
     mockGenerateSummary: vi.fn().mockResolvedValue("Test summary"),
     mockExtractActionItems: vi.fn().mockResolvedValue([]),
     mockStoreExtractedTasks: vi.fn().mockResolvedValue(undefined),
+    mockProvider: {
+      joinMeeting: vi.fn(),
+      leaveMeeting: vi.fn(),
+      onTranscript: vi.fn(),
+      getBot: vi.fn().mockResolvedValue({
+        media_shortcuts: {},
+        recordings: [],
+        status_changes: [],
+      }),
+      deleteBot: vi.fn().mockResolvedValue(undefined),
+      getParticipantEvents: vi.fn().mockResolvedValue([]),
+    },
+    mockUploadFile: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -41,6 +56,12 @@ vi.mock("@/lib/tasks/extract", () => ({
 }));
 vi.mock("@/lib/tasks/store", () => ({
   storeExtractedTasks: mockStoreExtractedTasks,
+}));
+vi.mock("@/lib/meeting-bot", () => ({
+  getMeetingBotProvider: () => mockProvider,
+}));
+vi.mock("@/lib/storage/operations", () => ({
+  uploadFile: mockUploadFile,
 }));
 
 import { processMeetingEnd } from "./processing";
@@ -106,5 +127,108 @@ describe("processMeetingEnd", () => {
         metadata: expect.objectContaining({ summary: "Summary" }),
       })
     );
+  });
+
+  it("deletes Recall bot after successful recording capture", async () => {
+    mockScrollTranscript.mockResolvedValueOnce([]);
+    mockGenerateSummary.mockResolvedValueOnce("Summary");
+
+    // getBot returns a bot with a recording URL
+    mockProvider.getBot.mockResolvedValueOnce({
+      media_shortcuts: {
+        video_mixed: {
+          data: { download_url: "https://recall.example.com/recording.mp4" },
+        },
+      },
+      recordings: [{ id: "rec-1" }],
+      status_changes: [],
+    });
+
+    // Mock the meeting metadata query (noRecording check)
+    mockDb.where.mockResolvedValueOnce(undefined); // completed status update
+    mockDb.where.mockResolvedValueOnce([{ metadata: {} }]); // noRecording check
+
+    // Mock fetch for recording download
+    const mockFetchResponse = {
+      ok: true,
+      headers: new Headers({ "content-length": "1024" }),
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+    };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(mockFetchResponse));
+
+    // Mock the metadata persist query
+    mockDb.where
+      .mockResolvedValueOnce([{ metadata: {} }]) // current metadata read
+      .mockResolvedValueOnce(undefined); // metadata update
+
+    await processMeetingEnd("meeting-1", "user-1", "col-1", {
+      botId: "bot-1",
+    });
+
+    expect(mockUploadFile).toHaveBeenCalledWith(
+      "recordings/meeting-1.mp4",
+      expect.any(Buffer),
+      "video/mp4"
+    );
+    expect(mockProvider.deleteBot).toHaveBeenCalledWith("bot-1");
+  });
+
+  it("does NOT delete Recall bot when recording download fails", async () => {
+    mockScrollTranscript.mockResolvedValueOnce([]);
+    mockGenerateSummary.mockResolvedValueOnce("Summary");
+
+    mockProvider.getBot.mockResolvedValueOnce({
+      media_shortcuts: {
+        video_mixed: {
+          data: { download_url: "https://recall.example.com/recording.mp4" },
+        },
+      },
+      recordings: [],
+      status_changes: [],
+    });
+
+    // completed status update + noRecording check
+    mockDb.where.mockResolvedValueOnce(undefined);
+    mockDb.where.mockResolvedValueOnce([{ metadata: {} }]);
+
+    // fetch fails
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValueOnce(new Error("Network error"))
+    );
+
+    await processMeetingEnd("meeting-1", "user-1", "col-1", {
+      botId: "bot-1",
+    });
+
+    // Bot should NOT be deleted — recording is still on Recall
+    expect(mockProvider.deleteBot).not.toHaveBeenCalled();
+  });
+
+  it("deletes Recall bot when recording is intentionally skipped (noRecording)", async () => {
+    mockScrollTranscript.mockResolvedValueOnce([]);
+    mockGenerateSummary.mockResolvedValueOnce("Summary");
+
+    mockProvider.getBot.mockResolvedValueOnce({
+      media_shortcuts: {
+        video_mixed: {
+          data: { download_url: "https://recall.example.com/recording.mp4" },
+        },
+      },
+      recordings: [],
+      status_changes: [],
+    });
+
+    // completed status update + noRecording check returns noRecording: true
+    mockDb.where.mockResolvedValueOnce(undefined);
+    mockDb.where.mockResolvedValueOnce([{ metadata: { noRecording: true } }]);
+
+    await processMeetingEnd("meeting-1", "user-1", "col-1", {
+      botId: "bot-1",
+    });
+
+    // Recording was intentionally skipped, bot can be safely deleted
+    expect(mockUploadFile).not.toHaveBeenCalled();
+    expect(mockProvider.deleteBot).toHaveBeenCalledWith("bot-1");
   });
 });
