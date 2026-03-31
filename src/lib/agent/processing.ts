@@ -75,33 +75,65 @@ export async function processMeetingEnd(
   // Capture recording and participant data from Recall (runs even if summary failed)
   const botId = metadata.botId as string | undefined;
   if (botId) {
+    let recordingCaptured = false;
     try {
-      await captureRecordingAndParticipants(meetingId, userId, botId);
+      recordingCaptured = await captureRecordingAndParticipants(
+        meetingId,
+        userId,
+        botId
+      );
     } catch (err) {
       console.error("[Processing] Recording/participant capture failed:", err);
+    }
+
+    // Only delete Recall bot if recording was captured (or intentionally skipped).
+    // If capture failed, keep the bot so the recording-retention cron or a
+    // manual retry can still fetch it.
+    if (recordingCaptured) {
+      try {
+        const provider = getMeetingBotProvider();
+        if (provider.deleteBot) {
+          await provider.deleteBot(botId);
+          console.log(`[Processing] Recall bot ${botId} deleted`);
+        }
+      } catch (err) {
+        console.error(`[Processing] Recall bot ${botId} deletion failed:`, err);
+      }
     }
   }
 }
 
 /**
  * Fetch recording + participant data from Recall and persist.
- * Fire-and-forget — failure doesn't affect meeting completion.
+ * Returns true if the recording was captured successfully or intentionally
+ * skipped (noRecording, no URL, too large). Returns false if a download or
+ * upload failed — in that case the Recall bot should NOT be deleted.
  */
 async function captureRecordingAndParticipants(
   meetingId: string,
   userId: string,
   botId: string
-): Promise<void> {
+): Promise<boolean> {
   const provider = getMeetingBotProvider();
-  if (!provider.getBot) return;
+  if (!provider.getBot) return true;
 
   const bot = await provider.getBot(botId);
   const updates: Record<string, unknown> = {};
+  let recordingFailed = false;
+
+  // Check if recording storage is disabled for this meeting
+  const [meetingRow] = await db
+    .select({ metadata: meetings.metadata })
+    .from(meetings)
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+  const noRecording = Boolean(
+    (meetingRow?.metadata as Record<string, unknown>)?.noRecording
+  );
 
   // Capture recording to S3 (skip files > 200MB to avoid OOM in serverless)
   const MAX_RECORDING_SIZE = 200 * 1024 * 1024;
   const recordingUrl = bot.media_shortcuts?.video_mixed?.data?.download_url;
-  if (recordingUrl) {
+  if (recordingUrl && !noRecording) {
     try {
       const res = await fetch(recordingUrl);
       if (res.ok) {
@@ -128,6 +160,7 @@ async function captureRecordingAndParticipants(
       }
     } catch (err) {
       console.error("[Processing] Recording download failed:", err);
+      recordingFailed = true;
     }
   }
 
@@ -167,4 +200,6 @@ async function captureRecordingAndParticipants(
         .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
     }
   }
+
+  return !recordingFailed;
 }

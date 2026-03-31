@@ -34,4 +34,8 @@ export class MockProvider implements MeetingBotProvider {
       callback("Hello, this is a mock transcript.", "Mock Speaker", Date.now());
     }, 2000);
   }
+
+  async deleteBot(botId: string): Promise<void> {
+    console.log(`[MockBot] Deleting bot ${botId}`);
+  }
 }

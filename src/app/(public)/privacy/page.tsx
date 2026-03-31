@@ -45,9 +45,9 @@ export default function PrivacyPage() {
               password, collected at registration.
             </li>
             <li>
-              <strong>Meeting content</strong> — audio streams, transcripts,
-              AI-generated summaries, and extracted action items produced when a
-              meeting bot joins a call.
+              <strong>Meeting content</strong> — audio streams, video
+              recordings, transcripts, AI-generated summaries, and extracted
+              action items produced when a meeting bot joins a call.
             </li>
             <li>
               <strong>Uploaded documents</strong> — files you upload to the
@@ -224,16 +224,19 @@ export default function PrivacyPage() {
             <li>
               <strong>Meeting content</strong> — transcripts, summaries, and
               action items are retained until you delete the meeting or your
-              account.
+              account. Video recordings are stored for a default retention
+              period of 90 days after the meeting ends, after which they are
+              automatically deleted. You may disable recording storage for
+              individual meetings before they start.
             </li>
             <li>
               <strong>Uploaded documents</strong> — retained until you delete
               them or your account.
             </li>
             <li>
-              <strong>Recall.ai</strong> — media associated with recordings may
-              be retained by Recall.ai in accordance with their retention
-              policy. We configure the shortest retention window available.
+              <strong>Recall.ai</strong> — we delete bot data from Recall.ai
+              after processing is complete. Recall.ai may retain residual data
+              in accordance with their own retention policy.
             </li>
             <li>
               <strong>OpenAI (API)</strong> — API inputs and outputs may be

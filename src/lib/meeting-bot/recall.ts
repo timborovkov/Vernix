@@ -172,4 +172,17 @@ export class RecallProvider implements MeetingBotProvider {
     };
     return data.results ?? [];
   }
+
+  async deleteBot(botId: string): Promise<void> {
+    const response = await fetch(`${this.apiUrl}/bot/${botId}/`, {
+      method: "DELETE",
+      headers: { Authorization: `Token ${this.apiKey}` },
+    });
+    // 404 = already gone, treat as success
+    if (!response.ok && response.status !== 404) {
+      throw new Error(
+        `Recall API error: ${response.status} ${await response.text()}`
+      );
+    }
+  }
 }

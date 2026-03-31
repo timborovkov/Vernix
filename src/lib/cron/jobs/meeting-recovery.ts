@@ -1,25 +1,10 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
 import { and, eq, lte, sql } from "drizzle-orm";
 import { getMeetingBotProvider } from "@/lib/meeting-bot";
 import { processMeetingEnd } from "@/lib/agent/processing";
 
-/**
- * Cron endpoint: recovers meetings stuck in transitional states.
- * Runs every 5 minutes. Protected by CRON_SECRET.
- *
- * - joining > 10 min → failed
- * - active > 30 min without webhook → check Recall, recover
- * - processing > 2 hours → re-run processing
- */
-export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const secret = request.headers.get("authorization");
-  if (!cronSecret || secret !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function runMeetingRecovery() {
   const now = new Date();
   let recovered = 0;
 
@@ -74,7 +59,6 @@ export async function GET(request: Request) {
     const botId = metadata.botId as string | undefined;
 
     if (!botId || !provider.getBot) {
-      // No botId or no getBot method — mark as failed
       await db
         .update(meetings)
         .set({ status: "failed", updatedAt: now })
@@ -93,7 +77,6 @@ export async function GET(request: Request) {
 
       if (lastStatus === "done" || lastStatus === "fatal") {
         if (!m.userId) {
-          // No userId — can't process, mark as failed
           await db
             .update(meetings)
             .set({ status: "failed", updatedAt: now })
@@ -104,11 +87,9 @@ export async function GET(request: Request) {
           recovered++;
           continue;
         }
-        // Bot has finished — process the meeting
         console.log(
           `[Meeting Recovery] Bot ${botId} is ${lastStatus}, processing meeting ${m.id}`
         );
-        // Atomic: only transition if still active (webhook may have already handled it)
         const [updated] = await db
           .update(meetings)
           .set({
@@ -118,7 +99,7 @@ export async function GET(request: Request) {
           })
           .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")))
           .returning({ id: meetings.id });
-        if (!updated) continue; // webhook already handled it
+        if (!updated) continue;
 
         await processMeetingEnd(m.id, m.userId, m.qdrantCollectionName, {
           ...metadata,
@@ -129,8 +110,6 @@ export async function GET(request: Request) {
         });
         recovered++;
       } else {
-        // Bot still in call — check if it's been too long (> 4 hours)
-        // Use startedAt, fall back to updatedAt for age
         const ageRef = m.startedAt ?? m.updatedAt;
         const meetingAge = now.getTime() - new Date(ageRef).getTime();
         if (meetingAge > 4 * 60 * 60 * 1000) {
@@ -150,7 +129,6 @@ export async function GET(request: Request) {
           } catch {
             // Bot might already be gone
           }
-          // Atomic: only transition if still active (webhook may have already handled it)
           const [updated] = await db
             .update(meetings)
             .set({
@@ -160,7 +138,7 @@ export async function GET(request: Request) {
             })
             .where(and(eq(meetings.id, m.id), eq(meetings.status, "active")))
             .returning({ id: meetings.id });
-          if (!updated) continue; // webhook already handled it
+          if (!updated) continue;
           await processMeetingEnd(m.id, m.userId, m.qdrantCollectionName, {
             ...metadata,
             title: m.title,
@@ -209,7 +187,6 @@ export async function GET(request: Request) {
       recovered++;
       continue;
     }
-    // Bump updatedAt atomically to prevent concurrent retries from next cron run
     const [claimed] = await db
       .update(meetings)
       .set({ updatedAt: now })
@@ -221,7 +198,7 @@ export async function GET(request: Request) {
         )
       )
       .returning({ id: meetings.id });
-    if (!claimed) continue; // another cron run or webhook already handling it
+    if (!claimed) continue;
 
     const metadata = (m.metadata as Record<string, unknown>) ?? {};
     console.log(
@@ -258,13 +235,12 @@ export async function GET(request: Request) {
         eq(meetings.status, "completed"),
         sql`${meetings.metadata}->>'recordingKey' IS NULL`,
         sql`${meetings.metadata}->>'botId' IS NOT NULL`,
+        sql`${meetings.metadata}->>'noRecording' IS DISTINCT FROM 'true'`,
         sql`${meetings.endedAt} > ${recordingWindow}`
       )
     )
     .limit(10);
 
-  // Recording capture is handled by the processing pipeline
-  // Just log for visibility
   if (missingRecordings.length > 0) {
     console.log(
       `[Meeting Recovery] ${missingRecordings.length} recent meetings without recordings`
@@ -272,5 +248,5 @@ export async function GET(request: Request) {
   }
 
   console.log(`[Meeting Recovery] Recovered ${recovered} meetings`);
-  return NextResponse.json({ recovered });
+  return { recovered };
 }

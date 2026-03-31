@@ -66,6 +66,14 @@ export default function TermsPage() {
             4. Recording Consent and Acceptable Use
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
+            The Service records video of meetings by default and stores
+            recordings for up to 90 days, after which they are automatically
+            deleted. You may disable recording storage on a per-meeting basis
+            before the meeting starts. Even when recording storage is disabled,
+            the Service still processes audio for real-time transcription and
+            summary generation.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
             You are solely responsible for complying with all applicable laws
             regarding the recording and transcription of conversations,
             including but not limited to obtaining informed consent from all
@@ -238,7 +246,7 @@ export default function TermsPage() {
           <h2 className="mb-2 text-lg font-semibold">
             10. Data Processing and Privacy
           </h2>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground mb-3 text-sm">
             Your data is processed in accordance with our{" "}
             <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
@@ -250,6 +258,13 @@ export default function TermsPage() {
             transcripts — will be transmitted to and processed by our
             sub-processors (Recall.ai, OpenAI, Railway, Sentry) in the United
             States.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Meeting recordings are automatically deleted after 90 days. You may
+            also delete individual meeting recordings at any time by deleting
+            the meeting. When a meeting is deleted, all associated data —
+            including recordings, transcripts, and summaries — is removed from
+            our systems and third-party sub-processors.
           </p>
         </section>
 

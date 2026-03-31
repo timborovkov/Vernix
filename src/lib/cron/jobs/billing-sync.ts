@@ -1,21 +1,9 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { and, eq, isNotNull, lte } from "drizzle-orm";
 import { syncBillingFromPolar } from "@/lib/billing/sync";
 
-/**
- * Cron endpoint: reconciles billing state for users whose billing period has ended.
- * Catches cases where webhooks were missed or delayed.
- * Protected by CRON_SECRET.
- */
-export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const secret = request.headers.get("authorization");
-  if (!cronSecret || secret !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function runBillingSync() {
   const now = new Date();
   let syncedCount = 0;
 
@@ -64,6 +52,5 @@ export async function GET(request: Request) {
   }
 
   console.log(`[Billing Sync Cron] Synced ${syncedCount} users`);
-
-  return NextResponse.json({ synced: syncedCount });
+  return { synced: syncedCount };
 }

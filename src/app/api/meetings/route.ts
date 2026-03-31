@@ -20,6 +20,7 @@ const createMeetingSchema = z.object({
   joinLink: z.url("Must be a valid URL"),
   agenda: z.string().max(10000).optional(),
   silent: z.boolean().optional().default(false),
+  noRecording: z.boolean().optional().default(false),
 });
 
 export async function GET() {
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { title, joinLink, agenda, silent } = parsed.data;
+  const { title, joinLink, agenda, silent, noRecording } = parsed.data;
 
   // Billing check
   const { limits, period } = await requireLimits(user.id);
@@ -78,6 +79,9 @@ export async function POST(request: Request) {
   }
   if (silent) {
     metadata.silent = true;
+  }
+  if (noRecording) {
+    metadata.noRecording = true;
   }
 
   const [meeting] = await db

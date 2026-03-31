@@ -48,4 +48,5 @@ export interface MeetingBotProvider {
   ): void;
   getBot?(botId: string): Promise<RecallBot>;
   getParticipantEvents?(recordingId: string): Promise<RecallParticipantEvent[]>;
+  deleteBot?(botId: string): Promise<void>;
 }

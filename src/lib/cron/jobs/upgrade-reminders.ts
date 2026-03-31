@@ -1,21 +1,10 @@
-import { NextResponse } from "next/server";
 import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email/send";
 import { getFreePlanUpgradeReminderHtml } from "@/lib/email/templates";
 
-/**
- * Cron endpoint: sends weekly upgrade reminders to free users.
- * Protected by CRON_SECRET header to prevent unauthorized access.
- */
-export async function GET(request: Request) {
-  const cronSecret = process.env.CRON_SECRET;
-  const secret = request.headers.get("authorization");
-  if (!cronSecret || secret !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function runUpgradeReminders() {
   const now = new Date();
   const sevenDaysAgo = new Date(now);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -61,6 +50,5 @@ export async function GET(request: Request) {
     `[Upgrade Reminders] Sent ${sent.length} emails:`,
     sent.join(", ") || "none"
   );
-
-  return NextResponse.json({ sent: sent.length, emails: sent });
+  return { sent: sent.length, emails: sent };
 }
