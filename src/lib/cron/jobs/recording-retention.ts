@@ -72,10 +72,7 @@ export async function runRecordingRetention() {
       );
       deleted++;
     } catch (err) {
-      console.error(
-        `[Recording Retention] DB update failed for ${m.id}:`,
-        err
-      );
+      console.error(`[Recording Retention] DB update failed for ${m.id}:`, err);
     }
   }
 
