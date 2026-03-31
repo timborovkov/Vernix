@@ -258,6 +258,7 @@ export async function GET(request: Request) {
         eq(meetings.status, "completed"),
         sql`${meetings.metadata}->>'recordingKey' IS NULL`,
         sql`${meetings.metadata}->>'botId' IS NOT NULL`,
+        sql`${meetings.metadata}->>'noRecording' IS DISTINCT FROM 'true'`,
         sql`${meetings.endedAt} > ${recordingWindow}`
       )
     )

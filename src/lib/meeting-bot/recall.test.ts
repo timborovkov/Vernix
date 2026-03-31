@@ -223,4 +223,39 @@ describe("RecallProvider", () => {
       })
     );
   });
+
+  it("deleteBot sends DELETE to correct endpoint", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    const provider = new RecallProvider();
+    await provider.deleteBot("bot-42");
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://eu-central-1.recall.ai/api/v1/bot/bot-42/",
+      expect.objectContaining({
+        method: "DELETE",
+        headers: { Authorization: "Token test-key" },
+      })
+    );
+  });
+
+  it("deleteBot treats 404 as success (bot already gone)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response("Not Found", { status: 404 })
+    );
+
+    const provider = new RecallProvider();
+    await expect(provider.deleteBot("bot-gone")).resolves.toBeUndefined();
+  });
+
+  it("deleteBot throws on server error", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response("Internal Server Error", { status: 500 })
+    );
+
+    const provider = new RecallProvider();
+    await expect(provider.deleteBot("bot-99")).rejects.toThrow(
+      "Recall API error: 500"
+    );
+  });
 });

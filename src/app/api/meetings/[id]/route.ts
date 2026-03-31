@@ -7,6 +7,7 @@ import { upsertAgenda } from "@/lib/vector/agenda";
 import { requireSessionUser } from "@/lib/auth/session";
 import { documents } from "@/lib/db/schema";
 import { deleteFile } from "@/lib/storage/operations";
+import { getMeetingBotProvider } from "@/lib/meeting-bot";
 
 export async function GET(
   _request: Request,
@@ -49,10 +50,8 @@ export async function PATCH(
   }
 
   // Only allow updating safe fields
-  const { title, joinLink, agenda, silent, muted } = body as Record<
-    string,
-    unknown
-  >;
+  const { title, joinLink, agenda, silent, muted, noRecording } =
+    body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof title === "string") updates.title = title;
   if (typeof joinLink === "string") updates.joinLink = joinLink;
@@ -88,6 +87,15 @@ export async function PATCH(
     const canEditSilent = ["pending", "failed"].includes(meeting.status);
     if (canEditSilent) {
       metadataUpdates.silent = silent;
+      metadataChanged = true;
+    }
+  }
+
+  // Allow toggling noRecording only before meeting starts
+  if (typeof noRecording === "boolean") {
+    const canEdit = ["pending", "failed"].includes(meeting.status);
+    if (canEdit) {
+      metadataUpdates.noRecording = noRecording;
       metadataChanged = true;
     }
   }
@@ -130,6 +138,30 @@ export async function DELETE(
 
   if (!meeting) {
     return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
+  }
+
+  // Clean up S3 recording
+  const metadata = (meeting.metadata as Record<string, unknown>) ?? {};
+  const recordingKey = metadata.recordingKey as string | undefined;
+  if (recordingKey) {
+    try {
+      await deleteFile(recordingKey);
+    } catch {
+      // S3 cleanup is best-effort
+    }
+  }
+
+  // Clean up Recall bot
+  const botId = metadata.botId as string | undefined;
+  if (botId) {
+    try {
+      const provider = getMeetingBotProvider();
+      if (provider.deleteBot) {
+        await provider.deleteBot(botId);
+      }
+    } catch {
+      // Recall cleanup is best-effort — bot may already be gone
+    }
   }
 
   await deleteMeetingCollection(meeting.qdrantCollectionName);
