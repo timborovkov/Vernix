@@ -10,8 +10,6 @@ Vernix uses HTTP-based cron endpoints under `/api/cron/*`. All job logic lives i
 
 A **unified dispatcher** at `GET /api/cron` determines which jobs are due based on the current UTC time and runs them. This allows a single Railway cron service to drive all jobs.
 
-Individual endpoints (`/api/cron/meeting-recovery`, etc.) still work for manual invocation or debugging.
-
 All endpoints are protected by a shared `CRON_SECRET` Bearer token.
 
 ---
@@ -42,11 +40,7 @@ The dispatcher runs every 5 minutes and evaluates which jobs are due. Jobs with 
 **Local development:**
 
 ```bash
-# Run all due jobs
 curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/cron
-
-# Run a specific job directly
-curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/cron/meeting-recovery
 ```
 
 ---
@@ -59,7 +53,6 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 | ------------ | --------------------------------------- |
 | **Schedule** | Every 5 minutes (always runs)           |
 | **Handler**  | `src/lib/cron/jobs/meeting-recovery.ts` |
-| **Endpoint** | `GET /api/cron/meeting-recovery`        |
 
 **What it does:**
 
@@ -78,7 +71,6 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 | ------------ | ---------------------------------------------- |
 | **Schedule** | Every 6 hours (00:00, 06:00, 12:00, 18:00 UTC) |
 | **Handler**  | `src/lib/cron/jobs/billing-sync.ts`            |
-| **Endpoint** | `GET /api/cron/billing-sync`                   |
 
 **What it does:**
 
@@ -96,7 +88,6 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 | ------------ | ------------------------------------------ |
 | **Schedule** | Daily at 03:00 UTC                         |
 | **Handler**  | `src/lib/cron/jobs/recording-retention.ts` |
-| **Endpoint** | `GET /api/cron/recording-retention`        |
 
 **What it does:**
 
@@ -118,7 +109,6 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 | ------------ | ---------------------------------------- |
 | **Schedule** | Weekly on Monday at 09:00 UTC            |
 | **Handler**  | `src/lib/cron/jobs/upgrade-reminders.ts` |
-| **Endpoint** | `GET /api/cron/upgrade-reminders`        |
 
 **What it does:**
 
@@ -151,8 +141,7 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 
 1. Create a handler in `src/lib/cron/jobs/<job-name>.ts` exporting an async function
 2. Register it in `src/lib/cron/index.ts` with a `shouldRun()` schedule check
-3. Optionally create `src/app/api/cron/<job-name>/route.ts` for direct invocation
-4. Add the job to this document
+3. Add the job to this document
 
 ---
 
