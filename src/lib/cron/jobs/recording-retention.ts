@@ -55,19 +55,28 @@ export async function runRecordingRetention() {
       }
     }
 
-    // Clear recordingKey from metadata
-    const updatedMetadata = { ...metadata };
-    delete updatedMetadata.recordingKey;
-    await db
-      .update(meetings)
-      .set({
-        metadata: updatedMetadata,
-        updatedAt: new Date(),
-      })
-      .where(and(eq(meetings.id, m.id), eq(meetings.userId, m.userId)));
+    // Clear recordingKey from metadata — wrapped so one DB failure doesn't abort the batch
+    try {
+      const updatedMetadata = { ...metadata };
+      delete updatedMetadata.recordingKey;
+      await db
+        .update(meetings)
+        .set({
+          metadata: updatedMetadata,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(meetings.id, m.id), eq(meetings.userId, m.userId)));
 
-    console.log(`[Recording Retention] Deleted recording for meeting ${m.id}`);
-    deleted++;
+      console.log(
+        `[Recording Retention] Deleted recording for meeting ${m.id}`
+      );
+      deleted++;
+    } catch (err) {
+      console.error(
+        `[Recording Retention] DB update failed for ${m.id}:`,
+        err
+      );
+    }
   }
 
   console.log(
