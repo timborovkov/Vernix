@@ -90,8 +90,11 @@ All under `src/app/api/`:
 - `webhooks/polar/route.ts` — POST Polar webhook handler (subscription lifecycle, customer events)
 - `mcp/oauth/start/route.ts` — POST initiate OAuth flow for catalog/custom MCP server (auth required)
 - `mcp/oauth/callback/route.ts` — GET OAuth callback from external provider (public, state JWT provides auth)
+- `cron/route.ts` — GET unified cron dispatcher, runs due jobs based on schedule (CRON_SECRET auth). Called every 5 min.
 - `cron/billing-sync/route.ts` — GET reconcile billing state for stale subscriptions/trials (CRON_SECRET auth)
 - `cron/meeting-recovery/route.ts` — GET recover stuck meetings (joining/active/processing), capture missing recordings (CRON_SECRET auth)
+- `cron/recording-retention/route.ts` — GET delete recordings past retention period from S3 (CRON_SECRET auth)
+- `cron/upgrade-reminders/route.ts` — GET send weekly upgrade emails to free users (CRON_SECRET auth)
 - `meetings/[id]/recording/route.ts` — GET signed S3 download URL for meeting recording
 - `auth/accept-terms/route.ts` — POST accept terms of use (sets `termsAcceptedAt` + bridge cookie)
 
