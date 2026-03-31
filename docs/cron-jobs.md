@@ -120,6 +120,38 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 
 ---
 
+### Recording Retention
+
+| Field             | Value                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| **Endpoint**      | `GET /api/cron/recording-retention`                                                              |
+| **Schedule**      | Daily at 03:00 UTC (`0 3 * * *`)                                                                 |
+| **Start command** | `sh -c 'curl -sf -H "Authorization: Bearer $CRON_SECRET" $APP_URL/api/cron/recording-retention'` |
+| **Source**        | `src/app/api/cron/recording-retention/route.ts`                                                  |
+
+**What it does:**
+
+1. Reads retention period from `RECORDING_RETENTION_DAYS` env var (default: 90 days)
+2. Finds completed meetings with recordings older than the retention period
+3. Deletes the recording file from S3
+4. Attempts to delete the Recall bot (likely already gone)
+5. Clears `recordingKey` from meeting metadata
+
+**Idempotency:** Safe to run multiple times; once `recordingKey` is cleared, the meeting won't be selected again.
+
+**Dependencies:** Requires `CRON_SECRET`, S3 access, and optionally Recall API access.
+
+**Response:**
+
+```json
+{
+  "deleted": 3,
+  "retentionDays": 90
+}
+```
+
+---
+
 ## Adding New Cron Jobs
 
 1. Create a new route at `src/app/api/cron/<job-name>/route.ts`
