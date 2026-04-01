@@ -109,7 +109,7 @@ export function TrialPromptBanner({
             </p>
             <p className="text-muted-foreground text-xs">
               Keep tool integrations, voice agent, and live business data in
-              your meetings. €{PRICING[PLANS.PRO].monthly}/mo.
+              your calls. €{PRICING[PLANS.PRO].monthly}/mo.
             </p>
           </div>
           <Button
