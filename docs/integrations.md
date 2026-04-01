@@ -58,35 +58,49 @@ Legacy: if the old `apiKey` field is set but `authType` is still `none`, it's tr
 
 For catalog integrations with `authMode: "oauth"`, Vernix uses the MCP SDK's built-in OAuth 2.1 support.
 
-### Pre-registered OAuth apps
+### OAuth auth strategies
 
-Most MCP servers don't support dynamic client registration (RFC 7591). Each OAuth integration requires a pre-registered OAuth app on the service's developer console.
+OAuth integrations use two strategies depending on provider support:
 
-`VernixOAuthProvider` checks `PRE_REGISTERED_CLIENTS` in `src/lib/mcp/oauth-provider.ts` for credentials from env vars before falling back to dynamic registration. Currently registered:
+**Dynamic registration (RFC 7591)** — No env vars needed. The MCP SDK automatically registers Vernix as a public client with the provider's `/register` endpoint. Client credentials are persisted in `mcpOauthTokens`.
 
-| Service   | Env Vars                                                 | Status    | Token Endpoint Auth Method |
-| --------- | -------------------------------------------------------- | --------- | -------------------------- |
-| GitHub    | `GITHUB_MCP_CLIENT_ID`, `GITHUB_MCP_CLIENT_SECRET`       | Available | `none` (default)           |
-| Notion    | `NOTION_MCP_CLIENT_ID`, `NOTION_MCP_CLIENT_SECRET`       | Available | `none` (default)           |
-| Linear    | `LINEAR_MCP_CLIENT_ID`, `LINEAR_MCP_CLIENT_SECRET`       | Available | `none` (default)           |
-| Pipedrive | `PIPEDRIVE_MCP_CLIENT_ID`, `PIPEDRIVE_MCP_CLIENT_SECRET` | Available | `client_secret_post`       |
-| Slack     | `SLACK_MCP_CLIENT_ID`, `SLACK_MCP_CLIENT_SECRET`         | Available | `client_secret_post`       |
+| Service    | Auth Strategy        | Token Endpoint Auth |
+| ---------- | -------------------- | ------------------- |
+| Notion     | Dynamic registration | `none` (public)     |
+| Linear     | Dynamic registration | `none` (public)     |
+| Jira       | Dynamic registration | `none` (public)     |
+| Confluence | Dynamic registration | `none` (public)     |
+| Asana      | Dynamic registration | `none` (public)     |
+| Figma      | Dynamic registration | `none` (public)     |
+| GitLab     | Dynamic registration | server-assigned     |
+| Intercom   | Dynamic registration | `none` (public)     |
+| Monday.com | Dynamic registration | `none` (public)     |
+| Sentry     | Dynamic registration | `none` (public)     |
 
-MCP OAuth apps are separate from login OAuth apps — different redirect URLs. Login uses providers like `GITHUB_CLIENT_ID` → `/api/auth/callback/github`. MCP integrations use provider-specific MCP credentials (for example, `GITHUB_MCP_CLIENT_ID`, `NOTION_MCP_CLIENT_ID`, `LINEAR_MCP_CLIENT_ID`, `PIPEDRIVE_MCP_CLIENT_ID`, or `SLACK_MCP_CLIENT_ID`) → `/api/mcp/oauth/callback`.
+**Pre-registered** — Requires env vars. For providers that don't expose a registration endpoint.
+
+| Service   | Env Vars                                                 | Token Endpoint Auth  |
+| --------- | -------------------------------------------------------- | -------------------- |
+| GitHub    | `GITHUB_MCP_CLIENT_ID`, `GITHUB_MCP_CLIENT_SECRET`       | `none`               |
+| Pipedrive | `PIPEDRIVE_MCP_CLIENT_ID`, `PIPEDRIVE_MCP_CLIENT_SECRET` | `client_secret_post` |
+| Slack     | `SLACK_MCP_CLIENT_ID`, `SLACK_MCP_CLIENT_SECRET`         | `client_secret_post` |
+
+MCP OAuth apps are separate from login OAuth apps — different redirect URLs. Login uses providers like `GITHUB_CLIENT_ID` → `/api/auth/callback/github`. MCP integrations use `/api/mcp/oauth/callback`.
 
 ### Adding a new OAuth integration
+
+**If the provider supports dynamic registration** (has a `registration_endpoint` in its `.well-known/oauth-authorization-server` metadata):
+
+1. Add the integration to the catalog in `src/lib/integrations/catalog.ts` with `authMode: "oauth"`
+2. No env vars or code changes needed — the MCP SDK handles registration automatically
+
+**If the provider does NOT support dynamic registration:**
 
 1. Register Vernix as an OAuth app on the service's developer console
 2. Set the callback URL to `https://vernix.app/api/mcp/oauth/callback`
 3. Add env vars for the client ID and secret
-4. Add an entry to `PRE_REGISTERED_CLIENTS` in `src/lib/mcp/oauth-provider.ts`:
-   ```ts
-   "https://mcp.slack.com": {
-     clientIdEnv: "SLACK_MCP_CLIENT_ID",
-     clientSecretEnv: "SLACK_MCP_CLIENT_SECRET",
-   },
-   ```
-5. Change the catalog entry's `status` from `"coming-soon"` to `"available"`
+4. Add an entry to `PRE_REGISTERED_CLIENTS` in `src/lib/mcp/oauth-provider.ts`
+5. Add the integration to the catalog
 6. Add the env vars to `.env.example` and `src/lib/env.ts`
 
 ### How the flow works
