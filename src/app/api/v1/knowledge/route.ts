@@ -1,4 +1,5 @@
 import { withApiAuth } from "@/lib/api/middleware";
+import { RATE_LIMIT_EXPENSIVE } from "@/lib/api/constants";
 import { apiSuccess, apiCreated, apiError, handleServiceError } from "@/lib/api/response";
 import { paginationSchema } from "@/lib/api/pagination";
 import { listDocuments, uploadDocument } from "@/lib/services/knowledge";
@@ -55,5 +56,5 @@ export const POST = withApiAuth(
       return handleServiceError(error);
     }
   },
-  { endpoint: "knowledge:upload", ratePerMinute: 10 }
+  { endpoint: "knowledge:upload", ratePerMinute: RATE_LIMIT_EXPENSIVE }
 );
