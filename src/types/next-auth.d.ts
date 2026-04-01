@@ -5,6 +5,7 @@ declare module "next-auth" {
   interface User {
     image?: string | null;
     termsAcceptedAt?: Date | string | null;
+    emailVerifiedAt?: Date | string | null;
   }
 
   interface Session {
@@ -14,6 +15,7 @@ declare module "next-auth" {
       name?: string | null;
       image?: string | null;
       termsAcceptedAt?: string | null;
+      emailVerifiedAt?: string | null;
     };
   }
 }
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     id?: string;
     image?: string | null;
     termsAcceptedAt?: string | null;
+    emailVerifiedAt?: string | null;
   }
 }
