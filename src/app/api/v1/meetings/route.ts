@@ -8,7 +8,7 @@ import {
   handleServiceError,
 } from "@/lib/api/response";
 import { paginationSchema } from "@/lib/api/pagination";
-import { listMeetings, createMeeting } from "@/lib/services/meetings";
+import { listMeetings, createMeeting, getMeeting } from "@/lib/services/meetings";
 import { joinMeeting } from "@/lib/services/agent";
 
 const createMeetingSchema = z.object({
@@ -100,7 +100,6 @@ export const POST = withApiAuth(
           });
         } catch (joinError) {
           // Meeting created but join failed — re-fetch to get current DB state
-          const { getMeeting } = await import("@/lib/services/meetings");
           let currentMeeting;
           try {
             currentMeeting = await getMeeting(user.id, meeting.id);
