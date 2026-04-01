@@ -5,7 +5,7 @@ import {
   updateMeeting,
   deleteMeeting,
 } from "@/lib/services/meetings";
-import { NotFoundError } from "@/lib/api/errors";
+import { NotFoundError, ValidationError } from "@/lib/api/errors";
 
 export async function GET(
   _request: Request,
@@ -43,13 +43,6 @@ export async function PATCH(
   const { title, joinLink, agenda, silent, muted, noRecording } =
     body as Record<string, unknown>;
 
-  if (typeof agenda === "string" && agenda.length > 10000) {
-    return NextResponse.json(
-      { error: "Agenda must be under 10,000 characters" },
-      { status: 400 }
-    );
-  }
-
   try {
     const updated = await updateMeeting(user.id, id, {
       title: typeof title === "string" ? title : undefined,
@@ -63,6 +56,9 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof NotFoundError) {
       return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
+    }
+    if (error instanceof ValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json(
       { error: "Internal server error" },
