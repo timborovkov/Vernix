@@ -44,7 +44,7 @@ Run `pnpm validate` after every change. It formats, lints with autofix, typechec
 - **`src/lib/knowledge/`** — `parse.ts` extracts text from PDF/DOCX/TXT/MD. `chunk.ts` splits text into overlapping chunks. `process.ts` orchestrates parse → chunk → embed → Qdrant upsert.
 - **`src/lib/tasks/`** — `extract.ts` uses LLM (gpt-5.4-mini JSON mode) to extract action items from transcript. `store.ts` batch inserts/replaces tasks for a meeting.
 - **`src/lib/storage/`** — S3-compatible client singleton (Minio locally). `operations.ts` for upload, delete, list, and presigned download URLs.
-- **`src/lib/mcp/`** — `server.ts` creates per-connection MCP servers exposing meeting data tools. `client.ts` manages connections to user-configured external MCP servers with connection caching. `auth.ts` has `buildAuthHeaders()` for 5 auth types (none, bearer, header, basic, oauth). `oauth-provider.ts` implements the MCP SDK's `OAuthClientProvider` interface with DB-backed token storage and signed JWT state parameters (uses `jose`). `transport.ts` accepts optional `authProvider` for OAuth servers.
+- **`src/lib/mcp/`** — `server.ts` creates per-connection MCP servers exposing meeting data tools (10 tools: `search_meetings`, `list_meetings`, `get_meeting`, `get_transcript`, `list_tasks`, `create_task`, `vernix_join_call`, `vernix_stop_call`, `vernix_search_meetings`, `vernix_search_tasks`). Uses `registerTool` API. Agent-control tools (`vernix_*`) use the shared service layer. `client.ts` manages connections to user-configured external MCP servers with connection caching. `auth.ts` has `buildAuthHeaders()` for 5 auth types (none, bearer, header, basic, oauth). `oauth-provider.ts` implements the MCP SDK's `OAuthClientProvider` interface with DB-backed token storage and signed JWT state parameters (uses `jose`). `transport.ts` accepts optional `authProvider` for OAuth servers.
 - **`src/lib/auth/api-key.ts`** — API key generation (bcrypt-hashed) and authentication for MCP server endpoint.
 - **`src/lib/billing/`** — Billing and usage tracking. `constants.ts` defines plans, pricing (€29/mo, €24/mo annual), usage rates (€3/hr voice, €1.50/hr silent), €30 monthly credit, per-plan hard caps, trial config (14 days, 90 min, full Pro features including voice, API, MCP, integrations), and `DISPLAY` — pre-formatted strings for UI (e.g. `DISPLAY.proMonthly` → "€29", `DISPLAY.trialDays` → "14"). All user-facing billing text must use constants/DISPLAY, never hardcode values. `usage.ts` records usage events, queries period summaries, and syncs metered usage to Polar. `limits.ts` resolves effective limits per plan/trial and provides `canStartMeeting()`, `canUploadDocument()`, `canMakeRagQuery()`, `canMakeApiRequest()` checks.
 - **`src/lib/polar.ts`** — Polar SDK singleton client. `isPolarEnabled()` guard for optional billing.
@@ -94,10 +94,38 @@ All under `src/app/api/`:
 - `meetings/[id]/recording/route.ts` — GET signed S3 download URL for meeting recording
 - `auth/accept-terms/route.ts` — POST accept terms of use (sets `termsAcceptedAt` + bridge cookie)
 
+### Public REST API (v1)
+
+All under `src/app/api/v1/`. Authenticated via API key (`Authorization: Bearer kk_...`). Uses `withApiAuth` middleware from `src/lib/api/middleware.ts` for auth, rate limiting, billing, and usage tracking. Responses use `{ data, meta?, error? }` envelope. Cursor-based pagination.
+
+- `v1/meetings/route.ts` — GET list (paginated), POST create (+ optional `autoJoin: true`)
+- `v1/meetings/[id]/route.ts` — GET, PATCH, DELETE
+- `v1/meetings/[id]/join/route.ts` — POST join agent
+- `v1/meetings/[id]/stop/route.ts` — POST stop agent + trigger processing
+- `v1/meetings/[id]/transcript/route.ts` — GET transcript segments
+- `v1/meetings/[id]/tasks/route.ts` — GET list (paginated), POST create task
+- `v1/tasks/route.ts` — GET all tasks (paginated)
+- `v1/tasks/[id]/route.ts` — GET, PATCH
+- `v1/search/route.ts` — GET semantic search (`?q=`, `?meetingId=`, `?limit=`)
+- `v1/knowledge/route.ts` — GET list (paginated), POST upload (multipart)
+- `v1/knowledge/[id]/route.ts` — GET detail + download URL, DELETE
+- `v1/openapi.json/route.ts` — GET OpenAPI 3.1 specification
+
+**Key layers:**
+- `src/lib/api/constants.ts` — API version, rate limit constants (`RATE_LIMIT_STANDARD=60`, `RATE_LIMIT_EXPENSIVE=10`)
+- `src/lib/api/middleware.ts` — `withApiAuth()` HOF: API key auth → rate limit → billing check → usage recording → headers
+- `src/lib/api/response.ts` — Envelope helpers: `apiSuccess()`, `apiCreated()`, `apiError()`, `handleServiceError()`
+- `src/lib/api/pagination.ts` — Cursor-based pagination: `encodeCursor()`, `decodeCursor()`, `buildPaginationMeta()`
+- `src/lib/api/errors.ts` — Service-layer error types: `NotFoundError`, `BillingError`, `ValidationError`, `ConflictError`, `ForbiddenError`
+- `src/lib/api/openapi.ts` — `buildOpenApiSpec()` generates OpenAPI 3.1 spec programmatically
+- `src/lib/services/` — Framework-agnostic business logic (used by both internal routes and v1 API): `meetings.ts`, `agent.ts`, `tasks.ts`, `search.ts`, `transcripts.ts`, `knowledge.ts`
+
+**API docs:** Interactive docs at `/docs` (Scalar) loading spec from `/api/v1/openapi.json`
+
 ### Auth & Middleware
 
 - `src/middleware.ts` — Protects `/dashboard/*`, `/api/meetings/*`, `/api/agent/*`, `/api/search/*`, `/api/knowledge/*`, `/api/tasks/*`, `/api/settings/*`, `/api/billing`, `/api/export`
-- Public endpoints (no auth): `/api/webhooks/*` (incl. Polar), `/api/checkout`, `/api/portal`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool`, `/api/agent/activation-status`, `/api/agent/wake-detect`, `/api/agent/voice-fallback` (all verified by botSecret), `/api/mcp` (API key auth), `/api/mcp/oauth/callback` (state JWT provides auth)
+- Public endpoints (no auth): `/api/webhooks/*` (incl. Polar), `/api/checkout`, `/api/portal`, `/api/agent/voice-token`, `/api/agent/rag`, `/api/agent/mcp-tool`, `/api/agent/activation-status`, `/api/agent/wake-detect`, `/api/agent/voice-fallback` (all verified by botSecret), `/api/mcp` (API key auth), `/api/mcp/oauth/callback` (state JWT provides auth), `/api/v1/*` (API key auth via `withApiAuth`, not in middleware matcher)
 - All meeting API routes check `userId` ownership via `and(eq(meetings.id, id), eq(meetings.userId, user.id))`
 - RAG requires `userId` parameter to prevent cross-user data leakage
 - Terms acceptance enforced in middleware: authenticated users without `termsAcceptedAt` (in JWT or `terms_accepted` cookie) are redirected to `/accept-terms`
