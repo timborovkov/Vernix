@@ -53,11 +53,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const integration = findIntegration(slug);
   if (!integration) return {};
 
-  const title = `Vernix + ${integration.name} Integration`;
-  const description = `Connect ${integration.name} to your video calls with Vernix. ${integration.description}`;
+  const title = `${integration.name} Integration for Video Calls | Vernix`;
+  const description = `Use ${integration.name} during Zoom, Meet, and Teams calls. ${integration.description} Ask questions and get live answers without leaving the call.`;
 
   return {
-    title: `${title} — Vernix`,
+    title,
     description,
     openGraph: {
       title,
@@ -85,13 +85,30 @@ export default async function IntegrationPage({ params }: Props) {
     ? `Connect ${integration.name}`
     : `Get Started with ${integration.name}`;
 
+  const categoryLabel = getCategoryLabel(integration.category);
+  const relatedIntegrations = getIntegrations()
+    .filter((i) => i.category === integration.category && i.id !== slug)
+    .slice(0, 4);
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: `Vernix + ${integration.name}`,
+    name: `${integration.name} Integration for Video Calls`,
     applicationCategory: "BusinessApplication",
-    description: `Connect ${integration.name} to your video calls with Vernix. ${integration.description}`,
+    operatingSystem: "Web",
+    description: `Use ${integration.name} during Zoom, Google Meet, and Microsoft Teams calls. ${integration.description}`,
     url: `${BASE_URL}/integration/${slug}`,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "EUR",
+      description: "Free plan available. Pro plan for voice agent and integrations.",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Vernix",
+      url: BASE_URL,
+    },
   };
 
   return (
@@ -122,23 +139,25 @@ export default async function IntegrationPage({ params }: Props) {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Vernix + {integration.name}
+                {integration.name} Integration for Video Calls
               </h1>
               {integration.status === "coming-soon" && (
                 <Badge variant="secondary">Coming Soon</Badge>
               )}
             </div>
-            <p className="text-muted-foreground mt-1 text-lg">
-              Connect {integration.name} to your video calls.{" "}
-              {integration.description}
-            </p>
           </div>
         </div>
 
+        <p className="text-muted-foreground mb-6 text-base leading-relaxed">
+          Connect {integration.name} to Vernix and access{" "}
+          {integration.description.toLowerCase().replace(/\.$/, "")} — directly
+          during your Zoom, Google Meet, Microsoft Teams, or Webex calls. No
+          tab-switching, no screen-sharing. Just ask and get answers from{" "}
+          {integration.name} in real time.
+        </p>
+
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline">
-            {getCategoryLabel(integration.category)}
-          </Badge>
+          <Badge variant="outline">{categoryLabel}</Badge>
           {integration.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="text-xs">
               {tag}
@@ -256,6 +275,39 @@ export default async function IntegrationPage({ params }: Props) {
           <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
+
+      {/* Related integrations */}
+      {relatedIntegrations.length > 0 && (
+        <div className="mt-12">
+          <h2 className="mb-4 text-lg font-semibold">
+            Other {categoryLabel} integrations
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {relatedIntegrations.map((related) => (
+              <Link
+                key={related.id}
+                href={`/integration/${related.id}`}
+                className="border-border hover:border-ring/40 hover:bg-muted/50 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+                  <Image
+                    src={related.logo}
+                    alt={related.name}
+                    width={20}
+                    height={20}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-sm font-medium">{related.name}</span>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {related.description}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Footer nav */}
       <div className="border-border mt-8 border-t pt-8">
