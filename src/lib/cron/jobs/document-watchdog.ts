@@ -20,7 +20,7 @@ export async function runDocumentWatchdog() {
   let marked = 0;
   for (const doc of stuck) {
     try {
-      await db
+      const [updated] = await db
         .update(documents)
         .set({
           status: "failed",
@@ -29,8 +29,9 @@ export async function runDocumentWatchdog() {
         })
         .where(
           and(eq(documents.id, doc.id), eq(documents.status, "processing"))
-        );
-      marked++;
+        )
+        .returning({ id: documents.id });
+      if (updated) marked++;
     } catch (err) {
       console.error(
         `[Document Watchdog] Failed to mark document ${doc.id}:`,
