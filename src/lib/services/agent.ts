@@ -16,7 +16,11 @@ import { NotFoundError, BillingError, ConflictError } from "@/lib/api/errors";
 // Join agent to meeting
 // ---------------------------------------------------------------------------
 
-export async function joinMeeting(userId: string, meetingId: string) {
+export async function joinMeeting(
+  userId: string,
+  meetingId: string,
+  userName?: string
+) {
   const [meeting] = await db
     .select()
     .from(meetings)
@@ -64,7 +68,7 @@ export async function joinMeeting(userId: string, meetingId: string) {
     const { botId, voiceSecret } = await provider.joinMeeting(
       meeting.joinLink,
       meetingId,
-      undefined, // name not available via API key auth
+      userName,
       { silent }
     );
 
