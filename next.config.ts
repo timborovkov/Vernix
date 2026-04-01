@@ -3,6 +3,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfjs-dist", "pdfkit"],
+  async redirects() {
+    return [
+      {
+        source:
+          "/dashboard/:id((?!call|tasks|settings|knowledge|integrations)[^/]+)",
+        destination: "/dashboard/call/:id",
+        permanent: true,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { hostname: "lh3.googleusercontent.com" },

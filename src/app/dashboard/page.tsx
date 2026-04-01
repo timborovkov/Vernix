@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   <span className="flex-1 truncate">{task.title}</span>
                   {task.meetingTitle && (
                     <Link
-                      href={`/dashboard/${task.meetingId}`}
+                      href={`/dashboard/call/${task.meetingId}`}
                       className="text-muted-foreground truncate text-xs hover:underline"
                     >
                       {task.meetingTitle}

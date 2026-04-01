@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Link2, Lock } from "lucide-react";
+import { ArrowLeft, User, Link2, Lock, Globe } from "lucide-react";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 interface SettingsFormProps {
@@ -33,6 +33,8 @@ export function SettingsForm({
     updatingName,
     changePassword,
     changingPassword,
+    updateTimezone,
+    updatingTimezone,
     unlinkAccount,
     unlinkingAccount,
   } = useProfile();
@@ -41,6 +43,19 @@ export function SettingsForm({
   const [nameEditing, setNameEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [tzSearch, setTzSearch] = useState("");
+
+  const browserTz = typeof window !== "undefined"
+    ? Intl.DateTimeFormat().resolvedOptions().timeZone
+    : "UTC";
+  const allTimezones = typeof Intl.supportedValuesOf === "function"
+    ? Intl.supportedValuesOf("timeZone")
+    : [browserTz];
+  const filteredTimezones = tzSearch
+    ? allTimezones.filter((tz) =>
+        tz.toLowerCase().includes(tzSearch.toLowerCase())
+      )
+    : allTimezones;
 
   const handleNameSave = async () => {
     try {
@@ -154,6 +169,56 @@ export function SettingsForm({
                 </div>
               </>
             ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Timezone */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe className="h-4 w-4" />
+              Timezone
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              All dates and times across Vernix will use this timezone.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={!profile?.timezone ? "accent" : "outline"}
+                  disabled={updatingTimezone}
+                  onClick={() => updateTimezone(null)}
+                >
+                  Auto ({browserTz})
+                </Button>
+              </div>
+              <Input
+                placeholder="Search timezones..."
+                value={tzSearch}
+                onChange={(e) => setTzSearch(e.target.value)}
+                className="max-w-xs"
+              />
+              <div className="border-border max-h-48 max-w-xs overflow-y-auto rounded-md border">
+                {filteredTimezones.slice(0, 100).map((tz) => (
+                  <button
+                    key={tz}
+                    type="button"
+                    className={`w-full px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted ${
+                      profile?.timezone === tz
+                        ? "bg-ring/10 text-foreground font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                    onClick={() => updateTimezone(tz)}
+                    disabled={updatingTimezone}
+                  >
+                    {tz}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

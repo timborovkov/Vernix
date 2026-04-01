@@ -43,6 +43,7 @@ export const users = pgTable("users", {
     withTimezone: true,
   }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  timezone: text("timezone"), // IANA timezone e.g. "America/New_York", null = browser auto
   termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })

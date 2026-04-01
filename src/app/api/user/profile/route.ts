@@ -16,6 +16,7 @@ export async function GET() {
       email: users.email,
       image: users.image,
       hasPassword: users.passwordHash,
+      timezone: users.timezone,
     })
     .from(users)
     .where(eq(users.id, userOrRes.id));
@@ -39,12 +40,14 @@ export async function GET() {
     email: user.email,
     image: user.image,
     hasPassword: !!user.hasPassword,
+    timezone: user.timezone,
     accounts: linkedAccounts,
   });
 }
 
 const updateSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Name is required").optional(),
+  timezone: z.string().nullable().optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -66,11 +69,28 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (parsed.data.name === undefined && parsed.data.timezone === undefined) {
+    return NextResponse.json(
+      { error: "At least one field required" },
+      { status: 400 }
+    );
+  }
+
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.timezone !== undefined)
+    updates.timezone = parsed.data.timezone;
+
   const [updated] = await db
     .update(users)
-    .set({ name: parsed.data.name, updatedAt: new Date() })
+    .set(updates)
     .where(eq(users.id, userOrRes.id))
-    .returning({ id: users.id, name: users.name, email: users.email });
+    .returning({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      timezone: users.timezone,
+    });
 
   return NextResponse.json(updated);
 }
