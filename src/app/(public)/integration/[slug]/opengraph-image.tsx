@@ -7,8 +7,13 @@ export async function generateStaticParams() {
   return getIntegrations().map((i) => ({ slug: i.id }));
 }
 
-export default function Image({ params }: { params: { slug: string } }) {
-  const integration = getIntegrations().find((i) => i.id === params.slug);
+export default async function Image({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const integration = getIntegrations().find((i) => i.id === slug);
   if (!integration) {
     return generateOgImage(
       "Vernix Integration",
