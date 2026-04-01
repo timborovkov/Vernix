@@ -169,7 +169,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            7. Third-Party Platforms and Sub-Processors
+            7. Third-Party Platforms, Sub-Processors, and Integrations
           </h2>
           <p className="text-muted-foreground text-sm">
             The Service integrates with third-party video conferencing platforms
@@ -185,6 +185,34 @@ export default function TermsPage() {
             downtime, or policy changes of any third-party platform or
             sub-processor.
           </p>
+          <p className="text-muted-foreground mt-3 text-sm">
+            The Service may also connect to user-enabled third-party
+            integrations (including MCP servers) via OAuth credentials, API
+            keys, or other authentication methods you provide or approve. By
+            connecting an integration, you instruct us to access and process
+            data from that service, and to send data to that service when
+            requested by you or your configured workflows.
+          </p>
+          <ul className="text-muted-foreground mt-3 list-disc space-y-1 pl-5 text-sm">
+            <li>
+              You are responsible for selecting integrations, reviewing and
+              approving requested permission scopes, and ensuring you are
+              authorised to grant access for the relevant third-party account or
+              workspace.
+            </li>
+            <li>
+              You remain responsible for actions performed through connected
+              integrations, including reading, creating, updating, or deleting
+              third-party data via the Service.
+            </li>
+            <li>
+              Integration availability and behavior may change at any time due
+              to third-party outages, API changes, policy updates, token expiry,
+              revocation, or rate limits. We do not guarantee uninterrupted
+              access to any integration and disclaim liability for such
+              third-party changes.
+            </li>
+          </ul>
         </section>
 
         <section>

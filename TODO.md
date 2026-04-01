@@ -1,24 +1,5 @@
 # TODO
 
-## Integrations
-
-- **Register OAuth apps for more services (priority order)** — Pre-registered OAuth apps are now available for GitHub and Notion. Prioritize next: (1) Linear, (2) HubSpot CRM, (3) Salesforce, (4) Pipedrive, (5) Slack. Next wave: Jira, Asana. For each: register Vernix in provider developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, and change catalog status to `available`.
-
-## Cron Jobs & Background Reconciliation
-
-- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
-- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
-
-## Blog & Content
-
-- **Blog infrastructure** — Add a `/blog` section with MDX/markdown posts, frontmatter, static generation.
-- **Initial posts** — Write 3-5 launch posts. Suggested ideas:
-  - "Silent Agent vs Voice Agent: When to Use Each Mode"
-  - "From Transcript to Action: How Vernix Extracts Tasks Automatically"
-  - "How to Build a Searchable Meeting Memory Across Your Calls"
-  - "Vernix + GitHub: Keep Engineering Context Close to Your Meeting Memory"
-  - "Privacy and Retention in AI Meeting Tools: What Teams Should Check"
-
 ## SEO & Discoverability
 
 - **Google Search Console** — Verify domain, submit sitemap, monitor indexing - DONE
@@ -65,11 +46,24 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Run security scan & audit** — Run a security scan/audit, then track/fix findings.
 - **Block malicious bots** — Add bot blocking at app/edge level.
 - **Collect and attribute usage telemetry** — Track token usage, Recall usage, and related costs.
+- **Configure LLM tracing** — Configure something like Langsmith tracing for all AI agents and tools. (note, we use OpenAI, so Langsmith is probably not the best choice)
 
 ## Account Verification
 
 - **Email verification flow** — Add verification tokens + email template + verify route, enforce verified email before full app access.
 - **Optional profile enrichment fields in Settings** — Add optional `phone` and `company` fields to user profiles.
+
+## Scoped Context, Tools and Data Access
+
+- **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
+- **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
+- **List tools in the UI** — List available tools from MCP integrations in the UI, so the user can see what they can connect to.
+- **Allow toggling tools on/off** — Allow the user to toggle tools provided by MCP integrations on/off in the UI, so they can control which tools are available to the agent.
+
+## Inactive Account Cleanup
+
+- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
+- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
 
 ## Vision-Based Document Parsing
 
@@ -82,7 +76,3 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Public changelog page** — `/changelog` page on the website
 - **Service uptime monitoring** — Monitor all critical dependencies
 - **Public status page** — Host a public status page showing real-time uptime
-
-## Scoped Context, Tools and Data Access
-
-- **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.

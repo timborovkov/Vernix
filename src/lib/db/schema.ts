@@ -216,33 +216,37 @@ export type McpServer = typeof mcpServers.$inferSelect;
 // OAuth tokens for MCP servers
 // ---------------------------------------------------------------------------
 
-export const mcpOauthTokens = pgTable("mcp_oauth_tokens", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("user_id")
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
-  mcpServerId: uuid("mcp_server_id")
-    .references(() => mcpServers.id, { onDelete: "cascade" })
-    .notNull(),
-  accessToken: text("access_token").notNull(),
-  refreshToken: text("refresh_token"),
-  tokenType: text("token_type").default("Bearer"),
-  scope: text("scope"),
-  expiresAt: timestamp("expires_at", { withTimezone: true }),
-  clientId: text("client_id"),
-  clientSecret: text("client_secret"),
-  clientIdIssuedAt: timestamp("client_id_issued_at", { withTimezone: true }),
-  clientSecretExpiresAt: timestamp("client_secret_expires_at", {
-    withTimezone: true,
-  }),
-  codeVerifier: text("code_verifier"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
+export const mcpOauthTokens = pgTable(
+  "mcp_oauth_tokens",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    mcpServerId: uuid("mcp_server_id")
+      .references(() => mcpServers.id, { onDelete: "cascade" })
+      .notNull(),
+    accessToken: text("access_token").notNull(),
+    refreshToken: text("refresh_token"),
+    tokenType: text("token_type").default("Bearer"),
+    scope: text("scope"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    clientId: text("client_id"),
+    clientSecret: text("client_secret"),
+    clientIdIssuedAt: timestamp("client_id_issued_at", { withTimezone: true }),
+    clientSecretExpiresAt: timestamp("client_secret_expires_at", {
+      withTimezone: true,
+    }),
+    codeVerifier: text("code_verifier"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [unique("mcp_oauth_tokens_user_server").on(t.userId, t.mcpServerId)]
+);
 
 export type McpOauthToken = typeof mcpOauthTokens.$inferSelect;
 
