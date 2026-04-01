@@ -1,4 +1,23 @@
-const CONTENT = `# Vernix
+import {
+  DISPLAY,
+  FREE_TRIAL,
+  LIMITS,
+  PLANS,
+} from "@/lib/billing/constants";
+import { getIntegrations, CATEGORIES } from "@/lib/integrations/catalog";
+
+function buildContent(): string {
+  const integrations = getIntegrations();
+
+  const integrationsByCategory = CATEGORIES.map((cat) => {
+    const items = integrations.filter((i) => i.category === cat.value);
+    if (items.length === 0) return "";
+    return `### ${cat.label}\n${items.map((i) => `- ${i.name}: ${i.description}`).join("\n")}`;
+  })
+    .filter(Boolean)
+    .join("\n\n");
+
+  return `# Vernix
 
 > An AI assistant that joins your video calls, connects to your tools, and answers questions with real business data during meetings.
 
@@ -19,8 +38,26 @@ Vernix is an AI meeting assistant that joins Zoom, Google Meet, Microsoft Teams,
 
 ## Pricing
 
-- Free: 5 silent meetings per month, 30 minutes, 20 AI queries per day. No credit card.
-- Pro: €29/month (or €24/month billed annually). 14-day free trial. Voice agent, tool integrations, 200 documents, 200 queries per day, unlimited meetings with €30 monthly usage credit.
+### Free Plan
+- ${LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings per month, ${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes total
+- ${LIMITS[PLANS.FREE].ragQueriesPerDay} AI queries per day
+- ${LIMITS[PLANS.FREE].documentsCount} documents, ${LIMITS[PLANS.FREE].totalStorageMB}MB storage
+- No credit card required
+
+### Pro Plan
+- ${DISPLAY.proMonthly}/month (or ${DISPLAY.proAnnual}/month billed annually)
+- ${FREE_TRIAL.days}-day free trial with ${FREE_TRIAL.totalMinutes} minutes of call time
+- Voice agent, silent mode, and tool integrations
+- ${LIMITS[PLANS.PRO].documentsCount} documents, ${LIMITS[PLANS.PRO].totalStorageMB}MB storage
+- ${LIMITS[PLANS.PRO].ragQueriesPerDay} AI queries per day
+- ${DISPLAY.monthlyCredit} monthly usage credit included
+- Voice calls: ${DISPLAY.voiceRate}, silent calls: ${DISPLAY.silentRate}
+- Credit covers ~${DISPLAY.voiceHoursPerCredit}h voice or ~${DISPLAY.silentHoursPerCredit}h silent per month
+- API access (${LIMITS[PLANS.PRO].apiRequestsPerDay} requests/day) and MCP server/client connections
+
+## Available Integrations
+
+${integrationsByCategory}
 
 ## Links
 
@@ -32,9 +69,10 @@ Vernix is an AI meeting assistant that joins Zoom, Google Meet, Microsoft Teams,
 - FAQ: https://vernix.app/faq
 - Contact: https://vernix.app/contact
 `;
+}
 
 export function GET() {
-  return new Response(CONTENT, {
+  return new Response(buildContent(), {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
   });
 }
