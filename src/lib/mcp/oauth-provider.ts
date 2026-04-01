@@ -267,29 +267,18 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   private async upsertTokenRow(
     fields: Partial<typeof mcpOauthTokens.$inferInsert>
   ): Promise<void> {
-    const [existing] = await db
-      .select({ id: mcpOauthTokens.id })
-      .from(mcpOauthTokens)
-      .where(
-        and(
-          eq(mcpOauthTokens.userId, this.userId),
-          eq(mcpOauthTokens.mcpServerId, this.mcpServerId)
-        )
-      );
-
-    if (existing) {
-      await db
-        .update(mcpOauthTokens)
-        .set({ ...fields, updatedAt: new Date() })
-        .where(eq(mcpOauthTokens.id, existing.id));
-    } else {
-      await db.insert(mcpOauthTokens).values({
+    await db
+      .insert(mcpOauthTokens)
+      .values({
         userId: this.userId,
         mcpServerId: this.mcpServerId,
         accessToken: "", // placeholder, will be updated by saveTokens
         ...fields,
+      })
+      .onConflictDoUpdate({
+        target: [mcpOauthTokens.userId, mcpOauthTokens.mcpServerId],
+        set: { ...fields, updatedAt: new Date() },
       });
-    }
   }
 }
 
