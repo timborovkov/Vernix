@@ -262,6 +262,7 @@ All billing constants live in `src/lib/billing/constants.ts`:
 - `FREE_TRIAL` — trial duration and minute cap
 - `LIMITS` — per-plan hard caps (meetings, docs, queries, API, MCP)
 - `TRIAL_LIMITS` — trial limits (full Pro features, 90-minute meeting cap)
+- `DISPLAY` — pre-formatted strings for UI (`proMonthly`, `proAnnual`, `annualSavings`, `voiceRate`, `silentRate`, `monthlyCredit`, `trialDays`, `trialMinutes`, `voiceHoursPerCredit`, `silentHoursPerCredit`). All user-facing billing text (pricing pages, FAQ, email templates, upgrade dialogs, feature pages, etc.) must use `DISPLAY` or raw constants — never hardcode billing values as string literals.
 
 ---
 
