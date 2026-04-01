@@ -73,10 +73,10 @@ describe("Catalog MCP Server Reachability", () => {
         // 200/201 — server responded
         // 401/403 — auth required (server exists, expects credentials)
         // 405 — method not allowed (server exists)
-        // 301/302/307 — redirect to auth (OAuth flow)
+        // 301/302/303/307/308 — redirect to auth (OAuth flow)
         // 500 — server error without auth (some servers crash without a key)
         const acceptableStatuses = [
-          200, 201, 401, 403, 405, 301, 302, 307, 500,
+          200, 201, 401, 403, 405, 301, 302, 303, 307, 308, 500,
         ];
 
         expect(
