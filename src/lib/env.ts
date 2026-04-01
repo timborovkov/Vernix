@@ -47,6 +47,12 @@ const envSchema = z
     GITHUB_MCP_CLIENT_SECRET: z.string().optional(),
     NOTION_MCP_CLIENT_ID: z.string().optional(),
     NOTION_MCP_CLIENT_SECRET: z.string().optional(),
+    LINEAR_MCP_CLIENT_ID: z.string().optional(),
+    LINEAR_MCP_CLIENT_SECRET: z.string().optional(),
+    PIPEDRIVE_MCP_CLIENT_ID: z.string().optional(),
+    PIPEDRIVE_MCP_CLIENT_SECRET: z.string().optional(),
+    SLACK_MCP_CLIENT_ID: z.string().optional(),
+    SLACK_MCP_CLIENT_SECRET: z.string().optional(),
 
     // Resend (email provider — optional, emails disabled without it)
     RESEND_API_KEY: z.string().optional(),
