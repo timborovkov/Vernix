@@ -53,11 +53,13 @@ providers.push(
       const valid = await compare(password, user.passwordHash);
       if (!valid) return null;
 
-      // Track last activity for inactive account detection
-      db.update(users)
-        .set({ lastActiveAt: new Date() })
-        .where(eq(users.id, user.id))
-        .catch(() => {}); // fire-and-forget
+      // Track last activity for inactive account detection (fire-and-forget)
+      Promise.resolve(
+        db
+          .update(users)
+          .set({ lastActiveAt: new Date() })
+          .where(eq(users.id, user.id))
+      ).catch(() => {});
 
       return {
         id: user.id,
