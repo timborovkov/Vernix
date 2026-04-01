@@ -212,7 +212,7 @@ describe("POST /api/agent/join", () => {
     expect(mockProvider.joinMeeting).toHaveBeenCalledWith(
       expect.any(String),
       validUuid,
-      expect.any(String), // user.name
+      undefined, // user.name not set in test session mock
       { silent: true }
     );
   });
