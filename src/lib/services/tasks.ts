@@ -53,13 +53,16 @@ export async function listTasks(
     .select({
       id: tasks.id,
       meetingId: tasks.meetingId,
+      userId: tasks.userId,
       title: tasks.title,
       assignee: tasks.assignee,
       status: tasks.status,
+      autoExtracted: tasks.autoExtracted,
       sourceText: tasks.sourceText,
       sourceTimestampMs: tasks.sourceTimestampMs,
       dueDate: tasks.dueDate,
       createdAt: tasks.createdAt,
+      updatedAt: tasks.updatedAt,
       meetingTitle: meetings.title,
     })
     .from(tasks)
