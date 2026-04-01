@@ -62,6 +62,11 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Email verification flow** — Add verification tokens + email template + verify route, enforce verified email before full app access.
 - **Optional profile enrichment fields in Settings** — Add optional `phone` and `company` fields to user profiles.
 
+## Scoped Context, Tools and Data Access
+
+- **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
+- **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
+
 ## Vision-Based Document Parsing
 
 - **OpenAI Vision for PDFs** — Use GPT-4o vision to process PDF pages as images for richer extraction.
@@ -73,8 +78,3 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Public changelog page** — `/changelog` page on the website
 - **Service uptime monitoring** — Monitor all critical dependencies
 - **Public status page** — Host a public status page showing real-time uptime
-
-## Scoped Context, Tools and Data Access
-
-- **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
-- **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
