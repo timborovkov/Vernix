@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -35,6 +36,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       publishedTime: post.frontmatter.date,
       authors: [post.frontmatter.author],
+      ...(post.frontmatter.image && {
+        images: [{ url: post.frontmatter.image, width: 1200, height: 630 }],
+      }),
     },
   };
 }
@@ -77,6 +81,19 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         )}
       </header>
+
+      {post.frontmatter.image && (
+        <div className="mb-12 overflow-hidden rounded-lg">
+          <Image
+            src={post.frontmatter.image}
+            alt=""
+            width={1200}
+            height={630}
+            className="w-full object-cover"
+            priority
+          />
+        </div>
+      )}
 
       <div className="prose prose-neutral dark:prose-invert prose-headings:font-semibold prose-a:text-ring prose-a:no-underline hover:prose-a:underline prose-code:font-mono prose-pre:bg-muted prose-pre:border prose-pre:border-border max-w-none">
         <MDXRemote source={post.content} components={mdxComponents} />
