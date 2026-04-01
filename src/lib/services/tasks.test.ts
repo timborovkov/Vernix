@@ -194,25 +194,17 @@ describe("updateTask", () => {
     );
   });
 
-  it("does not set title if too long (over 500)", async () => {
-    const task = fakeTask();
-    mockDb.returning.mockResolvedValueOnce([task]);
-
+  it("throws ValidationError if title too long (over 500)", async () => {
     const longTitle = "x".repeat(501);
-    await updateTask(USER_ID, task.id, { title: longTitle });
-
-    const setArg = mockDb.set.mock.calls[0][0] as Record<string, unknown>;
-    expect(setArg.title).toBeUndefined();
+    await expect(
+      updateTask(USER_ID, fakeTask().id, { title: longTitle })
+    ).rejects.toThrow("Title must be between 1 and 500 characters");
   });
 
-  it("does not set title if empty string", async () => {
-    const task = fakeTask();
-    mockDb.returning.mockResolvedValueOnce([task]);
-
-    await updateTask(USER_ID, task.id, { title: "" });
-
-    const setArg = mockDb.set.mock.calls[0][0] as Record<string, unknown>;
-    expect(setArg.title).toBeUndefined();
+  it("throws ValidationError if title is empty string", async () => {
+    await expect(
+      updateTask(USER_ID, fakeTask().id, { title: "" })
+    ).rejects.toThrow("Title must be between 1 and 500 characters");
   });
 
   it("always includes updatedAt", async () => {
