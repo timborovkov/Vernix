@@ -11,28 +11,25 @@ import { and, eq } from "drizzle-orm";
 import { getEnv } from "@/lib/env";
 
 /**
- * Pre-registered OAuth app credentials for services that don't support
+ * Pre-registered OAuth app credentials for services that do NOT support
  * dynamic client registration (RFC 7591). Keyed by server URL prefix.
+ *
+ * Services that DO support dynamic registration (Notion, Linear, GitHub)
+ * should NOT be listed here — the MCP SDK will register automatically
+ * via POST /register and persist the client_id in mcpOauthTokens.
  */
 const PRE_REGISTERED_CLIENTS: Record<
   string,
   {
     clientIdEnv: string;
     clientSecretEnv: string;
-    tokenEndpointAuthMethod?: OAuthClientMetadata["token_endpoint_auth_method"];
+    tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
   }
 > = {
   "https://api.githubcopilot.com": {
     clientIdEnv: "GITHUB_MCP_CLIENT_ID",
     clientSecretEnv: "GITHUB_MCP_CLIENT_SECRET",
-  },
-  "https://mcp.notion.com": {
-    clientIdEnv: "NOTION_MCP_CLIENT_ID",
-    clientSecretEnv: "NOTION_MCP_CLIENT_SECRET",
-  },
-  "https://mcp.linear.app": {
-    clientIdEnv: "LINEAR_MCP_CLIENT_ID",
-    clientSecretEnv: "LINEAR_MCP_CLIENT_SECRET",
+    tokenEndpointAuthMethod: "none",
   },
   "https://mcp.pipedrive.com": {
     clientIdEnv: "PIPEDRIVE_MCP_CLIENT_ID",
@@ -50,7 +47,7 @@ function getPreRegisteredConfig(serverUrl: string):
   | {
       clientIdEnv: string;
       clientSecretEnv: string;
-      tokenEndpointAuthMethod?: OAuthClientMetadata["token_endpoint_auth_method"];
+      tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
     }
   | undefined {
   for (const [prefix, config] of Object.entries(PRE_REGISTERED_CLIENTS)) {
@@ -68,6 +65,13 @@ function getPreRegisteredClient(
   const clientId = process.env[config.clientIdEnv];
   const clientSecret = process.env[config.clientSecretEnv];
   if (!clientId) return undefined;
+
+  // Validate client_secret is present when the token endpoint auth method requires it
+  if (config.tokenEndpointAuthMethod !== "none" && !clientSecret) {
+    throw new Error(
+      `Missing ${config.clientSecretEnv} — required for ${config.tokenEndpointAuthMethod} auth on ${serverUrl}`
+    );
+  }
 
   return {
     client_id: clientId,

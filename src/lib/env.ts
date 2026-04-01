@@ -42,13 +42,10 @@ const envSchema = z
     GITHUB_CLIENT_ID: z.string().optional(),
     GITHUB_CLIENT_SECRET: z.string().optional(),
 
-    // MCP OAuth apps (separate from login OAuth — different redirect URLs)
+    // MCP OAuth apps — only for providers without dynamic registration.
+    // Notion, Linear, etc. use RFC 7591 dynamic registration (no env vars needed).
     GITHUB_MCP_CLIENT_ID: z.string().optional(),
     GITHUB_MCP_CLIENT_SECRET: z.string().optional(),
-    NOTION_MCP_CLIENT_ID: z.string().optional(),
-    NOTION_MCP_CLIENT_SECRET: z.string().optional(),
-    LINEAR_MCP_CLIENT_ID: z.string().optional(),
-    LINEAR_MCP_CLIENT_SECRET: z.string().optional(),
     PIPEDRIVE_MCP_CLIENT_ID: z.string().optional(),
     PIPEDRIVE_MCP_CLIENT_SECRET: z.string().optional(),
     SLACK_MCP_CLIENT_ID: z.string().optional(),
