@@ -19,7 +19,7 @@ export async function GET(
   const { id } = await params;
 
   try {
-    const result = await listTasks(user.id, { meetingId: id });
+    const result = await listTasks(user.id, { meetingId: id, limit: 1000 });
     return NextResponse.json({ tasks: result.data });
   } catch (error) {
     if (error instanceof NotFoundError) {
