@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { meetings, tasks } from "@/lib/db/schema";
 import { and, desc, eq, lt, or } from "drizzle-orm";
-import { NotFoundError } from "@/lib/api/errors";
+import { NotFoundError, ValidationError } from "@/lib/api/errors";
 import { decodeCursor, buildPaginationMeta } from "@/lib/api/pagination";
 
 // ---------------------------------------------------------------------------
@@ -130,6 +130,7 @@ export async function updateTask(
     assignee?: string | null;
     status?: "open" | "completed";
     dueDate?: string | null;
+    meetingId?: string;
   }
 ) {
   const updates: Record<string, unknown> = { updatedAt: new Date() };
@@ -152,16 +153,18 @@ export async function updateTask(
   } else if (typeof input.dueDate === "string") {
     const parsed = new Date(input.dueDate);
     if (isNaN(parsed.getTime())) {
-      const { ValidationError } = await import("@/lib/api/errors");
       throw new ValidationError("Invalid due date");
     }
     updates.dueDate = parsed;
   }
 
+  const conditions = [eq(tasks.id, taskId), eq(tasks.userId, userId)];
+  if (input.meetingId) conditions.push(eq(tasks.meetingId, input.meetingId));
+
   const [updated] = await db
     .update(tasks)
     .set(updates)
-    .where(and(eq(tasks.id, taskId), eq(tasks.userId, userId)))
+    .where(and(...conditions))
     .returning();
 
   if (!updated) throw new NotFoundError("Task");
