@@ -1,9 +1,4 @@
-import {
-  DISPLAY,
-  FREE_TRIAL,
-  LIMITS,
-  PLANS,
-} from "@/lib/billing/constants";
+import { DISPLAY, FREE_TRIAL, LIMITS, PLANS } from "@/lib/billing/constants";
 import { getIntegrations, CATEGORIES } from "@/lib/integrations/catalog";
 
 function buildContent(): string {
