@@ -30,6 +30,7 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
 - **Attribution** — UTM parameter tracking across signup flow for campaign attribution
 - **Feature usage event tracking** — Track key in-product feature usage events for product analytics.
+- **Hotjar tracking** — Add Hotjar tracking to the website for heatmaps and session recording. Remember to update the privacy and cookie policies to include Hotjar. Make sure cookie consent is working correctly.
 
 ## Security Hardening & Infra Go-Live Check
 
