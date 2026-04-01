@@ -51,6 +51,8 @@ function resetDbChain() {
   for (const m of Object.keys(mockDb)) {
     mockDb[m].mockReset().mockImplementation(() => mockDb);
   }
+  // Default: .returning() resolves to a row (for optimistic locking UPDATEs)
+  mockDb.returning.mockReset().mockResolvedValue([{ id: "mock-id" }]);
   mockJoinMeeting.mockReset();
   mockLeaveMeeting.mockReset();
   mockProcessMeetingEnd.mockReset().mockResolvedValue(undefined);
