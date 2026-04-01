@@ -213,6 +213,26 @@ export default function PrivacyPage() {
                   </td>
                   <td className="py-2">United States / EU</td>
                 </tr>
+                <tr>
+                  <td className="py-2 pr-4">
+                    <a
+                      href="https://contentsquare.com/privacy-center/"
+                      className="text-foreground underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Contentsquare
+                    </a>
+                  </td>
+                  <td className="py-2 pr-4">
+                    UX analytics, heatmaps, session replays (consent-based only)
+                  </td>
+                  <td className="py-2 pr-4">
+                    Click/scroll behaviour, page interactions, anonymised
+                    session data
+                  </td>
+                  <td className="py-2">EU / United States</td>
+                </tr>
               </tbody>
             </table>
           </div>
