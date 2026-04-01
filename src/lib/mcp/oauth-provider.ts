@@ -128,9 +128,18 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    // Check for pre-registered OAuth app credentials (env vars)
-    const preRegistered = getPreRegisteredClient(this.serverUrl);
-    if (preRegistered) return preRegistered;
+    const preRegisteredConfig = getPreRegisteredConfig(this.serverUrl);
+
+    // For pre-registered integrations, do not fall back to DB dynamic clients.
+    // This prevents stale client IDs from being used when env vars are missing.
+    if (preRegisteredConfig) {
+      const preRegistered = getPreRegisteredClient(this.serverUrl);
+      if (preRegistered) return preRegistered;
+
+      throw new Error(
+        `Missing pre-registered OAuth credentials for ${this.serverUrl}. Expected env vars: ${preRegisteredConfig.clientIdEnv} and ${preRegisteredConfig.clientSecretEnv}`
+      );
+    }
 
     // Fall back to dynamically registered credentials from DB
     const [row] = await db
@@ -156,7 +165,7 @@ export class VernixOAuthProvider implements OAuthClientProvider {
 
   async saveClientInformation(info: OAuthClientInformation): Promise<void> {
     // Skip saving if using pre-registered credentials from env vars
-    if (getPreRegisteredClient(this.serverUrl)) return;
+    if (getPreRegisteredConfig(this.serverUrl)) return;
 
     await this.upsertTokenRow({
       clientId: info.client_id,
