@@ -16,7 +16,7 @@ import {
   Plug,
   Clock,
 } from "lucide-react";
-import { PRICING, PLANS } from "@/lib/billing/constants";
+import { PRICING, PLANS, DISPLAY, LIMITS } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 const PRO_FEATURES = [
@@ -26,7 +26,10 @@ const PRO_FEATURES = [
   },
   { icon: Mic, label: "Voice agent answers and takes action during calls" },
   { icon: Search, label: "Search across all your meetings and documents" },
-  { icon: FileText, label: "200 knowledge base documents for context" },
+  {
+    icon: FileText,
+    label: `${LIMITS[PLANS.PRO].documentsCount} knowledge base documents for context`,
+  },
   { icon: MessageSquare, label: "AI chat across all your meetings" },
   { icon: Clock, label: "Unlimited meetings with monthly credit" },
 ];
@@ -75,8 +78,8 @@ export default function WelcomePage() {
           Welcome to Vernix
         </h1>
         <p className="text-muted-foreground mb-8 text-center text-sm">
-          Your account is ready. Try Pro free for 14 days, or start with the
-          free plan.
+          Your account is ready. Try Pro free for {DISPLAY.trialDays} days, or
+          start with the free plan.
         </p>
 
         {/* Pro trial card */}
@@ -86,7 +89,8 @@ export default function WelcomePage() {
               <div>
                 <h2 className="text-lg font-semibold">Start Pro free</h2>
                 <p className="text-muted-foreground text-xs">
-                  14 days free. Cancel anytime before trial ends.
+                  {DISPLAY.trialDays} days free. Cancel anytime before trial
+                  ends.
                 </p>
               </div>
               <Badge variant="default">Recommended</Badge>
@@ -136,8 +140,8 @@ export default function WelcomePage() {
             </div>
 
             <p className="text-muted-foreground text-center text-xs">
-              No charge for 14 days. Cancel before the trial ends and you
-              won&apos;t be billed.
+              No charge for {DISPLAY.trialDays} days. Cancel before the trial
+              ends and you won&apos;t be billed.
             </p>
           </CardContent>
         </Card>
@@ -152,7 +156,9 @@ export default function WelcomePage() {
             Continue with Free plan
           </Button>
           <p className="text-muted-foreground mt-1 text-xs">
-            5 silent meetings/month, 30 minutes, 20 queries/day
+            {LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings/month,{" "}
+            {LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes,{" "}
+            {LIMITS[PLANS.FREE].ragQueriesPerDay} queries/day
           </p>
         </div>
       </div>
