@@ -14,7 +14,12 @@ function format(
 ): string {
   const opts: Intl.DateTimeFormatOptions = { ...options };
   if (timezone) opts.timeZone = timezone;
-  return new Intl.DateTimeFormat(undefined, opts).format(toDate(date));
+  try {
+    return new Intl.DateTimeFormat(undefined, opts).format(toDate(date));
+  } catch {
+    // Fall back to no timezone if the stored value is invalid
+    return new Intl.DateTimeFormat(undefined, options).format(toDate(date));
+  }
 }
 
 /** e.g. "Jan 5, 2026, 3:42 PM" */
