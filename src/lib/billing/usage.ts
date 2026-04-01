@@ -308,6 +308,18 @@ export async function syncUsageToPolar(
         },
       ],
     });
+
+    // Mark the usage event as synced to Polar
+    await db
+      .update(usageEvents)
+      .set({ polarSyncedAt: new Date() })
+      .where(
+        and(
+          eq(usageEvents.userId, userId),
+          eq(usageEvents.meetingId, meetingId),
+          eq(usageEvents.type, type)
+        )
+      );
   } catch (err) {
     console.error("[Billing] Failed to sync usage to Polar:", err);
   }
