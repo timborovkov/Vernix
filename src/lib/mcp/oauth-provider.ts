@@ -14,7 +14,7 @@ import { getEnv } from "@/lib/env";
  * Pre-registered OAuth app credentials for services that do NOT support
  * dynamic client registration (RFC 7591). Keyed by server URL prefix.
  *
- * Services that DO support dynamic registration (Notion, Linear, GitHub)
+ * Services that DO support dynamic registration (Notion, Linear, etc.)
  * should NOT be listed here — the MCP SDK will register automatically
  * via POST /register and persist the client_id in mcpOauthTokens.
  */
@@ -50,8 +50,16 @@ export function getPreRegisteredConfig(serverUrl: string):
       tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
     }
   | undefined {
-  for (const [prefix, config] of Object.entries(PRE_REGISTERED_CLIENTS)) {
-    if (serverUrl.startsWith(prefix)) return config;
+  // Match by origin to prevent subdomain confusion attacks.
+  // e.g. "https://mcp.slack.com.evil.com" must NOT match "https://mcp.slack.com".
+  let origin: string;
+  try {
+    origin = new URL(serverUrl).origin;
+  } catch {
+    return undefined;
+  }
+  for (const [registeredUrl, config] of Object.entries(PRE_REGISTERED_CLIENTS)) {
+    if (origin === new URL(registeredUrl).origin) return config;
   }
   return undefined;
 }
