@@ -75,6 +75,7 @@ export function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    target="_blank"
                     className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                   >
                     {link.label}
