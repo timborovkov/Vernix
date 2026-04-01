@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth/session";
 import { searchMeetings } from "@/lib/services/search";
-import { NotFoundError, BillingError } from "@/lib/api/errors";
+import { NotFoundError, BillingError, SearchError } from "@/lib/api/errors";
 import { z } from "zod/v4";
 
 const searchSchema = z.object({
@@ -48,20 +48,8 @@ export async function GET(request: Request) {
         { status: error.statusCode }
       );
     }
-    if (error instanceof Error) {
-      // Surface specific error messages from the service layer
-      if (error.message.includes("embedding")) {
-        return NextResponse.json(
-          { error: "Failed to create embedding", details: error.message },
-          { status: 500 }
-        );
-      }
-      if (error.message.includes("Vector search failed")) {
-        return NextResponse.json(
-          { error: "Vector search failed for all collections" },
-          { status: 500 }
-        );
-      }
+    if (error instanceof SearchError) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json(
       { error: "Internal server error" },
