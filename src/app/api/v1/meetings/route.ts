@@ -78,7 +78,7 @@ export const POST = withApiAuth(
 
       if (autoJoin) {
         try {
-          const joinResult = await joinMeeting(user.id, meeting.id);
+          const joinResult = await joinMeeting(user.id, meeting.id, user.name);
           return apiCreated({
             ...meeting,
             agent: { botId: joinResult.botId, status: joinResult.status },
