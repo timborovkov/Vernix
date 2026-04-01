@@ -61,6 +61,17 @@ import { canStartMeeting } from "@/lib/billing/limits";
 
 const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
+function resetDbChain() {
+  for (const m of Object.keys(mockDb)) {
+    mockDb[m].mockReset().mockImplementation(() => mockDb);
+  }
+  mockCreateCollection.mockReset().mockResolvedValue(undefined);
+  mockDeleteCollection.mockReset().mockResolvedValue(undefined);
+  mockUpsertAgenda.mockReset().mockResolvedValue(undefined);
+  mockDeleteFile.mockReset().mockResolvedValue(undefined);
+  mockDeleteBot.mockReset().mockResolvedValue(undefined);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -74,7 +85,7 @@ import {
 } from "./meetings";
 
 describe("listMeetings", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("queries with userId condition and default limit of 21 (limit+1)", async () => {
     const meetings = [fakeMeeting(), fakeMeeting({ id: "second-id" })];
@@ -117,7 +128,7 @@ describe("listMeetings", () => {
 });
 
 describe("createMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws BillingError when canStartMeeting says not allowed", async () => {
     vi.mocked(canStartMeeting).mockReturnValueOnce({
@@ -238,7 +249,7 @@ describe("createMeeting", () => {
 });
 
 describe("getMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("returns meeting when found", async () => {
     const meeting = fakeMeeting();
@@ -266,7 +277,7 @@ describe("getMeeting", () => {
 });
 
 describe("updateMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws ValidationError when agenda exceeds 10,000 characters", async () => {
     const meeting = fakeMeeting();
@@ -375,7 +386,7 @@ describe("updateMeeting", () => {
 });
 
 describe("deleteMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when meeting does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);

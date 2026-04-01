@@ -66,6 +66,19 @@ import { canUploadDocument } from "@/lib/billing/limits";
 
 const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
+function resetDbChain() {
+  for (const m of Object.keys(mockDb)) {
+    mockDb[m].mockReset().mockImplementation(() => mockDb);
+  }
+  mockEnsureBucket.mockReset().mockResolvedValue(undefined);
+  mockUploadFile.mockReset().mockResolvedValue(undefined);
+  mockDeleteFile.mockReset().mockResolvedValue(undefined);
+  mockGetDownloadUrl.mockReset().mockResolvedValue("https://s3.example.com/file");
+  mockProcessDocument.mockReset().mockResolvedValue(undefined);
+  mockDeleteDocumentChunks.mockReset().mockResolvedValue(undefined);
+  mockKnowledgeCollectionName.mockReset().mockReturnValue("knowledge_user123");
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -78,7 +91,7 @@ function createMockFile(name: string, size: number, type: string): File {
 }
 
 describe("uploadDocument", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws ValidationError when file is empty", async () => {
     const file = createMockFile("test.pdf", 0, "application/pdf");
@@ -207,7 +220,7 @@ describe("uploadDocument", () => {
 });
 
 describe("getDocument", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when document does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);
@@ -231,7 +244,7 @@ describe("getDocument", () => {
 });
 
 describe("deleteDocument", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when document does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);

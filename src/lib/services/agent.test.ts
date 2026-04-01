@@ -47,6 +47,15 @@ import { canStartMeeting } from "@/lib/billing/limits";
 
 const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
+function resetDbChain() {
+  for (const m of Object.keys(mockDb)) {
+    mockDb[m].mockReset().mockImplementation(() => mockDb);
+  }
+  mockJoinMeeting.mockReset();
+  mockLeaveMeeting.mockReset();
+  mockProcessMeetingEnd.mockReset().mockResolvedValue(undefined);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -54,7 +63,7 @@ const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 import { joinMeeting, stopMeeting } from "./agent";
 
 describe("joinMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when meeting does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);
@@ -213,7 +222,7 @@ describe("joinMeeting", () => {
 });
 
 describe("stopMeeting", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when meeting does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);

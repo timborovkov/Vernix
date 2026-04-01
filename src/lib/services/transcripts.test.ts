@@ -36,6 +36,13 @@ vi.mock("@/lib/vector/scroll", () => ({
 
 const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
+function resetDbChain() {
+  for (const m of Object.keys(mockDb)) {
+    mockDb[m].mockReset().mockImplementation(() => mockDb);
+  }
+  mockScrollTranscript.mockReset();
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -43,7 +50,7 @@ const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 import { getTranscript } from "./transcripts";
 
 describe("getTranscript", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when meeting does not exist", async () => {
     mockDb.where.mockResolvedValueOnce([]);

@@ -29,6 +29,12 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 
 const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
+function resetDbChain() {
+  for (const m of Object.keys(mockDb)) {
+    mockDb[m].mockReset().mockImplementation(() => mockDb);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -36,7 +42,7 @@ const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 import { listTasks, getTask, createTask, updateTask } from "./tasks";
 
 describe("listTasks", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("queries with default limit of 21 (limit+1)", async () => {
     mockDb.limit.mockResolvedValueOnce([]);
@@ -73,7 +79,7 @@ describe("listTasks", () => {
 });
 
 describe("getTask", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("returns task when found", async () => {
     const task = { ...fakeTask(), meetingTitle: "Test Meeting" };
@@ -94,7 +100,7 @@ describe("getTask", () => {
 });
 
 describe("createTask", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws NotFoundError when meeting is not found (ownership check)", async () => {
     mockDb.where.mockResolvedValueOnce([]); // meeting lookup
@@ -139,7 +145,7 @@ describe("createTask", () => {
 });
 
 describe("updateTask", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(resetDbChain);
 
   it("throws ValidationError for invalid due date", async () => {
     await expect(
