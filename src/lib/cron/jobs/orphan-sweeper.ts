@@ -1,0 +1,66 @@
+import { db } from "@/lib/db";
+import { usageEvents, documents, meetings } from "@/lib/db/schema";
+import { and, eq, isNull, lt, sql } from "drizzle-orm";
+
+/**
+ * Clean up orphaned DB records:
+ * 1. Old usage_events with null meetingId (from deleted meetings) > 90 days
+ * 2. Documents referencing non-existent meetings (re-parent to global knowledge)
+ */
+export async function runOrphanSweeper() {
+  const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000); // 90 days
+  let cleaned = 0;
+
+  // 1. Delete old orphaned usage events (meetingId set to null by cascade)
+  try {
+    const deleted = await db
+      .delete(usageEvents)
+      .where(
+        and(isNull(usageEvents.meetingId), lt(usageEvents.createdAt, cutoff))
+      )
+      .returning({ id: usageEvents.id });
+    if (deleted.length > 0) {
+      console.log(
+        `[Orphan Sweeper] Deleted ${deleted.length} orphaned usage events`
+      );
+      cleaned += deleted.length;
+    }
+  } catch (err) {
+    console.error("[Orphan Sweeper] Usage event cleanup failed:", err);
+  }
+
+  // 2. Re-parent documents whose meetingId references a deleted meeting
+  try {
+    const orphanedDocs = await db
+      .select({ id: documents.id, meetingId: documents.meetingId })
+      .from(documents)
+      .leftJoin(meetings, eq(documents.meetingId, meetings.id))
+      .where(and(sql`${documents.meetingId} IS NOT NULL`, isNull(meetings.id)))
+      .limit(100);
+
+    for (const doc of orphanedDocs) {
+      try {
+        await db
+          .update(documents)
+          .set({ meetingId: null, updatedAt: new Date() })
+          .where(eq(documents.id, doc.id));
+        cleaned++;
+      } catch (err) {
+        console.error(
+          `[Orphan Sweeper] Failed to re-parent document ${doc.id}:`,
+          err
+        );
+      }
+    }
+
+    if (orphanedDocs.length > 0) {
+      console.log(
+        `[Orphan Sweeper] Re-parented ${orphanedDocs.length} orphaned documents`
+      );
+    }
+  } catch (err) {
+    console.error("[Orphan Sweeper] Document cleanup failed:", err);
+  }
+
+  return { cleaned };
+}
