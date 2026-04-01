@@ -14,7 +14,7 @@ import { getEnv } from "@/lib/env";
  * Pre-registered OAuth app credentials for services that do NOT support
  * dynamic client registration (RFC 7591). Keyed by server URL prefix.
  *
- * Services that DO support dynamic registration (Notion, Linear, GitHub)
+ * Services that DO support dynamic registration (Notion, Linear, etc.)
  * should NOT be listed here — the MCP SDK will register automatically
  * via POST /register and persist the client_id in mcpOauthTokens.
  */
@@ -43,15 +43,25 @@ const PRE_REGISTERED_CLIENTS: Record<
   },
 };
 
-export function getPreRegisteredConfig(serverUrl: string):
+function getPreRegisteredConfig(serverUrl: string):
   | {
       clientIdEnv: string;
       clientSecretEnv: string;
       tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
     }
   | undefined {
-  for (const [prefix, config] of Object.entries(PRE_REGISTERED_CLIENTS)) {
-    if (serverUrl.startsWith(prefix)) return config;
+  // Match by origin to prevent subdomain confusion attacks.
+  // e.g. "https://mcp.slack.com.evil.com" must NOT match "https://mcp.slack.com".
+  let origin: string;
+  try {
+    origin = new URL(serverUrl).origin;
+  } catch {
+    return undefined;
+  }
+  for (const [registeredUrl, config] of Object.entries(
+    PRE_REGISTERED_CLIENTS
+  )) {
+    if (origin === new URL(registeredUrl).origin) return config;
   }
   return undefined;
 }
@@ -257,29 +267,18 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   private async upsertTokenRow(
     fields: Partial<typeof mcpOauthTokens.$inferInsert>
   ): Promise<void> {
-    const [existing] = await db
-      .select({ id: mcpOauthTokens.id })
-      .from(mcpOauthTokens)
-      .where(
-        and(
-          eq(mcpOauthTokens.userId, this.userId),
-          eq(mcpOauthTokens.mcpServerId, this.mcpServerId)
-        )
-      );
-
-    if (existing) {
-      await db
-        .update(mcpOauthTokens)
-        .set({ ...fields, updatedAt: new Date() })
-        .where(eq(mcpOauthTokens.id, existing.id));
-    } else {
-      await db.insert(mcpOauthTokens).values({
+    await db
+      .insert(mcpOauthTokens)
+      .values({
         userId: this.userId,
         mcpServerId: this.mcpServerId,
         accessToken: "", // placeholder, will be updated by saveTokens
         ...fields,
+      })
+      .onConflictDoUpdate({
+        target: [mcpOauthTokens.userId, mcpOauthTokens.mcpServerId],
+        set: { ...fields, updatedAt: new Date() },
       });
-    }
   }
 }
 

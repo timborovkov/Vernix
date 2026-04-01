@@ -90,7 +90,7 @@ export async function GET(request: Request) {
       catalogIntegrationId: server.catalogIntegrationId,
     });
     return NextResponse.redirect(
-      `${integrationsUrl}?error=${encodeURIComponent(`Token exchange failed: ${errMsg}`)}`
+      `${integrationsUrl}?error=${encodeURIComponent("Token exchange failed")}`
     );
   }
 
