@@ -324,9 +324,9 @@ export function SettingsForm({
             {billing && !billing.limits.apiEnabled ? (
               <div className="space-y-3 py-2">
                 <p className="text-muted-foreground text-sm">
-                  Access your meetings, transcripts, and search from Claude
+                  Access your calls, transcripts, and search from Claude
                   Desktop, Cursor, or any MCP client. Ask questions about your
-                  meetings from your favorite AI tools.
+                  calls from your favorite AI tools.
                 </p>
                 <Button
                   size="sm"
@@ -364,7 +364,7 @@ export function SettingsForm({
             <div>
               <p className="text-sm font-medium">Integrations</p>
               <p className="text-muted-foreground text-xs">
-                Connect Slack, Linear, GitHub, and more to your meetings.
+                Connect Slack, Linear, GitHub, and more to your calls.
               </p>
             </div>
             <Button
