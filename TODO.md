@@ -1,18 +1,5 @@
 # TODO
 
-## Completed
-
-- Core product foundation: call pipeline, post-call processing, and production hardening
-- AI agent system: live voice agent, on-demand realtime rewrite, fast wake-word detection, silent/text mode, mute controls, and agent tools
-- Knowledge & context: chat with call notes, RAG knowledge base, meeting-scoped docs, and agenda/context support
-- Tasks & productivity: action item extraction, task management UX, and dashboard/task list improvements
-- Auth & accounts: credentials auth, SSO, password reset/email integration, profiles, and terms acceptance flow
-- Billing & monetization: pricing strategy/page, Polar billing integration, plan limits/paywalls, lifecycle emails, and subscription access policy
-- Integrations platform: MCP connections/testing, integrations catalog + UX revamp, and OAuth foundation (including GitHub pre-registration)
-- Reliability, retention & compliance: recording retention policy/fixes, deletion consistency, webhook verification/idempotency, and legal policy updates
-- Operations & background jobs: unified cron dispatcher, active reconciliation/cleanup jobs, billing sync/reminders, and cron documentation alignment
-- UX, onboarding & launch: rebrand to Vernix, dark mode/theme selector, empty-state/onboarding polish, growth/SEO surfaces, and analytics/monitoring
-
 ## Integrations
 
 - **Register OAuth apps for more services** — Currently only GitHub has a pre-registered OAuth app. To enable more OAuth integrations (Slack, Linear, Notion, etc.): register Vernix on each service's developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, change catalog status to `available`.
