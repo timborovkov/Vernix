@@ -45,9 +45,15 @@ export async function GET() {
   });
 }
 
+const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"));
+
 const updateSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
-  timezone: z.string().nullable().optional(),
+  timezone: z
+    .string()
+    .refine((tz) => VALID_TIMEZONES.has(tz), "Invalid timezone")
+    .nullable()
+    .optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -76,7 +82,7 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const updates: Record<string, unknown> = { updatedAt: new Date() };
+  const updates: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
   if (parsed.data.timezone !== undefined)
     updates.timezone = parsed.data.timezone;
