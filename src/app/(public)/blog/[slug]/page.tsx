@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { mdxComponents } from "@/components/blog/mdx-components";
 
 interface Props {
@@ -86,7 +87,20 @@ export default async function BlogPostPage({ params }: Props) {
         <MDXRemote source={post.content} components={mdxComponents} />
       </div>
 
-      <div className="border-border mt-16 border-t pt-8">
+      <div className="border-border mt-16 rounded-lg border p-8 text-center">
+        <p className="mb-2 text-lg font-semibold">
+          Ready to try Vernix on your next call?
+        </p>
+        <p className="text-muted-foreground mb-6 text-sm">
+          Paste a meeting link, and Vernix joins in seconds. Free to start.
+        </p>
+        <Button variant="accent" size="lg" render={<Link href="/register" />}>
+          Try Vernix Free
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="border-border mt-8 border-t pt-8">
         <Link
           href="/blog"
           className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
