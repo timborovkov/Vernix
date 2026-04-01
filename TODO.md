@@ -56,6 +56,8 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 
 - **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
 - **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
+- **List tools in the UI** — List available tools from MCP integrations in the UI, so the user can see what they can connect to.
+- **Allow toggling tools on/off** — Allow the user to toggle tools provided by MCP integrations on/off in the UI, so they can control which tools are available to the agent.
 
 ## Inactive Account Cleanup
 
