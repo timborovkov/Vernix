@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const meetingId = searchParams.get("meetingId") ?? undefined;
 
   try {
-    const result = await listDocuments(user.id, { meetingId });
+    const result = await listDocuments(user.id, { meetingId, limit: 1000 });
     return NextResponse.json({ documents: result.data });
   } catch (error) {
     console.error("Knowledge list error:", error);
