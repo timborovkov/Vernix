@@ -43,7 +43,7 @@ const PRE_REGISTERED_CLIENTS: Record<
   },
 };
 
-export function getPreRegisteredConfig(serverUrl: string):
+function getPreRegisteredConfig(serverUrl: string):
   | {
       clientIdEnv: string;
       clientSecretEnv: string;
