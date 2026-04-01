@@ -5,6 +5,7 @@ import { Video, Mic, FileText, Clock, Plug } from "lucide-react";
 import { MeetingCard } from "./meeting-card";
 import { useBilling } from "@/hooks/use-billing";
 import { Badge } from "@/components/ui/badge";
+import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 import type { Meeting } from "@/lib/db/schema";
 
 interface MeetingListProps {
@@ -65,7 +66,7 @@ function TrialEmptyState() {
         </div>
         <p className="text-muted-foreground mt-6 text-xs">
           <Clock className="mr-1 inline h-3 w-3" />
-          90 minutes of meeting time included in your trial
+          {DISPLAY.trialMinutes} minutes of meeting time included in your trial
         </p>
       </div>
     );
@@ -81,7 +82,8 @@ function TrialEmptyState() {
         everything, and generates summaries.
       </p>
       <p className="text-muted-foreground mt-4 text-xs">
-        Free plan includes 30 minutes of silent meetings.{" "}
+        Free plan includes {LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes
+        of silent meetings.{" "}
         <Link href="/pricing" className="underline underline-offset-2">
           Start a Pro trial to connect your tools and unlock voice
         </Link>

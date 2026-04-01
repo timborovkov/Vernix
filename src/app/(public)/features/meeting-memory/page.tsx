@@ -12,6 +12,7 @@ import {
   ListChecks,
   Plug,
 } from "lucide-react";
+import { LIMITS, PLANS } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "AI Meeting Transcription and Search | Vernix",
@@ -100,7 +101,8 @@ export default function MeetingMemoryPage() {
             </Button>
           </div>
           <p className="text-muted-foreground mt-4 text-xs leading-relaxed">
-            Free plan includes 5 meetings per month. No credit card.
+            Free plan includes {LIMITS[PLANS.FREE].meetingsPerMonth} meetings
+            per month. No credit card.
           </p>
         </div>
       </div>
