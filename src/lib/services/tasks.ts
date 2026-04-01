@@ -153,6 +153,9 @@ export async function updateTask(
     updates.title = input.title;
   }
   if (input.assignee !== undefined) {
+    if (typeof input.assignee === "string" && input.assignee.length > 200) {
+      throw new ValidationError("Assignee must be under 200 characters");
+    }
     updates.assignee = input.assignee || null;
   }
   if (input.status === "open" || input.status === "completed") {
