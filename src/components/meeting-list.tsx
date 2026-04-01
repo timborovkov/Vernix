@@ -23,9 +23,9 @@ function TrialEmptyState() {
     return (
       <div className="text-muted-foreground py-12 text-center">
         <Video className="mx-auto mb-3 h-12 w-12 opacity-40" />
-        <p className="text-lg font-medium">No meetings yet</p>
+        <p className="text-lg font-medium">No calls yet</p>
         <p className="text-sm">
-          Create a meeting to get started with your AI agent.
+          Create a call to get started with your AI agent.
         </p>
       </div>
     );
@@ -46,7 +46,7 @@ function TrialEmptyState() {
           Your AI assistant is ready for calls
         </p>
         <p className="text-muted-foreground mx-auto mt-2 max-w-md text-sm">
-          Click &quot;New Meeting&quot; and paste a Zoom, Meet, Teams, or Webex
+          Click &quot;New Call&quot; and paste a Zoom, Meet, Teams, or Webex
           link. Vernix joins, connects to your tools, and answers questions with
           real data during the call.
         </p>
@@ -66,7 +66,7 @@ function TrialEmptyState() {
         </div>
         <p className="text-muted-foreground mt-6 text-xs">
           <Clock className="mr-1 inline h-3 w-3" />
-          {DISPLAY.trialMinutes} minutes of meeting time included in your trial
+          {DISPLAY.trialMinutes} minutes of call time included in your trial
         </p>
       </div>
     );
@@ -76,14 +76,14 @@ function TrialEmptyState() {
   return (
     <div className="py-12 text-center">
       <Video className="text-muted-foreground mx-auto mb-3 h-12 w-12 opacity-40" />
-      <p className="text-lg font-medium">No meetings yet</p>
+      <p className="text-lg font-medium">No calls yet</p>
       <p className="text-muted-foreground mx-auto mt-1 max-w-sm text-sm">
-        Create a meeting to get started. Vernix joins your call, transcribes
+        Create a call to get started. Vernix joins your call, transcribes
         everything, and generates summaries.
       </p>
       <p className="text-muted-foreground mt-4 text-xs">
         Free plan includes {LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes
-        of silent meetings.{" "}
+        of silent calls.{" "}
         <Link href="/pricing" className="underline underline-offset-2">
           Start a Pro trial to connect your tools and unlock voice
         </Link>
