@@ -7,6 +7,7 @@ export const GET = ApiReference({
   title: "Vernix API Documentation",
   theme: "kepler",
   darkMode: true,
+  favicon: `${BASE_URL}/brand/icon/icon.svg`,
   metaData: {
     title: "Vernix API Docs",
     description:
