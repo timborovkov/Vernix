@@ -63,6 +63,16 @@ vi.mock("@/lib/meeting-bot", () => ({
 vi.mock("@/lib/storage/operations", () => ({
   uploadFile: mockUploadFile,
 }));
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+}));
+vi.mock("@/lib/email/templates", () => ({
+  getFirstMeetingEmailHtml: vi.fn().mockReturnValue("<html>first</html>"),
+}));
+vi.mock("@/lib/email/preferences", () => ({
+  shouldSendEmail: vi.fn().mockReturnValue(false), // Skip email logic in processing tests
+  buildUnsubscribeUrl: vi.fn().mockReturnValue(""),
+}));
 
 import { processMeetingEnd } from "./processing";
 
