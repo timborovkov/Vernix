@@ -5,6 +5,7 @@ import { CookiePreferencesButton } from "@/components/cookie-preferences-button"
 const PRODUCT_LINKS = [
   { href: "/#features", label: "Features" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },

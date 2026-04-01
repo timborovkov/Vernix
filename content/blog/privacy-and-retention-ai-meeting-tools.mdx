@@ -1,0 +1,103 @@
+---
+title: "Privacy and Retention in AI Meeting Tools: What Teams Should Check"
+description: "Before you let an AI into your meetings, ask the right questions about data handling, retention, and access control. Here's what to look for."
+date: "2026-03-15"
+author: "Tim Borovkov"
+tags: ["privacy", "trust"]
+---
+
+AI meeting tools are becoming standard. They transcribe calls, generate summaries, and build searchable archives. That's genuinely useful — but it also means a third-party service is processing some of your most sensitive conversations.
+
+Before adopting any AI meeting tool — including Vernix — here's what your team should evaluate.
+
+## Who can access the transcript data?
+
+When a meeting gets transcribed, where does the text go? Who can read it?
+
+**What to look for:**
+
+- Transcripts are scoped to the user who created the meeting — not shared across an organization by default
+- API endpoints enforce ownership checks (every query filters by user ID)
+- There's no admin backdoor that lets someone read another user's meetings without explicit permission
+
+At Vernix, every meeting belongs to the user who created it. All API queries include a user ownership check. Search results only return data from your meetings and your documents. There is no organization-wide admin view.
+
+## Is the data used for model training?
+
+Many AI services use customer data to improve their models. For meeting transcripts, this creates a real risk: fragments of your private conversations could influence model outputs for other users.
+
+**What to look for:**
+
+- A clear statement on whether transcripts are used for training
+- Whether the AI providers used (OpenAI, etc.) have data processing agreements that exclude training
+
+Vernix uses OpenAI for transcription, embeddings, and generation. We use the API tier, which does not train on customer data per OpenAI's data usage policy.
+
+## How long is data retained?
+
+Transcripts, embeddings, summaries, recordings — these accumulate over time. If there's no retention policy, your data lives on the service's infrastructure indefinitely.
+
+**What to look for:**
+
+- Can you delete individual meetings and all associated data?
+- Is deletion complete (transcript, vector embeddings, recordings, summaries)?
+- Are there configurable retention periods?
+
+When you delete a meeting in Vernix, the transcript, vector embeddings, summary, tasks, and any associated recordings are all removed. Deletion is not soft — the data is purged from Postgres, Qdrant, and S3.
+
+## What happens on the call itself?
+
+The meeting bot is a participant in the call. What capabilities does it have? Does it record audio or video? Can it see screen shares?
+
+**What to look for:**
+
+- Whether the bot records audio, video, or both
+- Whether recording is optional or always-on
+- Whether silent mode is available (transcription without audio capture)
+
+Vernix offers silent mode for calls where audio recording isn't appropriate. In silent mode, the bot transcribes the conversation but does not capture or store any audio. The voice agent features are disabled — the bot only operates through the meeting's text chat.
+
+## Where is the data stored?
+
+Geographic location of data storage matters for compliance, especially for teams subject to GDPR, SOC 2, or industry-specific regulations.
+
+**What to look for:**
+
+- Where databases and object storage are hosted
+- Whether you can choose your data region
+- Whether the service supports self-hosting or on-premise deployment
+
+## Can you export your data?
+
+Lock-in is a real concern. If you decide to switch tools, can you take your data with you?
+
+**What to look for:**
+
+- Meeting export in standard formats (Markdown, PDF)
+- Bulk export capability
+- API access to your own data
+
+Vernix supports individual meeting export as Markdown or PDF, bulk export of all meetings as a ZIP archive, and full API access to your meeting data. You also get an MCP server endpoint so other tools in your stack can query your meeting data directly.
+
+## A checklist for your team
+
+Before adopting any AI meeting tool, ask these questions:
+
+- [ ] Who can access my transcript data? Is it user-scoped?
+- [ ] Is my data used for model training?
+- [ ] Can I delete meetings and all associated data?
+- [ ] Is there a configurable retention policy?
+- [ ] Can the bot operate without recording audio (silent mode)?
+- [ ] Where is the data physically stored?
+- [ ] Can I export my data in standard formats?
+- [ ] Is there API access to my own data?
+
+No tool will be perfect on every dimension. But you should know the answers before your first call gets transcribed.
+
+## Our approach at Vernix
+
+We built Vernix with a simple principle: your meeting data belongs to you. That means user-scoped access, complete deletion, no training on your data, and export in open formats.
+
+We think transparency about data handling should be a baseline, not a differentiator. But since many tools don't make this information easy to find, we're stating it plainly here.
+
+If you have specific questions about how Vernix handles data, reach out through our contact page. We'll answer directly.
