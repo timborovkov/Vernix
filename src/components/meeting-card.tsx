@@ -118,7 +118,7 @@ export function MeetingCard({
           {meeting.status === "active" && (
             <p className="mt-2 text-xs text-green-600">
               {isSilent
-                ? "Text agent responds via meeting chat when called: Vernix"
+                ? "Text agent responds via call chat when called: Vernix"
                 : "Voice agent responds to: Vernix, Agent, Assistant"}
             </p>
           )}
@@ -160,7 +160,7 @@ export function MeetingCard({
       <ConfirmDialog
         open={confirmStop}
         onOpenChange={setConfirmStop}
-        title="Stop meeting agent?"
+        title="Stop call agent?"
         description="Summary will be generated after stopping."
         confirmLabel="Stop"
         onConfirm={() => {
@@ -172,7 +172,7 @@ export function MeetingCard({
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title="Delete this meeting?"
+        title="Delete this call?"
         description="This will also remove all transcript data. This action cannot be undone."
         confirmLabel="Delete"
         variant="destructive"
