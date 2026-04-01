@@ -97,19 +97,6 @@ export async function POST(request: Request) {
   const provider = new VernixOAuthProvider(user.id, serverId, serverUrl);
 
   try {
-    const clientInfo = await provider.clientInformation();
-    console.log("[OAuth Start] Initiating flow:", {
-      integrationId: parsed.data.integrationId,
-      serverUrl,
-      serverId,
-      hasClientId: !!clientInfo?.client_id,
-      clientIdPrefix: clientInfo?.client_id?.slice(0, 8) + "…",
-      hasClientSecret: !!clientInfo?.client_secret,
-      tokenEndpointAuthMethod:
-        provider.clientMetadata.token_endpoint_auth_method,
-      redirectUrl: provider.redirectUrl,
-    });
-
     const result = await auth(provider, { serverUrl });
 
     if (result === "AUTHORIZED") {
@@ -123,10 +110,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    console.log("[OAuth Start] Redirecting to:", {
-      authUrl: provider.pendingAuthUrl.toString().slice(0, 120) + "…",
-    });
 
     return NextResponse.json({
       authorizationUrl: provider.pendingAuthUrl.toString(),
