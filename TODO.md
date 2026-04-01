@@ -6,7 +6,7 @@
 - **OpenAPI spec** — Write an OpenAPI 3.1 spec documenting all endpoints, request/response schemas, auth, pagination, and error codes.
 - **API docs page** — Host interactive docs at `/docs` or `/api-docs`.
 - **Agent control endpoints** — `POST /api/v1/meetings` (create + auto-join), `POST /api/v1/meetings/:id/join`, `POST /api/v1/meetings/:id/stop`.
-- **MCP server tools** — Add `join_meeting` and `stop_meeting` tools to the MCP server.
+- **MCP server tools** — Add `vernix_join_call` (create and instantly join a call), `vernix_stop_call` (stop the call), `vernix_search_meetings` (search across meeting transcripts and knowledge base using vector similarity), `vernix_search_tasks` (search across tasks using vector similarity), and other tools as needed.
 - **Rate limiting & versioning** — Per-key rate limits, API version in URL path, deprecation headers.
 - **API in llms.txt** — Link to the API docs in the llms.txt file and add an introduction to the API.
 
