@@ -171,5 +171,11 @@ export async function stopMeeting(userId: string, meetingId: string) {
     participants: (meeting.participants as string[]) ?? [],
   });
 
-  return { status: "processing" as const };
+  // Re-fetch to return the actual post-processing status (completed or failed)
+  const [updated] = await db
+    .select({ status: meetings.status })
+    .from(meetings)
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
+
+  return { status: (updated?.status ?? "processing") as string };
 }
