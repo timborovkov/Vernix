@@ -21,9 +21,13 @@ export async function PATCH(
   try {
     const updated = await updateTask(user.id, taskId, {
       title: typeof title === "string" ? title : undefined,
-      assignee: assignee === null ? null : typeof assignee === "string" ? assignee : undefined,
-      status:
-        status === "open" || status === "completed" ? status : undefined,
+      assignee:
+        assignee === null
+          ? null
+          : typeof assignee === "string"
+            ? assignee
+            : undefined,
+      status: status === "open" || status === "completed" ? status : undefined,
       dueDate:
         dueDate === null
           ? null

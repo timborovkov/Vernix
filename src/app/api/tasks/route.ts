@@ -7,10 +7,7 @@ export async function GET(request: Request) {
   if (user instanceof NextResponse) return user;
 
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get("status") as
-    | "open"
-    | "completed"
-    | undefined;
+  const status = searchParams.get("status") as "open" | "completed" | undefined;
 
   try {
     const result = await listTasks(user.id, {

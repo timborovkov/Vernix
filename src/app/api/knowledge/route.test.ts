@@ -26,7 +26,10 @@ describe("GET /api/knowledge", () => {
         meetingTitle: "Sprint Retro",
       },
     ];
-    mockListDocuments.mockResolvedValueOnce({ data: docs, meta: { hasMore: false } });
+    mockListDocuments.mockResolvedValueOnce({
+      data: docs,
+      meta: { hasMore: false },
+    });
 
     const req = new Request("http://localhost/api/knowledge");
     const { status, data } = await parseJsonResponse(await GET(req));
@@ -44,9 +47,14 @@ describe("GET /api/knowledge", () => {
         meetingTitle: "Sprint Retro",
       },
     ];
-    mockListDocuments.mockResolvedValueOnce({ data: docs, meta: { hasMore: false } });
+    mockListDocuments.mockResolvedValueOnce({
+      data: docs,
+      meta: { hasMore: false },
+    });
 
-    const req = new Request("http://localhost/api/knowledge?meetingId=meeting-1");
+    const req = new Request(
+      "http://localhost/api/knowledge?meetingId=meeting-1"
+    );
     const { status, data } = await parseJsonResponse(await GET(req));
 
     expect(status).toBe(200);

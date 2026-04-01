@@ -1,15 +1,19 @@
 import { resetRateLimits } from "@/lib/rate-limit";
 
-const { mockAuthenticateApiKey, mockRequireLimits, mockGetDailyCount, mockRecordUsageEvent } =
-  vi.hoisted(() => ({
-    mockAuthenticateApiKey: vi.fn(),
-    mockRequireLimits: vi.fn().mockResolvedValue({
-      limits: { apiEnabled: true, apiRequestsPerDay: 1000 },
-      period: { start: new Date(), end: new Date() },
-    }),
-    mockGetDailyCount: vi.fn().mockResolvedValue(0),
-    mockRecordUsageEvent: vi.fn().mockResolvedValue(undefined),
-  }));
+const {
+  mockAuthenticateApiKey,
+  mockRequireLimits,
+  mockGetDailyCount,
+  mockRecordUsageEvent,
+} = vi.hoisted(() => ({
+  mockAuthenticateApiKey: vi.fn(),
+  mockRequireLimits: vi.fn().mockResolvedValue({
+    limits: { apiEnabled: true, apiRequestsPerDay: 1000 },
+    period: { start: new Date(), end: new Date() },
+  }),
+  mockGetDailyCount: vi.fn().mockResolvedValue(0),
+  mockRecordUsageEvent: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock("@/lib/auth/api-key", () => ({
   authenticateApiKey: mockAuthenticateApiKey,
@@ -60,9 +64,7 @@ describe("withApiAuth", () => {
   it("calls handler and sets headers on success", async () => {
     mockAuthenticateApiKey.mockResolvedValueOnce(testUser);
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
     const wrapped = withApiAuth(handler, { endpoint: "test" });
     const response = await wrapped(makeRequest(), dummyContext);
 
@@ -79,9 +81,7 @@ describe("withApiAuth", () => {
   it("returns 429 when rate limit exceeded", async () => {
     mockAuthenticateApiKey.mockResolvedValue(testUser);
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
     // Use a very low rate limit
     const wrapped = withApiAuth(handler, {
       endpoint: "rate-test",
@@ -123,9 +123,7 @@ describe("withApiAuth", () => {
   it("skips billing when skipBilling is true", async () => {
     mockAuthenticateApiKey.mockResolvedValueOnce(testUser);
 
-    const handler = vi.fn().mockResolvedValue(
-      NextResponse.json({ ok: true })
-    );
+    const handler = vi.fn().mockResolvedValue(NextResponse.json({ ok: true }));
     const wrapped = withApiAuth(handler, {
       endpoint: "skip-billing",
       skipBilling: true,

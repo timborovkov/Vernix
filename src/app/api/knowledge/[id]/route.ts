@@ -17,7 +17,10 @@ export async function GET(
     return NextResponse.json(doc);
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
     }
     return NextResponse.json(
       { error: "Internal server error" },
@@ -40,7 +43,10 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof NotFoundError) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Document not found" },
+        { status: 404 }
+      );
     }
     return NextResponse.json(
       { error: "Internal server error" },
