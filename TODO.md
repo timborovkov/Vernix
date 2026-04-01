@@ -37,6 +37,13 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Collect and attribute usage telemetry** — Track token usage, Recall usage, and related costs.
 - **Configure LLM tracing** — Configure something like Langsmith tracing for all AI agents and tools. (note, we use OpenAI, so Langsmith is probably not the best choice)
 
+## Marketing materials
+
+- **Demo video** — Create a new demo video for the website, explaining what Vernix is, how it works, and how to use it. Something like a Loom
+- **Animated video** — Create a new animated video for the website, explaining what Vernix is, how it works, and how to use it. Using https://www.remotion.dev/
+- **Visual assets using Recraft** — Create a visual assets for marketing, showing features, use cases, and benefits using Recraft.
+- **Launch posts** - Linkedin, Hacker News, Reddit, Product Hunt, Twitter, Instagram, etc. Write 3 launch posts. Explain the story, the hackathon project, the problem we solved, the solution, the benefits, the technology stack, etc.
+
 ## Scoped Context, Tools and Data Access
 
 - **Context groups** — Solution to the problem of context leakage, too many tools, too many data sources, too much context. We don't want the Vernix assistant to leak private information on public calls for example.
@@ -49,7 +56,15 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Update public documentation** — Update the public documentation to reflect the new scoped context, tools and data access model, e.g. context groups.
 - **Website feature page for context groups** — Create a new feature page for context groups, explaining what they are, how to use them, and how to create them.
 - **Update website content** — Update the website content to reflect the new scoped context, tools and data access model, e.g. context groups. This affects the landing page, the FAQ, etc.
-- **New blog post for context groups** — Write a new blog post for context groups, explaining what they are, how to use them, and how to create them.
+- **New blog post about context groups** — Write a new blog post about context groups, generate thumbnail with nanobanana, explaining what they are, what problems they solve, how to use them, and how to create them.
+
+## Agent Skill for Vernix
+
+- **Agent skill for Vernix** — Create a agent skill for Vernix. The skill would allow agents like Claude or Open Claw to use Vernix to join calls, search meetings, search tasks, search knowledge base, and other tools.
+- **Make a page for the agent skill for Vernix** — Create a new page for the agent skill for Vernix, explaining what it is, how to use it.
+- **Update public documentation** — Update the public documentation to reflect the new agent skill for Vernix.
+- **Update website content** — Update the website content to reflect the new agent skill for Vernix. This affects the landing page, the FAQ, etc.
+- **New blog post about agent skill for Vernix** — Write a new blog post about agent skill for Vernix, generate thumbnail with nanobanana, explaining what it is, what problems it solves, how to use it.
 
 ## Inactive Account Cleanup
 
