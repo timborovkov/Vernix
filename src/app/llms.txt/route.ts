@@ -5,14 +5,21 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
 function buildContent(): string {
   const integrations = getIntegrations();
+  const available = integrations.filter((i) => i.status === "available");
+  const comingSoon = integrations.filter((i) => i.status === "coming-soon");
 
-  const integrationsByCategory = CATEGORIES.map((cat) => {
-    const items = integrations.filter((i) => i.category === cat.value);
+  const availableByCategory = CATEGORIES.map((cat) => {
+    const items = available.filter((i) => i.category === cat.value);
     if (items.length === 0) return "";
     return `### ${cat.label}\n${items.map((i) => `- ${i.name}: ${i.description}`).join("\n")}`;
   })
     .filter(Boolean)
     .join("\n\n");
+
+  const comingSoonList =
+    comingSoon.length > 0
+      ? `\n\n## Coming Soon\n\n${comingSoon.map((i) => `- ${i.name}: ${i.description}`).join("\n")}`
+      : "";
 
   return `# Vernix
 
@@ -54,7 +61,7 @@ Vernix is an AI meeting assistant that joins Zoom, Google Meet, Microsoft Teams,
 
 ## Available Integrations
 
-${integrationsByCategory}
+${availableByCategory}${comingSoonList}
 
 ## Links
 
