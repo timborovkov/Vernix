@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { withApiAuth } from "@/lib/api/middleware";
+import { RATE_LIMIT_EXPENSIVE } from "@/lib/api/constants";
 import { apiSuccess, apiError, handleServiceError } from "@/lib/api/response";
 import { searchMeetings } from "@/lib/services/search";
 
@@ -34,5 +35,5 @@ export const GET = withApiAuth(
       return handleServiceError(error);
     }
   },
-  { endpoint: "search", ratePerMinute: 10 }
+  { endpoint: "search", ratePerMinute: RATE_LIMIT_EXPENSIVE }
 );
