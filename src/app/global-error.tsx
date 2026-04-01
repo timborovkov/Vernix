@@ -3,8 +3,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { TriangleAlert } from "lucide-react";
 import { useEffect } from "react";
-
-const themeScript = `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||t!=="light"&&matchMedia("(prefers-color-scheme:dark)").matches)document.documentElement.classList.add("dark")}catch(e){}})()`;
+import { ThemeScript } from "@/components/theme-script";
 
 export default function GlobalError({
   error,
@@ -18,7 +17,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <ThemeScript />
       </head>
       <body className="flex min-h-dvh flex-col items-center justify-center bg-white px-4 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
         <div className="flex flex-col items-center text-center">
