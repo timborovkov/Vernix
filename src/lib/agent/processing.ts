@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { meetings, users } from "@/lib/db/schema";
-import { and, eq, count } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
 import { extractActionItems } from "@/lib/tasks/extract";
@@ -239,17 +239,17 @@ async function sendFirstMeetingEmail(
   if (!user || user.firstMeetingEmailSentAt) return;
   if (!shouldSendEmail(user.emailPreferences, "product")) return;
 
-  // Check this is actually the first completed meeting
-  const [{ total }] = await db
-    .select({ total: count() })
+  // Check this is actually the first completed meeting and get the title
+  const completedMeetings = await db
+    .select({ id: meetings.id, title: meetings.title })
     .from(meetings)
     .where(and(eq(meetings.userId, userId), eq(meetings.status, "completed")));
 
-  if (total !== 1) return;
+  if (completedMeetings.length !== 1) return;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
   const summaryUrl = `${appUrl}/dashboard/meetings/${meetingId}`;
-  const title = (metadata.title as string) ?? "Your meeting";
+  const title = completedMeetings[0].title ?? "Your meeting";
   const unsubscribeUrl = buildUnsubscribeUrl(userId, "product");
 
   await sendEmail({
