@@ -66,6 +66,18 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Update website content** — Update the website content to reflect the new agent skill for Vernix. This affects the landing page, the FAQ, etc.
 - **New blog post about agent skill for Vernix** — Write a new blog post about agent skill for Vernix, generate thumbnail with nanobanana, explaining what it is, what problems it solves, how to use it.
 
+## Hidden mode
+
+- **Hidden mode** — Create a hidden mode for Vernix. The hidden mode would allow the user to use Vernix without being visible to the other participants in the call. This is useful for private calls, or calls where the user wants to use Vernix without being visible to the other participants.
+- **Browser plugin** - One option would be to have a browser plugin for this.
+- **UI to show agentic responses while hidden** - A UI element / page to show what the agent is up to, show responses etc, but only to the user. No one else in the call should see this.
+- **No wake word** - Agent should silently respond without being directly triggered by a wake word.
+- **Update APIs, MCP server, docs** - Update the APIs, MCP server, and docs to support the hidden mode.
+- **New blog post about hidden mode** — Write a new blog post about hidden mode, generate thumbnail with nanobanana, explaining what it is, what problems it solves, how to use it.
+- **Website feature page for hidden mode** — Create a new feature page for hidden mode, explaining what it is, how to use it.
+- **Update website content** — Update the website content to reflect the new hidden mode. This affects the landing page, the FAQ, etc.
+- **New blog post about hidden mode** — Write a new blog post about hidden mode, generate thumbnail with nanobanana, explaining what it is, what problems it solves, how to use it.
+
 ## Inactive Account Cleanup
 
 - **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
