@@ -69,6 +69,17 @@ function getPreRegisteredClient(
   const clientSecret = process.env[config.clientSecretEnv];
   if (!clientId) return undefined;
 
+  // Validate client_secret is present when the token endpoint auth method requires it
+  if (
+    config.tokenEndpointAuthMethod &&
+    config.tokenEndpointAuthMethod !== "none" &&
+    !clientSecret
+  ) {
+    throw new Error(
+      `Missing ${config.clientSecretEnv} — required for ${config.tokenEndpointAuthMethod} auth on ${serverUrl}`
+    );
+  }
+
   return {
     client_id: clientId,
     ...(clientSecret ? { client_secret: clientSecret } : {}),
