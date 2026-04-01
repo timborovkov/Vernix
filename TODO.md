@@ -48,6 +48,8 @@
 - Recording retention policy: 90-day default enforced via cron (`RECORDING_RETENTION_DAYS`), documented storage cost
 - Deletion consistency: meeting DELETE handler cleans up S3 recordings, Recall bots, Qdrant collections, and scoped documents
 - Legal disclosures: Terms of Use and Privacy Policy updated with recording retention, storage, and deletion behavior
+- Recording privacy controls UI: "Disable recording" checkbox in meeting creation dialog, threaded through hook/API
+- Cron jobs: token purge, document processing watchdog, usage integrity audit, billing meter retry/backfill (`polarSyncedAt` tracking), Qdrant collection cleanup, orphaned S3 storage cleanup, orphan DB record sweeper, inactive account detection (informational)
 - Integrations platform foundation: Zod-validated catalog (`src/lib/integrations/catalog.ts`), 30 seeded integrations, custom MCP auth types (none/bearer/header/basic/OAuth), OAuth flow (MCP SDK authProvider + state JWT + PKCE + token storage), and pre-registered GitHub OAuth
 - Integrations UX revamp: `/dashboard/integrations` searchable catalog + category filters + connected server cards, Integration Cloud on landing/feature pages, MCP management moved from Settings, and Pro/Trial paywall gating
 - Reliability hardening: Recall webhook signature verification (Svix) and meeting-usage billing idempotency guard
@@ -63,21 +65,10 @@
 
 - **Register OAuth apps for more services** — Currently only GitHub has a pre-registered OAuth app. To enable more OAuth integrations (Slack, Linear, Notion, etc.): register Vernix on each service's developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, change catalog status to `available`.
 
-## Recording Retention & Deletion
-
-- **Ship recording privacy controls UI** — Backend `noRecording` flag works via API, but there's no UI toggle in the meeting creation form for users to disable recording.
-
 ## Cron Jobs & Background Reconciliation
 
-- **Cron: billing meter retry/backfill** — Add scheduled retry/backfill for failed Polar metered usage ingests to prevent under/over-billing drift.
-- **Cron: usage integrity audit** — Detect completed calls missing `usage_events` (or duplicate usage rows) and repair/report discrepancies.
-- **Cron: inactive account cleanup policy** — Define inactivity windows + warning flow, then archive/deactivate/delete truly inactive accounts on schedule.
-- **Cron: purge expired password reset tokens** — Delete expired rows from `password_reset_tokens` on a schedule instead of only cleaning during reset creation.
-- **Cron: document processing watchdog** — Detect documents stuck in `processing` for too long; mark `failed` or retry parsing/embedding pipeline safely.
-- **Cron: orphan DB record sweeper** — Periodically remove/repair records that lost parents (or should have cascaded) and reconcile mismatches between DB state and external artifacts.
-- **Cron: orphaned storage cleanup** — Remove orphaned knowledge files in S3/Minio that no longer have a matching DB document row.
-- **Cron: orphaned Qdrant collection cleanup** — Delete dangling `meeting_*` or stale per-user knowledge collections that no longer map to active DB records/retention policy.
-- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs.
+- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
+- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
 
 ## Pricing Constants Sweep
 
