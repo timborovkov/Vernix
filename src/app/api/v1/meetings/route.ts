@@ -8,7 +8,11 @@ import {
   handleServiceError,
 } from "@/lib/api/response";
 import { paginationSchema } from "@/lib/api/pagination";
-import { listMeetings, createMeeting, getMeeting } from "@/lib/services/meetings";
+import {
+  listMeetings,
+  createMeeting,
+  getMeeting,
+} from "@/lib/services/meetings";
 import { joinMeeting } from "@/lib/services/agent";
 
 const createMeetingSchema = z.object({
