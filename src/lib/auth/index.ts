@@ -67,6 +67,7 @@ providers.push(
         name: user.name,
         image: user.image,
         termsAcceptedAt: user.termsAcceptedAt,
+        emailVerifiedAt: user.emailVerifiedAt,
       };
     },
   })
@@ -118,10 +119,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
       if (existingAccount) {
-        // Returning SSO user — load termsAcceptedAt from DB
+        // Returning SSO user — load termsAcceptedAt + emailVerifiedAt from DB
         const [dbUser] = await db
           .select({
             termsAcceptedAt: users.termsAcceptedAt,
+            emailVerifiedAt: users.emailVerifiedAt,
             image: users.image,
           })
           .from(users)
@@ -129,6 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         user.id = existingAccount.userId;
         user.image = dbUser?.image ?? user.image;
         user.termsAcceptedAt = dbUser?.termsAcceptedAt ?? null;
+        user.emailVerifiedAt = dbUser?.emailVerifiedAt ?? null;
 
         // Track last activity for inactive account detection (fire-and-forget)
         Promise.resolve(
@@ -177,6 +180,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         user.image = existingUser.image ?? oauthImage;
         user.termsAcceptedAt = existingUser.termsAcceptedAt ?? null;
+        user.emailVerifiedAt = existingUser.emailVerifiedAt ?? null;
 
         // Track last activity for inactive account detection (fire-and-forget)
         Promise.resolve(
@@ -225,15 +229,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             >[0])
           : token) ?? token;
 
-      // On session update, re-read termsAcceptedAt from DB
+      // On session update, re-read termsAcceptedAt + emailVerifiedAt from DB
       if (trigger === "update" && base.id) {
         const [dbUser] = await db
-          .select({ termsAcceptedAt: users.termsAcceptedAt })
+          .select({
+            termsAcceptedAt: users.termsAcceptedAt,
+            emailVerifiedAt: users.emailVerifiedAt,
+          })
           .from(users)
           .where(eq(users.id, base.id as string));
         if (dbUser) {
           base.termsAcceptedAt = dbUser.termsAcceptedAt
             ? dbUser.termsAcceptedAt.toISOString()
+            : null;
+          base.emailVerifiedAt = dbUser.emailVerifiedAt
+            ? dbUser.emailVerifiedAt.toISOString()
             : null;
         }
       }
