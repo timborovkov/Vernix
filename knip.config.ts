@@ -8,6 +8,10 @@ const config: KnipConfig = {
     "src/**/*.test.{ts,tsx}",
   ],
   project: ["src/**/*.{ts,tsx}"],
+  ignore: [
+    // shadcn/ui components export subcomponents for future use — don't flag as dead code
+    "src/components/ui/**",
+  ],
   ignoreDependencies: [
     // postcss is required by Tailwind CSS v4 but loaded implicitly
     "postcss",
