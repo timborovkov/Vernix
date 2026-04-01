@@ -26,7 +26,7 @@ interface Source {
 
 /** Extract human-readable name from a tool name. */
 function toolDisplayName(toolName: string): string {
-  if (toolName === "searchMeetingContext") return "Search meeting context";
+  if (toolName === "searchMeetingContext") return "Search call context";
   // MCP format: mcp__{serverId}__{originalToolName}
   const parts = toolName.split("__");
   if (parts.length >= 3 && parts[0] === "mcp") {
@@ -138,7 +138,7 @@ function ActiveToolIndicator({ toolName }: { toolName: string }) {
       ) : (
         <Loader2 className="h-3 w-3 animate-spin" />
       )}
-      {isSearch ? "Searching meeting context..." : `Using ${display}...`}
+      {isSearch ? "Searching call context..." : `Using ${display}...`}
     </div>
   );
 }
