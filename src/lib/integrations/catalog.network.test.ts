@@ -17,6 +17,8 @@ async function probeEndpoint(url: string): Promise<{
   status: number;
   ok: boolean;
   contentType: string | null;
+  location: string | null;
+  wwwAuthenticate: string | null;
 }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -46,6 +48,8 @@ async function probeEndpoint(url: string): Promise<{
       status: res.status,
       ok: res.ok,
       contentType: res.headers.get("content-type"),
+      location: res.headers.get("location"),
+      wwwAuthenticate: res.headers.get("www-authenticate"),
     };
   } finally {
     clearTimeout(timeout);
@@ -77,6 +81,42 @@ describe("Catalog MCP Server Reachability", () => {
         expect(
           acceptableStatuses.includes(result.status),
           `${integration.name}: expected one of [${acceptableStatuses.join(", ")}] but got ${result.status}`
+        ).toBe(true);
+      },
+      TIMEOUT_MS + 5_000
+    );
+  }
+
+  const oauthIntegrations = withServers.filter((i) => i.authMode === "oauth");
+
+  for (const integration of oauthIntegrations) {
+    it(
+      `${integration.name} (${integration.serverUrl}) shows OAuth auth signal`,
+      async () => {
+        const result = await probeEndpoint(integration.serverUrl!);
+        const redirectStatuses = [301, 302, 303, 307, 308];
+        const challengeStatuses = [401, 403];
+        const authGatedStatuses = [...redirectStatuses, ...challengeStatuses];
+
+        const isAuthGated = authGatedStatuses.includes(result.status);
+
+        const hasValidRedirectSignal =
+          redirectStatuses.includes(result.status) &&
+          typeof result.location === "string" &&
+          result.location.length > 0;
+
+        const challenge = (result.wwwAuthenticate ?? "").toLowerCase();
+        const hasValidChallengeSignal =
+          challengeStatuses.includes(result.status) &&
+          // Some providers omit WWW-Authenticate entirely. If present, validate it.
+          (challenge.length === 0 ||
+            challenge.includes("bearer") ||
+            challenge.includes("oauth") ||
+            challenge.includes("authorization"));
+
+        expect(
+          isAuthGated && (hasValidRedirectSignal || hasValidChallengeSignal),
+          `${integration.name}: expected OAuth auth-gated response. got status=${result.status}, location=${result.location ?? "none"}, www-authenticate=${result.wwwAuthenticate ?? "none"}`
         ).toBe(true);
       },
       TIMEOUT_MS + 5_000
