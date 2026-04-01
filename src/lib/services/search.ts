@@ -5,6 +5,7 @@ import {
   AllSearchesFailedError,
 } from "@/lib/agent/rag";
 import { NotFoundError, BillingError, SearchError } from "@/lib/api/errors";
+export { SearchError };
 import { requireLimits } from "@/lib/billing/enforce";
 import { canMakeRagQuery } from "@/lib/billing/limits";
 import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
