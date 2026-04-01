@@ -14,11 +14,17 @@ export async function runOrphanSweeper() {
   // 1. Delete old orphaned usage events (meetingId set to null by cascade)
   // Bounded via subquery since PostgreSQL doesn't support LIMIT on DELETE
   try {
+    // Only delete meeting-type events that lost their meetingId via cascade.
+    // Non-meeting events (rag_query, api_request, doc_upload) legitimately have null meetingId.
     const toDelete = await db
       .select({ id: usageEvents.id })
       .from(usageEvents)
       .where(
-        and(isNull(usageEvents.meetingId), lt(usageEvents.createdAt, cutoff))
+        and(
+          isNull(usageEvents.meetingId),
+          lt(usageEvents.createdAt, cutoff),
+          sql`${usageEvents.type} IN ('voice_meeting', 'silent_meeting')`
+        )
       )
       .limit(100);
 
