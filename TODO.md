@@ -16,7 +16,7 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Trial expired / downgraded email** — On subscription.revoked webhook, email what they lost.
 - **Win-back email (30 days post-churn)** — Cron job: find users who churned 30 days ago. One final re-engagement.
 - **Email preference management** — Add unsubscribe links to all marketing/reminder emails.
-- **Email template design/brand QA pass** — Audit all existing email templates (welcome, upgrade reminders, retention, password reset, and new lifecycle emails) for visual consistency and quality: correct logo usage, colors, typography, spacing, CTA styling, dark-mode behavior where applicable, and cross-client rendering.
+- **Email template design/brand QA pass** — Audit all existing email templates (welcome, upgrade reminders, retention, password reset, and new lifecycle emails) for visual consistency and quality: correct logo usage, colors, typography, spacing, CTA styling, and cross-client rendering.
 - **Email communication docs** — Maintain `docs/emails.md` documenting every email we send.
 
 ## Google Analytics Sales Funnel
