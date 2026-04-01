@@ -22,16 +22,16 @@ import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 const PRO_FEATURES = [
   {
     icon: Plug,
-    label: "Connect tools like Slack, Linear, or CRM for live data in meetings",
+    label: "Connect tools like Slack, Linear, or CRM for live data in calls",
   },
   { icon: Mic, label: "Voice agent answers and takes action during calls" },
-  { icon: Search, label: "Search across all your meetings and documents" },
+  { icon: Search, label: "Search across all your calls and documents" },
   {
     icon: FileText,
     label: `${LIMITS[PLANS.PRO].documentsCount} knowledge base documents for context`,
   },
-  { icon: MessageSquare, label: "AI chat across all your meetings" },
-  { icon: Clock, label: "Unlimited meetings with monthly credit" },
+  { icon: MessageSquare, label: "AI chat across all your calls" },
+  { icon: Clock, label: "Unlimited calls with monthly credit" },
 ];
 
 export default function WelcomePage() {
@@ -156,7 +156,7 @@ export default function WelcomePage() {
             Continue with Free plan
           </Button>
           <p className="text-muted-foreground mt-1 text-xs">
-            {LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings/month,{" "}
+            {LIMITS[PLANS.FREE].meetingsPerMonth} silent calls/month,{" "}
             {LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes,{" "}
             {LIMITS[PLANS.FREE].ragQueriesPerDay} queries/day
           </p>
