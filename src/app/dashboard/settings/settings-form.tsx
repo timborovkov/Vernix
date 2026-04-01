@@ -377,6 +377,15 @@ export function SettingsForm({
                   onCreate={createKey}
                   onDelete={deleteKey}
                 />
+                <div className="border-border border-t pt-3">
+                  <Link
+                    href="/docs"
+                    target="_blank"
+                    className="text-muted-foreground hover:text-foreground text-sm underline transition-colors"
+                  >
+                    View API Documentation &rarr;
+                  </Link>
+                </div>
               </>
             )}
           </CardContent>
