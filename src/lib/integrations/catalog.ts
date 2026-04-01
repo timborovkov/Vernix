@@ -340,7 +340,7 @@ const CATALOG: Integration[] = [
     category: "productivity",
     tags: ["wiki", "docs", "databases"],
     featured: true,
-    status: "coming-soon",
+    status: "available",
     serverUrl: "https://mcp.notion.com/mcp",
     authMode: "oauth",
     docsUrl: "https://developers.notion.com/docs/mcp",
