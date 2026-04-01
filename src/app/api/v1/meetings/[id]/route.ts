@@ -1,10 +1,20 @@
+import { z } from "zod/v4";
 import { withApiAuth } from "@/lib/api/middleware";
-import { apiSuccess, handleServiceError } from "@/lib/api/response";
+import { apiSuccess, apiError, handleServiceError } from "@/lib/api/response";
 import {
   getMeeting,
   updateMeeting,
   deleteMeeting,
 } from "@/lib/services/meetings";
+
+const updateMeetingSchema = z.object({
+  title: z.string().min(1).optional(),
+  joinLink: z.url().optional(),
+  agenda: z.string().max(10000).optional(),
+  silent: z.boolean().optional(),
+  muted: z.boolean().optional(),
+  noRecording: z.boolean().optional(),
+});
 
 export const GET = withApiAuth(
   async (_request, user, { params }) => {
@@ -27,22 +37,21 @@ export const PATCH = withApiAuth(
     try {
       body = await request.json();
     } catch {
-      const { apiError } = await import("@/lib/api/response");
       return apiError("VALIDATION_ERROR", "Invalid JSON body", 400);
     }
 
-    const { title, joinLink, agenda, silent, muted, noRecording } =
-      body as Record<string, unknown>;
+    const parsed = updateMeetingSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiError(
+        "VALIDATION_ERROR",
+        "Validation failed",
+        400,
+        parsed.error.issues
+      );
+    }
 
     try {
-      const updated = await updateMeeting(user.id, id, {
-        title: typeof title === "string" ? title : undefined,
-        joinLink: typeof joinLink === "string" ? joinLink : undefined,
-        agenda: typeof agenda === "string" ? agenda : undefined,
-        silent: typeof silent === "boolean" ? silent : undefined,
-        muted: typeof muted === "boolean" ? muted : undefined,
-        noRecording: typeof noRecording === "boolean" ? noRecording : undefined,
-      });
+      const updated = await updateMeeting(user.id, id, parsed.data);
       return apiSuccess(updated);
     } catch (error) {
       return handleServiceError(error);
