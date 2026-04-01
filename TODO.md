@@ -2,7 +2,7 @@
 
 ## Integrations
 
-- **Register OAuth apps for more services (priority order)** — Currently only GitHub has a pre-registered OAuth app. Prioritize: (1) Notion, (2) Linear, (3) HubSpot CRM, (4) Salesforce, (5) Pipedrive. Next wave: Slack, Jira, Asana. For each: register Vernix in provider developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, and change catalog status to `available`.
+- **Register OAuth apps for more services (priority order)** — Pre-registered OAuth apps are now available for GitHub and Notion. Prioritize next: (1) Linear, (2) HubSpot CRM, (3) Salesforce, (4) Pipedrive, (5) Slack. Next wave: Jira, Asana. For each: register Vernix in provider developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, and change catalog status to `available`.
 
 ## Cron Jobs & Background Reconciliation
 
