@@ -1,3 +1,11 @@
+import {
+  DISPLAY,
+  LIMITS,
+  PLANS,
+  MONTHLY_CREDIT,
+  PRICING,
+} from "@/lib/billing/constants";
+
 function getAppUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 }
@@ -26,7 +34,7 @@ export function getWelcomeEmailHtml(name: string): string {
           <li>Search across all your meetings and uploaded documents</li>
           <li>AI chat across all your meetings</li>
         </ul>
-        <p style="font-size:12px;color:#888;margin:8px 0 0">14 days free, then &euro;29/mo. Cancel anytime.</p>
+        <p style="font-size:12px;color:#888;margin:8px 0 0">${DISPLAY.trialDays} days free, then &euro;${PRICING[PLANS.PRO].monthly}/mo. Cancel anytime.</p>
       </div>
       <p style="font-size:14px;font-weight:600;color:#333;margin:0 0 12px">Get started in 3 steps:</p>
       <ol style="font-size:14px;color:#555;line-height:1.8;padding-left:20px;margin:0 0 24px">
@@ -40,7 +48,7 @@ export function getWelcomeEmailHtml(name: string): string {
         </a>
       </div>
       <p style="font-size:12px;color:#999;line-height:1.6;margin:0;text-align:center">
-        Free plan includes 5 silent meetings per month.
+        Free plan includes ${LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings per month.
         Start a Pro trial to connect your tools and unlock the voice agent.
       </p>
       <p style="font-size:12px;color:#999;margin:8px 0 0;text-align:center">
@@ -73,7 +81,7 @@ export function getFreePlanUpgradeReminderHtml(name: string): string {
           <li>Integrations with tools like Slack, Linear, and GitHub</li>
           <li>Voice agent responses inside live calls</li>
           <li>Higher usage limits for docs and AI queries</li>
-          <li>&euro;30 monthly meeting credit included</li>
+          <li>&euro;${MONTHLY_CREDIT[PLANS.PRO]} monthly meeting credit included</li>
         </ul>
       </div>
       <div style="text-align:center;margin:32px 0">
