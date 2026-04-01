@@ -20,7 +20,7 @@ import {
   Clock,
   Zap,
 } from "lucide-react";
-import { PRICING, PLANS, LIMITS } from "@/lib/billing/constants";
+import { PRICING, PLANS, LIMITS, DISPLAY } from "@/lib/billing/constants";
 import { useBilling } from "@/hooks/use-billing";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
@@ -57,16 +57,14 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
     title: "Unlock the voice agent",
     description:
       "Connect your tools and get an assistant that answers questions with real business data during calls. Ask it to look things up, take action, or pull reports, live.",
-    proValue:
-      "Tool integrations, voice agent, unlimited meetings with €30 monthly credit",
+    proValue: `Tool integrations, voice agent, unlimited meetings with ${DISPLAY.monthlyCredit} monthly credit`,
     limitType: "feature",
   },
   meeting_minutes: {
     icon: Clock,
     title: "Monthly minutes used up",
-    description:
-      "You've used all your meeting minutes for this period. Upgrade to Pro for unlimited minutes with €30 of usage credit included every month.",
-    proValue: `€30 credit covers ~10 hrs voice or ~20 hrs silent per month`,
+    description: `You've used all your meeting minutes for this period. Upgrade to Pro for unlimited minutes with ${DISPLAY.monthlyCredit} of usage credit included every month.`,
+    proValue: `${DISPLAY.monthlyCredit} credit covers ~${DISPLAY.voiceHoursPerCredit} hrs voice or ~${DISPLAY.silentHoursPerCredit} hrs silent per month`,
     limitType: "quota",
   },
   meeting_count: {
@@ -300,7 +298,7 @@ export function UpgradeDialog({
           </div>
         )}
         <p className="text-muted-foreground text-center text-xs">
-          14-day free trial. Cancel anytime.
+          {DISPLAY.trialDays}-day free trial. Cancel anytime.
         </p>
         <DialogFooter>
           <Button
