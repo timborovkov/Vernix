@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { getAllPosts } from "@/lib/blog";
+import { getIntegrations } from "@/lib/integrations/catalog";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
@@ -13,6 +14,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "monthly" as const,
     priority: 0.7,
   }));
+
+  const integrationEntries: MetadataRoute.Sitemap = getIntegrations().map(
+    (i) => ({
+      url: `${BASE_URL}/integration/${i.id}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })
+  );
 
   const latestPostDate =
     posts.length > 0
@@ -57,6 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     ...blogEntries,
+    ...integrationEntries,
     {
       url: `${BASE_URL}/faq`,
       lastModified: new Date(),
@@ -83,6 +94,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${BASE_URL}/terms`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${BASE_URL}/cookie-policy`,
       lastModified: new Date(),
       changeFrequency: "yearly",
       priority: 0.3,

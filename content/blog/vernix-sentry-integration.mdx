@@ -1,0 +1,45 @@
+---
+title: "Vernix + Sentry: Error Context in the Incident Call, Not After"
+description: "Connect Sentry to Vernix and get error rates, stack traces, and release health during incident calls. Stop tab-switching when production is down."
+date: "2026-04-04"
+author: "Tim Borovkov"
+tags: ["integrations", "engineering", "sentry"]
+image: "/blog/vernix-sentry-integration.jpg"
+---
+
+Incident calls follow a pattern. Someone says "errors are spiking." Someone else opens Sentry, reads the stack trace, and relays what they see. The rest of the team listens to a secondhand summary of data that's right there in a dashboard — just not in the meeting.
+
+Vernix connected to Sentry brings the error data directly into the call.
+
+## What the Sentry integration does
+
+With Sentry connected, the agent can query your error tracking during meetings:
+
+- "What errors are spiking in production?"
+- "How many users are affected by the checkout crash?"
+- "What's the release health for the latest deploy?"
+- "Show me the most frequent error in the last hour"
+
+The agent pulls from Sentry and responds in real time, so the entire team has the same context.
+
+## Where this matters most
+
+### Incident response
+
+When production is down, the last thing you need is one person narrating a dashboard while everyone else waits. Anyone on the call can ask the agent for error counts, affected users, or stack trace details. Decisions happen faster when the whole team sees the same data.
+
+### Post-incident reviews
+
+Retros work better when the data is in front of everyone. Instead of preparing screenshots or sharing a dashboard, ask the agent to pull up the error timeline from the incident. "How many errors did we see between 2pm and 3pm on Tuesday?" gets answered immediately.
+
+### Release monitoring
+
+After a deploy, the team often hops on a quick call to watch for issues. The agent can report release health metrics — error rates, crash-free sessions, new issues — without anyone needing to keep a dashboard tab open.
+
+## How to connect
+
+Go to **Settings > Integrations** in your Vernix dashboard, find Sentry, and click **Connect**. OAuth authorization takes seconds. No API tokens to configure.
+
+## Incident context that doesn't disappear after the call
+
+The agent's Sentry responses become part of your meeting transcript. Error counts, affected user percentages, stack trace details — all captured alongside the decisions they informed. When someone asks "why did we roll back?" weeks later, the transcript has both the discussion and the data.

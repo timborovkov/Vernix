@@ -1,0 +1,45 @@
+---
+title: "Vernix + GitLab: Pipelines and Merge Requests During the Call"
+description: "Connect GitLab to Vernix and check merge requests, pipeline status, and issues during your meetings. No more switching to the GitLab UI mid-call."
+date: "2026-04-05"
+author: "Tim Borovkov"
+tags: ["integrations", "engineering", "gitlab"]
+image: "/blog/vernix-gitlab-integration.jpg"
+---
+
+If your team runs on GitLab, you know the drill. Someone mentions a merge request during standup. Someone else asks if the pipeline passed. Now two people have GitLab open while the rest of the team waits — and whether that takes five seconds or two minutes depends entirely on page load speed.
+
+Connect GitLab to Vernix, and those lookups happen inside the meeting.
+
+## What the GitLab integration does
+
+With GitLab connected, the agent can check your projects during calls:
+
+- "Are there any failed pipelines on main?"
+- "What merge requests are waiting for review?"
+- "Who approved the auth refactor MR?"
+- "What issues are assigned to me this milestone?"
+
+The agent queries GitLab and responds in real time — by voice or in the meeting chat.
+
+## Where this saves the most time
+
+### Daily standups
+
+Standups are supposed to be quick. They slow down the moment someone needs to check a pipeline or MR status. The agent handles those lookups inline, so the standup stays on pace.
+
+### Merge request reviews
+
+When discussing a merge request on a call, the team often needs details — who reviewed it, are the pipelines green, any open threads? The agent pulls this context so the conversation can move straight to the decision: merge, request changes, or defer.
+
+### Milestone planning
+
+Planning the next milestone? Ask the agent how many open issues remain, what's been merged since the last release, or which MRs are blocked. The data arrives in the meeting, not in a separate browser tab.
+
+## How to connect
+
+In your Vernix dashboard, go to **Settings > Integrations** and find GitLab. Click **Connect** to authorize with your GitLab account via OAuth. One click, no tokens to manage.
+
+## Code context in the conversation
+
+When the agent answers a GitLab question, that response is captured in the meeting transcript. Pipeline failures, MR approvals, issue assignments — all recorded alongside the discussion. Your meeting memory includes not just what was said, but the state of your codebase at that moment.

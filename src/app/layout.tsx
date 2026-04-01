@@ -21,6 +21,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const disableIndexing = process.env.NEXT_PUBLIC_DISABLE_INDEXING === "true";
+
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
@@ -28,6 +30,7 @@ export const metadata: Metadata = {
   title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
   description:
     "An AI agent that joins Zoom, Meet, Teams, and Webex. Connects to Slack, Linear, GitHub. Answers questions with live data during calls. Free to start.",
+  ...(disableIndexing && { robots: { index: false, follow: false } }),
   icons: {
     icon: [
       {
@@ -73,6 +76,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        <meta
+          name="theme-color"
+          content="#ffffff"
+          media="(prefers-color-scheme: light)"
+        />
+        <meta
+          name="theme-color"
+          content="#242424"
+          media="(prefers-color-scheme: dark)"
+        />
         <ThemeScript />
       </head>
       <body className="flex min-h-full flex-col">

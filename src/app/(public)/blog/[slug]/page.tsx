@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
@@ -37,19 +37,58 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.frontmatter.date,
       authors: [post.frontmatter.author],
       ...(post.frontmatter.image && {
-        images: [{ url: post.frontmatter.image, width: 1200, height: 630 }],
+        images: [{ url: post.frontmatter.image }],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.frontmatter.title,
+      description: post.frontmatter.description,
+      ...(post.frontmatter.image && {
+        images: [post.frontmatter.image],
       }),
     },
   };
 }
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
   if (!post) notFound();
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.frontmatter.title,
+    description: post.frontmatter.description,
+    datePublished: post.frontmatter.date,
+    author: {
+      "@type": "Person",
+      name: post.frontmatter.author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Vernix",
+      logo: { "@type": "ImageObject", url: `${BASE_URL}/brand/icon/icon.svg` },
+    },
+    url: `${BASE_URL}/blog/${slug}`,
+    wordCount: post.readingTime * 200,
+    ...(post.frontmatter.image && {
+      image: `${BASE_URL}${post.frontmatter.image}`,
+    }),
+    ...(post.frontmatter.tags.length > 0 && {
+      keywords: post.frontmatter.tags.join(", "),
+    }),
+  };
+
   return (
     <article className="mx-auto max-w-3xl px-4 py-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href="/blog"
         className="text-muted-foreground hover:text-foreground mb-8 inline-flex items-center gap-1.5 text-sm transition-colors"
@@ -83,13 +122,13 @@ export default async function BlogPostPage({ params }: Props) {
       </header>
 
       {post.frontmatter.image && (
-        <div className="mb-12 overflow-hidden rounded-lg">
+        <div className="bg-muted relative mb-12 aspect-2/1 w-full overflow-hidden rounded-lg">
           <Image
             src={post.frontmatter.image}
-            alt=""
-            width={1200}
-            height={630}
-            className="w-full object-cover"
+            alt={post.frontmatter.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 768px"
             priority
           />
         </div>

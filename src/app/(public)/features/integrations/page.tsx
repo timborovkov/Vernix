@@ -1,19 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
-import {
-  Plug,
-  ArrowRight,
-  Mic,
-  Search,
-  FileText,
-  MessageSquare,
-} from "lucide-react";
+import { Plug, ArrowRight } from "lucide-react";
 import { DISPLAY } from "@/lib/billing/constants";
+import { getIntegrations, CATEGORIES } from "@/lib/integrations/catalog";
 
 export const metadata: Metadata = {
   title: "Connect Your Tools to Video Calls | Vernix Integrations",
@@ -169,29 +165,62 @@ export default function IntegrationsPage() {
         </div>
       </ScrollReveal>
 
-      {/* Plus section */}
+      {/* Full integration catalog */}
       <ScrollReveal>
         <div className="mb-24 lg:mb-28">
-          <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
-            Plus, everything else
+          <h2 className="mb-4 text-center text-2xl font-bold sm:text-3xl">
+            Browse all integrations
           </h2>
-          <div className="text-muted-foreground mx-auto grid max-w-2xl gap-4 text-sm sm:grid-cols-2">
-            <div className="flex items-center gap-2">
-              <Mic className="h-4 w-4 shrink-0" />
-              Voice agent answers live
-            </div>
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 shrink-0" />
-              Automatic summaries and tasks
-            </div>
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 shrink-0" />
-              Cross-call search
-            </div>
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 shrink-0" />
-              AI chat across all calls
-            </div>
+          <p className="text-muted-foreground mx-auto mb-12 max-w-xl text-center text-sm leading-relaxed">
+            Connect any of these tools and query them live during your calls.
+          </p>
+          <div className="space-y-12">
+            {CATEGORIES.map((category) => {
+              const items = getIntegrations().filter(
+                (i) => i.category === category.value
+              );
+              if (items.length === 0) return null;
+              return (
+                <div key={category.value}>
+                  <h3 className="text-muted-foreground mb-4 text-sm font-semibold tracking-wide uppercase">
+                    {category.label}
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {items.map((integration) => (
+                      <Link
+                        key={integration.id}
+                        href={`/integration/${integration.id}`}
+                        className="border-border hover:border-ring/40 hover:bg-muted/50 flex items-center gap-4 rounded-lg border p-4 transition-colors"
+                      >
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+                          <Image
+                            src={integration.logo}
+                            alt={integration.name}
+                            width={20}
+                            height={20}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {integration.name}
+                            </span>
+                            {integration.status === "coming-soon" && (
+                              <Badge variant="secondary" className="text-xs">
+                                Coming soon
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {integration.description}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </ScrollReveal>

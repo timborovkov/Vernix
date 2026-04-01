@@ -11,13 +11,13 @@ export function BlogCard({ post }: { post: BlogPost }) {
       className="border-border hover:border-ring/40 group block overflow-hidden rounded-lg border transition-colors"
     >
       {post.frontmatter.image && (
-        <div className="aspect-[16/9] overflow-hidden">
+        <div className="bg-muted relative aspect-2/1 w-full">
           <Image
             src={post.frontmatter.image}
-            alt=""
-            width={600}
-            height={340}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            alt={post.frontmatter.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 50vw"
           />
         </div>
       )}
