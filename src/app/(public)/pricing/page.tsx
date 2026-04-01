@@ -11,7 +11,7 @@ import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 
 const FREE_FEATURES = [
-  `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent meetings per month`,
+  `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent calls per month`,
   "Live transcription",
   "AI summaries and action items",
   `RAG chat (${LIMITS[PLANS.FREE].ragQueriesPerDay} queries/day)`,
@@ -26,15 +26,15 @@ const PRO_FEATURES = [
   `${LIMITS[PLANS.PRO].documentsCount} knowledge base documents`,
   `API access (${LIMITS[PLANS.PRO].apiRequestsPerDay.toLocaleString("en")} requests/day)`,
   "MCP server and client connections",
-  "Cross-meeting search",
-  "Meeting export (PDF and Markdown)",
-  `Up to ${LIMITS[PLANS.PRO].concurrentMeetings} concurrent meetings`,
+  "Cross-call search",
+  "Call export (PDF and Markdown)",
+  `Up to ${LIMITS[PLANS.PRO].concurrentMeetings} concurrent calls`,
 ];
 
 const USAGE_RATE_ROWS = [
-  { type: "Voice meeting", price: DISPLAY.voiceRate },
-  { type: "Silent meeting", price: DISPLAY.silentRate },
-  { type: "Post-meeting chat", price: "Free" },
+  { type: "Voice call", price: DISPLAY.voiceRate },
+  { type: "Silent call", price: DISPLAY.silentRate },
+  { type: "Post-call chat", price: "Free" },
 ];
 
 export default function PricingPage() {
@@ -55,7 +55,7 @@ export default function PricingPage() {
         One plan. Pay for what you use.
       </h1>
       <p className="text-muted-foreground mx-auto mb-8 max-w-lg text-center">
-        Start free with silent meetings. Pro includes {DISPLAY.monthlyCredit} of
+        Start free with silent calls. Pro includes {DISPLAY.monthlyCredit} of
         usage credit — most users never go over.
       </p>
 
@@ -105,7 +105,7 @@ export default function PricingPage() {
               </span>
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              Silent meeting agent. No credit card needed.
+              Silent call agent. No credit card needed.
             </p>
           </CardHeader>
           <CardContent>
@@ -183,7 +183,7 @@ export default function PricingPage() {
           Usage-based. Predictable.
         </h2>
         <p className="text-muted-foreground mx-auto mb-6 max-w-md text-center text-sm">
-          Credits cover your meetings. Most users stay within the{" "}
+          Credits cover your calls. Most users stay within the{" "}
           {DISPLAY.monthlyCredit} credit and pay a flat{" "}
           {annual ? DISPLAY.proAnnual : DISPLAY.proMonthly}/mo. If you go over,
           you only pay for what you use.
