@@ -5,7 +5,16 @@ import { fakeMeeting, fakeDocument } from "@/test/helpers";
 // Mocks
 // ---------------------------------------------------------------------------
 
-const { mockDb } = vi.hoisted(() => {
+const {
+  mockDb,
+  mockEnsureBucket,
+  mockUploadFile,
+  mockDeleteFile,
+  mockGetDownloadUrl,
+  mockProcessDocument,
+  mockDeleteDocumentChunks,
+  mockKnowledgeCollectionName,
+} = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -24,32 +33,30 @@ const { mockDb } = vi.hoisted(() => {
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return { mockDb: db };
+  return {
+    mockDb: db,
+    mockEnsureBucket: vi.fn().mockResolvedValue(undefined),
+    mockUploadFile: vi.fn().mockResolvedValue(undefined),
+    mockDeleteFile: vi.fn().mockResolvedValue(undefined),
+    mockGetDownloadUrl: vi
+      .fn()
+      .mockResolvedValue("https://s3.example.com/file"),
+    mockProcessDocument: vi.fn().mockResolvedValue(undefined),
+    mockDeleteDocumentChunks: vi.fn().mockResolvedValue(undefined),
+    mockKnowledgeCollectionName: vi.fn().mockReturnValue("knowledge_user123"),
+  };
 });
-vi.mock("@/lib/db", () => ({ db: mockDb }));
 
-const mockEnsureBucket = vi.fn().mockResolvedValue(undefined);
-const mockUploadFile = vi.fn().mockResolvedValue(undefined);
-const mockDeleteFile = vi.fn().mockResolvedValue(undefined);
-const mockGetDownloadUrl = vi
-  .fn()
-  .mockResolvedValue("https://s3.example.com/file");
+vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/storage/operations", () => ({
   ensureBucket: mockEnsureBucket,
   uploadFile: mockUploadFile,
   deleteFile: mockDeleteFile,
   getDownloadUrl: mockGetDownloadUrl,
 }));
-
-const mockProcessDocument = vi.fn().mockResolvedValue(undefined);
 vi.mock("@/lib/knowledge/process", () => ({
   processDocument: mockProcessDocument,
 }));
-
-const mockDeleteDocumentChunks = vi.fn().mockResolvedValue(undefined);
-const mockKnowledgeCollectionName = vi
-  .fn()
-  .mockReturnValue("knowledge_user123");
 vi.mock("@/lib/vector/knowledge", () => ({
   deleteDocumentChunks: mockDeleteDocumentChunks,
   knowledgeCollectionName: mockKnowledgeCollectionName,
@@ -65,11 +72,7 @@ const USER_ID = "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22";
 
 import { uploadDocument, deleteDocument, getDocument } from "./knowledge";
 
-function createMockFile(
-  name: string,
-  size: number,
-  type: string
-): File {
+function createMockFile(name: string, size: number, type: string): File {
   const buffer = new ArrayBuffer(size);
   return new File([buffer], name, { type });
 }
@@ -108,7 +111,7 @@ describe("uploadDocument", () => {
 
   it("throws NotFoundError for meeting-scoped upload when meeting not found", async () => {
     const file = createMockFile("test.pdf", 100, "application/pdf");
-    // First where: meeting ownership check returns empty
+    // Meeting ownership check returns empty
     mockDb.where.mockResolvedValueOnce([]);
 
     await expect(
@@ -152,30 +155,16 @@ describe("uploadDocument", () => {
     );
   });
 
-  it("calls processDocument with correct args", async () => {
-    const file = createMockFile("doc.pdf", 1024, "application/pdf");
-    const doc = fakeDocument();
-    mockDb.returning.mockResolvedValueOnce([doc]); // insert
-    mockDb.where.mockResolvedValueOnce([doc]); // re-fetch
-
-    await uploadDocument(USER_ID, file, "meeting-123");
-
-    // The where call for meeting ownership check
-    // must succeed first — mock it
-    // Actually we need to mock the meeting check BEFORE the upload logic
-    // Re-do: meeting check happens before S3 upload
-  });
-
   it("verifies meeting ownership for scoped uploads", async () => {
     const file = createMockFile("doc.pdf", 1024, "application/pdf");
     const meeting = fakeMeeting();
     const doc = fakeDocument({ meetingId: meeting.id });
 
-    // First where: meeting ownership check
+    // Meeting ownership check
     mockDb.where.mockResolvedValueOnce([{ id: meeting.id }]);
     // insert().returning()
     mockDb.returning.mockResolvedValueOnce([doc]);
-    // re-fetch where
+    // re-fetch
     mockDb.where.mockResolvedValueOnce([doc]);
 
     await uploadDocument(USER_ID, file, meeting.id);
@@ -188,11 +177,7 @@ describe("uploadDocument", () => {
   });
 
   it("sanitizes filename with path traversal attempts", async () => {
-    const file = createMockFile(
-      "../../../etc/passwd",
-      100,
-      "text/plain"
-    );
+    const file = createMockFile("../../../etc/passwd", 100, "text/plain");
     const doc = fakeDocument();
     mockDb.returning.mockResolvedValueOnce([doc]);
     mockDb.where.mockResolvedValueOnce([doc]);
@@ -217,7 +202,6 @@ describe("uploadDocument", () => {
 
     const result = await uploadDocument(USER_ID, file);
 
-    // Should return the re-fetched doc (with failed status)
     expect(result.status).toBe("failed");
   });
 });
@@ -295,7 +279,9 @@ describe("deleteDocument", () => {
 
     await deleteDocument(USER_ID, doc.id);
 
-    expect(mockDeleteFile).toHaveBeenCalledWith("knowledge/user/doc/file.pdf");
+    expect(mockDeleteFile).toHaveBeenCalledWith(
+      "knowledge/user/doc/file.pdf"
+    );
   });
 
   it("deletes DB record", async () => {
@@ -318,10 +304,8 @@ describe("deleteDocument", () => {
       new Error("Qdrant connection failed")
     );
 
-    // Should not throw — Qdrant errors are caught
     await deleteDocument(USER_ID, doc.id);
 
-    // S3 and DB cleanup should still happen
     expect(mockDeleteFile).toHaveBeenCalledWith(doc.s3Key);
     expect(mockDb.delete).toHaveBeenCalled();
   });
@@ -333,10 +317,8 @@ describe("deleteDocument", () => {
       .mockResolvedValue(undefined); // subsequent
     mockDeleteFile.mockRejectedValueOnce(new Error("S3 error"));
 
-    // Should not throw
     await deleteDocument(USER_ID, doc.id);
 
-    // DB cleanup should still happen
     expect(mockDb.delete).toHaveBeenCalled();
   });
 });
