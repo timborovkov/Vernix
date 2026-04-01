@@ -6,6 +6,7 @@ import {
   getFeaturedIntegrations,
   getIntegrations,
 } from "@/lib/integrations/catalog";
+import { DISPLAY } from "@/lib/billing/constants";
 
 interface IntegrationCloudProps {
   showCta?: boolean;
@@ -16,7 +17,7 @@ interface IntegrationCloudProps {
 export function IntegrationCloud({
   showCta = true,
   ctaHref = "/register",
-  ctaText = "Try free for 14 days",
+  ctaText = `Try free for ${DISPLAY.trialDays} days`,
 }: IntegrationCloudProps) {
   // Collect example prompts from all integrations
   const prompts = getIntegrations()
