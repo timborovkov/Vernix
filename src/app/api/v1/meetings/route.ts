@@ -38,10 +38,19 @@ export const GET = withApiAuth(
     }
 
     const rawStatus = searchParams.get("status") ?? undefined;
-    const validStatuses = ["pending", "joining", "active", "processing", "completed", "failed"] as const;
-    const status = rawStatus && validStatuses.includes(rawStatus as typeof validStatuses[number])
-      ? rawStatus
-      : undefined;
+    const validStatuses = [
+      "pending",
+      "joining",
+      "active",
+      "processing",
+      "completed",
+      "failed",
+    ] as const;
+    const status =
+      rawStatus &&
+      validStatuses.includes(rawStatus as (typeof validStatuses)[number])
+        ? rawStatus
+        : undefined;
 
     try {
       const result = await listMeetings(user.id, {

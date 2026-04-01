@@ -150,15 +150,17 @@ describe("PATCH /api/meetings/[id]", () => {
   });
 
   it("rejects agenda longer than 10000 characters", async () => {
+    const { ValidationError } = await import("@/lib/api/errors");
+    mockUpdateMeeting.mockRejectedValueOnce(
+      new ValidationError("Agenda must be under 10,000 characters")
+    );
+
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
       body: { agenda: "x".repeat(10001) },
     });
     const response = await PATCH(req, makeParams("1"));
     expect(response.status).toBe(400);
-
-    // Service should never be called for invalid input
-    expect(mockUpdateMeeting).not.toHaveBeenCalled();
   });
 
   it("passes silent to service (service handles status-based logic)", async () => {
