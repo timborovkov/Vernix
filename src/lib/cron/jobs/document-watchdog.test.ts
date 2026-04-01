@@ -39,6 +39,10 @@ describe("runDocumentWatchdog", () => {
 
   it("marks stuck documents as failed with timeout error", async () => {
     mockDb.limit.mockResolvedValueOnce([{ id: "doc-1" }, { id: "doc-2" }]);
+    // returning() must resolve to an array for destructuring
+    mockDb.returning
+      .mockResolvedValueOnce([{ id: "doc-1" }])
+      .mockResolvedValueOnce([{ id: "doc-2" }]);
 
     const result = await runDocumentWatchdog();
 
@@ -55,25 +59,13 @@ describe("runDocumentWatchdog", () => {
 
   it("continues processing when one update fails", async () => {
     mockDb.limit.mockResolvedValueOnce([{ id: "doc-1" }, { id: "doc-2" }]);
-    // The update chain calls: db.update().set().where()
-    // The SELECT's .where() returns chainable db by default
-    // For update calls, .where() is the terminal call
-    // Make the first update's terminal .where() reject by tracking call count
-    let whereCallCount = 0;
-    mockDb.where.mockImplementation(() => {
-      whereCallCount++;
-      // Call 1: SELECT .where() → chain to .limit() (return db)
-      // Call 2: UPDATE .where() for doc-1 → reject
-      // Call 3: UPDATE .where() for doc-2 → resolve
-      if (whereCallCount === 2) {
-        return Promise.reject(new Error("DB error"));
-      }
-      return mockDb;
-    });
+    // First returning() rejects (doc-1 fails), second succeeds (doc-2)
+    mockDb.returning
+      .mockRejectedValueOnce(new Error("DB error"))
+      .mockResolvedValueOnce([{ id: "doc-2" }]);
 
     const result = await runDocumentWatchdog();
 
     expect(result.marked).toBe(1);
-    mockDb.where.mockImplementation(() => mockDb); // restore
   });
 });
