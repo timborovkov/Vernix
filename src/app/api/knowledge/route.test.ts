@@ -28,9 +28,39 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/storage/operations", () => ({
   ensureBucket: mockEnsureBucket,
   uploadFile: mockUploadFile,
+  deleteFile: vi.fn().mockResolvedValue(undefined),
+  getDownloadUrl: vi.fn().mockResolvedValue("https://example.com/download"),
 }));
 vi.mock("@/lib/knowledge/process", () => ({
   processDocument: mockProcessDocument,
+}));
+vi.mock("@/lib/billing/enforce", () => ({
+  requireLimits: vi.fn().mockResolvedValue({
+    limits: {
+      documentsCount: 100,
+      maxDocumentSizeMB: 50,
+      docUploadsPerMonth: 100,
+      totalStorageMB: 1000,
+    },
+    period: { start: new Date(), end: new Date() },
+  }),
+}));
+vi.mock("@/lib/billing/usage", () => ({
+  getDocumentCount: vi.fn().mockResolvedValue(0),
+  getMonthlyDocUploads: vi.fn().mockResolvedValue(0),
+  getTotalStorageMB: vi.fn().mockResolvedValue(0),
+  recordUsageEvent: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/billing/limits", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/billing/limits")>();
+  return {
+    ...original,
+    canUploadDocument: vi.fn().mockReturnValue({ allowed: true }),
+  };
+});
+vi.mock("@/lib/vector/knowledge", () => ({
+  deleteDocumentChunks: vi.fn().mockResolvedValue(undefined),
+  knowledgeCollectionName: vi.fn().mockReturnValue("knowledge_test"),
 }));
 
 import { GET, POST } from "./route";
