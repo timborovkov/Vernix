@@ -72,26 +72,12 @@ export async function GET(request: Request) {
   const provider = new VernixOAuthProvider(userId, mcpServerId, server.url);
 
   try {
-    // Log what credentials the SDK will use (redacted)
-    const clientInfo = await provider.clientInformation();
-    console.log("[OAuth Callback] Exchanging code for tokens:", {
-      serverUrl: server.url,
-      catalogIntegrationId: server.catalogIntegrationId,
-      redirectUrl: provider.redirectUrl,
-      hasClientId: !!clientInfo?.client_id,
-      clientIdPrefix: clientInfo?.client_id?.slice(0, 8) + "…",
-      hasClientSecret: !!clientInfo?.client_secret,
-      tokenEndpointAuthMethod:
-        provider.clientMetadata.token_endpoint_auth_method,
-    });
-
     const result = await auth(provider, {
       serverUrl: server.url,
       authorizationCode: code,
     });
 
     if (result !== "AUTHORIZED") {
-      console.error("[OAuth Callback] auth() returned non-AUTHORIZED:", result);
       return NextResponse.redirect(
         `${integrationsUrl}?error=${encodeURIComponent("Token exchange failed")}`
       );
@@ -100,10 +86,8 @@ export async function GET(request: Request) {
     const errMsg = err instanceof Error ? err.message : String(err);
     console.error("[OAuth Callback] Token exchange failed:", {
       error: errMsg,
-      errorType: err?.constructor?.name,
       serverUrl: server.url,
       catalogIntegrationId: server.catalogIntegrationId,
-      redirectUrl: provider.redirectUrl,
     });
     return NextResponse.redirect(
       `${integrationsUrl}?error=${encodeURIComponent(`Token exchange failed: ${errMsg}`)}`
