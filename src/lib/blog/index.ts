@@ -21,11 +21,9 @@ export function getAllPosts(): BlogPost[] {
   const posts = files
     .map((filename) => {
       const slug = filename.replace(/\.mdx$/, "");
-      return getPostBySlug(slug);
+      return getPostBySlug(slug, { includeDrafts: false });
     })
-    .filter(
-      (post): post is BlogPost => post !== null && !post.frontmatter.draft
-    );
+    .filter((post): post is BlogPost => post !== null);
 
   return posts.sort(
     (a, b) =>
@@ -34,13 +32,18 @@ export function getAllPosts(): BlogPost[] {
   );
 }
 
-export function getPostBySlug(slug: string): BlogPost | null {
+export function getPostBySlug(
+  slug: string,
+  { includeDrafts = false }: { includeDrafts?: boolean } = {}
+): BlogPost | null {
   const filePath = path.join(CONTENT_DIR, `${slug}.mdx`);
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(raw);
   const frontmatter = frontmatterSchema.parse(data);
+
+  if (!includeDrafts && frontmatter.draft) return null;
 
   return {
     slug,
