@@ -40,6 +40,7 @@ export function useMeetings() {
       joinLink: string;
       agenda?: string;
       silent?: boolean;
+      noRecording?: boolean;
     }) => {
       const res = await fetch("/api/meetings", {
         method: "POST",
@@ -127,9 +128,16 @@ export function useMeetings() {
     title: string,
     joinLink: string,
     agenda?: string,
-    silent?: boolean
+    silent?: boolean,
+    noRecording?: boolean
   ) => {
-    return createMutation.mutateAsync({ title, joinLink, agenda, silent });
+    return createMutation.mutateAsync({
+      title,
+      joinLink,
+      agenda,
+      silent,
+      noRecording,
+    });
   };
 
   return {

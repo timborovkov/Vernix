@@ -121,6 +121,107 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 
 ---
 
+### Token Purge
+
+| Field        | Value                              |
+| ------------ | ---------------------------------- |
+| **Schedule** | Daily at 04:00 UTC                 |
+| **Handler**  | `src/lib/cron/jobs/token-purge.ts` |
+
+**What it does:** Deletes expired password reset tokens from the database.
+
+**Idempotency:** Safe to run multiple times; only deletes tokens past their expiry.
+
+---
+
+### Document Watchdog
+
+| Field        | Value                                    |
+| ------------ | ---------------------------------------- |
+| **Schedule** | Every 30 minutes                         |
+| **Handler**  | `src/lib/cron/jobs/document-watchdog.ts` |
+
+**What it does:** Finds documents stuck in `processing` status for over 30 minutes and marks them `failed` with a timeout error. Limit 20 per run.
+
+**Idempotency:** Safe to run multiple times; only acts on documents still in `processing` status.
+
+---
+
+### Usage Audit
+
+| Field        | Value                              |
+| ------------ | ---------------------------------- |
+| **Schedule** | Daily at 05:00 UTC                 |
+| **Handler**  | `src/lib/cron/jobs/usage-audit.ts` |
+
+**What it does:** Detects completed meetings from the last 48 hours missing `usage_events` rows and backfills them via `recordMeetingUsage()`. Limit 50 per run.
+
+**Idempotency:** Safe to run multiple times; `recordMeetingUsage` has built-in deduplication.
+
+---
+
+### Billing Retry
+
+| Field        | Value                                |
+| ------------ | ------------------------------------ |
+| **Schedule** | Every 6 hours                        |
+| **Handler**  | `src/lib/cron/jobs/billing-retry.ts` |
+
+**What it does:** Finds `usage_events` from the last 7 days where `polarSyncedAt IS NULL` and re-attempts Polar metered usage sync. Limit 50 per run.
+
+**Idempotency:** Uses Polar's `externalId` for deduplication; safe to retry.
+
+---
+
+### Qdrant Cleanup
+
+| Field        | Value                                 |
+| ------------ | ------------------------------------- |
+| **Schedule** | Weekly Sunday at 04:00 UTC            |
+| **Handler**  | `src/lib/cron/jobs/qdrant-cleanup.ts` |
+
+**What it does:** Lists all Qdrant collections, checks `meeting_*` and `knowledge_*` collections against the database, and deletes orphaned ones. Limit 20 deletions per run.
+
+---
+
+### Storage Cleanup
+
+| Field        | Value                                  |
+| ------------ | -------------------------------------- |
+| **Schedule** | Weekly Sunday at 05:00 UTC             |
+| **Handler**  | `src/lib/cron/jobs/storage-cleanup.ts` |
+
+**What it does:** Scans S3 `knowledge/` and `recordings/` prefixes for files without matching DB records and deletes orphaned objects. Limit 30 deletions per run.
+
+---
+
+### Inactive Cleanup
+
+| Field        | Value                                   |
+| ------------ | --------------------------------------- |
+| **Schedule** | Weekly Monday at 04:00 UTC              |
+| **Handler**  | `src/lib/cron/jobs/inactive-cleanup.ts` |
+
+**What it does:** Detects free-plan users with no activity in 180 days. Currently informational only (logs count). Actual archival/deletion requires a warning email flow.
+
+---
+
+### Orphan Sweeper
+
+| Field        | Value                                 |
+| ------------ | ------------------------------------- |
+| **Schedule** | Weekly Sunday at 03:00 UTC            |
+| **Handler**  | `src/lib/cron/jobs/orphan-sweeper.ts` |
+
+**What it does:**
+
+1. Deletes `usage_events` with null `meetingId` older than 90 days
+2. Re-parents documents referencing deleted meetings (sets `meetingId = NULL`)
+
+Limit 100 per run.
+
+---
+
 ## Unified Dispatcher Response
 
 ```json
@@ -147,6 +248,7 @@ curl -H "Authorization: Bearer your-cron-secret-here" http://localhost:3000/api/
 
 ## Future Jobs
 
+- **Dead-user data purge** -- Purge S3 + Qdrant + Recall data for deleted/expired accounts (requires user deletion flow first)
 - **Usage credit reset** -- Reset monthly usage counters at billing period boundaries
 - **Data retention cleanup** -- Archive/delete data for churned users per retention policy
 - **Usage alerts** -- Send email when Pro users hit 80% or 100% of their monthly credit

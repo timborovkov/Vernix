@@ -2,86 +2,29 @@
 
 ## Completed
 
-- Core Pipeline (functional baseline)
-- Voice Agent (differentiator)
-- Post-Meeting Processing
-- UX Polish
-- Authentication
-- Live Voice Agent
-- Chat with Meeting Notes
-- Knowledge Base (file uploads + RAG)
-- Meeting-Scoped Knowledge
-- Meeting Context & Agenda
-- Action Items & Tasks
-- MCP Tool Connections
-- Data Export
-- Production Hardening
-- Rebrand to Vernix (`vernix.app`)
-- UI Polish & Launch Prep
-- Dark Mode & Theme Selector
-- User Profiles & SSO
-- Password Reset & NextAuth Email Integration
-- Silent Agent Mode (Text Agent)
-- Switch to TanStack Query
-- MCP Server Connection Testing
-- Analytics & Monitoring
-- Contact Forms & Email
-- Welcome Email
-- Pricing strategy calculation
-- Pricing page (`/pricing`)
-- Self-kick agent tool (leave_meeting)
-- Switch to silent mode tool (switch_to_silent)
-- User mute control (UI kill switch)
-- Mute state enforcement
-- Hide completed tasks from dashboard action points
-- Show meeting-scoped files on knowledge page
-- Voice Mode Rewrite (On-Demand Realtime)
-- Internal Agent System Documentation (`docs/agent-architecture.md`)
-- Fast Wake-Word Detection (Client-Side VAD + gpt-4o-mini-transcribe)
-- Billing with Polar (constants, Polar integration, hard caps, usage tracking, billing UI, webhook handler, limit enforcement, paywalls)
-- Billing lifecycle emails (disable trial-expiry reminders, weekly free-user upgrade reminders, cancellation retention emails)
-- Cron job upgrade reminders for free users every week, email them to let them know about the upgrade options.
-- Subscription cancellation access policy (keep access until period/trial end)
-- Cron documentation sync (`docs/cron-jobs.md` aligned with active jobs)
-- Unified cron dispatcher (`/api/cron`) — single Railway service drives all jobs via schedule-based dispatch, extracted job handlers into `src/lib/cron/jobs/`
-- Recording retention bug fixes — S3 failure no longer orphans recordings (skips metadata clear on failure), null userId no longer causes infinite reprocessing loop
-- Recording retention policy: 90-day default enforced via cron (`RECORDING_RETENTION_DAYS`), documented storage cost
-- Deletion consistency: meeting DELETE handler cleans up S3 recordings, Recall bots, Qdrant collections, and scoped documents
-- Legal disclosures: Terms of Use and Privacy Policy updated with recording retention, storage, and deletion behavior
-- Integrations platform foundation: Zod-validated catalog (`src/lib/integrations/catalog.ts`), 30 seeded integrations, custom MCP auth types (none/bearer/header/basic/OAuth), OAuth flow (MCP SDK authProvider + state JWT + PKCE + token storage), and pre-registered GitHub OAuth
-- Integrations UX revamp: `/dashboard/integrations` searchable catalog + category filters + connected server cards, Integration Cloud on landing/feature pages, MCP management moved from Settings, and Pro/Trial paywall gating
-- Reliability hardening: Recall webhook signature verification (Svix) and meeting-usage billing idempotency guard
-- Growth and discoverability surfaces: Welcome to Pro page (`/welcome-to-pro`), feature landing pages (`/features/integrations`, `/features/meeting-memory`, `/features/context`), and SEO foundations (robots.txt, sitemap.xml, llms.txt, meta tags)
-- Billing operations and packaging: Polar subscription reconciliation cron (`/api/cron/billing-sync`) and trial policy aligned to full Pro feature access (voice, API, MCP, integrations)
-- Task management: `/dashboard/tasks` cross-call task list with filter tabs (open/all/completed), inline task completion with optimistic updates, dashboard widget limited to 3 tasks with "View all" link, Tasks nav button in header, meeting title links to source call, task source context (transcript snippet + timestamp from extraction)
-- Empty states and onboarding UX: auth page redirects for logged-in users (middleware), public site header shows "Dashboard" when authenticated, landing page auth-aware CTAs, dashboard "Start your first call" empty state with knowledge/integrations nudges, integrations page first-connection banner
-- Terms of use acceptance: checkbox on credentials signup form, SSO post-auth acceptance page (`/accept-terms`), middleware enforcement (`termsAcceptedAt` in JWT), schema column on users table
-- Call detail page restructure: tab-based layout (Overview, Transcript, Tasks, Documents, Chat), URL hash deep linking, bounded transcript scroll, meeting link button, extracted into 5 component files
-- Call reliability and recording: Recall API expansion (getBot, getParticipantEvents), auto-recording capture to S3, participant event persistence, meeting recovery cron (stuck joining/active/processing), video player in overview tab, re-generate summary button
+- Core product foundation: call pipeline, post-call processing, and production hardening
+- AI agent system: live voice agent, on-demand realtime rewrite, fast wake-word detection, silent/text mode, mute controls, and agent tools
+- Knowledge & context: chat with call notes, RAG knowledge base, meeting-scoped docs, and agenda/context support
+- Tasks & productivity: action item extraction, task management UX, and dashboard/task list improvements
+- Auth & accounts: credentials auth, SSO, password reset/email integration, profiles, and terms acceptance flow
+- Billing & monetization: pricing strategy/page, Polar billing integration, plan limits/paywalls, lifecycle emails, and subscription access policy
+- Integrations platform: MCP connections/testing, integrations catalog + UX revamp, and OAuth foundation (including GitHub pre-registration)
+- Reliability, retention & compliance: recording retention policy/fixes, deletion consistency, webhook verification/idempotency, and legal policy updates
+- Operations & background jobs: unified cron dispatcher, active reconciliation/cleanup jobs, billing sync/reminders, and cron documentation alignment
+- UX, onboarding & launch: rebrand to Vernix, dark mode/theme selector, empty-state/onboarding polish, growth/SEO surfaces, and analytics/monitoring
 
 ## Integrations
 
 - **Register OAuth apps for more services** — Currently only GitHub has a pre-registered OAuth app. To enable more OAuth integrations (Slack, Linear, Notion, etc.): register Vernix on each service's developer console, add env vars, add to `PRE_REGISTERED_CLIENTS` in `oauth-provider.ts`, change catalog status to `available`.
 
-## Recording Retention & Deletion
-
-- **Ship recording privacy controls UI** — Backend `noRecording` flag works via API, but there's no UI toggle in the meeting creation form for users to disable recording.
-
 ## Cron Jobs & Background Reconciliation
 
-- **Cron: billing meter retry/backfill** — Add scheduled retry/backfill for failed Polar metered usage ingests to prevent under/over-billing drift.
-- **Cron: usage integrity audit** — Detect completed calls missing `usage_events` (or duplicate usage rows) and repair/report discrepancies.
-- **Cron: inactive account cleanup policy** — Define inactivity windows + warning flow, then archive/deactivate/delete truly inactive accounts on schedule.
-- **Cron: purge expired password reset tokens** — Delete expired rows from `password_reset_tokens` on a schedule instead of only cleaning during reset creation.
-- **Cron: document processing watchdog** — Detect documents stuck in `processing` for too long; mark `failed` or retry parsing/embedding pipeline safely.
-- **Cron: orphan DB record sweeper** — Periodically remove/repair records that lost parents (or should have cascaded) and reconcile mismatches between DB state and external artifacts.
-- **Cron: orphaned storage cleanup** — Remove orphaned knowledge files in S3/Minio that no longer have a matching DB document row.
-- **Cron: orphaned Qdrant collection cleanup** — Delete dangling `meeting_*` or stale per-user knowledge collections that no longer map to active DB records/retention policy.
-- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs.
+- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
+- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
 
 ## Pricing Constants Sweep
 
-- **Use billing constants everywhere** — `src/lib/billing/constants.ts` defines all prices, limits, and rates, but many files hardcode `€29`, `€30`, `200`, `€3/hr`, etc. Affected: pricing page, FAQ, upgrade-dialog trigger copy, trial-prompt-banner, feature pages, email templates, welcome page, SEO meta descriptions. Sweep all hardcoded values and replace with imports from constants. Email templates (HTML strings) need a helper function to inject values since they can't import TS directly.
+- **Use billing constants everywhere** — `src/lib/billing/constants.ts` should be the single source of truth for all billing-configurable values (prices, usage limits, monthly credits, trial duration/allowance, hard caps, and plan-dependent quotas), but many files still hardcode values like `€29`, `€30`, `200`, `90 min`, and `€3/hr`. Affected: pricing page, FAQ, upgrade-dialog trigger copy, trial-prompt-banner, feature pages, email templates, welcome page, and SEO meta descriptions. Sweep all hardcoded billing values and replace them with constants-driven wiring. Email templates (HTML strings) need a helper function to inject values since they can't import TS directly.
 
 ## Product Terminology & Time Display
 
@@ -117,6 +60,7 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 - **Trial expired / downgraded email** — On subscription.revoked webhook, email what they lost.
 - **Win-back email (30 days post-churn)** — Cron job: find users who churned 30 days ago. One final re-engagement.
 - **Email preference management** — Add unsubscribe links to all marketing/reminder emails.
+- **Email template design/brand QA pass** — Audit all existing email templates (welcome, upgrade reminders, retention, password reset, and new lifecycle emails) for visual consistency and quality: correct logo usage, colors, typography, spacing, CTA styling, dark-mode behavior where applicable, and cross-client rendering.
 - **Email communication docs** — Maintain `docs/emails.md` documenting every email we send.
 
 ## Blog & Content
