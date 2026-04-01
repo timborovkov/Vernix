@@ -154,7 +154,47 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            6. AI-Generated Content Disclaimer
+            6. API Access and MCP Server
+          </h2>
+          <p className="text-muted-foreground mb-3 text-sm">
+            The Service provides a public REST API and MCP (Model Context
+            Protocol) server for programmatic access to your meeting data,
+            transcripts, tasks, knowledge base, and agent control. API access
+            requires a Pro plan and authentication via API keys generated in
+            your account settings.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            API keys are secrets. You are responsible for keeping them
+            confidential and secure. Do not share API keys in public
+            repositories, client-side code, or with unauthorized parties. You
+            are liable for all actions performed using your API keys. If you
+            believe a key has been compromised, revoke it immediately in your
+            account settings.
+          </p>
+          <p className="text-muted-foreground mb-3 text-sm">
+            API usage is subject to per-key rate limits and daily request
+            quotas as published in our{" "}
+            <Link href="/docs" className="text-foreground underline">
+              API documentation
+            </Link>
+            . We may throttle or block requests that exceed these limits.
+            Automated access must respect rate limit headers returned in API
+            responses.
+          </p>
+          <p className="text-muted-foreground text-sm">
+            The MCP server allows AI assistants (such as Claude Desktop,
+            Cursor, and similar tools) to access your Vernix data on your
+            behalf. By connecting an AI assistant to the Vernix MCP server,
+            you authorize that assistant to read and modify your meeting data,
+            tasks, and knowledge base within the limits of your plan. You are
+            responsible for the actions performed by any AI assistant
+            connected to your account.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">
+            7. AI-Generated Content Disclaimer
           </h2>
           <p className="text-muted-foreground text-sm">
             The Service uses artificial intelligence to produce transcripts,
@@ -169,7 +209,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            7. Third-Party Platforms, Sub-Processors, and Integrations
+            8. Third-Party Platforms, Sub-Processors, and Integrations
           </h2>
           <p className="text-muted-foreground text-sm">
             The Service integrates with third-party video conferencing platforms
@@ -217,7 +257,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            8. Intellectual Property
+            9. Intellectual Property
           </h2>
           <p className="text-muted-foreground text-sm">
             You retain all ownership rights in your content, including meeting
@@ -232,7 +272,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            9. Fees, Pricing, and Plan Changes
+            10. Fees, Pricing, and Plan Changes
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
             The Service offers a free plan with limited usage and a paid Pro
@@ -272,7 +312,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            10. Data Processing and Privacy
+            11. Data Processing and Privacy
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
             Your data is processed in accordance with our{" "}
@@ -298,7 +338,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            11. Limitation of Liability
+            12. Limitation of Liability
           </h2>
           <p className="text-muted-foreground text-sm">
             To the maximum extent permitted by applicable law, the Service is
@@ -316,7 +356,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">12. Indemnification</h2>
+          <h2 className="mb-2 text-lg font-semibold">13. Indemnification</h2>
           <p className="text-muted-foreground text-sm">
             You agree to indemnify, defend, and hold harmless Vernix, its
             officers, directors, employees, and agents from and against any
@@ -330,7 +370,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            13. Suspension and Termination
+            14. Suspension and Termination
           </h2>
           <p className="text-muted-foreground mb-3 text-sm">
             We may, at our sole discretion and without liability, suspend or
@@ -376,7 +416,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            14. Governing Law and Disputes
+            15. Governing Law and Disputes
           </h2>
           <p className="text-muted-foreground text-sm">
             These Terms shall be governed by and construed in accordance with
@@ -389,7 +429,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">15. Changes to Terms</h2>
+          <h2 className="mb-2 text-lg font-semibold">16. Changes to Terms</h2>
           <p className="text-muted-foreground text-sm">
             We may update these Terms from time to time. Material changes will
             be communicated by posting the updated Terms on the Service and
@@ -400,7 +440,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">16. Contact</h2>
+          <h2 className="mb-2 text-lg font-semibold">17. Contact</h2>
           <p className="text-muted-foreground text-sm">
             For questions about these Terms, contact us at{" "}
             <a
