@@ -296,8 +296,9 @@ describe("stopMeeting", () => {
       metadata: { botId: "bot-333" },
     });
     mockDb.where
-      .mockResolvedValueOnce([meeting])
-      .mockResolvedValueOnce([{ status: "completed" }]);
+      .mockResolvedValueOnce([meeting]) // initial fetch
+      .mockImplementationOnce(() => mockDb) // processing update
+      .mockResolvedValueOnce([{ status: "completed" }]); // re-fetch
 
     await stopMeeting(USER_ID, meeting.id);
 
