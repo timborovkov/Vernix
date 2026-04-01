@@ -22,6 +22,10 @@ const PRE_REGISTERED_CLIENTS: Record<
     clientIdEnv: "GITHUB_MCP_CLIENT_ID",
     clientSecretEnv: "GITHUB_MCP_CLIENT_SECRET",
   },
+  "https://mcp.notion.com": {
+    clientIdEnv: "NOTION_MCP_CLIENT_ID",
+    clientSecretEnv: "NOTION_MCP_CLIENT_SECRET",
+  },
 };
 
 function getPreRegisteredClient(
