@@ -75,6 +75,22 @@ Vernix exposes an [MCP server](https://modelcontextprotocol.io) that lets AI ass
 - \`vernix_stop_call\` — Stop the agent and trigger post-meeting processing
 - \`vernix_search_tasks\` — Search and filter tasks across meetings
 
+## Quick Start: Zero to Meeting Summary
+
+The full meeting lifecycle in 5 API calls:
+
+1. **Create a meeting:** \`POST /meetings\` with \`title\` and \`joinLink\` (the video call URL). Optionally set \`"autoJoin": true\` to skip step 2.
+2. **Join the agent:** \`POST /meetings/{id}/join\` — the agent joins the video call. Status: pending → joining → active.
+3. **Let the meeting happen.** The agent transcribes in real time, responds to questions via voice or chat, and connects to your integrations.
+4. **Stop the agent:** \`POST /meetings/{id}/stop\` — triggers summary generation and task extraction. Status: active → processing → completed.
+5. **Get results:** \`GET /meetings/{id}\` for the summary, \`GET /meetings/{id}/transcript\` for the full transcript, \`GET /meetings/{id}/tasks\` for extracted action items.
+
+**Meeting status lifecycle:** \`pending\` → \`joining\` → \`active\` → \`processing\` → \`completed\` (or \`failed\`).
+
+**Shortcut:** \`POST /meetings\` with \`"autoJoin": true\` combines steps 1 and 2 into a single call.
+
+**Search:** Once you have meetings, \`GET /search?q=your+question\` searches across all transcripts and knowledge base documents.
+
 ## Error Codes
 
 All errors follow the format \`{ error: { code, message } }\`. Possible codes:
