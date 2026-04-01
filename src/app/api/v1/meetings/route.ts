@@ -99,9 +99,16 @@ export const POST = withApiAuth(
             agent: { botId: joinResult.botId, status: joinResult.status },
           });
         } catch (joinError) {
-          // Meeting created successfully but join failed — return meeting with join error
+          // Meeting created but join failed — re-fetch to get current DB state
+          const { getMeeting } = await import("@/lib/services/meetings");
+          let currentMeeting;
+          try {
+            currentMeeting = await getMeeting(user.id, meeting.id);
+          } catch {
+            currentMeeting = meeting;
+          }
           return apiCreated({
-            ...meeting,
+            ...currentMeeting,
             agent: {
               status: "failed",
               error:
