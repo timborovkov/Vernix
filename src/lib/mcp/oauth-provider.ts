@@ -11,37 +11,82 @@ import { and, eq } from "drizzle-orm";
 import { getEnv } from "@/lib/env";
 
 /**
- * Pre-registered OAuth app credentials for services that don't support
+ * Pre-registered OAuth app credentials for services that do NOT support
  * dynamic client registration (RFC 7591). Keyed by server URL prefix.
+ *
+ * Services that DO support dynamic registration (Notion, Linear, etc.)
+ * should NOT be listed here — the MCP SDK will register automatically
+ * via POST /register and persist the client_id in mcpOauthTokens.
  */
 const PRE_REGISTERED_CLIENTS: Record<
   string,
-  { clientIdEnv: string; clientSecretEnv: string }
+  {
+    clientIdEnv: string;
+    clientSecretEnv: string;
+    tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
+  }
 > = {
   "https://api.githubcopilot.com": {
     clientIdEnv: "GITHUB_MCP_CLIENT_ID",
     clientSecretEnv: "GITHUB_MCP_CLIENT_SECRET",
+    tokenEndpointAuthMethod: "none",
+  },
+  "https://mcp.pipedrive.com": {
+    clientIdEnv: "PIPEDRIVE_MCP_CLIENT_ID",
+    clientSecretEnv: "PIPEDRIVE_MCP_CLIENT_SECRET",
+    tokenEndpointAuthMethod: "client_secret_post",
+  },
+  "https://mcp.slack.com": {
+    clientIdEnv: "SLACK_MCP_CLIENT_ID",
+    clientSecretEnv: "SLACK_MCP_CLIENT_SECRET",
+    tokenEndpointAuthMethod: "client_secret_post",
   },
 };
+
+function getPreRegisteredConfig(serverUrl: string):
+  | {
+      clientIdEnv: string;
+      clientSecretEnv: string;
+      tokenEndpointAuthMethod: OAuthClientMetadata["token_endpoint_auth_method"];
+    }
+  | undefined {
+  // Match by origin to prevent subdomain confusion attacks.
+  // e.g. "https://mcp.slack.com.evil.com" must NOT match "https://mcp.slack.com".
+  let origin: string;
+  try {
+    origin = new URL(serverUrl).origin;
+  } catch {
+    return undefined;
+  }
+  for (const [registeredUrl, config] of Object.entries(
+    PRE_REGISTERED_CLIENTS
+  )) {
+    if (origin === new URL(registeredUrl).origin) return config;
+  }
+  return undefined;
+}
 
 function getPreRegisteredClient(
   serverUrl: string
 ): OAuthClientInformation | undefined {
-  for (const [prefix, { clientIdEnv, clientSecretEnv }] of Object.entries(
-    PRE_REGISTERED_CLIENTS
-  )) {
-    if (serverUrl.startsWith(prefix)) {
-      const clientId = process.env[clientIdEnv];
-      const clientSecret = process.env[clientSecretEnv];
-      if (clientId) {
-        return {
-          client_id: clientId,
-          ...(clientSecret ? { client_secret: clientSecret } : {}),
-        };
-      }
-    }
+  const config = getPreRegisteredConfig(serverUrl);
+  if (!config) return undefined;
+
+  const clientId = process.env[config.clientIdEnv];
+  const clientSecret = process.env[config.clientSecretEnv];
+  if (!clientId) return undefined;
+
+  // Validate client_secret is present when the token endpoint auth method requires it
+  if (config.tokenEndpointAuthMethod !== "none" && !clientSecret) {
+    throw new Error(
+      `Missing ${config.clientSecretEnv} — required for ${config.tokenEndpointAuthMethod} auth on ${serverUrl}`
+    );
   }
-  return undefined;
+
+  return {
+    client_id: clientId,
+    ...(clientSecret ? { client_secret: clientSecret } : {}),
+  };
 }
 
 /**
@@ -70,12 +115,15 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   }
 
   get clientMetadata(): OAuthClientMetadata {
+    const tokenEndpointAuthMethod =
+      getPreRegisteredConfig(this.serverUrl)?.tokenEndpointAuthMethod ?? "none";
+
     return {
       redirect_uris: [this.redirectUrl],
       client_name: "Vernix",
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
-      token_endpoint_auth_method: "none",
+      token_endpoint_auth_method: tokenEndpointAuthMethod,
     };
   }
 
@@ -94,9 +142,18 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   }
 
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    // Check for pre-registered OAuth app credentials (env vars)
-    const preRegistered = getPreRegisteredClient(this.serverUrl);
-    if (preRegistered) return preRegistered;
+    const preRegisteredConfig = getPreRegisteredConfig(this.serverUrl);
+
+    // For pre-registered integrations, do not fall back to DB dynamic clients.
+    // This prevents stale client IDs from being used when env vars are missing.
+    if (preRegisteredConfig) {
+      const preRegistered = getPreRegisteredClient(this.serverUrl);
+      if (preRegistered) return preRegistered;
+
+      throw new Error(
+        `Missing pre-registered OAuth credentials for ${this.serverUrl}. Expected env vars: ${preRegisteredConfig.clientIdEnv} and ${preRegisteredConfig.clientSecretEnv}`
+      );
+    }
 
     // Fall back to dynamically registered credentials from DB
     const [row] = await db
@@ -122,7 +179,7 @@ export class VernixOAuthProvider implements OAuthClientProvider {
 
   async saveClientInformation(info: OAuthClientInformation): Promise<void> {
     // Skip saving if using pre-registered credentials from env vars
-    if (getPreRegisteredClient(this.serverUrl)) return;
+    if (getPreRegisteredConfig(this.serverUrl)) return;
 
     await this.upsertTokenRow({
       clientId: info.client_id,
@@ -210,29 +267,18 @@ export class VernixOAuthProvider implements OAuthClientProvider {
   private async upsertTokenRow(
     fields: Partial<typeof mcpOauthTokens.$inferInsert>
   ): Promise<void> {
-    const [existing] = await db
-      .select({ id: mcpOauthTokens.id })
-      .from(mcpOauthTokens)
-      .where(
-        and(
-          eq(mcpOauthTokens.userId, this.userId),
-          eq(mcpOauthTokens.mcpServerId, this.mcpServerId)
-        )
-      );
-
-    if (existing) {
-      await db
-        .update(mcpOauthTokens)
-        .set({ ...fields, updatedAt: new Date() })
-        .where(eq(mcpOauthTokens.id, existing.id));
-    } else {
-      await db.insert(mcpOauthTokens).values({
+    await db
+      .insert(mcpOauthTokens)
+      .values({
         userId: this.userId,
         mcpServerId: this.mcpServerId,
         accessToken: "", // placeholder, will be updated by saveTokens
         ...fields,
+      })
+      .onConflictDoUpdate({
+        target: [mcpOauthTokens.userId, mcpOauthTokens.mcpServerId],
+        set: { ...fields, updatedAt: new Date() },
       });
-    }
   }
 }
 

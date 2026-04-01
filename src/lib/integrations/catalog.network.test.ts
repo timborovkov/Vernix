@@ -17,6 +17,8 @@ async function probeEndpoint(url: string): Promise<{
   status: number;
   ok: boolean;
   contentType: string | null;
+  location: string | null;
+  wwwAuthenticate: string | null;
 }> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -25,6 +27,7 @@ async function probeEndpoint(url: string): Promise<{
     // Send a POST with MCP initialize request to trigger protocol handling
     const res = await fetch(url, {
       method: "POST",
+      redirect: "manual",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json, text/event-stream",
@@ -46,6 +49,8 @@ async function probeEndpoint(url: string): Promise<{
       status: res.status,
       ok: res.ok,
       contentType: res.headers.get("content-type"),
+      location: res.headers.get("location"),
+      wwwAuthenticate: res.headers.get("www-authenticate"),
     };
   } finally {
     clearTimeout(timeout);
@@ -68,15 +73,51 @@ describe("Catalog MCP Server Reachability", () => {
         // 200/201 — server responded
         // 401/403 — auth required (server exists, expects credentials)
         // 405 — method not allowed (server exists)
-        // 301/302/307 — redirect to auth (OAuth flow)
+        // 301/302/303/307/308 — redirect to auth (OAuth flow)
         // 500 — server error without auth (some servers crash without a key)
         const acceptableStatuses = [
-          200, 201, 401, 403, 405, 301, 302, 307, 500,
+          200, 201, 401, 403, 405, 301, 302, 303, 307, 308, 500,
         ];
 
         expect(
           acceptableStatuses.includes(result.status),
           `${integration.name}: expected one of [${acceptableStatuses.join(", ")}] but got ${result.status}`
+        ).toBe(true);
+      },
+      TIMEOUT_MS + 5_000
+    );
+  }
+
+  const oauthIntegrations = withServers.filter((i) => i.authMode === "oauth");
+
+  for (const integration of oauthIntegrations) {
+    it(
+      `${integration.name} (${integration.serverUrl}) shows OAuth auth signal`,
+      async () => {
+        const result = await probeEndpoint(integration.serverUrl!);
+        const redirectStatuses = [301, 302, 303, 307, 308];
+        const challengeStatuses = [401, 403];
+        const authGatedStatuses = [...redirectStatuses, ...challengeStatuses];
+
+        const isAuthGated = authGatedStatuses.includes(result.status);
+
+        const hasValidRedirectSignal =
+          redirectStatuses.includes(result.status) &&
+          typeof result.location === "string" &&
+          result.location.length > 0;
+
+        const challenge = (result.wwwAuthenticate ?? "").toLowerCase();
+        const hasValidChallengeSignal =
+          challengeStatuses.includes(result.status) &&
+          // Some providers omit WWW-Authenticate entirely. If present, validate it.
+          (challenge.length === 0 ||
+            challenge.includes("bearer") ||
+            challenge.includes("oauth") ||
+            challenge.includes("authorization"));
+
+        expect(
+          isAuthGated && (hasValidRedirectSignal || hasValidChallengeSignal),
+          `${integration.name}: expected OAuth auth-gated response. got status=${result.status}, location=${result.location ?? "none"}, www-authenticate=${result.wwwAuthenticate ?? "none"}`
         ).toBe(true);
       },
       TIMEOUT_MS + 5_000

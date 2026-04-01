@@ -212,6 +212,17 @@ export default function PrivacyPage() {
             reviews to verify compliance. An up-to-date sub-processor list is
             available upon request.
           </p>
+          <p className="text-muted-foreground mt-3 text-sm">
+            If you connect optional third-party integrations (including
+            OAuth-based or API key-based MCP integrations), we process and
+            exchange data with those providers at your direction to provide the
+            integration functionality. These connected integrations are distinct
+            from our core sub-processors above: they are selected by you, may
+            have their own independent data practices, and are governed by the
+            terms and privacy policies of the relevant provider. You can revoke
+            access by disconnecting the integration or revoking credentials with
+            the provider.
+          </p>
         </section>
 
         <section>

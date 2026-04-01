@@ -181,56 +181,6 @@ export function SettingsForm({
           </CardContent>
         </Card>
 
-        {/* Timezone */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Globe className="h-4 w-4" />
-              Timezone
-            </CardTitle>
-            <p className="text-muted-foreground text-sm">
-              All dates and times across Vernix will use this timezone.
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={!profile?.timezone ? "accent" : "outline"}
-                  disabled={updatingTimezone}
-                  onClick={() => updateTimezone(null)}
-                >
-                  Auto ({browserTz})
-                </Button>
-              </div>
-              <Input
-                placeholder="Search timezones..."
-                value={tzSearch}
-                onChange={(e) => setTzSearch(e.target.value)}
-                className="max-w-xs"
-              />
-              <div className="border-border max-h-48 max-w-xs overflow-y-auto rounded-md border">
-                {filteredTimezones.slice(0, 100).map((tz) => (
-                  <button
-                    key={tz}
-                    type="button"
-                    className={`hover:bg-muted w-full px-3 py-1.5 text-left text-sm transition-colors ${
-                      profile?.timezone === tz
-                        ? "bg-ring/10 text-foreground font-medium"
-                        : "text-muted-foreground"
-                    }`}
-                    onClick={() => updateTimezone(tz)}
-                    disabled={updatingTimezone}
-                  >
-                    {tz}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Billing */}
         <BillingCard billing={billing} loading={billingLoading} />
 
@@ -448,6 +398,64 @@ export function SettingsForm({
             >
               Manage
             </Button>
+          </CardContent>
+        </Card>
+
+        {/* Timezone */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe className="h-4 w-4" />
+              Timezone
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              All dates and times across Vernix will use this timezone.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={!profile?.timezone ? "accent" : "outline"}
+                  disabled={updatingTimezone}
+                  onClick={() => updateTimezone(null)}
+                >
+                  Auto ({browserTz})
+                </Button>
+                {profile?.timezone && (
+                  <span className="text-muted-foreground text-sm">
+                    Current:{" "}
+                    <span className="text-foreground font-medium">
+                      {profile.timezone}
+                    </span>
+                  </span>
+                )}
+              </div>
+              <Input
+                placeholder="Search timezones..."
+                value={tzSearch}
+                onChange={(e) => setTzSearch(e.target.value)}
+                className="max-w-xs"
+              />
+              <div className="border-border max-h-48 max-w-xs overflow-y-auto rounded-md border">
+                {filteredTimezones.slice(0, 100).map((tz) => (
+                  <button
+                    key={tz}
+                    type="button"
+                    className={`hover:bg-muted w-full px-3 py-1.5 text-left text-sm transition-colors ${
+                      profile?.timezone === tz
+                        ? "bg-ring/10 text-foreground font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                    onClick={() => updateTimezone(tz)}
+                    disabled={updatingTimezone}
+                  >
+                    {tz}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
