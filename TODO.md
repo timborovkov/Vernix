@@ -1,24 +1,5 @@
 # TODO
 
-## Account Verification
-
-- **Email verification flow** — Add verification tokens + email template + verify route, enforce verified email before full app access.
-- **Optional profile enrichment fields in Settings** — Add optional `phone` and `company` fields to user profiles.
-
-## Email Communication & Conversion
-
-Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last chance retention (on cancel webhook), password reset.
-
-- **Post-first-meeting email** — After a user's first meeting completes, email the summary link and nudge Pro trial.
-- **Trial started confirmation** — When Polar trial begins, confirm what they unlocked with setup steps for integrations.
-- **Mid-trial check-in (day 7)** — Cron job: find users 7 days into trial. "Have you connected your tools yet?"
-- **Trial ending warning (day 11, 13)** — Cron job: find users whose trial ends in 3 or 1 days.
-- **Trial expired / downgraded email** — On subscription.revoked webhook, email what they lost.
-- **Win-back email (30 days post-churn)** — Cron job: find users who churned 30 days ago. One final re-engagement.
-- **Email preference management** — Add unsubscribe links to all marketing/reminder emails.
-- **Email template design/brand QA pass** — Audit all existing email templates (welcome, upgrade reminders, retention, password reset, and new lifecycle emails) for visual consistency and quality: correct logo usage, colors, typography, spacing, CTA styling, and cross-client rendering.
-- **Email communication docs** — Maintain `docs/emails.md` documenting every email we send.
-
 ## Google Analytics Sales Funnel
 
 - **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
