@@ -12,16 +12,19 @@ export default function PrivacyPage() {
     <div className="mx-auto max-w-3xl px-4 py-24">
       <h1 className="mb-2 text-3xl font-bold">Privacy Policy</h1>
       <p className="text-muted-foreground mb-12 text-sm">
-        Last updated: March 2026
+        Last updated: April 2026
       </p>
 
       <div className="space-y-8">
         <section>
           <h2 className="mb-2 text-lg font-semibold">1. Data Controller</h2>
           <p className="text-muted-foreground text-sm">
-            Vernix (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is the data
-            controller for the personal data processed through this service. For
-            any data-protection enquiries, contact us at{" "}
+            Nyxone OÜ (registry code 16172329, VAT ID EE16172329), Harju
+            maakond, Tallinn, Kesklinna linnaosa, Narva mnt 5, 10117, Estonia,
+            operating as &quot;Vernix&quot; (&quot;we&quot;, &quot;us&quot;,
+            &quot;our&quot;), is the data controller for the personal data
+            processed through this service. For any data-protection enquiries,
+            contact us at{" "}
             <a
               href="mailto:hello@vernix.app"
               className="text-foreground underline"
@@ -57,6 +60,12 @@ export default function PrivacyPage() {
               <strong>Usage and diagnostic data</strong> — IP address, browser
               type, pages visited, feature interactions, error reports, and
               performance metrics.
+            </li>
+            <li>
+              <strong>API access data</strong> — API key usage logs, request
+              metadata (timestamps, endpoints, IP addresses), and rate limit
+              counters. API keys are stored as bcrypt hashes; only a
+              non-reversible prefix is retained for identification.
             </li>
           </ul>
         </section>
@@ -345,7 +354,9 @@ export default function PrivacyPage() {
               hello@vernix.app
             </a>
             . We will respond within 30 days. You also have the right to lodge a
-            complaint with your local supervisory authority.
+            complaint with your local data-protection supervisory authority. Our
+            lead supervisory authority is the Estonian Data Protection
+            Inspectorate (Andmekaitse Inspektsioon).
           </p>
         </section>
 

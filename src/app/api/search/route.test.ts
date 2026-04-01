@@ -34,6 +34,30 @@ vi.mock("@/lib/vector/knowledge", () => ({
   knowledgeCollectionName: (userId: string) =>
     `knowledge_${userId.replace(/-/g, "")}`,
 }));
+vi.mock("@/lib/billing/enforce", () => ({
+  requireLimits: vi.fn().mockResolvedValue({
+    limits: {
+      ragQueriesPerDay: 100,
+      apiEnabled: true,
+      apiRequestsPerDay: 1000,
+    },
+    period: { start: new Date(), end: new Date() },
+    plan: "pro",
+  }),
+  billingError: vi.fn(),
+}));
+vi.mock("@/lib/billing/usage", () => ({
+  getDailyCount: vi.fn().mockResolvedValue(0),
+  recordUsageEvent: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("@/lib/billing/limits", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@/lib/billing/limits")>();
+  return {
+    ...original,
+    canMakeRagQuery: vi.fn().mockReturnValue({ allowed: true }),
+  };
+});
 
 import { GET } from "./route";
 import { parseJsonResponse, fakeMeeting } from "@/test/helpers";

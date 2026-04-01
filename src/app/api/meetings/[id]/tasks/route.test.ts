@@ -1,31 +1,15 @@
-const { mockDb } = vi.hoisted(() => {
-  const db: Record<string, ReturnType<typeof vi.fn>> = {};
-  for (const m of [
-    "select",
-    "from",
-    "where",
-    "orderBy",
-    "insert",
-    "values",
-    "returning",
-    "update",
-    "set",
-    "delete",
-  ]) {
-    db[m] = vi.fn().mockImplementation(() => db);
-  }
-  return { mockDb: db };
-});
+const { mockListTasks, mockCreateTask } = vi.hoisted(() => ({
+  mockListTasks: vi.fn(),
+  mockCreateTask: vi.fn(),
+}));
 
-vi.mock("@/lib/db", () => ({ db: mockDb }));
+vi.mock("@/lib/services/tasks", () => ({
+  listTasks: mockListTasks,
+  createTask: mockCreateTask,
+}));
 
 import { GET, POST } from "./route";
-import {
-  createJsonRequest,
-  parseJsonResponse,
-  fakeMeeting,
-  fakeTask,
-} from "@/test/helpers";
+import { createJsonRequest, parseJsonResponse, fakeTask } from "@/test/helpers";
 
 const makeParams = (id: string) => ({ params: Promise.resolve({ id }) });
 
@@ -33,10 +17,10 @@ describe("GET /api/meetings/:id/tasks", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns tasks for a meeting", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting()]) // meeting ownership check
-      .mockReturnValueOnce(mockDb); // tasks query chaining
-    mockDb.orderBy.mockResolvedValueOnce([fakeTask(), fakeTask({ id: "t2" })]);
+    mockListTasks.mockResolvedValueOnce({
+      data: [fakeTask(), fakeTask({ id: "t2" })],
+      meta: { hasMore: false },
+    });
 
     const req = new Request("http://localhost/api/meetings/1/tasks");
     const { status, data } = await parseJsonResponse(
@@ -45,10 +29,15 @@ describe("GET /api/meetings/:id/tasks", () => {
 
     expect(status).toBe(200);
     expect(data.tasks).toHaveLength(2);
+    expect(mockListTasks).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ meetingId: "1" })
+    );
   });
 
   it("returns 404 when meeting not found", async () => {
-    mockDb.where.mockResolvedValueOnce([]);
+    const { NotFoundError } = await import("@/lib/api/errors");
+    mockListTasks.mockRejectedValueOnce(new NotFoundError("Meeting"));
 
     const req = new Request("http://localhost/api/meetings/999/tasks");
     const { status } = await parseJsonResponse(
@@ -62,10 +51,9 @@ describe("GET /api/meetings/:id/tasks", () => {
 describe("POST /api/meetings/:id/tasks", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("creates a task with correct meetingId and userId", async () => {
+  it("creates a task with correct meetingId", async () => {
     const task = fakeTask();
-    mockDb.where.mockResolvedValueOnce([fakeMeeting()]); // meeting check
-    mockDb.returning.mockResolvedValueOnce([task]);
+    mockCreateTask.mockResolvedValueOnce(task);
 
     const meetingId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
     const req = createJsonRequest(
@@ -81,20 +69,13 @@ describe("POST /api/meetings/:id/tasks", () => {
 
     expect(status).toBe(201);
     expect(data.title).toBe("Follow up with client");
-    // Verify insert was called with the correct meetingId and userId
-    expect(mockDb.values).toHaveBeenCalledWith(
-      expect.objectContaining({
-        meetingId,
-        userId: "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
-        title: "New task",
-        assignee: "Alice",
-      })
-    );
+    expect(mockCreateTask).toHaveBeenCalledWith(expect.any(String), meetingId, {
+      title: "New task",
+      assignee: "Alice",
+    });
   });
 
   it("returns 400 for missing title", async () => {
-    mockDb.where.mockResolvedValueOnce([fakeMeeting()]);
-
     const req = createJsonRequest("http://localhost/api/meetings/1/tasks", {
       method: "POST",
       body: {},
@@ -104,5 +85,22 @@ describe("POST /api/meetings/:id/tasks", () => {
     );
 
     expect(status).toBe(400);
+    // Service should not be called for invalid input
+    expect(mockCreateTask).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when meeting not found", async () => {
+    const { NotFoundError } = await import("@/lib/api/errors");
+    mockCreateTask.mockRejectedValueOnce(new NotFoundError("Meeting"));
+
+    const req = createJsonRequest("http://localhost/api/meetings/999/tasks", {
+      method: "POST",
+      body: { title: "Test task" },
+    });
+    const { status } = await parseJsonResponse(
+      await POST(req, makeParams("999"))
+    );
+
+    expect(status).toBe(404);
   });
 });

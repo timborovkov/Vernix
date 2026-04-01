@@ -335,22 +335,22 @@ export function SettingsForm({
           </CardContent>
         </Card>
 
-        {/* MCP Server Access */}
+        {/* API & MCP Access */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">MCP Server Access</CardTitle>
+            <CardTitle className="text-lg">API &amp; MCP Access</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Generate API keys to connect from Claude Desktop, Cursor, or other
-              MCP clients.
+              API keys for the REST API and MCP server. Use them with curl,
+              scripts, Claude Desktop, Cursor, or any MCP client.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {billing && !billing.limits.apiEnabled ? (
               <div className="space-y-3 py-2">
                 <p className="text-muted-foreground text-sm">
-                  Access your calls, transcripts, and search from Claude
-                  Desktop, Cursor, or any MCP client. Ask questions about your
-                  calls from your favorite AI tools.
+                  Programmatic access to your meetings, transcripts, tasks, and
+                  search. Connect from scripts, AI assistants, or any MCP
+                  client.
                 </p>
                 <Button
                   size="sm"
@@ -364,19 +364,38 @@ export function SettingsForm({
               </div>
             ) : (
               <>
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-                    Server URL
-                  </p>
-                  <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
-                    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/mcp`}
-                  </code>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                      REST API Base URL
+                    </p>
+                    <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
+                      {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/v1`}
+                    </code>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                      MCP Server URL
+                    </p>
+                    <code className="bg-muted text-foreground block rounded px-3 py-2 text-sm break-all">
+                      {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/mcp`}
+                    </code>
+                  </div>
                 </div>
                 <ApiKeyList
                   keys={keys}
                   onCreate={createKey}
                   onDelete={deleteKey}
                 />
+                <div className="border-border border-t pt-3">
+                  <Link
+                    href="/docs"
+                    target="_blank"
+                    className="text-muted-foreground hover:text-foreground text-sm underline transition-colors"
+                  >
+                    View API Documentation &rarr;
+                  </Link>
+                </div>
               </>
             )}
           </CardContent>

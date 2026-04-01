@@ -4,40 +4,18 @@ import {
   fakeMeeting,
 } from "@/test/helpers";
 
-const { mockDb, mockDeleteMeetingCollection, mockDeleteFile } = vi.hoisted(
-  () => {
-    const db: Record<string, ReturnType<typeof vi.fn>> = {};
-    for (const m of [
-      "select",
-      "from",
-      "where",
-      "orderBy",
-      "insert",
-      "values",
-      "returning",
-      "update",
-      "set",
-      "delete",
-    ]) {
-      db[m] = vi.fn().mockImplementation(() => db);
-    }
-    return {
-      mockDb: db,
-      mockDeleteMeetingCollection: vi.fn().mockResolvedValue(undefined),
-      mockDeleteFile: vi.fn().mockResolvedValue(undefined),
-    };
-  }
+const { mockGetMeeting, mockUpdateMeeting, mockDeleteMeeting } = vi.hoisted(
+  () => ({
+    mockGetMeeting: vi.fn(),
+    mockUpdateMeeting: vi.fn(),
+    mockDeleteMeeting: vi.fn(),
+  })
 );
 
-vi.mock("@/lib/db", () => ({ db: mockDb }));
-vi.mock("@/lib/vector/collections", () => ({
-  deleteMeetingCollection: mockDeleteMeetingCollection,
-}));
-vi.mock("@/lib/vector/agenda", () => ({
-  upsertAgenda: vi.fn().mockResolvedValue(undefined),
-}));
-vi.mock("@/lib/storage/operations", () => ({
-  deleteFile: mockDeleteFile,
+vi.mock("@/lib/services/meetings", () => ({
+  getMeeting: mockGetMeeting,
+  updateMeeting: mockUpdateMeeting,
+  deleteMeeting: mockDeleteMeeting,
 }));
 
 import { GET, PATCH, DELETE } from "./route";
@@ -48,7 +26,7 @@ describe("GET /api/meetings/[id]", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns meeting when found", async () => {
-    mockDb.where.mockResolvedValueOnce([fakeMeeting()]);
+    mockGetMeeting.mockResolvedValueOnce(fakeMeeting());
 
     const req = new Request("http://localhost/api/meetings/1");
     const response = await GET(req, makeParams("1"));
@@ -56,10 +34,15 @@ describe("GET /api/meetings/[id]", () => {
 
     expect(status).toBe(200);
     expect(data.title).toBe("Test Meeting");
+    expect(mockGetMeeting).toHaveBeenCalledWith(
+      "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22", // test user id
+      "1"
+    );
   });
 
   it("returns 404 when not found", async () => {
-    mockDb.where.mockResolvedValueOnce([]);
+    const { NotFoundError } = await import("@/lib/api/errors");
+    mockGetMeeting.mockRejectedValueOnce(new NotFoundError("Meeting"));
 
     const req = new Request("http://localhost/api/meetings/999");
     const response = await GET(req, makeParams("999"));
@@ -71,10 +54,7 @@ describe("PATCH /api/meetings/[id]", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("updates allowed fields (title, joinLink)", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting()])
-      .mockReturnValueOnce(mockDb);
-    mockDb.returning.mockResolvedValueOnce([fakeMeeting({ title: "Updated" })]);
+    mockUpdateMeeting.mockResolvedValueOnce(fakeMeeting({ title: "Updated" }));
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -85,18 +65,15 @@ describe("PATCH /api/meetings/[id]", () => {
 
     expect(status).toBe(200);
     expect(data.title).toBe("Updated");
-
-    // Verify set was called with title and updatedAt
-    expect(mockDb.set).toHaveBeenCalledWith(
+    expect(mockUpdateMeeting).toHaveBeenCalledWith(
+      "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      "1",
       expect.objectContaining({ title: "Updated" })
     );
   });
 
   it("ignores non-allowlisted fields (status, userId, qdrantCollectionName)", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting()])
-      .mockReturnValueOnce(mockDb);
-    mockDb.returning.mockResolvedValueOnce([fakeMeeting()]);
+    mockUpdateMeeting.mockResolvedValueOnce(fakeMeeting());
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -109,15 +86,17 @@ describe("PATCH /api/meetings/[id]", () => {
     });
     await PATCH(req, makeParams("1"));
 
-    const setCall = mockDb.set.mock.calls[0][0];
-    expect(setCall.title).toBe("Good");
-    expect(setCall.status).toBeUndefined();
-    expect(setCall.userId).toBeUndefined();
-    expect(setCall.qdrantCollectionName).toBeUndefined();
+    // Only title should be passed to the service — status, userId, etc. are not extracted
+    const passedInput = mockUpdateMeeting.mock.calls[0][2];
+    expect(passedInput.title).toBe("Good");
+    expect(passedInput.status).toBeUndefined();
+    expect(passedInput.userId).toBeUndefined();
+    expect(passedInput.qdrantCollectionName).toBeUndefined();
   });
 
   it("returns 404 when meeting not found", async () => {
-    mockDb.where.mockResolvedValueOnce([]);
+    const { NotFoundError } = await import("@/lib/api/errors");
+    mockUpdateMeeting.mockRejectedValueOnce(new NotFoundError("Meeting"));
 
     const req = createJsonRequest("http://localhost/api/meetings/999", {
       method: "PATCH",
@@ -128,17 +107,12 @@ describe("PATCH /api/meetings/[id]", () => {
   });
 
   it("sets muted in metadata for active meetings", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([
-        fakeMeeting({ status: "active", metadata: { botId: "bot-1" } }),
-      ])
-      .mockReturnValueOnce(mockDb);
-    mockDb.returning.mockResolvedValueOnce([
+    mockUpdateMeeting.mockResolvedValueOnce(
       fakeMeeting({
         status: "active",
         metadata: { botId: "bot-1", muted: true },
-      }),
-    ]);
+      })
+    );
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -149,19 +123,17 @@ describe("PATCH /api/meetings/[id]", () => {
     );
 
     expect(status).toBe(200);
-    expect(mockDb.set).toHaveBeenCalledWith(
-      expect.objectContaining({
-        metadata: expect.objectContaining({ muted: true }),
-      })
+    expect(mockUpdateMeeting).toHaveBeenCalledWith(
+      expect.any(String),
+      "1",
+      expect.objectContaining({ muted: true })
     );
     expect(data.metadata.muted).toBe(true);
   });
 
-  it("ignores muted for non-active meetings", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
-      .mockReturnValueOnce(mockDb);
-    mockDb.returning.mockResolvedValueOnce([fakeMeeting()]);
+  it("passes muted to service even for non-active meetings (service handles logic)", async () => {
+    // The route passes all fields through — the service decides what to apply
+    mockUpdateMeeting.mockResolvedValueOnce(fakeMeeting({ status: "pending" }));
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -169,12 +141,19 @@ describe("PATCH /api/meetings/[id]", () => {
     });
     await PATCH(req, makeParams("1"));
 
-    const setCall = mockDb.set.mock.calls[0][0];
-    expect(setCall.metadata).toBeUndefined();
+    // Route passes muted through; service ignores it for non-active meetings
+    expect(mockUpdateMeeting).toHaveBeenCalledWith(
+      expect.any(String),
+      "1",
+      expect.objectContaining({ muted: true })
+    );
   });
 
   it("rejects agenda longer than 10000 characters", async () => {
-    mockDb.where.mockResolvedValueOnce([fakeMeeting()]);
+    const { ValidationError } = await import("@/lib/api/errors");
+    mockUpdateMeeting.mockRejectedValueOnce(
+      new ValidationError("Agenda must be under 10,000 characters")
+    );
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -184,11 +163,9 @@ describe("PATCH /api/meetings/[id]", () => {
     expect(response.status).toBe(400);
   });
 
-  it("allows toggling silent only for pending/failed meetings", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting({ status: "active" })])
-      .mockReturnValueOnce(mockDb);
-    mockDb.returning.mockResolvedValueOnce([fakeMeeting({ status: "active" })]);
+  it("passes silent to service (service handles status-based logic)", async () => {
+    // The route passes silent through — the service decides based on meeting status
+    mockUpdateMeeting.mockResolvedValueOnce(fakeMeeting({ status: "active" }));
 
     const req = createJsonRequest("http://localhost/api/meetings/1", {
       method: "PATCH",
@@ -196,27 +173,19 @@ describe("PATCH /api/meetings/[id]", () => {
     });
     await PATCH(req, makeParams("1"));
 
-    const setCall = mockDb.set.mock.calls[0][0];
-    // silent should not appear in metadata for active meeting
-    expect(setCall.metadata).toBeUndefined();
+    expect(mockUpdateMeeting).toHaveBeenCalledWith(
+      expect.any(String),
+      "1",
+      expect.objectContaining({ silent: true })
+    );
   });
 });
 
 describe("DELETE /api/meetings/[id]", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("deletes Qdrant collection and meeting-scoped S3 files", async () => {
-    const meeting = fakeMeeting({
-      qdrantCollectionName: "meeting_abc123",
-    });
-    mockDb.where
-      .mockResolvedValueOnce([meeting]) // SELECT meeting
-      .mockResolvedValueOnce([
-        { id: "d1", s3Key: "knowledge/user/d1/file.pdf" },
-        { id: "d2", s3Key: "knowledge/user/d2/file.txt" },
-      ]) // SELECT meeting-scoped docs
-      .mockResolvedValueOnce(undefined) // DELETE documents
-      .mockResolvedValueOnce(undefined); // DELETE meetings
+  it("returns 200 on successful delete", async () => {
+    mockDeleteMeeting.mockResolvedValueOnce(undefined);
 
     const req = new Request("http://localhost/api/meetings/1", {
       method: "DELETE",
@@ -226,34 +195,15 @@ describe("DELETE /api/meetings/[id]", () => {
 
     expect(status).toBe(200);
     expect(data.success).toBe(true);
-
-    // Verify Qdrant collection was deleted with the correct name
-    expect(mockDeleteMeetingCollection).toHaveBeenCalledWith("meeting_abc123");
-
-    // Verify S3 files were cleaned up
-    expect(mockDeleteFile).toHaveBeenCalledTimes(2);
-    expect(mockDeleteFile).toHaveBeenCalledWith("knowledge/user/d1/file.pdf");
-    expect(mockDeleteFile).toHaveBeenCalledWith("knowledge/user/d2/file.txt");
-  });
-
-  it("skips document cleanup when no meeting-scoped docs exist", async () => {
-    mockDb.where
-      .mockResolvedValueOnce([fakeMeeting()]) // SELECT meeting
-      .mockResolvedValueOnce([]) // SELECT meeting-scoped docs (none)
-      .mockResolvedValueOnce(undefined); // DELETE meetings
-
-    const req = new Request("http://localhost/api/meetings/1", {
-      method: "DELETE",
-    });
-    const response = await DELETE(req, makeParams("1"));
-    expect(response.status).toBe(200);
-
-    expect(mockDeleteFile).not.toHaveBeenCalled();
-    expect(mockDeleteMeetingCollection).toHaveBeenCalledOnce();
+    expect(mockDeleteMeeting).toHaveBeenCalledWith(
+      "b1ffcd00-1a2b-4ef8-bb6d-7cc0ce491b22",
+      "1"
+    );
   });
 
   it("returns 404 when meeting not found", async () => {
-    mockDb.where.mockResolvedValueOnce([]);
+    const { NotFoundError } = await import("@/lib/api/errors");
+    mockDeleteMeeting.mockRejectedValueOnce(new NotFoundError("Meeting"));
 
     const req = new Request("http://localhost/api/meetings/999", {
       method: "DELETE",

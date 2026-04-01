@@ -12,7 +12,7 @@ export default function CookiePolicyPage() {
     <div className="mx-auto max-w-3xl px-4 py-24">
       <h1 className="mb-2 text-3xl font-bold">Cookie Policy</h1>
       <p className="text-muted-foreground mb-12 text-sm">
-        Last updated: March 2026
+        Last updated: April 2026
       </p>
 
       <div className="space-y-8">
@@ -178,7 +178,9 @@ export default function CookiePolicyPage() {
         <section>
           <h2 className="mb-2 text-lg font-semibold">7. Contact</h2>
           <p className="text-muted-foreground text-sm">
-            If you have questions about this Cookie Policy, contact us at{" "}
+            If you have questions about this Cookie Policy, contact Nyxone OÜ
+            (registry code 16172329), Harju maakond, Tallinn, Kesklinna
+            linnaosa, Narva mnt 5, 10117, Estonia, at{" "}
             <a
               href="mailto:hello@vernix.app"
               className="text-foreground underline"

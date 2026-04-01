@@ -54,7 +54,7 @@ const QUESTIONS = [
   },
   {
     q: "Does Vernix store call recordings?",
-    a: "No. Vernix processes the audio stream in real time for transcription, but only the text transcript is stored — not the raw audio or video.",
+    a: "By default, Vernix records the call audio and stores it securely so you can play it back later. You can disable recording per meeting by toggling 'No Recording' when creating a call. When recording is disabled, only the text transcript is stored.",
   },
   {
     q: "Do participants need to consent to recording?",
@@ -63,6 +63,18 @@ const QUESTIONS = [
   {
     q: "Can I export my data?",
     a: "Yes. Export individual calls as PDF or Markdown, or bulk export all calls as a ZIP archive. Your data is always yours.",
+  },
+  {
+    q: "How do integrations work?",
+    a: "Vernix connects to tools like Slack, Linear, GitHub, Jira, and more via MCP (Model Context Protocol). Once connected, the agent can pull live data from these tools during your call. For example, ask 'What are the open tickets in Linear?' and get an answer in real time. Connect integrations in Settings → Integrations.",
+  },
+  {
+    q: "Does Vernix have an API?",
+    a: "Yes. The REST API lets you create meetings, control the agent, fetch transcripts, manage tasks, and search across your data programmatically. There's also an MCP server for AI assistants like Claude Desktop and Cursor. API access requires a Pro plan. See the full documentation at /docs.",
+  },
+  {
+    q: "Can I automate meeting workflows?",
+    a: "Yes. Use the API to create a meeting, join the agent, and retrieve summaries and tasks automatically. You can also use the MCP server to let AI assistants like Claude manage your meetings directly. The API supports creating and joining in a single call with the autoJoin option.",
   },
   {
     q: "What happens if I cancel Pro?",
