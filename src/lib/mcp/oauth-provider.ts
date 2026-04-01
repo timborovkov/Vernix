@@ -26,6 +26,18 @@ const PRE_REGISTERED_CLIENTS: Record<
     clientIdEnv: "NOTION_MCP_CLIENT_ID",
     clientSecretEnv: "NOTION_MCP_CLIENT_SECRET",
   },
+  "https://mcp.linear.app": {
+    clientIdEnv: "LINEAR_MCP_CLIENT_ID",
+    clientSecretEnv: "LINEAR_MCP_CLIENT_SECRET",
+  },
+  "https://mcp.pipedrive.com": {
+    clientIdEnv: "PIPEDRIVE_MCP_CLIENT_ID",
+    clientSecretEnv: "PIPEDRIVE_MCP_CLIENT_SECRET",
+  },
+  "https://mcp.slack.com": {
+    clientIdEnv: "SLACK_MCP_CLIENT_ID",
+    clientSecretEnv: "SLACK_MCP_CLIENT_SECRET",
+  },
 };
 
 function getPreRegisteredClient(
