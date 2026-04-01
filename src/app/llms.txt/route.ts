@@ -1,6 +1,8 @@
 import { DISPLAY, FREE_TRIAL, LIMITS, PLANS } from "@/lib/billing/constants";
 import { getIntegrations, CATEGORIES } from "@/lib/integrations/catalog";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+
 function buildContent(): string {
   const integrations = getIntegrations();
 
@@ -56,13 +58,13 @@ ${integrationsByCategory}
 
 ## Links
 
-- Homepage: https://vernix.app
-- Tool Integrations: https://vernix.app/features/integrations
-- Meeting Memory: https://vernix.app/features/meeting-memory
-- Knowledge Base: https://vernix.app/features/context
-- Pricing: https://vernix.app/pricing
-- FAQ: https://vernix.app/faq
-- Contact: https://vernix.app/contact
+- Homepage: ${BASE_URL}
+- Tool Integrations: ${BASE_URL}/features/integrations
+- Meeting Memory: ${BASE_URL}/features/meeting-memory
+- Knowledge Base: ${BASE_URL}/features/context
+- Pricing: ${BASE_URL}/pricing
+- FAQ: ${BASE_URL}/faq
+- Contact: ${BASE_URL}/contact
 `;
 }
 
