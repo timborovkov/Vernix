@@ -11,11 +11,7 @@ import { detectPaywallTrigger } from "@/components/upgrade-dialog";
 
 describe("BillingApiError", () => {
   it("sets name, message, code, and status", () => {
-    const err = new BillingApiError(
-      "Voice requires Pro",
-      "BILLING_LIMIT",
-      403
-    );
+    const err = new BillingApiError("Voice requires Pro", "BILLING_LIMIT", 403);
     expect(err.name).toBe("BillingApiError");
     expect(err.message).toBe("Voice requires Pro");
     expect(err.code).toBe("BILLING_LIMIT");
@@ -46,9 +42,9 @@ describe("BillingApiError", () => {
 
 describe("isBillingError", () => {
   it("returns true for BillingApiError instances", () => {
-    expect(
-      isBillingError(new BillingApiError("x", "BILLING_LIMIT", 403))
-    ).toBe(true);
+    expect(isBillingError(new BillingApiError("x", "BILLING_LIMIT", 403))).toBe(
+      true
+    );
   });
 
   it("returns false for regular Error", () => {
