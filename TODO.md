@@ -77,3 +77,4 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 ## Scoped Context, Tools and Data Access
 
 - **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
+- **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
