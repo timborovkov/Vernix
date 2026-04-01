@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { usageEvents, documents, meetings } from "@/lib/db/schema";
-import { and, eq, isNull, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm";
 
 /**
  * Clean up orphaned DB records:
@@ -12,18 +12,25 @@ export async function runOrphanSweeper() {
   let cleaned = 0;
 
   // 1. Delete old orphaned usage events (meetingId set to null by cascade)
+  // Bounded via subquery since PostgreSQL doesn't support LIMIT on DELETE
   try {
-    const deleted = await db
-      .delete(usageEvents)
+    const toDelete = await db
+      .select({ id: usageEvents.id })
+      .from(usageEvents)
       .where(
         and(isNull(usageEvents.meetingId), lt(usageEvents.createdAt, cutoff))
       )
-      .returning({ id: usageEvents.id });
-    if (deleted.length > 0) {
+      .limit(100);
+
+    if (toDelete.length > 0) {
+      const ids = toDelete.map((r) => r.id);
+      await db
+        .delete(usageEvents)
+        .where(inArray(usageEvents.id, ids));
       console.log(
-        `[Orphan Sweeper] Deleted ${deleted.length} orphaned usage events`
+        `[Orphan Sweeper] Deleted ${ids.length} orphaned usage events`
       );
-      cleaned += deleted.length;
+      cleaned += ids.length;
     }
   } catch (err) {
     console.error("[Orphan Sweeper] Usage event cleanup failed:", err);
