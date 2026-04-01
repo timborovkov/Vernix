@@ -26,7 +26,8 @@ interface CreateMeetingDialogProps {
     title: string,
     joinLink: string,
     agenda?: string,
-    silent?: boolean
+    silent?: boolean,
+    noRecording?: boolean
   ) => Promise<void>;
 }
 
@@ -39,6 +40,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
   const [joinLink, setJoinLink] = useState("");
   const [agenda, setAgenda] = useState("");
   const [silent, setSilent] = useState(false);
+  const [noRecording, setNoRecording] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
     null
@@ -51,11 +53,18 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
 
     setLoading(true);
     try {
-      await onCreate(title, joinLink, agenda || undefined, silent || undefined);
+      await onCreate(
+        title,
+        joinLink,
+        agenda || undefined,
+        silent || undefined,
+        noRecording || undefined
+      );
       setTitle("");
       setJoinLink("");
       setAgenda("");
       setSilent(false);
+      setNoRecording(false);
       setOpen(false);
     } catch (error) {
       if (isBillingError(error)) {
@@ -129,6 +138,21 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               <Label htmlFor="silent">Silent Mode</Label>
               <p className="text-muted-foreground text-xs">
                 Text-only — responds via meeting chat, no voice
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <input
+              type="checkbox"
+              id="noRecording"
+              checked={noRecording}
+              onChange={(e) => setNoRecording(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
+            />
+            <div>
+              <Label htmlFor="noRecording">Disable recording</Label>
+              <p className="text-muted-foreground text-xs">
+                No video will be stored for this call
               </p>
             </div>
           </div>
