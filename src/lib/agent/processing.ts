@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { meetings } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { meetings, users } from "@/lib/db/schema";
+import { and, eq, count } from "drizzle-orm";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { generateMeetingSummary } from "@/lib/summary/generate";
 import { extractActionItems } from "@/lib/tasks/extract";
@@ -62,6 +62,13 @@ export async function processMeetingEnd(
       await storeExtractedTasks(meetingId, userId, items);
     } catch (err) {
       console.error("Action item extraction failed:", err);
+    }
+
+    // First meeting email (non-critical)
+    try {
+      await sendFirstMeetingEmail(meetingId, userId, metadata);
+    } catch (err) {
+      console.error("[Processing] First meeting email failed:", err);
     }
   } catch (error) {
     console.error("Post-processing failed:", error);
@@ -202,4 +209,61 @@ async function captureRecordingAndParticipants(
   }
 
   return !recordingFailed;
+}
+
+/**
+ * Send an email after the user's first completed meeting.
+ * Only sends once (tracked via firstMeetingEmailSentAt).
+ */
+async function sendFirstMeetingEmail(
+  meetingId: string,
+  userId: string,
+  metadata: Record<string, unknown>
+): Promise<void> {
+  const { sendEmail } = await import("@/lib/email/send");
+  const { getFirstMeetingEmailHtml } = await import("@/lib/email/templates");
+  const { shouldSendEmail, buildUnsubscribeUrl } = await import(
+    "@/lib/email/preferences"
+  );
+
+  // Check if user already received this email
+  const [user] = await db
+    .select({
+      firstMeetingEmailSentAt: users.firstMeetingEmailSentAt,
+      name: users.name,
+      email: users.email,
+      emailPreferences: users.emailPreferences,
+    })
+    .from(users)
+    .where(eq(users.id, userId));
+
+  if (!user || user.firstMeetingEmailSentAt) return;
+  if (!shouldSendEmail(user.emailPreferences, "product")) return;
+
+  // Check this is actually the first completed meeting
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(meetings)
+    .where(
+      and(eq(meetings.userId, userId), eq(meetings.status, "completed"))
+    );
+
+  if (total !== 1) return;
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+  const summaryUrl = `${appUrl}/dashboard/meetings/${meetingId}`;
+  const title = (metadata.title as string) ?? "Your meeting";
+  const unsubscribeUrl = buildUnsubscribeUrl(userId, "product");
+
+  await sendEmail({
+    to: user.email,
+    subject: "Your first meeting summary is ready",
+    html: getFirstMeetingEmailHtml(user.name, title, summaryUrl, unsubscribeUrl),
+    unsubscribeUrl,
+  });
+
+  await db
+    .update(users)
+    .set({ firstMeetingEmailSentAt: new Date(), updatedAt: new Date() })
+    .where(eq(users.id, userId));
 }

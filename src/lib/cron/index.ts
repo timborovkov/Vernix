@@ -10,6 +10,9 @@ import { runQdrantCleanup } from "./jobs/qdrant-cleanup";
 import { runStorageCleanup } from "./jobs/storage-cleanup";
 import { runInactiveCleanup } from "./jobs/inactive-cleanup";
 import { runOrphanSweeper } from "./jobs/orphan-sweeper";
+import { runMidTrialCheckin } from "./jobs/mid-trial-checkin";
+import { runTrialWarning } from "./jobs/trial-warning";
+import { runWinBack } from "./jobs/win-back";
 
 interface CronJob {
   name: string;
@@ -112,6 +115,24 @@ export const CRON_JOBS: CronJob[] = [
       now.getUTCDay() === 0 &&
       now.getUTCHours() === 3 &&
       now.getUTCMinutes() < 5,
+  },
+  {
+    name: "mid-trial-checkin",
+    handler: runMidTrialCheckin,
+    // Daily at 10:00 UTC
+    shouldRun: (now) => now.getUTCHours() === 10 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "trial-warning",
+    handler: runTrialWarning,
+    // Daily at 10:00 UTC
+    shouldRun: (now) => now.getUTCHours() === 10 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "win-back",
+    handler: runWinBack,
+    // Daily at 11:00 UTC
+    shouldRun: (now) => now.getUTCHours() === 11 && now.getUTCMinutes() < 5,
   },
 ];
 

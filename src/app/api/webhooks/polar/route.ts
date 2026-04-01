@@ -4,7 +4,15 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { PLANS, FREE_TRIAL } from "@/lib/billing/constants";
 import { sendEmail } from "@/lib/email/send";
-import { getLastChanceRetentionHtml } from "@/lib/email/templates";
+import {
+  getLastChanceRetentionHtml,
+  getTrialStartedEmailHtml,
+  getTrialExpiredEmailHtml,
+} from "@/lib/email/templates";
+import {
+  shouldSendEmail,
+  buildUnsubscribeUrl,
+} from "@/lib/email/preferences";
 
 const RETENTION_EMAIL_COOLDOWN_DAYS = 30;
 
@@ -57,6 +65,41 @@ export const POST = Webhooks({
       console.log(
         `[Polar Webhook] Subscription created (trialing) for user ${externalId}, trial ends ${trialEndsAt.toISOString()}`
       );
+
+      // Send trial started email (fire-and-forget)
+      (async () => {
+        try {
+          const [user] = await db
+            .select({
+              name: users.name,
+              email: users.email,
+              emailPreferences: users.emailPreferences,
+            })
+            .from(users)
+            .where(eq(users.id, externalId));
+          if (
+            user &&
+            shouldSendEmail(user.emailPreferences, "product")
+          ) {
+            const unsubscribeUrl = buildUnsubscribeUrl(
+              externalId,
+              "product"
+            );
+            await sendEmail({
+              to: user.email,
+              subject: "Your Vernix Pro trial has started",
+              html: getTrialStartedEmailHtml(
+                user.name,
+                trialEndsAt,
+                unsubscribeUrl
+              ),
+              unsubscribeUrl,
+            });
+          }
+        } catch (err) {
+          console.error("[Polar Webhook] Trial started email failed:", err);
+        }
+      })();
     } else {
       // Direct subscription (no trial): activate Pro immediately
       await db
@@ -167,6 +210,16 @@ export const POST = Webhooks({
     const externalId = payload.data.customer?.externalId;
     if (!externalId) return;
 
+    // Fetch user info before downgrade for email
+    const [user] = await db
+      .select({
+        name: users.name,
+        email: users.email,
+        emailPreferences: users.emailPreferences,
+      })
+      .from(users)
+      .where(eq(users.id, externalId));
+
     await db
       .update(users)
       .set({
@@ -175,11 +228,25 @@ export const POST = Webhooks({
         trialEndsAt: null,
         currentPeriodStart: null,
         currentPeriodEnd: null,
+        churnedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(users.id, externalId));
 
     console.log(`[Polar Webhook] Subscription revoked for user ${externalId}`);
+
+    // Send trial expired / downgrade email (fire-and-forget)
+    if (user && shouldSendEmail(user.emailPreferences, "product")) {
+      const unsubscribeUrl = buildUnsubscribeUrl(externalId, "product");
+      sendEmail({
+        to: user.email,
+        subject: "Your Vernix Pro trial has ended",
+        html: getTrialExpiredEmailHtml(user.name, unsubscribeUrl),
+        unsubscribeUrl,
+      }).catch((err) =>
+        console.error("[Polar Webhook] Trial expired email failed:", err)
+      );
+    }
   },
 
   onCustomerCreated: async (payload) => {
