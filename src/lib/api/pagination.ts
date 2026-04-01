@@ -9,8 +9,6 @@ export const paginationSchema = z.object({
   cursor: z.string().optional(),
 });
 
-export type PaginationParams = z.infer<typeof paginationSchema>;
-
 interface CursorData {
   createdAt: string; // ISO date
   id: string;
