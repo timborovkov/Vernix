@@ -58,6 +58,12 @@ export default function PrivacyPage() {
               type, pages visited, feature interactions, error reports, and
               performance metrics.
             </li>
+            <li>
+              <strong>API access data</strong> — API key usage logs, request
+              metadata (timestamps, endpoints, IP addresses), and rate limit
+              counters. API keys are stored as bcrypt hashes; only a
+              non-reversible prefix is retained for identification.
+            </li>
           </ul>
         </section>
 
