@@ -24,15 +24,15 @@ export function getWelcomeEmailHtml(name: string): string {
       <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
       <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px">
         Thanks for signing up. Vernix joins your video calls, transcribes
-        everything, and gives you searchable, actionable meeting intelligence.
+        everything, and gives you searchable, actionable call intelligence.
       </p>
       <div style="background:#f0f0ff;border-radius:8px;padding:16px;margin:0 0 24px">
         <p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">Start a free Pro trial to unlock:</p>
         <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:18px;margin:0">
-          <li>Connect tools like Slack, Linear, or your CRM for live data in meetings</li>
+          <li>Connect tools like Slack, Linear, or your CRM for live data in calls</li>
           <li>Voice agent that answers questions and takes action during calls</li>
-          <li>Search across all your meetings and uploaded documents</li>
-          <li>AI chat across all your meetings</li>
+          <li>Search across all your calls and uploaded documents</li>
+          <li>AI chat across all your calls</li>
         </ul>
         <p style="font-size:12px;color:#888;margin:8px 0 0">${DISPLAY.trialDays} days free, then &euro;${PRICING[PLANS.PRO].monthly}/mo. Cancel anytime.</p>
       </div>
@@ -44,11 +44,11 @@ export function getWelcomeEmailHtml(name: string): string {
       </ol>
       <div style="text-align:center;margin:32px 0">
         <a href="${APP_URL}/dashboard" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
-          Start Your First Meeting
+          Start Your First Call
         </a>
       </div>
       <p style="font-size:12px;color:#999;line-height:1.6;margin:0;text-align:center">
-        Free plan includes ${LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings per month.
+        Free plan includes ${LIMITS[PLANS.FREE].meetingsPerMonth} silent calls per month.
         Start a Pro trial to connect your tools and unlock the voice agent.
       </p>
       <p style="font-size:12px;color:#999;margin:8px 0 0;text-align:center">
@@ -73,7 +73,7 @@ export function getFreePlanUpgradeReminderHtml(name: string): string {
     <div style="padding:32px">
       <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
       <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px">
-        Upgrade to Pro to connect your tools and let Vernix answer live business questions during meetings.
+        Upgrade to Pro to connect your tools and let Vernix answer live business questions during calls.
       </p>
       <div style="background:#f0f0ff;border-radius:8px;padding:16px;margin:0 0 24px">
         <p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">With Pro, you unlock:</p>
@@ -81,7 +81,7 @@ export function getFreePlanUpgradeReminderHtml(name: string): string {
           <li>Integrations with tools like Slack, Linear, and GitHub</li>
           <li>Voice agent responses inside live calls</li>
           <li>Higher usage limits for docs and AI queries</li>
-          <li>&euro;${MONTHLY_CREDIT[PLANS.PRO]} monthly meeting credit included</li>
+          <li>&euro;${MONTHLY_CREDIT[PLANS.PRO]} monthly call credit included</li>
         </ul>
       </div>
       <div style="text-align:center;margin:32px 0">
@@ -124,7 +124,7 @@ export function getLastChanceRetentionHtml(
         <p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">If you stay on Pro, you keep:</p>
         <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:18px;margin:0">
           <li>Tool integrations for live data in calls</li>
-          <li>Voice agent responses during meetings</li>
+          <li>Voice agent responses during calls</li>
           <li>Higher limits for knowledge and AI usage</li>
         </ul>
       </div>

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { CreditCard } from "lucide-react";
 import { PLANS, MONTHLY_CREDIT, PRICING } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+import { formatDate } from "@/lib/date";
+import { useTimezone } from "@/hooks/use-timezone";
 import type { BillingData } from "@/hooks/use-billing";
 
 function UsageBar({
@@ -53,6 +55,7 @@ interface BillingCardProps {
 }
 
 export function BillingCard({ billing, loading }: BillingCardProps) {
+  const timezone = useTimezone();
   if (loading) {
     return (
       <Card>
@@ -140,7 +143,7 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
         {/* Meeting usage */}
         <div className="space-y-3">
           <UsageBar
-            label="Meeting minutes"
+            label="Call minutes"
             used={billing.usage.voiceMinutes + billing.usage.silentMinutes}
             limit={billing.limits.meetingMinutesPerMonth}
             unit="min"
@@ -224,8 +227,8 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
 
         {/* Period info */}
         <p className="text-muted-foreground text-xs">
-          Billing period: {new Date(billing.period.start).toLocaleDateString()}{" "}
-          — {new Date(billing.period.end).toLocaleDateString()}
+          Billing period: {formatDate(billing.period.start, timezone)} —{" "}
+          {formatDate(billing.period.end, timezone)}
         </p>
       </CardContent>
     </Card>

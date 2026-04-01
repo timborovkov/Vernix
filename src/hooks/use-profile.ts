@@ -14,6 +14,7 @@ interface Profile {
   email: string;
   image: string | null;
   hasPassword: boolean;
+  timezone: string | null;
   accounts: LinkedAccount[];
 }
 
@@ -75,6 +76,26 @@ export function useProfile() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const updateTimezone = useMutation({
+    mutationFn: async (timezone: string | null) => {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timezone }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to update");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.profile.all });
+      toast.success("Timezone updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const unlinkAccount = useMutation({
     mutationFn: async (provider: string) => {
       const res = await fetch("/api/user/accounts", {
@@ -102,6 +123,8 @@ export function useProfile() {
     updatingName: updateName.isPending,
     changePassword: changePassword.mutateAsync,
     changingPassword: changePassword.isPending,
+    updateTimezone: updateTimezone.mutateAsync,
+    updatingTimezone: updateTimezone.isPending,
     unlinkAccount: unlinkAccount.mutateAsync,
     unlinkingAccount: unlinkAccount.isPending,
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useApiKeys } from "@/hooks/use-api-keys";
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Link2, Lock } from "lucide-react";
+import { ArrowLeft, User, Link2, Lock, Globe } from "lucide-react";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 interface SettingsFormProps {
@@ -33,6 +33,8 @@ export function SettingsForm({
     updatingName,
     changePassword,
     changingPassword,
+    updateTimezone,
+    updatingTimezone,
     unlinkAccount,
     unlinkingAccount,
   } = useProfile();
@@ -41,6 +43,28 @@ export function SettingsForm({
   const [nameEditing, setNameEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [tzSearch, setTzSearch] = useState("");
+
+  const browserTz =
+    typeof window !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "UTC";
+  const allTimezones = useMemo(
+    () =>
+      typeof Intl.supportedValuesOf === "function"
+        ? Intl.supportedValuesOf("timeZone")
+        : [browserTz],
+    [browserTz]
+  );
+  const filteredTimezones = useMemo(
+    () =>
+      tzSearch
+        ? allTimezones.filter((tz) =>
+            tz.toLowerCase().includes(tzSearch.toLowerCase())
+          )
+        : allTimezones,
+    [tzSearch, allTimezones]
+  );
 
   const handleNameSave = async () => {
     try {
@@ -154,6 +178,56 @@ export function SettingsForm({
                 </div>
               </>
             ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Timezone */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe className="h-4 w-4" />
+              Timezone
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              All dates and times across Vernix will use this timezone.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={!profile?.timezone ? "accent" : "outline"}
+                  disabled={updatingTimezone}
+                  onClick={() => updateTimezone(null)}
+                >
+                  Auto ({browserTz})
+                </Button>
+              </div>
+              <Input
+                placeholder="Search timezones..."
+                value={tzSearch}
+                onChange={(e) => setTzSearch(e.target.value)}
+                className="max-w-xs"
+              />
+              <div className="border-border max-h-48 max-w-xs overflow-y-auto rounded-md border">
+                {filteredTimezones.slice(0, 100).map((tz) => (
+                  <button
+                    key={tz}
+                    type="button"
+                    className={`hover:bg-muted w-full px-3 py-1.5 text-left text-sm transition-colors ${
+                      profile?.timezone === tz
+                        ? "bg-ring/10 text-foreground font-medium"
+                        : "text-muted-foreground"
+                    }`}
+                    onClick={() => updateTimezone(tz)}
+                    disabled={updatingTimezone}
+                  >
+                    {tz}
+                  </button>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -324,9 +398,9 @@ export function SettingsForm({
             {billing && !billing.limits.apiEnabled ? (
               <div className="space-y-3 py-2">
                 <p className="text-muted-foreground text-sm">
-                  Access your meetings, transcripts, and search from Claude
+                  Access your calls, transcripts, and search from Claude
                   Desktop, Cursor, or any MCP client. Ask questions about your
-                  meetings from your favorite AI tools.
+                  calls from your favorite AI tools.
                 </p>
                 <Button
                   size="sm"
@@ -364,7 +438,7 @@ export function SettingsForm({
             <div>
               <p className="text-sm font-medium">Integrations</p>
               <p className="text-muted-foreground text-xs">
-                Connect Slack, Linear, GitHub, and more to your meetings.
+                Connect Slack, Linear, GitHub, and more to your calls.
               </p>
             </div>
             <Button

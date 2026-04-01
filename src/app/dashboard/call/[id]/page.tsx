@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useMeetingDetail } from "@/hooks/use-meeting-detail";
 import { useKnowledge } from "@/hooks/use-knowledge";
 import { useMeetingTasks } from "@/hooks/use-tasks";
+import { formatDateTime } from "@/lib/date";
+import { useTimezone } from "@/hooks/use-timezone";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { statusVariant } from "@/lib/meetings/constants";
@@ -44,6 +46,8 @@ function getInitialTab(): TabId {
 export default function MeetingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<TabId>(getInitialTab);
+
+  const timezone = useTimezone();
 
   const {
     meeting,
@@ -126,7 +130,7 @@ export default function MeetingDetailPage() {
   if (!meeting) {
     return (
       <div className="text-muted-foreground py-12 text-center">
-        {error ?? "Meeting not found"}
+        {error ?? "Call not found"}
       </div>
     );
   }
@@ -174,10 +178,10 @@ export default function MeetingDetailPage() {
       {/* Timestamps */}
       <div className="text-muted-foreground mt-2 flex gap-4 text-sm">
         {meeting.startedAt && (
-          <span>Started: {new Date(meeting.startedAt).toLocaleString()}</span>
+          <span>Started: {formatDateTime(meeting.startedAt, timezone)}</span>
         )}
         {meeting.endedAt && (
-          <span>Ended: {new Date(meeting.endedAt).toLocaleString()}</span>
+          <span>Ended: {formatDateTime(meeting.endedAt, timezone)}</span>
         )}
       </div>
 

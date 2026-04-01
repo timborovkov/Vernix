@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Key, Trash2, Plus, Copy, Check } from "lucide-react";
+import { formatDate } from "@/lib/date";
+import { useTimezone } from "@/hooks/use-timezone";
 
 interface ApiKeyInfo {
   id: string;
@@ -29,6 +31,7 @@ interface ApiKeyListProps {
 }
 
 export function ApiKeyList({ keys, onCreate, onDelete }: ApiKeyListProps) {
+  const timezone = useTimezone();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
@@ -141,7 +144,7 @@ export function ApiKeyList({ keys, onCreate, onDelete }: ApiKeyListProps) {
                   <code>{key.keyPrefix}...</code>
                   {key.lastUsedAt && (
                     <span className="ml-2">
-                      Last used: {new Date(key.lastUsedAt).toLocaleDateString()}
+                      Last used: {formatDate(key.lastUsedAt, timezone)}
                     </span>
                   )}
                 </p>

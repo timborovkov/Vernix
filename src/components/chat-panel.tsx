@@ -91,8 +91,8 @@ export function ChatPanel({
           {messages.length === 0 && (
             <p className="text-muted-foreground py-8 text-center text-sm italic">
               {meetingId
-                ? "Ask questions about this meeting"
-                : "Ask questions about any of your meetings"}
+                ? "Ask questions about this call"
+                : "Ask questions about any of your calls"}
             </p>
           )}
           {messages.map((message) => (

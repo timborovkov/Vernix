@@ -57,29 +57,28 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
     title: "Unlock the voice agent",
     description:
       "Connect your tools and get an assistant that answers questions with real business data during calls. Ask it to look things up, take action, or pull reports, live.",
-    proValue: `Tool integrations, voice agent, unlimited meetings with ${DISPLAY.monthlyCredit} monthly credit`,
+    proValue: `Tool integrations, voice agent, unlimited calls with ${DISPLAY.monthlyCredit} monthly credit`,
     limitType: "feature",
   },
   meeting_minutes: {
     icon: Clock,
     title: "Monthly minutes used up",
-    description: `You've used all your meeting minutes for this period. Upgrade to Pro for unlimited minutes with ${DISPLAY.monthlyCredit} of usage credit included every month.`,
+    description: `You've used all your call minutes for this period. Upgrade to Pro for unlimited minutes with ${DISPLAY.monthlyCredit} of usage credit included every month.`,
     proValue: `${DISPLAY.monthlyCredit} credit covers ~${DISPLAY.voiceHoursPerCredit} hrs voice or ~${DISPLAY.silentHoursPerCredit} hrs silent per month`,
     limitType: "quota",
   },
   meeting_count: {
     icon: Users,
-    title: "Monthly meeting limit reached",
-    description:
-      "You've reached the maximum number of meetings for this period.",
-    proValue: `Up to ${LIMITS[PLANS.PRO].meetingsPerMonth} meetings per month`,
+    title: "Monthly call limit reached",
+    description: "You've reached the maximum number of calls for this period.",
+    proValue: `Up to ${LIMITS[PLANS.PRO].meetingsPerMonth} calls per month`,
     limitType: "quota",
   },
   concurrent_meetings: {
     icon: Users,
-    title: "One meeting at a time on Free",
-    description: `Free accounts can run one meeting at a time. Upgrade to run up to ${LIMITS[PLANS.PRO].concurrentMeetings} meetings simultaneously.`,
-    proValue: `${LIMITS[PLANS.PRO].concurrentMeetings} concurrent meetings`,
+    title: "One call at a time on Free",
+    description: `Free accounts can run one call at a time. Upgrade to run up to ${LIMITS[PLANS.PRO].concurrentMeetings} calls simultaneously.`,
+    proValue: `${LIMITS[PLANS.PRO].concurrentMeetings} concurrent calls`,
     limitType: "feature",
   },
   document_count: {
@@ -114,7 +113,7 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
   rag_queries: {
     icon: MessageSquare,
     title: "Daily question limit reached",
-    description: `You've used all ${LIMITS[PLANS.FREE].ragQueriesPerDay} questions for today. Upgrade for ${LIMITS[PLANS.PRO].ragQueriesPerDay} per day — keep asking about your meetings.`,
+    description: `You've used all ${LIMITS[PLANS.FREE].ragQueriesPerDay} questions for today. Upgrade for ${LIMITS[PLANS.PRO].ragQueriesPerDay} per day — keep asking about your calls.`,
     proValue: `${LIMITS[PLANS.PRO].ragQueriesPerDay} queries per day`,
     limitType: "quota",
   },
@@ -122,7 +121,7 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
     icon: Zap,
     title: "Integrations require Pro",
     description:
-      "Connect tools like Slack, Linear, GitHub, or your CRM. The agent pulls live data and takes action during your meetings.",
+      "Connect tools like Slack, Linear, GitHub, or your CRM. The agent pulls live data and takes action during your calls.",
     proValue: `Tool integrations, ${LIMITS[PLANS.PRO].apiRequestsPerDay} API requests/day`,
     limitType: "feature",
   },

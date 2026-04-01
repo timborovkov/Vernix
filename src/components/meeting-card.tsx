@@ -16,6 +16,8 @@ import { statusVariant } from "@/lib/meetings/constants";
 import Link from "next/link";
 import { Play, Square, Trash2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/date";
+import { useTimezone } from "@/hooks/use-timezone";
 import { isBillingError } from "@/lib/billing/errors";
 import {
   UpgradeDialog,
@@ -36,6 +38,7 @@ export function MeetingCard({
   onStop,
   onDelete,
 }: MeetingCardProps) {
+  const timezone = useTimezone();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmStop, setConfirmStop] = useState(false);
   const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
@@ -82,7 +85,10 @@ export function MeetingCard({
       <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0">
           <CardTitle className="text-lg">
-            <Link href={`/dashboard/${meeting.id}`} className="hover:underline">
+            <Link
+              href={`/dashboard/call/${meeting.id}`}
+              className="hover:underline"
+            >
               {meeting.title}
             </Link>
           </CardTitle>
@@ -107,18 +113,18 @@ export function MeetingCard({
           </a>
           {meeting.startedAt && (
             <p className="text-muted-foreground mt-1 text-xs">
-              Started: {new Date(meeting.startedAt).toLocaleString()}
+              Started: {formatDateTime(meeting.startedAt, timezone)}
             </p>
           )}
           {meeting.endedAt && (
             <p className="text-muted-foreground text-xs">
-              Ended: {new Date(meeting.endedAt).toLocaleString()}
+              Ended: {formatDateTime(meeting.endedAt, timezone)}
             </p>
           )}
           {meeting.status === "active" && (
             <p className="mt-2 text-xs text-green-600">
               {isSilent
-                ? "Text agent responds via meeting chat when called: Vernix"
+                ? "Text agent responds via call chat when called: Vernix"
                 : "Voice agent responds to: Vernix, Agent, Assistant"}
             </p>
           )}
@@ -160,7 +166,7 @@ export function MeetingCard({
       <ConfirmDialog
         open={confirmStop}
         onOpenChange={setConfirmStop}
-        title="Stop meeting agent?"
+        title="Stop call agent?"
         description="Summary will be generated after stopping."
         confirmLabel="Stop"
         onConfirm={() => {
@@ -172,7 +178,7 @@ export function MeetingCard({
       <ConfirmDialog
         open={confirmDelete}
         onOpenChange={setConfirmDelete}
-        title="Delete this meeting?"
+        title="Delete this call?"
         description="This will also remove all transcript data. This action cannot be undone."
         confirmLabel="Delete"
         variant="destructive"

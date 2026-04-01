@@ -32,7 +32,7 @@ const UNLOCKED_FEATURES = [
   },
   {
     icon: Search,
-    label: "Cross-meeting search",
+    label: "Cross-call search",
     description: "Search across all transcripts and documents",
   },
   {
@@ -43,12 +43,12 @@ const UNLOCKED_FEATURES = [
   {
     icon: MessageSquare,
     label: "AI chat",
-    description: "Ask questions about your meetings and get instant answers",
+    description: "Ask questions about your calls and get instant answers",
   },
   {
     icon: CreditCard,
     label: `${DISPLAY.monthlyCredit} monthly credit`,
-    description: `Covers ~${DISPLAY.voiceHoursPerCredit} hours of voice or ~${DISPLAY.silentHoursPerCredit} hours of silent meetings`,
+    description: `Covers ~${DISPLAY.voiceHoursPerCredit} hours of voice or ~${DISPLAY.silentHoursPerCredit} hours of silent calls`,
   },
 ];
 

@@ -145,7 +145,7 @@ export function OverviewTab({
           onClick={() => window.open(meeting.joinLink, "_blank", "noopener")}
         >
           <ExternalLink className="mr-1 h-3.5 w-3.5" />
-          Open Meeting Link
+          Open Call Link
         </Button>
       )}
 
@@ -209,7 +209,7 @@ export function OverviewTab({
           <textarea
             value={agenda}
             onChange={(e) => onAgendaChange(e.target.value)}
-            placeholder="Meeting goals, topics to discuss, prep notes..."
+            placeholder="Call goals, topics to discuss, prep notes..."
             rows={3}
             disabled={!isEditable}
             className="border-input bg-background placeholder:text-muted-foreground w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
@@ -235,7 +235,7 @@ export function OverviewTab({
                     Silent Mode
                   </Label>
                   <span className="text-muted-foreground text-xs">
-                    Text-only — responds via meeting chat, no voice
+                    Text-only — responds via call chat, no voice
                   </span>
                 </div>
               )}

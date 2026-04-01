@@ -75,7 +75,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
         setPaywallTrigger(trigger);
         setPaywallMessage(error.message);
       } else {
-        toast.error("Failed to create meeting");
+        toast.error("Failed to create call");
       }
     } finally {
       setLoading(false);
@@ -86,15 +86,15 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="accent" />}>
         <Plus className="mr-2 h-4 w-4" />
-        New Meeting
+        New Call
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create Meeting</DialogTitle>
+          <DialogTitle>New Call</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Meeting Title</Label>
+            <Label htmlFor="title">Call Title</Label>
             <Input
               id="title"
               placeholder="Weekly standup"
@@ -118,7 +118,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
             <Label htmlFor="agenda">Agenda (optional)</Label>
             <textarea
               id="agenda"
-              placeholder="Meeting goals, topics to discuss, prep notes..."
+              placeholder="Call goals, topics to discuss, prep notes..."
               value={agenda}
               onChange={(e) => setAgenda(e.target.value)}
               rows={3}
@@ -137,7 +137,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
             <div>
               <Label htmlFor="silent">Silent Mode</Label>
               <p className="text-muted-foreground text-xs">
-                Text-only — responds via meeting chat, no voice
+                Text-only — responds via call chat, no voice
               </p>
             </div>
           </div>
@@ -175,11 +175,11 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
           <p className="text-muted-foreground text-xs">
             Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}
             {silent || voiceDisabled
-              ? "The agent will listen passively and respond via meeting chat when called by name (Vernix)."
+              ? "The agent will listen passively and respond via call chat when called by name (Vernix)."
               : "The AI agent will join and respond when called by name (Vernix, Agent, or Assistant)."}
           </p>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating..." : "Create Meeting"}
+            {loading ? "Creating..." : "Create Call"}
           </Button>
         </form>
       </DialogContent>

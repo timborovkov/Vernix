@@ -13,22 +13,9 @@ import {
   ListChecks,
   User,
 } from "lucide-react";
+import { formatRelativeTime } from "@/lib/date";
 
 type StatusFilter = "all" | "open" | "completed";
-
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString();
-}
 
 export default function TasksPage() {
   const [filter, setFilter] = useState<StatusFilter>("open");
@@ -56,7 +43,7 @@ export default function TasksPage() {
         <div className="flex-1">
           <h1 className="text-2xl font-bold">Tasks</h1>
           <p className="text-muted-foreground text-sm">
-            Action items from your meetings
+            Action items from your calls
           </p>
         </div>
       </div>
@@ -98,7 +85,7 @@ export default function TasksPage() {
                 : "No tasks yet"}
           </p>
           <p className="text-sm">
-            Tasks are automatically extracted from your meeting transcripts.
+            Tasks are automatically extracted from your call transcripts.
           </p>
         </div>
       ) : (
@@ -136,7 +123,7 @@ export default function TasksPage() {
                   <div className="mt-0.5 flex items-center gap-2">
                     {task.meetingTitle && (
                       <Link
-                        href={`/dashboard/${task.meetingId}`}
+                        href={`/dashboard/call/${task.meetingId}`}
                         className="text-muted-foreground hover:text-foreground truncate text-xs transition-colors"
                       >
                         {task.meetingTitle}

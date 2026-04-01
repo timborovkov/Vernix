@@ -18,7 +18,7 @@ import { DISPLAY } from "@/lib/billing/constants";
 export const metadata: Metadata = {
   title: "Connect Your Tools to Video Calls | Vernix Integrations",
   description:
-    "Stop switching tabs during meetings. Connect Slack, Linear, GitHub, or your CRM. Ask Vernix and get live answers during the call.",
+    "Stop switching tabs during calls. Connect Slack, Linear, GitHub, or your CRM. Ask Vernix and get live answers during the call.",
 };
 
 const USE_CASES = [
@@ -27,7 +27,7 @@ const USE_CASES = [
     before:
       "Open Linear, share screen, scroll through boards, lose 2 minutes of everyone's time.",
     after:
-      '"Vernix, what\'s left in the current sprint?" The agent checks Linear and answers in 3 seconds. Meeting keeps moving.',
+      '"Vernix, what\'s left in the current sprint?" The agent checks Linear and answers in 3 seconds. Call keeps moving.',
   },
   {
     scenario: "A client asks about their support ticket.",
@@ -54,7 +54,7 @@ const STEPS = [
   },
   {
     step: "2",
-    title: "Start a meeting",
+    title: "Start a call",
     description:
       "Paste a Zoom, Meet, Teams, or Webex link. Vernix joins and connects to your tools automatically.",
   },
@@ -186,11 +186,11 @@ export default function IntegrationsPage() {
             </div>
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 shrink-0" />
-              Cross-meeting search
+              Cross-call search
             </div>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 shrink-0" />
-              AI chat across all meetings
+              AI chat across all calls
             </div>
           </div>
         </div>

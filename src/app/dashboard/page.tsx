@@ -76,7 +76,7 @@ export default function DashboardPage() {
       {!loading && meetings.length > 0 && (
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Input
-            placeholder="Search meetings..."
+            placeholder="Search calls..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="sm:max-w-xs"
@@ -98,7 +98,7 @@ export default function DashboardPage() {
 
       {showChat && (
         <div className="mb-6">
-          <ChatPanel placeholder="Ask about any of your meetings..." />
+          <ChatPanel placeholder="Ask about any of your calls..." />
         </div>
       )}
 
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                   <span className="flex-1 truncate">{task.title}</span>
                   {task.meetingTitle && (
                     <Link
-                      href={`/dashboard/${task.meetingId}`}
+                      href={`/dashboard/call/${task.meetingId}`}
                       className="text-muted-foreground truncate text-xs hover:underline"
                     >
                       {task.meetingTitle}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                 Start your first call
               </h2>
               <p className="text-muted-foreground mb-6 max-w-sm text-sm">
-                Paste a meeting link and Vernix joins your call, transcribes the
+                Paste a call link and Vernix joins your call, transcribes the
                 conversation, and generates a summary with action items.
               </p>
               <CreateMeetingDialog
@@ -260,7 +260,7 @@ export default function DashboardPage() {
         <MeetingList
           meetings={filtered}
           emptyMessage={
-            meetings.length > 0 ? "No meetings match your filters" : undefined
+            meetings.length > 0 ? "No calls match your filters" : undefined
           }
           onJoin={joinAgent}
           onStop={stopAgent}

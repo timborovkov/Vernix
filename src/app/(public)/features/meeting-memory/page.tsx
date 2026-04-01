@@ -15,9 +15,9 @@ import {
 import { LIMITS, PLANS } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
-  title: "AI Meeting Transcription and Search | Vernix",
+  title: "AI Call Transcription and Search | Vernix",
   description:
-    "Automatic transcription, summaries, and action items for every call. Search across all your meetings to find who said what, when. Free to start.",
+    "Automatic transcription, summaries, and action items for every call. Search across all your calls to find who said what, when. Free to start.",
 };
 
 const USE_CASES = [
@@ -34,27 +34,27 @@ const USE_CASES = [
     before:
       "Schedule a 30-minute catch-up call. Repeat everything that was already discussed.",
     after:
-      "Share the meeting search. They read the summaries, decisions, and action items on their own time.",
+      "Share the call search. They read the summaries, decisions, and action items on their own time.",
   },
   {
     scenario: "You need to remember who committed to what last week.",
     before:
       "Check your notes (if you took any). Ask around. Piece it together from memory.",
     after:
-      "Open the meeting, see the auto-extracted action items with assignees. Done.",
+      "Open the call, see the auto-extracted action items with assignees. Done.",
   },
 ];
 
 const STEPS = [
   {
     step: "1",
-    title: "Paste your meeting link",
+    title: "Paste your call link",
     description:
       "Zoom, Meet, Teams, or Webex. Vernix joins as a participant and starts transcribing.",
   },
   {
     step: "2",
-    title: "Meeting runs as normal",
+    title: "Call runs as normal",
     description:
       "Every word is captured with speaker identification. You focus on the conversation.",
   },
@@ -62,7 +62,7 @@ const STEPS = [
     step: "3",
     title: "Everything lands in your dashboard",
     description:
-      "Summary, action items, and full transcript. Searchable across all your meetings.",
+      "Summary, action items, and full transcript. Searchable across all your calls.",
   },
 ];
 
@@ -77,7 +77,7 @@ export default function MeetingMemoryPage() {
             <Search className="text-ring h-8 w-8" />
           </div>
           <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
-            Your in-call AI assistant with perfect meeting memory.
+            Your in-call AI assistant with perfect call memory.
           </h1>
           <p className="text-muted-foreground mx-auto mb-10 max-w-2xl text-lg leading-relaxed">
             During the call and after it ends, Vernix captures every decision,
@@ -101,8 +101,8 @@ export default function MeetingMemoryPage() {
             </Button>
           </div>
           <p className="text-muted-foreground mt-4 text-xs leading-relaxed">
-            Free plan includes {LIMITS[PLANS.FREE].meetingsPerMonth} meetings
-            per month. No credit card.
+            Free plan includes {LIMITS[PLANS.FREE].meetingsPerMonth} calls per
+            month. No credit card.
           </p>
         </div>
       </div>
@@ -167,7 +167,7 @@ export default function MeetingMemoryPage() {
       <ScrollReveal>
         <div className="mb-24 lg:mb-28">
           <h2 className="mb-8 text-center text-2xl font-bold sm:text-3xl">
-            What every meeting gives you
+            What every call gives you
           </h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <Card>
@@ -215,7 +215,7 @@ export default function MeetingMemoryPage() {
               <CardContent className="flex items-start gap-4 p-5">
                 <Search className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">Cross-meeting search</p>
+                  <p className="text-sm font-medium">Cross-call search</p>
                   <p className="text-muted-foreground text-xs leading-relaxed">
                     Find what was said across all your calls at once. Semantic
                     search, not just keyword matching.
@@ -249,7 +249,7 @@ export default function MeetingMemoryPage() {
       {/* Bottom CTA */}
       <div className="pb-2 text-center">
         <h2 className="mb-4 text-2xl font-bold sm:text-3xl">
-          Never forget a meeting again
+          Never forget a call again
         </h2>
         <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
           Start free. No credit card required.

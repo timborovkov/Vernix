@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
   title: "About — Vernix",
   description:
-    "Vernix started as a hackathon idea: what if an AI agent could sit in your meeting, remember everything, and answer questions on the spot? Built by Tim Borovkov.",
+    "Vernix started as a hackathon idea: what if an AI agent could sit in your call, remember everything, and answer questions on the spot? Built by Tim Borovkov.",
 };
 
 export default function AboutPage() {

@@ -8,6 +8,6 @@ interface ChatTabProps {
 
 export function ChatTab({ meetingId }: ChatTabProps) {
   return (
-    <ChatPanel meetingId={meetingId} placeholder="Ask about this meeting..." />
+    <ChatPanel meetingId={meetingId} placeholder="Ask about this call..." />
   );
 }

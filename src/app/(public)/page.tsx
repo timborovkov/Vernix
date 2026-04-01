@@ -44,7 +44,7 @@ const FEATURES = [
     icon: FileText,
     title: "Summaries that write themselves",
     description:
-      "Walk out of every meeting with a summary, key decisions, and action items — without writing a single note.",
+      "Walk out of every call with a summary, key decisions, and action items — without writing a single note.",
   },
   {
     icon: BookOpen,
@@ -54,7 +54,7 @@ const FEATURES = [
   },
   {
     icon: Search,
-    title: "Search across every meeting",
+    title: "Search across every call",
     description:
       '"Who mentioned the Q3 deadline?" Find what was said, when it was said, and who said it — across all your calls at once.',
   },
@@ -62,26 +62,26 @@ const FEATURES = [
     icon: VolumeX,
     title: "Silent when you need it",
     description:
-      "Prefer text? Silent mode monitors the call and responds via meeting chat. No audio, no disruption — just answers when you need them.",
+      "Prefer text? Silent mode monitors the call and responds via call chat. No audio, no disruption — just answers when you need them.",
   },
   {
     icon: ListChecks,
     title: "Action items, tracked",
     description:
-      "Tasks are pulled directly from conversations and tracked per meeting. No more digging through notes to find who committed to what.",
+      "Tasks are pulled directly from conversations and tracked per call. No more digging through notes to find who committed to what.",
   },
   {
     icon: MessageSquare,
-    title: "Ask your meetings anything",
+    title: "Ask your calls anything",
     description:
-      "Chat with your meeting history after the call. Ask follow-up questions, search for decisions, or revisit what was discussed weeks ago.",
+      "Chat with your call history after the call. Ask follow-up questions, search for decisions, or revisit what was discussed weeks ago.",
   },
 ];
 
 const STEPS = [
   {
     step: "1",
-    title: "Paste your meeting link",
+    title: "Paste your call link",
     description:
       "Drop a Zoom, Meet, Teams, or Webex link. Add an agenda or upload docs if you want — takes 10 seconds.",
   },
@@ -89,7 +89,7 @@ const STEPS = [
     step: "2",
     title: "Vernix joins as a participant",
     description:
-      "The agent enters your call, starts transcribing, and listens for questions. You run the meeting as usual.",
+      "The agent enters your call, starts transcribing, and listens for questions. You run the call as usual.",
   },
   {
     step: "3",
@@ -101,9 +101,9 @@ const STEPS = [
 
 const PAIN_POINTS = [
   "Switching tabs to look up a number while everyone waits",
-  "Writing meeting notes while trying to pay attention",
+  "Writing call notes while trying to pay attention",
   "Searching Slack for something someone definitely said on a call",
-  "Spending 20 minutes after every meeting writing a recap no one reads",
+  "Spending 20 minutes after every call writing a recap no one reads",
 ];
 
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
@@ -135,7 +135,7 @@ export default async function LandingPage() {
           />
         </div>
         <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
-          An AI assistant in every meeting that knows your business
+          An AI assistant in every call that knows your business
         </h1>
         <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
           Vernix joins your video calls, connects to your tools, and answers
@@ -297,8 +297,7 @@ export default async function LandingPage() {
       <section className="bg-ring/10 border-border border-t border-b py-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="mb-4 text-2xl font-bold">
-            Your next meeting could be the first one you never have to
-            summarize.
+            Your next call could be the first one you never have to summarize.
           </h2>
           <p className="text-muted-foreground mb-8">
             No credit card required. {DISPLAY.trialDays}-day Pro trial when you

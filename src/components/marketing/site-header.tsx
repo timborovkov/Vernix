@@ -26,7 +26,7 @@ const FEATURE_LINKS = [
   },
   {
     href: "/features/meeting-memory",
-    label: "Meeting Memory",
+    label: "Call Memory",
     description: "Transcripts, search, and summaries",
     icon: Search,
   },

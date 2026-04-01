@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText, Trash2, AlertCircle, Loader2, Download } from "lucide-react";
 import Link from "next/link";
+import { formatDateTime } from "@/lib/date";
+import { useTimezone } from "@/hooks/use-timezone";
 
 const FILE_TYPE_LABELS: Record<string, string> = {
   pdf: "PDF",
@@ -25,16 +27,6 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(date: Date | string): string {
-  return new Date(date).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 interface KnowledgeListProps {
   documents: DocumentWithMeeting[];
   onDelete: (id: string) => void;
@@ -48,6 +40,7 @@ export function KnowledgeList({
   onDownload,
   showMeetingLink,
 }: KnowledgeListProps) {
+  const timezone = useTimezone();
   if (documents.length === 0) {
     return (
       <div className="text-muted-foreground py-12 text-center">
@@ -75,13 +68,13 @@ export function KnowledgeList({
                   {FILE_TYPE_LABELS[doc.fileType] ?? doc.fileType.toUpperCase()}
                 </span>
                 <span>{formatFileSize(doc.fileSize)}</span>
-                <span>{formatDate(doc.createdAt)}</span>
+                <span>{formatDateTime(doc.createdAt, timezone)}</span>
                 {doc.status === "ready" && doc.chunkCount > 0 && (
                   <span>{doc.chunkCount} chunks</span>
                 )}
                 {showMeetingLink && doc.meetingId && doc.meetingTitle && (
                   <Link
-                    href={`/dashboard/${doc.meetingId}`}
+                    href={`/dashboard/call/${doc.meetingId}`}
                     className="truncate text-blue-600 hover:underline"
                   >
                     {doc.meetingTitle}
