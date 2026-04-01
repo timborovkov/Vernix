@@ -51,7 +51,8 @@ vi.mock("@/lib/billing/usage", () => ({
   recordUsageEvent: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("@/lib/billing/limits", async (importOriginal) => {
-  const original = await importOriginal<typeof import("@/lib/billing/limits")>();
+  const original =
+    await importOriginal<typeof import("@/lib/billing/limits")>();
   return {
     ...original,
     canMakeRagQuery: vi.fn().mockReturnValue({ allowed: true }),

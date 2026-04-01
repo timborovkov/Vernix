@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { meetings, users, documents } from "@/lib/db/schema";
-import { and, desc, eq, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, lt, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import {
   createMeetingCollection,
@@ -16,7 +16,7 @@ import {
   getUsedMinutes,
   getMonthlyMeetingCount,
 } from "@/lib/billing/usage";
-import { NotFoundError, BillingError, ConflictError } from "@/lib/api/errors";
+import { NotFoundError, BillingError } from "@/lib/api/errors";
 import { decodeCursor, buildPaginationMeta } from "@/lib/api/pagination";
 
 // ---------------------------------------------------------------------------

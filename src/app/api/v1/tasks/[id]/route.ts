@@ -36,7 +36,12 @@ export const PATCH = withApiAuth(
 
     const parsed = updateTaskSchema.safeParse(body);
     if (!parsed.success) {
-      return apiError("VALIDATION_ERROR", "Validation failed", 400, parsed.error.issues);
+      return apiError(
+        "VALIDATION_ERROR",
+        "Validation failed",
+        400,
+        parsed.error.issues
+      );
     }
 
     try {

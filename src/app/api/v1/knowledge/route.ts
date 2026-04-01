@@ -1,6 +1,11 @@
 import { withApiAuth } from "@/lib/api/middleware";
 import { RATE_LIMIT_EXPENSIVE } from "@/lib/api/constants";
-import { apiSuccess, apiCreated, apiError, handleServiceError } from "@/lib/api/response";
+import {
+  apiSuccess,
+  apiCreated,
+  apiError,
+  handleServiceError,
+} from "@/lib/api/response";
 import { paginationSchema } from "@/lib/api/pagination";
 import { listDocuments, uploadDocument } from "@/lib/services/knowledge";
 
@@ -14,7 +19,12 @@ export const GET = withApiAuth(
     });
 
     if (!parsed.success) {
-      return apiError("VALIDATION_ERROR", "Invalid pagination params", 400, parsed.error.issues);
+      return apiError(
+        "VALIDATION_ERROR",
+        "Invalid pagination params",
+        400,
+        parsed.error.issues
+      );
     }
 
     const meetingId = searchParams.get("meetingId") ?? undefined;
@@ -47,7 +57,10 @@ export const POST = withApiAuth(
     }
 
     const meetingIdStr = formData.get("meetingId");
-    const meetingId = typeof meetingIdStr === "string" && meetingIdStr ? meetingIdStr : undefined;
+    const meetingId =
+      typeof meetingIdStr === "string" && meetingIdStr
+        ? meetingIdStr
+        : undefined;
 
     try {
       const doc = await uploadDocument(user.id, file, meetingId);

@@ -1,5 +1,5 @@
 import { OpenApiBuilder } from "openapi3-ts/oas31";
-import { RATE_LIMIT_STANDARD, RATE_LIMIT_EXPENSIVE, API_VERSION } from "./constants";
+import { RATE_LIMIT_STANDARD, RATE_LIMIT_EXPENSIVE } from "./constants";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
@@ -12,7 +12,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 export function buildOpenApiSpec() {
   // Cast to `any` — openapi3-ts's OAS 3.1 types don't fully support `nullable`
   // but Scalar and other consumers handle it fine.
-  const builder = OpenApiBuilder.create(({
+  const builder = OpenApiBuilder.create({
     openapi: "3.1.0",
     info: {
       title: "Vernix API",
@@ -731,7 +731,11 @@ List endpoints use cursor-based pagination. Pass \`limit\` (1-100, default 20) a
                   type: "object",
                   properties: {
                     title: { type: "string", minLength: 1, maxLength: 500 },
-                    assignee: { type: "string", maxLength: 200, nullable: true },
+                    assignee: {
+                      type: "string",
+                      maxLength: 200,
+                      nullable: true,
+                    },
                     status: {
                       type: "string",
                       enum: ["open", "completed"],
@@ -970,7 +974,7 @@ List endpoints use cursor-based pagination. Pass \`limit\` (1-100, default 20) a
         },
       },
     },
-  }) as any);
+  } as any);
 
   return builder.getSpec();
 }

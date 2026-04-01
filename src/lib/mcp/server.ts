@@ -372,10 +372,7 @@ export function createMcpServer(userId: string): McpServer {
           .string()
           .optional()
           .describe("Scope search to a specific meeting"),
-        limit: z
-          .number()
-          .optional()
-          .describe("Max results (1-50, default 10)"),
+        limit: z.number().optional().describe("Max results (1-50, default 10)"),
       },
     },
     async ({ query, meetingId, limit }) => {

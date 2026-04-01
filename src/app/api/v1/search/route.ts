@@ -21,7 +21,12 @@ export const GET = withApiAuth(
     });
 
     if (!parsed.success) {
-      return apiError("VALIDATION_ERROR", "Invalid search params", 400, parsed.error.issues);
+      return apiError(
+        "VALIDATION_ERROR",
+        "Invalid search params",
+        400,
+        parsed.error.issues
+      );
     }
 
     try {

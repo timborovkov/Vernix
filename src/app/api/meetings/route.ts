@@ -5,7 +5,7 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireSessionUser } from "@/lib/auth/session";
 import { createMeeting } from "@/lib/services/meetings";
-import { NotFoundError, BillingError, ValidationError } from "@/lib/api/errors";
+import { BillingError, ValidationError } from "@/lib/api/errors";
 
 const createMeetingSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -48,7 +48,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof BillingError) {
       return NextResponse.json(
-        { error: error.message, code: error.statusCode === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED" },
+        {
+          error: error.message,
+          code: error.statusCode === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+        },
         { status: error.statusCode }
       );
     }
@@ -56,6 +59,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     console.error("Failed to create meeting:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

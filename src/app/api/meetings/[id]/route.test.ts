@@ -4,15 +4,13 @@ import {
   fakeMeeting,
 } from "@/test/helpers";
 
-const {
-  mockGetMeeting,
-  mockUpdateMeeting,
-  mockDeleteMeeting,
-} = vi.hoisted(() => ({
-  mockGetMeeting: vi.fn(),
-  mockUpdateMeeting: vi.fn(),
-  mockDeleteMeeting: vi.fn(),
-}));
+const { mockGetMeeting, mockUpdateMeeting, mockDeleteMeeting } = vi.hoisted(
+  () => ({
+    mockGetMeeting: vi.fn(),
+    mockUpdateMeeting: vi.fn(),
+    mockDeleteMeeting: vi.fn(),
+  })
+);
 
 vi.mock("@/lib/services/meetings", () => ({
   getMeeting: mockGetMeeting,
