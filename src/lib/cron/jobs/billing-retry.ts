@@ -1,16 +1,14 @@
 import { db } from "@/lib/db";
 import { usageEvents } from "@/lib/db/schema";
 import { and, gte, isNull, sql } from "drizzle-orm";
+import { syncUsageToPolar } from "@/lib/billing/usage";
 
 /**
  * Retry failed Polar metered usage ingests.
  * Finds usage_events from the last 7 days that were never synced to Polar
- * (polarSyncedAt IS NULL) and re-attempts the sync.
+ * (polarSyncedAt IS NULL) and re-attempts the sync via syncUsageToPolar.
  */
 export async function runBillingRetry() {
-  const { isPolarEnabled, getPolar } = await import("@/lib/polar");
-  if (!isPolarEnabled()) return { retried: 0, skipped: "polar_disabled" };
-
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
 
   const unsynced = await db
@@ -20,7 +18,6 @@ export async function runBillingRetry() {
       meetingId: usageEvents.meetingId,
       type: usageEvents.type,
       quantity: usageEvents.quantity,
-      costEur: usageEvents.costEur,
     })
     .from(usageEvents)
     .where(
@@ -34,52 +31,24 @@ export async function runBillingRetry() {
 
   if (unsynced.length === 0) return { retried: 0 };
 
-  // Lazy import to avoid circular deps
-  const { users } = await import("@/lib/db/schema");
-  const { eq } = await import("drizzle-orm");
-
-  const polar = getPolar();
   let retried = 0;
 
   for (const event of unsynced) {
     if (!event.meetingId) continue;
 
     try {
-      const [user] = await db
-        .select({ polarCustomerId: users.polarCustomerId })
-        .from(users)
-        .where(eq(users.id, event.userId));
-
-      if (!user?.polarCustomerId) continue;
-
-      const hours = Number(event.quantity) / 60;
-      const meetingType = event.type === "voice_meeting" ? "voice" : "silent";
-
-      await polar.events.ingest({
-        events: [
-          {
-            name: "meeting_usage",
-            externalCustomerId: event.userId,
-            externalId: `meeting_${event.meetingId}`,
-            metadata: {
-              meeting_id: event.meetingId,
-              meeting_type: meetingType,
-              duration_minutes: Number(event.quantity),
-              duration_hours: hours,
-              cost_eur: Number(event.costEur),
-            },
-          },
-        ],
-      });
-
-      await db
-        .update(usageEvents)
-        .set({ polarSyncedAt: new Date() })
-        .where(eq(usageEvents.id, event.id));
-
+      await syncUsageToPolar(
+        event.userId,
+        event.meetingId,
+        event.type as "voice_meeting" | "silent_meeting",
+        Number(event.quantity)
+      );
       retried++;
     } catch (err) {
-      console.error(`[Billing Retry] Failed to sync event ${event.id}:`, err);
+      console.error(
+        `[Billing Retry] Failed to sync event ${event.id}:`,
+        err
+      );
     }
   }
 
