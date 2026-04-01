@@ -2,6 +2,14 @@ import { runMeetingRecovery } from "./jobs/meeting-recovery";
 import { runBillingSync } from "./jobs/billing-sync";
 import { runRecordingRetention } from "./jobs/recording-retention";
 import { runUpgradeReminders } from "./jobs/upgrade-reminders";
+import { runTokenPurge } from "./jobs/token-purge";
+import { runDocumentWatchdog } from "./jobs/document-watchdog";
+import { runUsageAudit } from "./jobs/usage-audit";
+import { runBillingRetry } from "./jobs/billing-retry";
+import { runQdrantCleanup } from "./jobs/qdrant-cleanup";
+import { runStorageCleanup } from "./jobs/storage-cleanup";
+import { runInactiveCleanup } from "./jobs/inactive-cleanup";
+import { runOrphanSweeper } from "./jobs/orphan-sweeper";
 
 interface CronJob {
   name: string;
@@ -40,6 +48,69 @@ export const CRON_JOBS: CronJob[] = [
     shouldRun: (now) =>
       now.getUTCDay() === 1 &&
       now.getUTCHours() === 9 &&
+      now.getUTCMinutes() < 5,
+  },
+  {
+    name: "token-purge",
+    handler: runTokenPurge,
+    // Daily at 04:00 UTC
+    shouldRun: (now) => now.getUTCHours() === 4 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "document-watchdog",
+    handler: runDocumentWatchdog,
+    // Every 30 minutes (at :00 and :30 of each hour)
+    shouldRun: (now) => {
+      const m = now.getUTCMinutes();
+      return m < 5 || (m >= 30 && m < 35);
+    },
+  },
+  {
+    name: "usage-audit",
+    handler: runUsageAudit,
+    // Daily at 05:00 UTC
+    shouldRun: (now) => now.getUTCHours() === 5 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "billing-retry",
+    handler: runBillingRetry,
+    // Every 6 hours (same as billing-sync)
+    shouldRun: (now) => now.getUTCHours() % 6 === 0 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "qdrant-cleanup",
+    handler: runQdrantCleanup,
+    // Weekly Sunday at 04:00 UTC
+    shouldRun: (now) =>
+      now.getUTCDay() === 0 &&
+      now.getUTCHours() === 4 &&
+      now.getUTCMinutes() < 5,
+  },
+  {
+    name: "storage-cleanup",
+    handler: runStorageCleanup,
+    // Weekly Sunday at 05:00 UTC
+    shouldRun: (now) =>
+      now.getUTCDay() === 0 &&
+      now.getUTCHours() === 5 &&
+      now.getUTCMinutes() < 5,
+  },
+  {
+    name: "inactive-cleanup",
+    handler: runInactiveCleanup,
+    // Weekly Monday at 04:00 UTC
+    shouldRun: (now) =>
+      now.getUTCDay() === 1 &&
+      now.getUTCHours() === 4 &&
+      now.getUTCMinutes() < 5,
+  },
+  {
+    name: "orphan-sweeper",
+    handler: runOrphanSweeper,
+    // Weekly Sunday at 03:00 UTC
+    shouldRun: (now) =>
+      now.getUTCDay() === 0 &&
+      now.getUTCHours() === 3 &&
       now.getUTCMinutes() < 5,
   },
 ];

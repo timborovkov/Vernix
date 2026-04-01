@@ -44,6 +44,7 @@ export const users = pgTable("users", {
   }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
   termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -274,6 +275,7 @@ export const usageEvents = pgTable("usage_events", {
     .default("0")
     .notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().default({}),
+  polarSyncedAt: timestamp("polar_synced_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

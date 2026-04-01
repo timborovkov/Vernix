@@ -5,6 +5,14 @@ const mockHandlers = vi.hoisted(() => ({
   runBillingSync: vi.fn().mockResolvedValue({ synced: 0 }),
   runRecordingRetention: vi.fn().mockResolvedValue({ deleted: 0 }),
   runUpgradeReminders: vi.fn().mockResolvedValue({ sent: 0 }),
+  runTokenPurge: vi.fn().mockResolvedValue({ purged: 0 }),
+  runDocumentWatchdog: vi.fn().mockResolvedValue({ marked: 0 }),
+  runUsageAudit: vi.fn().mockResolvedValue({ repaired: 0 }),
+  runBillingRetry: vi.fn().mockResolvedValue({ retried: 0 }),
+  runQdrantCleanup: vi.fn().mockResolvedValue({ deleted: 0 }),
+  runStorageCleanup: vi.fn().mockResolvedValue({ deleted: 0 }),
+  runInactiveCleanup: vi.fn().mockResolvedValue({ flagged: 0 }),
+  runOrphanSweeper: vi.fn().mockResolvedValue({ cleaned: 0 }),
 }));
 
 vi.mock("./jobs/meeting-recovery", () => ({
@@ -18,6 +26,30 @@ vi.mock("./jobs/recording-retention", () => ({
 }));
 vi.mock("./jobs/upgrade-reminders", () => ({
   runUpgradeReminders: mockHandlers.runUpgradeReminders,
+}));
+vi.mock("./jobs/token-purge", () => ({
+  runTokenPurge: mockHandlers.runTokenPurge,
+}));
+vi.mock("./jobs/document-watchdog", () => ({
+  runDocumentWatchdog: mockHandlers.runDocumentWatchdog,
+}));
+vi.mock("./jobs/usage-audit", () => ({
+  runUsageAudit: mockHandlers.runUsageAudit,
+}));
+vi.mock("./jobs/billing-retry", () => ({
+  runBillingRetry: mockHandlers.runBillingRetry,
+}));
+vi.mock("./jobs/qdrant-cleanup", () => ({
+  runQdrantCleanup: mockHandlers.runQdrantCleanup,
+}));
+vi.mock("./jobs/storage-cleanup", () => ({
+  runStorageCleanup: mockHandlers.runStorageCleanup,
+}));
+vi.mock("./jobs/inactive-cleanup", () => ({
+  runInactiveCleanup: mockHandlers.runInactiveCleanup,
+}));
+vi.mock("./jobs/orphan-sweeper", () => ({
+  runOrphanSweeper: mockHandlers.runOrphanSweeper,
 }));
 
 import { CRON_JOBS, runDueCronJobs } from "./index";
@@ -92,6 +124,77 @@ describe("CRON_JOBS schedule logic", () => {
 
     it("does not run after the 5-min window on Monday", () => {
       expect(job().shouldRun(new Date("2026-03-16T09:05:00Z"))).toBe(false);
+    });
+  });
+
+  describe("token-purge", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "token-purge")!;
+
+    it("runs at 04:00 UTC", () => {
+      expect(job().shouldRun(new Date("2026-03-15T04:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-15T04:04:00Z"))).toBe(true);
+    });
+
+    it("does not run at other hours", () => {
+      expect(job().shouldRun(new Date("2026-03-15T03:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-15T05:00:00Z"))).toBe(false);
+    });
+  });
+
+  describe("document-watchdog", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "document-watchdog")!;
+
+    it("runs at the top of each hour", () => {
+      expect(job().shouldRun(new Date("2026-03-15T10:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-15T10:04:00Z"))).toBe(true);
+    });
+
+    it("runs at :30 of each hour", () => {
+      expect(job().shouldRun(new Date("2026-03-15T10:30:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-15T10:34:00Z"))).toBe(true);
+    });
+
+    it("does not run at other times", () => {
+      expect(job().shouldRun(new Date("2026-03-15T10:15:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-15T10:35:00Z"))).toBe(false);
+    });
+  });
+
+  describe("usage-audit", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "usage-audit")!;
+
+    it("runs at 05:00 UTC", () => {
+      expect(job().shouldRun(new Date("2026-03-15T05:00:00Z"))).toBe(true);
+    });
+
+    it("does not run at other hours", () => {
+      expect(job().shouldRun(new Date("2026-03-15T04:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-15T06:00:00Z"))).toBe(false);
+    });
+  });
+
+  describe("qdrant-cleanup", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "qdrant-cleanup")!;
+
+    it("runs on Sunday at 04:00 UTC", () => {
+      // 2026-03-15 is a Sunday
+      expect(job().shouldRun(new Date("2026-03-15T04:00:00Z"))).toBe(true);
+    });
+
+    it("does not run on other days", () => {
+      expect(job().shouldRun(new Date("2026-03-16T04:00:00Z"))).toBe(false);
+    });
+  });
+
+  describe("orphan-sweeper", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "orphan-sweeper")!;
+
+    it("runs on Sunday at 03:00 UTC", () => {
+      expect(job().shouldRun(new Date("2026-03-15T03:00:00Z"))).toBe(true);
+    });
+
+    it("does not run on other days", () => {
+      expect(job().shouldRun(new Date("2026-03-16T03:00:00Z"))).toBe(false);
     });
   });
 });

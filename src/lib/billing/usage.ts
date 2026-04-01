@@ -268,22 +268,26 @@ export function getEffectivePeriod(user: {
 // Sync usage to Polar meters (fire-and-forget after meetings end)
 // ---------------------------------------------------------------------------
 
+/**
+ * Sync a usage event to Polar's metered billing.
+ * Returns true if sync succeeded, false if it failed or was skipped.
+ */
 export async function syncUsageToPolar(
   userId: string,
   meetingId: string,
   type: "voice_meeting" | "silent_meeting",
   durationMinutes: number
-) {
+): Promise<boolean> {
   try {
     const { isPolarEnabled, getPolar } = await import("@/lib/polar");
-    if (!isPolarEnabled()) return;
+    if (!isPolarEnabled()) return false;
 
     const [user] = await db
       .select({ polarCustomerId: users.polarCustomerId })
       .from(users)
       .where(eq(users.id, userId));
 
-    if (!user?.polarCustomerId) return;
+    if (!user?.polarCustomerId) return false;
 
     const polar = getPolar();
     const hours = durationMinutes / 60;
@@ -308,7 +312,28 @@ export async function syncUsageToPolar(
         },
       ],
     });
+
+    // Mark the usage event as synced — separate try/catch so a DB failure
+    // doesn't mask a successful Polar ingest. Worst case: Polar gets a
+    // duplicate on retry (deduplicated by externalId).
+    try {
+      await db
+        .update(usageEvents)
+        .set({ polarSyncedAt: new Date() })
+        .where(
+          and(
+            eq(usageEvents.userId, userId),
+            eq(usageEvents.meetingId, meetingId),
+            eq(usageEvents.type, type)
+          )
+        );
+    } catch (dbErr) {
+      console.error("[Billing] polarSyncedAt update failed:", dbErr);
+    }
+
+    return true;
   } catch (err) {
     console.error("[Billing] Failed to sync usage to Polar:", err);
+    return false;
   }
 }
