@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { meetings, tasks } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
-import { getRAGContext, formatContextForPrompt } from "@/lib/agent/rag";
+import { formatContextForPrompt } from "@/lib/agent/rag";
 import { scrollTranscript } from "@/lib/vector/scroll";
 import { createMeeting } from "@/lib/services/meetings";
 import { joinMeeting, stopMeeting } from "@/lib/services/agent";
@@ -37,21 +37,49 @@ export function createMcpServer(userId: string): McpServer {
       },
     },
     async ({ query, meetingId, limit }) => {
-      const results = await getRAGContext(query, {
-        userId,
-        meetingId,
-        limit: limit ?? 10,
-        ...(meetingId ? { boostMeetingId: meetingId } : {}),
-      });
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text:
-              formatContextForPrompt(results) || "No relevant context found.",
-          },
-        ],
-      };
+      try {
+        const results = await searchMeetings(userId, {
+          query,
+          meetingId,
+          limit: limit ?? 10,
+        });
+        if (results.length === 0) {
+          return {
+            content: [
+              { type: "text" as const, text: "No relevant context found." },
+            ],
+          };
+        }
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: formatContextForPrompt(
+                results.map((r) => ({
+                  text: r.text,
+                  score: r.score,
+                  source: r.source as "transcript" | "document",
+                  speaker: r.speaker,
+                  timestampMs: r.timestamp_ms,
+                  meetingId: r.meetingId,
+                  fileName: r.fileName,
+                  documentId: r.documentId,
+                }))
+              ),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+            },
+          ],
+          isError: true,
+        };
+      }
     }
   );
 
