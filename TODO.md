@@ -1,10 +1,5 @@
 # TODO
 
-## Cron Jobs & Background Reconciliation
-
-- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
-- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
-
 ## SEO & Discoverability
 
 - **Google Search Console** — Verify domain, submit sitemap, monitor indexing - DONE
@@ -61,6 +56,11 @@ Current emails: welcome (signup), free plan upgrade reminder (weekly cron), last
 
 - **Data access scoping via Groups/Tags** — Add a grouping model for knowledge documents, calls, and MCP tool connections, then scope agent access by selected group(s) per call. Primary goal is preventing context leakage.
 - **Multiple connections to the same tool** — Allow multiple MCP integration connections to the same tool. The user might a member of multiple teams, projects, and organizations, and each might have a Notion or Linear workspace.
+
+## Inactive Account Cleanup
+
+- **Cron: dead-user data purge (S3 + Qdrant + Recall)** — For deleted/expired accounts, remove all remaining object storage files, user/meeting vector collections, and Recall call/bot artifacts to enforce retention and control storage costs. Requires user deletion flow first.
+- **Inactive account cleanup: warning emails + archival** — Current inactive-cleanup cron only detects; needs warning email flow and actual archival/deletion logic.
 
 ## Vision-Based Document Parsing
 
