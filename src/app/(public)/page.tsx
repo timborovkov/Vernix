@@ -19,12 +19,7 @@ import {
   Plug,
   Video,
 } from "lucide-react";
-import {
-  DISPLAY,
-  LIMITS,
-  PLANS,
-  PRICING,
-} from "@/lib/billing/constants";
+import { DISPLAY, LIMITS, PLANS, PRICING } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
