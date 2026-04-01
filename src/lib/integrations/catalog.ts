@@ -70,6 +70,98 @@ const CATALOG: Integration[] = [
     ],
   },
   {
+    id: "notion",
+    name: "Notion",
+    description:
+      "Search pages, databases, and wiki content for context during calls.",
+    logo: "/integrations/notion.svg",
+    category: "productivity",
+    tags: ["wiki", "docs", "databases"],
+    featured: true,
+    status: "available",
+    serverUrl: "https://mcp.notion.com/mcp",
+    authMode: "oauth",
+    docsUrl: "https://developers.notion.com/docs/mcp",
+    setupInstructions:
+      "Click Connect to authorize Vernix with your Notion workspace.",
+    examplePrompts: [
+      "What does our product roadmap say about Q4?",
+      "Find the onboarding checklist in Notion",
+    ],
+    sampleResponses: [
+      "The Q4 roadmap lists 3 priorities: integrations, mobile app, and enterprise features.",
+    ],
+  },
+  {
+    id: "linear",
+    name: "Linear",
+    description:
+      "Check sprint status, look up issues, and create tasks from meetings.",
+    logo: "/integrations/linear.svg",
+    category: "project-management",
+    tags: ["issues", "sprints", "project-tracking"],
+    featured: true,
+    status: "available",
+    serverUrl: "https://mcp.linear.app/mcp",
+    authMode: "oauth",
+    docsUrl: "https://linear.app/docs/mcp",
+    setupInstructions:
+      "Click Connect to authorize Vernix with your Linear workspace.",
+    examplePrompts: [
+      "What's left in the current sprint?",
+      "Create a ticket for the bug we just discussed",
+    ],
+    sampleResponses: [
+      "There are 5 open issues in Sprint 24: 2 high priority, 3 medium.",
+    ],
+  },
+  {
+    id: "pipedrive",
+    name: "Pipedrive",
+    description:
+      "Access deals, contacts, and pipeline stages during sales calls.",
+    logo: "/integrations/pipedrive.svg",
+    category: "crm",
+    tags: ["deals", "pipeline", "sales"],
+    featured: true,
+    status: "available",
+    serverUrl: "https://mcp.pipedrive.com/mcp",
+    authMode: "oauth",
+    docsUrl: "https://developers.pipedrive.com/docs/mcp",
+    setupInstructions:
+      "Click Connect to authorize Vernix with your Pipedrive account.",
+    examplePrompts: [
+      "Show me open deals for this account",
+      "What stage is the Acme opportunity in?",
+    ],
+    sampleResponses: [
+      "Acme opportunity is in Proposal stage with an expected close date next Friday.",
+    ],
+  },
+  {
+    id: "slack",
+    name: "Slack",
+    description:
+      "Search messages, channels, and users. Send follow-ups after meetings.",
+    logo: "/integrations/slack.svg",
+    category: "communication",
+    tags: ["messaging", "notifications", "team-chat"],
+    featured: true,
+    status: "available",
+    serverUrl: "https://mcp.slack.com/mcp",
+    authMode: "oauth",
+    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server/",
+    setupInstructions:
+      "Click Connect to authorize Vernix with your Slack workspace.",
+    examplePrompts: [
+      "What did the team discuss in #engineering today?",
+      "Send a follow-up to #product-updates about what we decided",
+    ],
+    sampleResponses: [
+      "The team discussed the Q3 roadmap and agreed to prioritize the API redesign.",
+    ],
+  },
+  {
     id: "airtable",
     name: "Airtable",
     description: "Query bases, tables, and records.",
@@ -284,76 +376,7 @@ const CATALOG: Integration[] = [
     sampleResponses: ["React 19 Server Components use 'use server' directive."],
   },
 
-  // ── Coming soon (OAuth app registration needed) ──────────────────────
-  {
-    id: "slack",
-    name: "Slack",
-    description:
-      "Search messages, channels, and users. Send follow-ups after meetings.",
-    logo: "/integrations/slack.svg",
-    category: "communication",
-    tags: ["messaging", "notifications", "team-chat"],
-    featured: true,
-    status: "coming-soon",
-    serverUrl: "https://mcp.slack.com/mcp",
-    authMode: "oauth",
-    docsUrl: "https://docs.slack.dev/ai/slack-mcp-server/",
-    setupInstructions:
-      "Click Connect to authorize Vernix with your Slack workspace.",
-    examplePrompts: [
-      "What did the team discuss in #engineering today?",
-      "Send a follow-up to #product-updates about what we decided",
-    ],
-    sampleResponses: [
-      "The team discussed the Q3 roadmap and agreed to prioritize the API redesign.",
-    ],
-  },
-  {
-    id: "linear",
-    name: "Linear",
-    description:
-      "Check sprint status, look up issues, and create tasks from meetings.",
-    logo: "/integrations/linear.svg",
-    category: "project-management",
-    tags: ["issues", "sprints", "project-tracking"],
-    featured: true,
-    status: "coming-soon",
-    serverUrl: "https://mcp.linear.app/mcp",
-    authMode: "oauth",
-    docsUrl: "https://linear.app/docs/mcp",
-    setupInstructions:
-      "Click Connect to authorize Vernix with your Linear workspace.",
-    examplePrompts: [
-      "What's left in the current sprint?",
-      "Create a ticket for the bug we just discussed",
-    ],
-    sampleResponses: [
-      "There are 5 open issues in Sprint 24: 2 high priority, 3 medium.",
-    ],
-  },
-  {
-    id: "notion",
-    name: "Notion",
-    description:
-      "Search pages, databases, and wiki content for context during calls.",
-    logo: "/integrations/notion.svg",
-    category: "productivity",
-    tags: ["wiki", "docs", "databases"],
-    featured: true,
-    status: "available",
-    serverUrl: "https://mcp.notion.com/mcp",
-    authMode: "oauth",
-    docsUrl: "https://developers.notion.com/docs/mcp",
-    setupInstructions:
-      "Click Connect to authorize Vernix with your Notion workspace.",
-    examplePrompts: [
-      "What does our product roadmap say about Q4?",
-      "Find the onboarding checklist in Notion",
-    ],
-    sampleResponses: [
-      "The Q4 roadmap lists 3 priorities: integrations, mobile app, and enterprise features.",
-    ],
-  },
+  // ── OAuth integrations ───────────────────────────────────────────────
   {
     id: "jira",
     name: "Jira",
