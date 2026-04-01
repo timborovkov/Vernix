@@ -4,11 +4,10 @@ import {
   EmbeddingError,
   AllSearchesFailedError,
 } from "@/lib/agent/rag";
-import { NotFoundError } from "@/lib/api/errors";
+import { NotFoundError, BillingError, SearchError } from "@/lib/api/errors";
 import { requireLimits } from "@/lib/billing/enforce";
 import { canMakeRagQuery } from "@/lib/billing/limits";
 import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
-import { BillingError } from "@/lib/api/errors";
 
 // ---------------------------------------------------------------------------
 // Semantic search across meetings and knowledge base
@@ -53,10 +52,10 @@ export async function searchMeetings(
       throw new NotFoundError("Meeting");
     }
     if (error instanceof EmbeddingError) {
-      throw new Error("Failed to create embedding");
+      throw new SearchError("Failed to create embedding");
     }
     if (error instanceof AllSearchesFailedError) {
-      throw new Error("Vector search failed for all collections");
+      throw new SearchError("Vector search failed for all collections");
     }
     throw error;
   }
