@@ -108,6 +108,55 @@ const PAIN_POINTS = [
 
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "Webex"];
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      name: "Vernix",
+      url: BASE_URL,
+      logo: `${BASE_URL}/brand/icon/icon.svg`,
+      description:
+        "AI meeting assistant that joins video calls, connects to your tools, and answers questions with live business data.",
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: "Vernix",
+      url: BASE_URL,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      description:
+        "An AI agent that joins Zoom, Meet, Teams, and Webex. Connects to Slack, Linear, GitHub. Answers questions with live data during calls.",
+      offers: [
+        {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "EUR",
+          name: "Free",
+          description:
+            "5 silent meetings per month, transcription, summaries, and action items.",
+        },
+        {
+          "@type": "Offer",
+          price: "29",
+          priceCurrency: "EUR",
+          name: "Pro",
+          description:
+            "Voice agent, tool integrations, unlimited meetings, and usage credit.",
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            price: "29",
+            priceCurrency: "EUR",
+            billingDuration: "P1M",
+          },
+        },
+      ],
+    },
+  ],
+};
+
 export default async function LandingPage() {
   const session = await auth();
   const isLoggedIn = !!session?.user;
@@ -115,6 +164,10 @@ export default async function LandingPage() {
   const ctaText = isLoggedIn ? "Go to Dashboard" : "Try Vernix Free";
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Hero */}
       <section className="relative mx-auto max-w-3xl px-4 py-24 text-center">
         <HeroBg />
