@@ -7,7 +7,7 @@ export const POST = withApiAuth(
   async (_request, user, { params }) => {
     const { id } = await params;
     try {
-      const result = await joinMeeting(user.id, id);
+      const result = await joinMeeting(user.id, id, user.name);
       return apiSuccess(result);
     } catch (error) {
       return handleServiceError(error);
