@@ -19,7 +19,12 @@ import {
   Plug,
   Video,
 } from "lucide-react";
-import { DISPLAY } from "@/lib/billing/constants";
+import {
+  DISPLAY,
+  LIMITS,
+  PLANS,
+  PRICING,
+} from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
@@ -135,19 +140,18 @@ const jsonLd = {
           price: "0",
           priceCurrency: "EUR",
           name: "Free",
-          description:
-            "5 silent meetings per month, transcription, summaries, and action items.",
+          description: `${LIMITS[PLANS.FREE].meetingsPerMonth} silent meetings per month, transcription, summaries, and action items.`,
         },
         {
           "@type": "Offer",
-          price: "29",
+          price: String(PRICING[PLANS.PRO].monthly),
           priceCurrency: "EUR",
           name: "Pro",
           description:
             "Voice agent, tool integrations, unlimited meetings, and usage credit.",
           priceSpecification: {
             "@type": "UnitPriceSpecification",
-            price: "29",
+            price: String(PRICING[PLANS.PRO].monthly),
             priceCurrency: "EUR",
             billingDuration: "P1M",
           },
