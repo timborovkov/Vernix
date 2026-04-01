@@ -49,10 +49,7 @@ export async function GET(request: Request) {
       );
     }
     if (error instanceof SearchError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json(
       { error: "Internal server error" },

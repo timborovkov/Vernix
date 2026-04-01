@@ -133,7 +133,9 @@ describe("email-verification", () => {
 
       const twentyFourHoursMs = 24 * 60 * 60 * 1000;
       // expiresAt should be ~24h from now (within 1 second tolerance)
-      expect(expiresAt).toBeGreaterThanOrEqual(before + twentyFourHoursMs - 1000);
+      expect(expiresAt).toBeGreaterThanOrEqual(
+        before + twentyFourHoursMs - 1000
+      );
       expect(expiresAt).toBeLessThanOrEqual(after + twentyFourHoursMs + 1000);
     });
 

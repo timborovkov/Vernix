@@ -4,10 +4,7 @@ import { and, eq, isNull, between } from "drizzle-orm";
 import { PLANS } from "@/lib/billing/constants";
 import { sendEmail } from "@/lib/email/send";
 import { getMidTrialCheckinHtml } from "@/lib/email/templates";
-import {
-  shouldSendEmail,
-  buildUnsubscribeUrl,
-} from "@/lib/email/preferences";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
 /**
  * Send mid-trial check-in emails to users ~7 days into their trial.

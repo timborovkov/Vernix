@@ -14,7 +14,9 @@ describe("email preferences", () => {
 
   describe("shouldSendEmail", () => {
     it("returns true for transactional regardless of preferences", () => {
-      expect(shouldSendEmail({ marketing: false, product: false }, "transactional")).toBe(true);
+      expect(
+        shouldSendEmail({ marketing: false, product: false }, "transactional")
+      ).toBe(true);
     });
 
     it("returns true for transactional when preferences are null", () => {
@@ -87,7 +89,9 @@ describe("email preferences", () => {
 
     it("returns false for tampered token", () => {
       const token = generateUnsubscribeToken("user-1", "marketing");
-      expect(verifyUnsubscribeToken(token + "tampered", "user-1", "marketing")).toBe(false);
+      expect(
+        verifyUnsubscribeToken(token + "tampered", "user-1", "marketing")
+      ).toBe(false);
     });
 
     it("returns false for wrong userId", () => {

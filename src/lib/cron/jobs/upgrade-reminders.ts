@@ -3,10 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email/send";
 import { getFreePlanUpgradeReminderHtml } from "@/lib/email/templates";
-import {
-  shouldSendEmail,
-  buildUnsubscribeUrl,
-} from "@/lib/email/preferences";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
 export async function runUpgradeReminders() {
   const now = new Date();

@@ -1,31 +1,40 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockDb, mockSendEmail, mockGetTrialWarningHtml, mockShouldSendEmail, mockBuildUnsubscribeUrl } =
-  vi.hoisted(() => {
-    const db: Record<string, ReturnType<typeof vi.fn>> = {};
-    for (const m of [
-      "select",
-      "from",
-      "where",
-      "orderBy",
-      "insert",
-      "values",
-      "returning",
-      "update",
-      "set",
-      "delete",
-      "limit",
-    ]) {
-      db[m] = vi.fn().mockImplementation(() => db);
-    }
-    return {
-      mockDb: db,
-      mockSendEmail: vi.fn().mockResolvedValue({ success: true }),
-      mockGetTrialWarningHtml: vi.fn().mockReturnValue("<html>trial warning</html>"),
-      mockShouldSendEmail: vi.fn().mockReturnValue(true),
-      mockBuildUnsubscribeUrl: vi.fn().mockReturnValue("https://vernix.app/api/email/unsubscribe?token=abc"),
-    };
-  });
+const {
+  mockDb,
+  mockSendEmail,
+  mockGetTrialWarningHtml,
+  mockShouldSendEmail,
+  mockBuildUnsubscribeUrl,
+} = vi.hoisted(() => {
+  const db: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const m of [
+    "select",
+    "from",
+    "where",
+    "orderBy",
+    "insert",
+    "values",
+    "returning",
+    "update",
+    "set",
+    "delete",
+    "limit",
+  ]) {
+    db[m] = vi.fn().mockImplementation(() => db);
+  }
+  return {
+    mockDb: db,
+    mockSendEmail: vi.fn().mockResolvedValue({ success: true }),
+    mockGetTrialWarningHtml: vi
+      .fn()
+      .mockReturnValue("<html>trial warning</html>"),
+    mockShouldSendEmail: vi.fn().mockReturnValue(true),
+    mockBuildUnsubscribeUrl: vi
+      .fn()
+      .mockReturnValue("https://vernix.app/api/email/unsubscribe?token=abc"),
+  };
+});
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mockSendEmail }));
@@ -86,7 +95,9 @@ describe("runTrialWarning", () => {
   it("sends second warning when previous was sent >2 days ago", async () => {
     const now = new Date();
     const user = makeUser({
-      trialWarningEmailSentAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000),
+      trialWarningEmailSentAt: new Date(
+        now.getTime() - 3 * 24 * 60 * 60 * 1000
+      ),
     });
     // The DB query already filters for lt(trialWarningEmailSentAt, twoDaysAgo),
     // so returning this user means it passed the filter
@@ -108,7 +119,10 @@ describe("runTrialWarning", () => {
     expect(result.sent).toBe(0);
     expect(mockSendEmail).not.toHaveBeenCalled();
     // shouldSendEmail was called with the user's preferences and "product"
-    expect(mockShouldSendEmail).toHaveBeenCalledWith({ product: false }, "product");
+    expect(mockShouldSendEmail).toHaveBeenCalledWith(
+      { product: false },
+      "product"
+    );
   });
 
   it("returns count of sent emails", async () => {

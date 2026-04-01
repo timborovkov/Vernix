@@ -26,8 +26,7 @@ export async function sendEmail(
     const headers: Record<string, string> = {};
     if (options.unsubscribeUrl) {
       headers["List-Unsubscribe"] = `<${options.unsubscribeUrl}>`;
-      headers["List-Unsubscribe-Post"] =
-        "List-Unsubscribe=One-Click";
+      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
     }
 
     const { error } = await resend.emails.send({

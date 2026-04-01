@@ -46,7 +46,7 @@ export function EmailVerificationBanner() {
       </button>
       <button
         onClick={() => setDismissed(true)}
-        className="text-muted-foreground ml-3 hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground ml-3"
         aria-label="Dismiss"
       >
         &times;

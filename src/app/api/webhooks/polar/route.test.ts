@@ -28,8 +28,12 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mockSendEmail }));
 vi.mock("@/lib/email/templates", () => ({
   getLastChanceRetentionHtml: mockLastChanceTemplate,
-  getTrialStartedEmailHtml: vi.fn().mockReturnValue("<html>trial-started</html>"),
-  getTrialExpiredEmailHtml: vi.fn().mockReturnValue("<html>trial-expired</html>"),
+  getTrialStartedEmailHtml: vi
+    .fn()
+    .mockReturnValue("<html>trial-started</html>"),
+  getTrialExpiredEmailHtml: vi
+    .fn()
+    .mockReturnValue("<html>trial-expired</html>"),
 }));
 vi.mock("@/lib/email/preferences", () => ({
   shouldSendEmail: vi.fn().mockReturnValue(true),

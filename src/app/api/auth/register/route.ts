@@ -70,8 +70,7 @@ export async function POST(request: Request) {
     // Fire-and-forget verification email
     createEmailVerificationToken(user.id)
       .then((token) => {
-        const appUrl =
-          process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
         const verifyUrl = `${appUrl}/api/auth/verify-email?token=${token}`;
         return sendEmail({
           to: email,

@@ -222,9 +222,8 @@ async function sendFirstMeetingEmail(
 ): Promise<void> {
   const { sendEmail } = await import("@/lib/email/send");
   const { getFirstMeetingEmailHtml } = await import("@/lib/email/templates");
-  const { shouldSendEmail, buildUnsubscribeUrl } = await import(
-    "@/lib/email/preferences"
-  );
+  const { shouldSendEmail, buildUnsubscribeUrl } =
+    await import("@/lib/email/preferences");
 
   // Check if user already received this email
   const [user] = await db
@@ -244,9 +243,7 @@ async function sendFirstMeetingEmail(
   const [{ total }] = await db
     .select({ total: count() })
     .from(meetings)
-    .where(
-      and(eq(meetings.userId, userId), eq(meetings.status, "completed"))
-    );
+    .where(and(eq(meetings.userId, userId), eq(meetings.status, "completed")));
 
   if (total !== 1) return;
 
@@ -258,7 +255,12 @@ async function sendFirstMeetingEmail(
   await sendEmail({
     to: user.email,
     subject: "Your first meeting summary is ready",
-    html: getFirstMeetingEmailHtml(user.name, title, summaryUrl, unsubscribeUrl),
+    html: getFirstMeetingEmailHtml(
+      user.name,
+      title,
+      summaryUrl,
+      unsubscribeUrl
+    ),
     unsubscribeUrl,
   });
 

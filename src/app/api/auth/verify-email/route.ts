@@ -56,7 +56,5 @@ export async function GET(request: Request) {
     .delete(emailVerificationTokens)
     .where(eq(emailVerificationTokens.id, record.id));
 
-  return NextResponse.redirect(
-    new URL("/dashboard?verified=1", request.url)
-  );
+  return NextResponse.redirect(new URL("/dashboard?verified=1", request.url));
 }

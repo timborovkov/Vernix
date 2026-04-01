@@ -250,28 +250,28 @@ Limit 100 per run.
 
 ### Mid-Trial Check-in
 
-| Field | Value |
-|---|---|
-| **Schedule** | Daily at 10:00 UTC |
-| **Handler** | `src/lib/cron/jobs/mid-trial-checkin.ts` |
+| Field        | Value                                    |
+| ------------ | ---------------------------------------- |
+| **Schedule** | Daily at 10:00 UTC                       |
+| **Handler**  | `src/lib/cron/jobs/mid-trial-checkin.ts` |
 
 Sends a check-in email to users ~7 days into their 14-day trial. Queries users whose `trialEndsAt` is 6-8 days from now and `midTrialEmailSentAt` is null. Respects email preferences.
 
 ### Trial Warning
 
-| Field | Value |
-|---|---|
-| **Schedule** | Daily at 10:00 UTC |
-| **Handler** | `src/lib/cron/jobs/trial-warning.ts` |
+| Field        | Value                                |
+| ------------ | ------------------------------------ |
+| **Schedule** | Daily at 10:00 UTC                   |
+| **Handler**  | `src/lib/cron/jobs/trial-warning.ts` |
 
 Sends trial ending warning emails. Two warnings per trial: day 11 (3 days left) and day 13 (1 day left), using a 2-day cooldown between sends via `trialWarningEmailSentAt`. Respects email preferences.
 
 ### Win-Back
 
-| Field | Value |
-|---|---|
-| **Schedule** | Daily at 11:00 UTC |
-| **Handler** | `src/lib/cron/jobs/win-back.ts` |
+| Field        | Value                           |
+| ------------ | ------------------------------- |
+| **Schedule** | Daily at 11:00 UTC              |
+| **Handler**  | `src/lib/cron/jobs/win-back.ts` |
 
 Sends re-engagement email to users who churned ~30 days ago. Queries users where `churnedAt` is 29-31 days ago and `winBackEmailSentAt` is null. Respects marketing email preferences.
 

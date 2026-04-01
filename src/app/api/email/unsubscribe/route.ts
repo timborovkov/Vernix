@@ -34,8 +34,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const currentPrefs =
-    (user.emailPreferences as Record<string, unknown>) ?? {};
+  const currentPrefs = (user.emailPreferences as Record<string, unknown>) ?? {};
   const updatedPrefs = { ...currentPrefs, [category]: false };
 
   await db

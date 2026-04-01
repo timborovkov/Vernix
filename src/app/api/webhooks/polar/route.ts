@@ -9,10 +9,7 @@ import {
   getTrialStartedEmailHtml,
   getTrialExpiredEmailHtml,
 } from "@/lib/email/templates";
-import {
-  shouldSendEmail,
-  buildUnsubscribeUrl,
-} from "@/lib/email/preferences";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
 const RETENTION_EMAIL_COOLDOWN_DAYS = 30;
 
@@ -77,14 +74,8 @@ export const POST = Webhooks({
             })
             .from(users)
             .where(eq(users.id, externalId));
-          if (
-            user &&
-            shouldSendEmail(user.emailPreferences, "product")
-          ) {
-            const unsubscribeUrl = buildUnsubscribeUrl(
-              externalId,
-              "product"
-            );
+          if (user && shouldSendEmail(user.emailPreferences, "product")) {
+            const unsubscribeUrl = buildUnsubscribeUrl(externalId, "product");
             await sendEmail({
               to: user.email,
               subject: "Your Vernix Pro trial has started",

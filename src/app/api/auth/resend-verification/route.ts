@@ -38,8 +38,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Email already verified" });
   }
 
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
   const token = await createEmailVerificationToken(sessionUser.id);
   const verifyUrl = `${appUrl}/api/auth/verify-email?token=${token}`;
 

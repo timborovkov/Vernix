@@ -4,21 +4,21 @@ Vernix sends emails via [Resend](https://resend.com/) from `hello@vernix.app`. A
 
 ## Email Catalog
 
-| Email | Trigger | Category | Template Function | Unsubscribe |
-|-------|---------|----------|-------------------|-------------|
-| Welcome | User registration | Transactional | `getWelcomeEmailHtml` | No |
-| Email Verification | Registration / resend request | Transactional | `getEmailVerificationHtml` | No |
-| Password Reset | Forgot password request | Transactional | `getPasswordResetEmailHtml` | No |
-| Trial Started | Polar `subscription.created` (trialing) | Product | `getTrialStartedEmailHtml` | Yes |
-| First Meeting Summary | First meeting completes | Product | `getFirstMeetingEmailHtml` | Yes |
-| Mid-Trial Check-in | Cron — day 7 of trial | Product | `getMidTrialCheckinHtml` | Yes |
-| Trial Warning (3d) | Cron — day 11 of trial | Product | `getTrialWarningHtml` | Yes |
-| Trial Warning (1d) | Cron — day 13 of trial | Product | `getTrialWarningHtml` | Yes |
-| Trial Expired | Polar `subscription.revoked` | Product | `getTrialExpiredEmailHtml` | Yes |
-| Upgrade Reminder | Cron — weekly (Mon 09:00 UTC) | Marketing | `getFreePlanUpgradeReminderHtml` | Yes |
-| Retention | Polar `subscription.canceled` | Marketing | `getLastChanceRetentionHtml` | Yes |
-| Win-Back | Cron — 30 days post-churn | Marketing | `getWinBackEmailHtml` | Yes |
-| Contact Notification | Contact form (internal) | Internal | `getContactNotificationHtml` | N/A |
+| Email                 | Trigger                                 | Category      | Template Function                | Unsubscribe |
+| --------------------- | --------------------------------------- | ------------- | -------------------------------- | ----------- |
+| Welcome               | User registration                       | Transactional | `getWelcomeEmailHtml`            | No          |
+| Email Verification    | Registration / resend request           | Transactional | `getEmailVerificationHtml`       | No          |
+| Password Reset        | Forgot password request                 | Transactional | `getPasswordResetEmailHtml`      | No          |
+| Trial Started         | Polar `subscription.created` (trialing) | Product       | `getTrialStartedEmailHtml`       | Yes         |
+| First Meeting Summary | First meeting completes                 | Product       | `getFirstMeetingEmailHtml`       | Yes         |
+| Mid-Trial Check-in    | Cron — day 7 of trial                   | Product       | `getMidTrialCheckinHtml`         | Yes         |
+| Trial Warning (3d)    | Cron — day 11 of trial                  | Product       | `getTrialWarningHtml`            | Yes         |
+| Trial Warning (1d)    | Cron — day 13 of trial                  | Product       | `getTrialWarningHtml`            | Yes         |
+| Trial Expired         | Polar `subscription.revoked`            | Product       | `getTrialExpiredEmailHtml`       | Yes         |
+| Upgrade Reminder      | Cron — weekly (Mon 09:00 UTC)           | Marketing     | `getFreePlanUpgradeReminderHtml` | Yes         |
+| Retention             | Polar `subscription.canceled`           | Marketing     | `getLastChanceRetentionHtml`     | Yes         |
+| Win-Back              | Cron — 30 days post-churn               | Marketing     | `getWinBackEmailHtml`            | Yes         |
+| Contact Notification  | Contact form (internal)                 | Internal      | `getContactNotificationHtml`     | N/A         |
 
 ## Categories
 
@@ -30,6 +30,7 @@ Vernix sends emails via [Resend](https://resend.com/) from `hello@vernix.app`. A
 ## Email Preferences
 
 Users can manage preferences in **Settings > Email Preferences** with two toggles:
+
 - Product updates (trial, meeting, check-in emails)
 - Marketing emails (upgrade, retention, win-back)
 
@@ -43,13 +44,13 @@ All non-transactional emails include an unsubscribe footer with an HMAC-signed l
 
 ## Throttling & Cooldowns
 
-| Email | Throttle |
-|-------|----------|
-| Upgrade Reminder | Max 1 per 7 days per user |
-| Retention | Max 1 per 30 days per user |
-| Mid-Trial Check-in | Once per trial |
-| Trial Warning | Max 2 per trial (2-day cooldown between) |
-| Win-Back | Once per churn event |
+| Email              | Throttle                                 |
+| ------------------ | ---------------------------------------- |
+| Upgrade Reminder   | Max 1 per 7 days per user                |
+| Retention          | Max 1 per 30 days per user               |
+| Mid-Trial Check-in | Once per trial                           |
+| Trial Warning      | Max 2 per trial (2-day cooldown between) |
+| Win-Back           | Once per churn event                     |
 
 ## Design System
 
@@ -67,12 +68,12 @@ All email templates follow a consistent design:
 
 ## Cron Jobs
 
-| Job | Schedule | File |
-|-----|----------|------|
+| Job                 | Schedule             | File                                     |
+| ------------------- | -------------------- | ---------------------------------------- |
 | `upgrade-reminders` | Weekly Mon 09:00 UTC | `src/lib/cron/jobs/upgrade-reminders.ts` |
-| `mid-trial-checkin` | Daily 10:00 UTC | `src/lib/cron/jobs/mid-trial-checkin.ts` |
-| `trial-warning` | Daily 10:00 UTC | `src/lib/cron/jobs/trial-warning.ts` |
-| `win-back` | Daily 11:00 UTC | `src/lib/cron/jobs/win-back.ts` |
+| `mid-trial-checkin` | Daily 10:00 UTC      | `src/lib/cron/jobs/mid-trial-checkin.ts` |
+| `trial-warning`     | Daily 10:00 UTC      | `src/lib/cron/jobs/trial-warning.ts`     |
+| `win-back`          | Daily 11:00 UTC      | `src/lib/cron/jobs/win-back.ts`          |
 
 ## Adding a New Email
 

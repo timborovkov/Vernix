@@ -4,10 +4,7 @@ import { and, eq, between, or, isNull, lt } from "drizzle-orm";
 import { PLANS } from "@/lib/billing/constants";
 import { sendEmail } from "@/lib/email/send";
 import { getTrialWarningHtml } from "@/lib/email/templates";
-import {
-  shouldSendEmail,
-  buildUnsubscribeUrl,
-} from "@/lib/email/preferences";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
 /**
  * Send trial ending warning emails at day 11 (3 days left) and day 13 (1 day left).
