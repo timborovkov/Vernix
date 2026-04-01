@@ -16,7 +16,7 @@ import {
   getUsedMinutes,
   getMonthlyMeetingCount,
 } from "@/lib/billing/usage";
-import { NotFoundError, BillingError } from "@/lib/api/errors";
+import { NotFoundError, BillingError, ValidationError } from "@/lib/api/errors";
 import { decodeCursor, buildPaginationMeta } from "@/lib/api/pagination";
 
 // ---------------------------------------------------------------------------
@@ -185,9 +185,7 @@ export async function updateMeeting(
 
   if (typeof input.agenda === "string") {
     if (input.agenda.length > 10000) {
-      throw new (await import("@/lib/api/errors")).ValidationError(
-        "Agenda must be under 10,000 characters"
-      );
+      throw new ValidationError("Agenda must be under 10,000 characters");
     }
     const trimmedAgenda = input.agenda.trim();
     metadataUpdates.agenda = trimmedAgenda || null;
