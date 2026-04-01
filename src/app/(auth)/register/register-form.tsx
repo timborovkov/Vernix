@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { SsoButtons } from "@/components/auth/sso-buttons";
+import { DISPLAY } from "@/lib/billing/constants";
 
 interface RegisterFormProps {
   enableGoogle: boolean;
@@ -71,7 +72,7 @@ export function RegisterForm({
     <div className="w-full max-w-sm">
       <h1 className="mb-1 text-2xl font-bold">Start using Vernix free</h1>
       <p className="text-muted-foreground mb-8 text-sm">
-        14-day Pro trial. No credit card required.
+        {DISPLAY.trialDays}-day Pro trial. No credit card required.
       </p>
 
       {hasSso && (

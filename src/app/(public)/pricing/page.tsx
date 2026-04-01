@@ -8,31 +8,32 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ArrowRight } from "lucide-react";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 
 const FREE_FEATURES = [
-  "30 minutes of silent meetings per month",
+  `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent meetings per month`,
   "Live transcription",
   "AI summaries and action items",
-  "RAG chat (20 queries/day)",
-  "5 knowledge base documents",
+  `RAG chat (${LIMITS[PLANS.FREE].ragQueriesPerDay} queries/day)`,
+  `${LIMITS[PLANS.FREE].documentsCount} knowledge base documents`,
 ];
 
 const PRO_FEATURES = [
   "Voice agent",
   "Silent agent",
-  "€30 usage credit included monthly",
+  `${DISPLAY.monthlyCredit} usage credit included monthly`,
   "Pay-as-you-go beyond credits",
-  "200 knowledge base documents",
-  "API access (1,000 requests/day)",
+  `${LIMITS[PLANS.PRO].documentsCount} knowledge base documents`,
+  `API access (${LIMITS[PLANS.PRO].apiRequestsPerDay.toLocaleString("en")} requests/day)`,
   "MCP server and client connections",
   "Cross-meeting search",
   "Meeting export (PDF and Markdown)",
-  "Up to 5 concurrent meetings",
+  `Up to ${LIMITS[PLANS.PRO].concurrentMeetings} concurrent meetings`,
 ];
 
-const USAGE_RATES = [
-  { type: "Voice meeting", price: "€3/hr" },
-  { type: "Silent meeting", price: "€1.50/hr" },
+const USAGE_RATE_ROWS = [
+  { type: "Voice meeting", price: DISPLAY.voiceRate },
+  { type: "Silent meeting", price: DISPLAY.silentRate },
   { type: "Post-meeting chat", price: "Free" },
 ];
 
@@ -40,9 +41,9 @@ export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const { data: session } = useSession();
 
-  const price = annual ? "€24" : "€29";
+  const price = annual ? DISPLAY.proAnnual : DISPLAY.proMonthly;
   const period = annual ? "/ mo, billed annually" : "/ month";
-  const savings = annual ? "Save €60/year" : null;
+  const savings = annual ? `Save ${DISPLAY.annualSavings}/year` : null;
 
   const checkoutUrl = session?.user
     ? getCheckoutUrl(annual ? "annual" : "monthly")
@@ -54,8 +55,8 @@ export default function PricingPage() {
         One plan. Pay for what you use.
       </h1>
       <p className="text-muted-foreground mx-auto mb-8 max-w-lg text-center">
-        Start free with silent meetings. Pro includes €30 of usage credit — most
-        users never go over.
+        Start free with silent meetings. Pro includes {DISPLAY.monthlyCredit} of
+        usage credit — most users never go over.
       </p>
 
       {/* Billing toggle */}
@@ -131,7 +132,9 @@ export default function PricingPage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">Pro</CardTitle>
-              <Badge variant="secondary">14-day free trial</Badge>
+              <Badge variant="secondary">
+                {DISPLAY.trialDays}-day free trial
+              </Badge>
             </div>
             <div className="mt-2">
               <span className="text-3xl font-bold">{price}</span>
@@ -140,7 +143,8 @@ export default function PricingPage() {
               </span>
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
-              Everything. Voice agent, API, MCP. €30 credit included.
+              Everything. Voice agent, API, MCP. {DISPLAY.monthlyCredit} credit
+              included.
             </p>
           </CardHeader>
           <CardContent>
@@ -161,7 +165,9 @@ export default function PricingPage() {
                 />
               }
             >
-              {session ? "Upgrade to Pro" : "Start 14-Day Free Trial"}
+              {session
+                ? "Upgrade to Pro"
+                : `Start ${DISPLAY.trialDays}-Day Free Trial`}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <p className="text-muted-foreground mt-3 text-center text-xs">
@@ -177,12 +183,13 @@ export default function PricingPage() {
           Usage-based. Predictable.
         </h2>
         <p className="text-muted-foreground mx-auto mb-6 max-w-md text-center text-sm">
-          Credits cover your meetings. Most users stay within the €30 credit and
-          pay a flat {annual ? "€24" : "€29"}/mo. If you go over, you only pay
-          for what you use.
+          Credits cover your meetings. Most users stay within the{" "}
+          {DISPLAY.monthlyCredit} credit and pay a flat{" "}
+          {annual ? DISPLAY.proAnnual : DISPLAY.proMonthly}/mo. If you go over,
+          you only pay for what you use.
         </p>
         <div className="border-border divide-border divide-y rounded-lg border">
-          {USAGE_RATES.map((rate) => (
+          {USAGE_RATE_ROWS.map((rate) => (
             <div
               key={rate.type}
               className="flex items-center justify-between px-4 py-3 text-sm"

@@ -15,7 +15,7 @@ import {
   Plug,
 } from "lucide-react";
 import { useBilling } from "@/hooks/use-billing";
-import { PLANS, PRICING } from "@/lib/billing/constants";
+import { PLANS, PRICING, FREE_TRIAL } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 function PlanBanner() {
@@ -40,7 +40,7 @@ function PlanBanner() {
             <Clock className="h-3.5 w-3.5" />
             <span>
               Pro trial: <strong>{billing.trialDaysRemaining}d left</strong>,{" "}
-              {Math.round(totalMin)} of 90 min used
+              {Math.round(totalMin)} of {FREE_TRIAL.totalMinutes} min used
             </span>
           </div>
         </div>

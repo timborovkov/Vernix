@@ -79,3 +79,26 @@ export const TRIAL_LIMITS = {
   ...LIMITS[PLANS.PRO],
   meetingMinutesPerMonth: FREE_TRIAL.totalMinutes,
 } as const;
+
+/** Format a number as EUR with trailing decimals only when needed (e.g. 1.5 → "1.50", 29 → "29") */
+function eur(n: number): string {
+  return Number.isInteger(n) ? `€${n}` : `€${n.toFixed(2)}`;
+}
+
+/** Pre-formatted display strings for UI — avoids scattering `€${...}` everywhere */
+export const DISPLAY = {
+  proMonthly: eur(PRICING[PLANS.PRO].monthly),
+  proAnnual: eur(PRICING[PLANS.PRO].annual / 12),
+  annualSavings: eur(
+    PRICING[PLANS.PRO].monthly * 12 - PRICING[PLANS.PRO].annual
+  ),
+  voiceCost: eur(USAGE_RATES.voice),
+  silentCost: eur(USAGE_RATES.silent),
+  voiceRate: `${eur(USAGE_RATES.voice)}/hr`,
+  silentRate: `${eur(USAGE_RATES.silent)}/hr`,
+  monthlyCredit: eur(MONTHLY_CREDIT[PLANS.PRO]),
+  trialDays: `${FREE_TRIAL.days}`,
+  trialMinutes: `${FREE_TRIAL.totalMinutes}`,
+  voiceHoursPerCredit: `${Math.floor(MONTHLY_CREDIT[PLANS.PRO] / USAGE_RATES.voice)}`,
+  silentHoursPerCredit: `${Math.floor(MONTHLY_CREDIT[PLANS.PRO] / USAGE_RATES.silent)}`,
+} as const;

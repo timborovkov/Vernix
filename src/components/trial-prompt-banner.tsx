@@ -13,7 +13,7 @@ import {
   Plug,
 } from "lucide-react";
 import { useBilling } from "@/hooks/use-billing";
-import { PLANS, PRICING } from "@/lib/billing/constants";
+import { PLANS, PRICING, DISPLAY } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 const STORAGE_KEY = "vernix_trial_prompt";
@@ -172,7 +172,7 @@ export function TrialPromptBanner({
               window.location.href = checkoutUrl;
             }}
           >
-            Try free for 14 days
+            Try free for {DISPLAY.trialDays} days
             <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
           <Button
@@ -200,8 +200,8 @@ export function TrialPromptBanner({
             Get an assistant that knows your business
           </p>
           <p className="text-muted-foreground text-xs">
-            Connect your tools. Get live answers and actions during calls. 14
-            days free.
+            Connect your tools. Get live answers and actions during calls.{" "}
+            {DISPLAY.trialDays} days free.
           </p>
         </div>
         <Button

@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { HeroBg } from "@/components/hero-bg";
 import { BookOpen, ArrowRight, FileText, Plug } from "lucide-react";
+import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Upload Docs, Get Answers During Calls | Vernix Knowledge Base",
@@ -69,7 +70,7 @@ export default function ContextPage() {
               size="lg"
               render={<Link href="/register" />}
             >
-              Try free for 14 days
+              Try free for {DISPLAY.trialDays} days
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <Button
@@ -185,7 +186,10 @@ export default function ContextPage() {
             ))}
           </div>
           <p className="text-muted-foreground mt-6 text-center text-xs leading-relaxed">
-            Free: 5 documents, 50MB. Pro: 200 documents, 500MB.
+            Free: {LIMITS[PLANS.FREE].documentsCount} documents,{" "}
+            {LIMITS[PLANS.FREE].totalStorageMB}MB. Pro:{" "}
+            {LIMITS[PLANS.PRO].documentsCount} documents,{" "}
+            {LIMITS[PLANS.PRO].totalStorageMB}MB.
           </p>
         </div>
       </ScrollReveal>
@@ -215,7 +219,7 @@ export default function ContextPage() {
           Your docs deserve to be heard
         </h2>
         <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
-          14-day free trial. No charge until the trial ends.
+          {DISPLAY.trialDays}-day free trial. No charge until the trial ends.
         </p>
         <Button variant="accent" size="lg" render={<Link href="/register" />}>
           Get started free

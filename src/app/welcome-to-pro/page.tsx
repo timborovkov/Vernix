@@ -17,6 +17,7 @@ import {
   Check,
   ArrowRight,
 } from "lucide-react";
+import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 
 const UNLOCKED_FEATURES = [
   {
@@ -36,7 +37,7 @@ const UNLOCKED_FEATURES = [
   },
   {
     icon: FileText,
-    label: "200 documents",
+    label: `${LIMITS[PLANS.PRO].documentsCount} documents`,
     description: "Upload knowledge base docs for richer context",
   },
   {
@@ -46,8 +47,8 @@ const UNLOCKED_FEATURES = [
   },
   {
     icon: CreditCard,
-    label: "\u20AC30 monthly credit",
-    description: "Covers ~10 hours of voice or ~20 hours of silent meetings",
+    label: `${DISPLAY.monthlyCredit} monthly credit`,
+    description: `Covers ~${DISPLAY.voiceHoursPerCredit} hours of voice or ~${DISPLAY.silentHoursPerCredit} hours of silent meetings`,
   },
 ];
 

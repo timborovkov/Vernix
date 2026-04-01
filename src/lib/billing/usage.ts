@@ -295,7 +295,7 @@ export async function syncUsageToPolar(
       type === "voice_meeting" ? USAGE_RATES.voice : USAGE_RATES.silent;
     const costEur = hours * rate;
 
-    // Single "meeting_usage" meter — Polar aggregates cost_eur, applies €30 credit
+    // Single "meeting_usage" meter — Polar aggregates cost_eur, applies monthly credit
     await polar.events.ingest({
       events: [
         {

@@ -13,6 +13,7 @@ import {
   FileText,
   MessageSquare,
 } from "lucide-react";
+import { DISPLAY } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Connect Your Tools to Video Calls | Vernix Integrations",
@@ -88,7 +89,7 @@ export default function IntegrationsPage() {
               size="lg"
               render={<Link href="/register" />}
             >
-              Try free for 14 days
+              Try free for {DISPLAY.trialDays} days
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <Button
@@ -201,7 +202,7 @@ export default function IntegrationsPage() {
           Ready to stop switching tabs?
         </h2>
         <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-sm leading-relaxed">
-          14-day free trial. No charge until the trial ends.
+          {DISPLAY.trialDays}-day free trial. No charge until the trial ends.
         </p>
         <Button variant="accent" size="lg" render={<Link href="/register" />}>
           Get started free
