@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getAllPosts, getPostBySlug } from "@/lib/blog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/date";
 import { mdxComponents } from "@/components/blog/mdx-components";
 
 interface Props {
@@ -36,14 +37,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
@@ -67,7 +60,7 @@ export default async function BlogPostPage({ params }: Props) {
           <span>{post.frontmatter.author}</span>
           <span>&middot;</span>
           <time dateTime={post.frontmatter.date}>
-            {formatDate(post.frontmatter.date)}
+            {formatDate(post.frontmatter.date, "UTC")}
           </time>
           <span>&middot;</span>
           <span>{post.readingTime} min read</span>
