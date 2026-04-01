@@ -11,19 +11,15 @@ import { detectPaywallTrigger } from "@/components/upgrade-dialog";
 
 describe("BillingApiError", () => {
   it("sets name, message, code, and status", () => {
-    const err = new BillingApiError(
-      "Voice requires Pro",
-      "LIMIT_EXCEEDED",
-      403
-    );
+    const err = new BillingApiError("Voice requires Pro", "BILLING_LIMIT", 403);
     expect(err.name).toBe("BillingApiError");
     expect(err.message).toBe("Voice requires Pro");
-    expect(err.code).toBe("LIMIT_EXCEEDED");
+    expect(err.code).toBe("BILLING_LIMIT");
     expect(err.status).toBe(403);
   });
 
-  it("isFeatureGate is true for LIMIT_EXCEEDED", () => {
-    const err = new BillingApiError("test", "LIMIT_EXCEEDED", 403);
+  it("isFeatureGate is true for BILLING_LIMIT", () => {
+    const err = new BillingApiError("test", "BILLING_LIMIT", 403);
     expect(err.isFeatureGate).toBe(true);
     expect(err.isQuotaExhausted).toBe(false);
   });
@@ -35,7 +31,7 @@ describe("BillingApiError", () => {
   });
 
   it("is an instance of Error", () => {
-    const err = new BillingApiError("test", "LIMIT_EXCEEDED", 403);
+    const err = new BillingApiError("test", "BILLING_LIMIT", 403);
     expect(err).toBeInstanceOf(Error);
   });
 });
@@ -46,9 +42,9 @@ describe("BillingApiError", () => {
 
 describe("isBillingError", () => {
   it("returns true for BillingApiError instances", () => {
-    expect(
-      isBillingError(new BillingApiError("x", "LIMIT_EXCEEDED", 403))
-    ).toBe(true);
+    expect(isBillingError(new BillingApiError("x", "BILLING_LIMIT", 403))).toBe(
+      true
+    );
   });
 
   it("returns false for regular Error", () => {
@@ -58,7 +54,7 @@ describe("isBillingError", () => {
   it("returns false for non-error values", () => {
     expect(isBillingError(null)).toBe(false);
     expect(isBillingError("string")).toBe(false);
-    expect(isBillingError({ code: "LIMIT_EXCEEDED" })).toBe(false);
+    expect(isBillingError({ code: "BILLING_LIMIT" })).toBe(false);
   });
 });
 
@@ -74,10 +70,10 @@ function mockResponse(status: number, body: unknown): Response {
 }
 
 describe("throwIfBillingError", () => {
-  it("throws BillingApiError for 403 with LIMIT_EXCEEDED code", async () => {
+  it("throws BillingApiError for 403 with BILLING_LIMIT code", async () => {
     const res = mockResponse(403, {
       error: "Voice meetings require a Pro plan",
-      code: "LIMIT_EXCEEDED",
+      code: "BILLING_LIMIT",
     });
 
     await expect(throwIfBillingError(res)).rejects.toThrow(BillingApiError);
@@ -85,12 +81,12 @@ describe("throwIfBillingError", () => {
       throwIfBillingError(
         mockResponse(403, {
           error: "Voice meetings require a Pro plan",
-          code: "LIMIT_EXCEEDED",
+          code: "BILLING_LIMIT",
         })
       )
     ).rejects.toMatchObject({
       message: "Voice meetings require a Pro plan",
-      code: "LIMIT_EXCEEDED",
+      code: "BILLING_LIMIT",
       status: 403,
     });
   });
@@ -139,7 +135,7 @@ describe("throwIfBillingError", () => {
   });
 
   it("uses fallback message when error field is missing", async () => {
-    const res = mockResponse(403, { code: "LIMIT_EXCEEDED" });
+    const res = mockResponse(403, { code: "BILLING_LIMIT" });
 
     await expect(throwIfBillingError(res)).rejects.toMatchObject({
       message: "Limit reached",

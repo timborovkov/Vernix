@@ -257,7 +257,7 @@ describe("POST /api/agent/join", () => {
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(403);
     expect(data.error).toBe("Voice meetings require a Pro plan");
-    expect(data.code).toBe("LIMIT_EXCEEDED");
+    expect(data.code).toBe("BILLING_LIMIT");
     expect(mockProvider.joinMeeting).not.toHaveBeenCalled();
   });
 

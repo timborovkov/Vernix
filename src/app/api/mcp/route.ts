@@ -52,7 +52,7 @@ async function handleMcpRequest(request: Request): Promise<Response> {
     return new Response(
       JSON.stringify({
         error: apiCheck.reason,
-        code: limits.apiEnabled ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+        code: limits.apiEnabled ? "RATE_LIMITED" : "BILLING_LIMIT",
       }),
       {
         status: limits.apiEnabled ? 429 : 403,

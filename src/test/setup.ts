@@ -40,7 +40,7 @@ const { mockBillingError } = vi.hoisted(() => {
       NextResponse.json(
         {
           error: check.reason,
-          code: status === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+          code: status === 429 ? "RATE_LIMITED" : "BILLING_LIMIT",
         },
         { status }
       ),
