@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DISPLAY, LIMITS, PLANS, FREE_TRIAL } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions | Vernix AI Meeting Assistant",
@@ -25,19 +26,19 @@ const QUESTIONS = [
   },
   {
     q: "Is there a free plan?",
-    a: "Yes. The free plan gives you 30 minutes of silent meetings per month with transcription, summaries, action items, and RAG chat. No credit card needed, no time limit — it's free forever.",
+    a: `Yes. The free plan gives you ${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent meetings per month with transcription, summaries, action items, and RAG chat. No credit card needed, no time limit — it's free forever.`,
   },
   {
     q: "How does the free trial work?",
-    a: "When you upgrade to Pro, you get a 14-day trial with full Pro features and 90 minutes of meeting time (voice or silent). After the trial, your subscription activates automatically. You can cancel anytime during the trial.",
+    a: `When you upgrade to Pro, you get a ${FREE_TRIAL.days}-day trial with full Pro features and ${FREE_TRIAL.totalMinutes} minutes of meeting time (voice or silent). After the trial, your subscription activates automatically. You can cancel anytime during the trial.`,
   },
   {
     q: "How does pricing work?",
-    a: "Pro is €29/mo and includes €30 of usage credit. Voice meetings cost €3/hr. Silent meetings cost €1.50/hr. Most users stay within the €30 credit and pay a flat €29/mo. If you go over, you only pay for the extra usage. You can set a monthly spending cap to avoid surprises.",
+    a: `Pro is ${DISPLAY.proMonthly}/mo and includes ${DISPLAY.monthlyCredit} of usage credit. Voice meetings cost ${DISPLAY.voiceRate}. Silent meetings cost ${DISPLAY.silentRate}. Most users stay within the ${DISPLAY.monthlyCredit} credit and pay a flat ${DISPLAY.proMonthly}/mo. If you go over, you only pay for the extra usage. You can set a monthly spending cap to avoid surprises.`,
   },
   {
     q: "What counts as usage?",
-    a: "Meeting time is the main usage metric. A 1-hour voice meeting uses €3 of credit. A 1-hour silent meeting uses €1.50. Post-meeting chat, summaries, and action items are included at no extra cost. Your €30 monthly credit covers roughly 10 hours of voice meetings or 20 hours of silent meetings.",
+    a: `Meeting time is the main usage metric. A 1-hour voice meeting uses ${DISPLAY.voiceRate.replace("/hr", "")} of credit. A 1-hour silent meeting uses ${DISPLAY.silentRate.replace("/hr", "")}. Post-meeting chat, summaries, and action items are included at no extra cost. Your ${DISPLAY.monthlyCredit} monthly credit covers roughly ${DISPLAY.voiceHoursPerCredit} hours of voice meetings or ${DISPLAY.silentHoursPerCredit} hours of silent meetings.`,
   },
   {
     q: "Can I use my own documents?",
