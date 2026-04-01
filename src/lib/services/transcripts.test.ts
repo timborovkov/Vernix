@@ -5,7 +5,7 @@ import { fakeMeeting } from "@/test/helpers";
 // Mocks
 // ---------------------------------------------------------------------------
 
-const { mockDb } = vi.hoisted(() => {
+const { mockDb, mockScrollTranscript } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const m of [
     "select",
@@ -23,11 +23,13 @@ const { mockDb } = vi.hoisted(() => {
   ]) {
     db[m] = vi.fn().mockImplementation(() => db);
   }
-  return { mockDb: db };
+  return {
+    mockDb: db,
+    mockScrollTranscript: vi.fn(),
+  };
 });
-vi.mock("@/lib/db", () => ({ db: mockDb }));
 
-const mockScrollTranscript = vi.fn();
+vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/vector/scroll", () => ({
   scrollTranscript: mockScrollTranscript,
 }));
