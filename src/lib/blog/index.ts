@@ -7,10 +7,11 @@ import { frontmatterSchema } from "./types";
 import type { BlogPost } from "./types";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "blog");
+const WORDS_PER_MINUTE = 200;
 
 function getReadingTime(content: string): number {
   const words = content.split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
+  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
 export function getAllPosts(): BlogPost[] {
@@ -36,7 +37,8 @@ export function getPostBySlug(
   slug: string,
   { includeDrafts = false }: { includeDrafts?: boolean } = {}
 ): BlogPost | null {
-  const filePath = path.join(CONTENT_DIR, `${slug}.mdx`);
+  const filePath = path.resolve(CONTENT_DIR, `${slug}.mdx`);
+  if (!filePath.startsWith(CONTENT_DIR + path.sep)) return null;
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf-8");
