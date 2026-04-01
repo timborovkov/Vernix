@@ -45,6 +45,8 @@ const envSchema = z
     // MCP OAuth apps (separate from login OAuth — different redirect URLs)
     GITHUB_MCP_CLIENT_ID: z.string().optional(),
     GITHUB_MCP_CLIENT_SECRET: z.string().optional(),
+    NOTION_MCP_CLIENT_ID: z.string().optional(),
+    NOTION_MCP_CLIENT_SECRET: z.string().optional(),
 
     // Resend (email provider — optional, emails disabled without it)
     RESEND_API_KEY: z.string().optional(),
