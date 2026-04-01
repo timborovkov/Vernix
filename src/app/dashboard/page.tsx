@@ -68,8 +68,8 @@ export default function DashboardPage() {
           <span className="hidden sm:inline">Chat</span>
         </Button>
         <CreateMeetingDialog
-          onCreate={async (title, joinLink, agenda, silent) => {
-            await createMeeting(title, joinLink, agenda, silent);
+          onCreate={async (title, joinLink, agenda, silent, noRecording) => {
+            await createMeeting(title, joinLink, agenda, silent, noRecording);
           }}
         />
       </div>
