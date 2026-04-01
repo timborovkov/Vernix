@@ -19,6 +19,7 @@ import {
   Plug,
   Video,
 } from "lucide-react";
+import { DISPLAY } from "@/lib/billing/constants";
 
 export const metadata: Metadata = {
   title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
@@ -300,7 +301,8 @@ export default async function LandingPage() {
             summarize.
           </h2>
           <p className="text-muted-foreground mb-8">
-            No credit card required. 14-day Pro trial when you upgrade.
+            No credit card required. {DISPLAY.trialDays}-day Pro trial when you
+            upgrade.
           </p>
           <Button size="lg" variant="accent" render={<Link href={ctaHref} />}>
             {isLoggedIn ? "Go to Dashboard" : "Try Vernix on Your Next Call"}
