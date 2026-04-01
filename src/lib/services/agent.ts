@@ -19,7 +19,8 @@ import { NotFoundError, BillingError, ConflictError } from "@/lib/api/errors";
 export async function joinMeeting(
   userId: string,
   meetingId: string,
-  userName?: string
+  userName?: string,
+  opts?: { skipBillingCheck?: boolean }
 ) {
   const [meeting] = await db
     .select()
@@ -34,26 +35,30 @@ export async function joinMeeting(
     );
   }
 
-  // Billing check
-  const silent = Boolean((meeting.metadata as Record<string, unknown>)?.silent);
-  const { limits, period } = await requireLimits(userId);
-  const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
-    getActiveMeetingCount(userId),
-    getUsedMinutes(userId, period.start, period.end),
-    getMonthlyMeetingCount(userId),
-  ]);
-  const check = canStartMeeting(
-    limits,
-    !silent,
-    usedMinutes,
-    activeMeetings,
-    monthlyCount
-  );
-  if (!check.allowed) {
-    throw new BillingError(
-      check.reason!,
-      !silent && !limits.voiceEnabled ? 403 : 429
+  // Billing check (skip when called from autoJoin — createMeeting already checked)
+  if (!opts?.skipBillingCheck) {
+    const silent = Boolean(
+      (meeting.metadata as Record<string, unknown>)?.silent
     );
+    const { limits, period } = await requireLimits(userId);
+    const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
+      getActiveMeetingCount(userId),
+      getUsedMinutes(userId, period.start, period.end),
+      getMonthlyMeetingCount(userId),
+    ]);
+    const check = canStartMeeting(
+      limits,
+      !silent,
+      usedMinutes,
+      activeMeetings,
+      monthlyCount
+    );
+    if (!check.allowed) {
+      throw new BillingError(
+        check.reason!,
+        !silent && !limits.voiceEnabled ? 403 : 429
+      );
+    }
   }
 
   // Optimistic lock: only transition if still in expected status
