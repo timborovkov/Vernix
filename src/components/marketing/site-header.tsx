@@ -40,6 +40,7 @@ const FEATURE_LINKS = [
 
 const NAV_LINKS = [
   { href: "/pricing", label: "Pricing" },
+  { href: "/blog", label: "Blog" },
   { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];

@@ -1,8 +1,24 @@
 import type { MetadataRoute } from "next";
 
+import { getAllPosts } from "@/lib/blog";
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getAllPosts();
+
+  const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${BASE_URL}/blog/${post.slug}`,
+    lastModified: new Date(post.frontmatter.date + "T12:00:00Z"),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  const latestPostDate =
+    posts.length > 0
+      ? new Date(posts[0].frontmatter.date + "T12:00:00Z")
+      : new Date();
+
   return [
     {
       url: BASE_URL,
@@ -34,6 +50,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: latestPostDate,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    ...blogEntries,
     {
       url: `${BASE_URL}/faq`,
       lastModified: new Date(),

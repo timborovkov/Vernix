@@ -1,0 +1,50 @@
+---
+title: "Vernix + GitHub: Pull Request Status Without Leaving the Call"
+description: "Connect GitHub to Vernix and get live PR status, commit history, and repo activity during your meetings. No more tab-switching to check what shipped."
+date: "2026-04-01"
+author: "Tim Borovkov"
+tags: ["integrations", "engineering", "github"]
+---
+
+Standups follow a pattern. Someone asks "where are we on the checkout rewrite?" and the engineer pulls up GitHub, scrolls through PRs, and reads out what they find. Everyone waits. The conversation stalls for 30 seconds while someone navigates three tabs.
+
+With Vernix connected to GitHub, that lookup happens inside the meeting.
+
+## What the GitHub integration does
+
+Once connected, Vernix can check your GitHub repositories during calls. Ask the agent a question, and it queries GitHub directly:
+
+- "What PRs are open on the main repo?"
+- "What changed in the last deploy?"
+- "Who reviewed the auth fix PR?"
+- "Are there any failing checks on the release branch?"
+
+The agent pulls the data and responds in real time, either by voice or in the meeting chat, depending on your mode.
+
+## Where this saves the most time
+
+### Standups and syncs
+
+The classic standup blocker: someone mentions a PR, and the team needs context. Instead of asking "can you share your screen?" or "I'll post the link after," the agent surfaces the PR title, status, reviewer comments, and CI results right there in the conversation.
+
+A question that used to cost 30-60 seconds of tab-switching now gets answered instantly.
+
+### Incident reviews
+
+When something breaks in production, the first question is usually "what changed?" Vernix can pull the recent commit history and PR merges, so the team can trace what shipped without someone manually diffing the deploy log.
+
+### Sprint planning
+
+Deciding what to prioritize next? Ask the agent how many open PRs are waiting for review, which ones have been sitting the longest, or what the team shipped last sprint. The data arrives in the conversation, not in a separate dashboard tab.
+
+## How to connect
+
+In your Vernix dashboard, go to **Settings > Integrations** and find GitHub. Click **Connect** to authorize Vernix with your GitHub account via OAuth. No API keys to manage, no tokens to rotate.
+
+Once connected, the agent can access your repositories during every meeting. You control which repos are visible through GitHub's standard OAuth permissions.
+
+## What the transcript captures
+
+When the agent answers a GitHub question during a call, that response becomes part of your meeting transcript. If you search later for "what PRs were open during the sprint review," you'll find the answer alongside the discussion that prompted it.
+
+This turns your meeting memory into something richer than a transcript. It captures not just what was said, but the data that informed the decisions.
