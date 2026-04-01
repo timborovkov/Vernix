@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import { withApiAuth } from "@/lib/api/middleware";
+import { RATE_LIMIT_EXPENSIVE } from "@/lib/api/constants";
 import {
   apiSuccess,
   apiCreated,
@@ -102,5 +103,5 @@ export const POST = withApiAuth(
       return handleServiceError(error);
     }
   },
-  { endpoint: "meetings:create", ratePerMinute: 10 }
+  { endpoint: "meetings:create", ratePerMinute: RATE_LIMIT_EXPENSIVE }
 );
