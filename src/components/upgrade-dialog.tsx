@@ -70,8 +70,7 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
   meeting_count: {
     icon: Users,
     title: "Monthly call limit reached",
-    description:
-      "You've reached the maximum number of calls for this period.",
+    description: "You've reached the maximum number of calls for this period.",
     proValue: `Up to ${LIMITS[PLANS.PRO].meetingsPerMonth} calls per month`,
     limitType: "quota",
   },

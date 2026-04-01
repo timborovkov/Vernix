@@ -45,12 +45,14 @@ export function SettingsForm({
   const [newPassword, setNewPassword] = useState("");
   const [tzSearch, setTzSearch] = useState("");
 
-  const browserTz = typeof window !== "undefined"
-    ? Intl.DateTimeFormat().resolvedOptions().timeZone
-    : "UTC";
-  const allTimezones = typeof Intl.supportedValuesOf === "function"
-    ? Intl.supportedValuesOf("timeZone")
-    : [browserTz];
+  const browserTz =
+    typeof window !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "UTC";
+  const allTimezones =
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : [browserTz];
   const filteredTimezones = tzSearch
     ? allTimezones.filter((tz) =>
         tz.toLowerCase().includes(tzSearch.toLowerCase())
@@ -206,7 +208,7 @@ export function SettingsForm({
                   <button
                     key={tz}
                     type="button"
-                    className={`w-full px-3 py-1.5 text-left text-sm transition-colors hover:bg-muted ${
+                    className={`hover:bg-muted w-full px-3 py-1.5 text-left text-sm transition-colors ${
                       profile?.timezone === tz
                         ? "bg-ring/10 text-foreground font-medium"
                         : "text-muted-foreground"

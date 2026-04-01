@@ -297,8 +297,7 @@ export default async function LandingPage() {
       <section className="bg-ring/10 border-border border-t border-b py-24">
         <div className="mx-auto max-w-3xl px-4 text-center">
           <h2 className="mb-4 text-2xl font-bold">
-            Your next call could be the first one you never have to
-            summarize.
+            Your next call could be the first one you never have to summarize.
           </h2>
           <p className="text-muted-foreground mb-8">
             No credit card required. {DISPLAY.trialDays}-day Pro trial when you

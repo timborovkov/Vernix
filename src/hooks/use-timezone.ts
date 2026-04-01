@@ -6,7 +6,5 @@ import { useProfile } from "./use-profile";
  */
 export function useTimezone(): string {
   const { profile } = useProfile();
-  return (
-    profile?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
-  );
+  return profile?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
 }
