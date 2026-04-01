@@ -2,6 +2,7 @@
   "name": "vernix",
   "version": "0.1.0",
   "private": true,
+  "license": "Elastic-2.0",
   "packageManager": "pnpm@10.30.1",
   "engines": {
     "node": ">=24"
@@ -24,7 +25,8 @@
     "test:network": "vitest run -c vitest.network.config.ts",
     "test:all": "vitest run && vitest run -c vitest.integration.config.ts",
     "test:coverage": "vitest run --coverage",
-    "validate": "pnpm test && pnpm format && pnpm lint --fix && pnpm typecheck"
+    "knip": "knip",
+    "validate": "pnpm test && pnpm format && pnpm lint --fix && pnpm typecheck && pnpm knip"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.47",
@@ -36,6 +38,7 @@
     "@polar-sh/nextjs": "^0.9.5",
     "@polar-sh/sdk": "^0.46.7",
     "@qdrant/js-client-rest": "^1.17.0",
+    "@scalar/nextjs-api-reference": "^0.10.5",
     "@sentry/nextjs": "^10.46.0",
     "@tanstack/react-query": "^5.95.2",
     "ai": "^6.0.134",
@@ -53,6 +56,7 @@
     "next-auth": "5.0.0-beta.30",
     "next-mdx-remote": "^6.0.0",
     "openai": "^6.32.0",
+    "openapi3-ts": "^4.5.0",
     "pdfjs-dist": "^5.5.207",
     "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
@@ -87,6 +91,7 @@
     "eslint-plugin-drizzle": "^0.2.3",
     "happy-dom": "^20.8.4",
     "jsdom": "^29.0.1",
+    "knip": "^6.2.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",

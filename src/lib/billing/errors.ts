@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
 // Billing error detection for frontend use.
-// API routes return { error: string, code: "LIMIT_EXCEEDED" | "RATE_LIMITED" }
+// API routes return { error: string, code: "BILLING_LIMIT" | "RATE_LIMITED" }
 // with status 403 (feature gate) or 429 (quota exhausted).
 // ---------------------------------------------------------------------------
 
-const BILLING_CODES = ["LIMIT_EXCEEDED", "RATE_LIMITED"] as const;
+const BILLING_CODES = ["BILLING_LIMIT", "RATE_LIMITED"] as const;
 type BillingCode = (typeof BILLING_CODES)[number];
 
 export class BillingApiError extends Error {
@@ -20,7 +20,7 @@ export class BillingApiError extends Error {
 
   /** True when the feature itself is locked (voice, API, storage cap) */
   get isFeatureGate(): boolean {
-    return this.code === "LIMIT_EXCEEDED";
+    return this.code === "BILLING_LIMIT";
   }
 
   /** True when a quota/rate limit is exhausted (resets next period) */
@@ -33,10 +33,6 @@ export function isBillingError(error: unknown): error is BillingApiError {
   return error instanceof BillingApiError;
 }
 
-/**
- * Parse an API response and throw BillingApiError if it's a billing error.
- * Call this in mutation functions before throwing a generic Error.
- */
 /**
  * Parse an API response and throw BillingApiError if it's a billing error.
  * Uses res.clone() so the original Response body remains consumable by the caller.

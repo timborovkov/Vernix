@@ -1,15 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireSessionUser } from "@/lib/auth/session";
-import { requireLimits, billingError } from "@/lib/billing/enforce";
-import { canMakeRagQuery } from "@/lib/billing/limits";
-import { getDailyCount, recordUsageEvent } from "@/lib/billing/usage";
+import { searchMeetings } from "@/lib/services/search";
+import { NotFoundError, BillingError, SearchError } from "@/lib/api/errors";
 import { z } from "zod/v4";
-import {
-  getRAGContext,
-  MeetingNotFoundError,
-  EmbeddingError,
-  AllSearchesFailedError,
-} from "@/lib/agent/rag";
 
 const searchSchema = z.object({
   q: z.string().min(1, "Query is required"),
@@ -20,12 +13,6 @@ const searchSchema = z.object({
 export async function GET(request: Request) {
   const user = await requireSessionUser();
   if (user instanceof NextResponse) return user;
-
-  // Billing check
-  const { limits } = await requireLimits(user.id);
-  const dailyRag = await getDailyCount(user.id, "rag_query");
-  const ragCheck = canMakeRagQuery(limits, dailyRag);
-  if (!ragCheck.allowed) return billingError(ragCheck, 429);
 
   const { searchParams } = new URL(request.url);
   const parsed = searchSchema.safeParse({
@@ -41,48 +28,28 @@ export async function GET(request: Request) {
     );
   }
 
-  const { q, meetingId, limit } = parsed.data;
-
   try {
-    const ragResults = await getRAGContext(q, {
-      meetingId,
-      limit,
-      userId: user.id,
+    const results = await searchMeetings(user.id, {
+      query: parsed.data.q,
+      meetingId: parsed.data.meetingId,
+      limit: parsed.data.limit,
     });
-
-    const results = ragResults.map((r) => ({
-      text: r.text,
-      score: r.score,
-      source: r.source,
-      speaker: r.speaker,
-      timestamp_ms: r.timestampMs,
-      meetingId: r.meetingId,
-      fileName: r.fileName,
-      documentId: r.documentId,
-    }));
-
-    recordUsageEvent(user.id, "rag_query").catch((e) =>
-      console.error("[Billing] Usage recording failed:", e)
-    );
     return NextResponse.json({ results });
   } catch (error) {
-    if (error instanceof MeetingNotFoundError) {
+    if (error instanceof NotFoundError) {
       return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
     }
-    if (error instanceof EmbeddingError) {
+    if (error instanceof BillingError) {
       return NextResponse.json(
         {
-          error: "Failed to create embedding",
-          details: error.message,
+          error: error.message,
+          code: error.statusCode === 429 ? "RATE_LIMITED" : "BILLING_LIMIT",
         },
-        { status: 500 }
+        { status: error.statusCode }
       );
     }
-    if (error instanceof AllSearchesFailedError) {
-      return NextResponse.json(
-        { error: "Vector search failed for all collections" },
-        { status: 500 }
-      );
+    if (error instanceof SearchError) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json(
       { error: "Internal server error" },

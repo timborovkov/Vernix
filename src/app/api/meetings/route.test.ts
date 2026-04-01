@@ -232,6 +232,6 @@ describe("POST /api/meetings", () => {
 
     expect(status).toBe(403);
     expect(data.error).toBe("Voice meetings require a Pro plan");
-    expect(data.code).toBe("LIMIT_EXCEEDED");
+    expect(data.code).toBe("BILLING_LIMIT");
   });
 });

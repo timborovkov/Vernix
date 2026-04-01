@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { meetings } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
-import { scrollTranscript } from "@/lib/vector/scroll";
 import { requireSessionUser } from "@/lib/auth/session";
+import { getTranscript } from "@/lib/services/transcripts";
+import { NotFoundError } from "@/lib/api/errors";
 
 export async function GET(
   _request: Request,
@@ -13,19 +11,14 @@ export async function GET(
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;
-  const [meeting] = await db
-    .select()
-    .from(meetings)
-    .where(and(eq(meetings.id, id), eq(meetings.userId, user.id)));
-
-  if (!meeting) {
-    return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
-  }
 
   try {
-    const segments = await scrollTranscript(meeting.qdrantCollectionName);
-    return NextResponse.json({ segments });
-  } catch {
+    const result = await getTranscript(user.id, id);
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return NextResponse.json({ error: "Meeting not found" }, { status: 404 });
+    }
     return NextResponse.json(
       { error: "Failed to fetch transcript" },
       { status: 500 }

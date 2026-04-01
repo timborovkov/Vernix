@@ -81,9 +81,10 @@ describe("POST /api/agent/join", () => {
 
   it("transitions pending -> joining -> active on success", async () => {
     mockDb.where
-      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })]) // SELECT
+      .mockReturnValueOnce(mockDb) // optimistic lock UPDATE .where -> chain to .returning
+      .mockResolvedValueOnce(undefined); // final UPDATE .where
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]); // optimistic lock .returning
 
     const req = createJsonRequest("http://localhost/api/agent/join", {
       method: "POST",
@@ -100,9 +101,10 @@ describe("POST /api/agent/join", () => {
 
   it("transitions to failed when provider throws", async () => {
     mockDb.where
-      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce([fakeMeeting({ status: "pending" })]) // SELECT
+      .mockReturnValueOnce(mockDb) // optimistic lock UPDATE
+      .mockResolvedValueOnce(undefined); // failed status UPDATE
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]); // optimistic lock
     mockProvider.joinMeeting.mockRejectedValueOnce(
       new Error("Connection refused")
     );
@@ -123,8 +125,9 @@ describe("POST /api/agent/join", () => {
   it("allows joining from failed status", async () => {
     mockDb.where
       .mockResolvedValueOnce([fakeMeeting({ status: "failed" })])
-      .mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(mockDb)
       .mockResolvedValueOnce(undefined);
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]);
 
     const req = createJsonRequest("http://localhost/api/agent/join", {
       method: "POST",
@@ -142,8 +145,9 @@ describe("POST /api/agent/join", () => {
     });
     mockDb.where
       .mockResolvedValueOnce([fakeMeeting({ status: "pending" })])
-      .mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(mockDb)
       .mockResolvedValueOnce(undefined);
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]);
 
     const req = createJsonRequest("http://localhost/api/agent/join", {
       method: "POST",
@@ -170,8 +174,9 @@ describe("POST /api/agent/join", () => {
       .mockResolvedValueOnce([
         fakeMeeting({ status: "pending", metadata: { silent: true } }),
       ])
-      .mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(mockDb)
       .mockResolvedValueOnce(undefined);
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]);
 
     const req = createJsonRequest("http://localhost/api/agent/join", {
       method: "POST",
@@ -193,8 +198,9 @@ describe("POST /api/agent/join", () => {
       .mockResolvedValueOnce([
         fakeMeeting({ status: "pending", metadata: { silent: true } }),
       ])
-      .mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(mockDb)
       .mockResolvedValueOnce(undefined);
+    mockDb.returning.mockResolvedValueOnce([{ id: validUuid }]);
 
     const req = createJsonRequest("http://localhost/api/agent/join", {
       method: "POST",
@@ -206,7 +212,7 @@ describe("POST /api/agent/join", () => {
     expect(mockProvider.joinMeeting).toHaveBeenCalledWith(
       expect.any(String),
       validUuid,
-      undefined,
+      undefined, // user.name not set in test session mock
       { silent: true }
     );
   });
@@ -251,11 +257,11 @@ describe("POST /api/agent/join", () => {
     const { status, data } = await parseJsonResponse(await POST(req));
     expect(status).toBe(403);
     expect(data.error).toBe("Voice meetings require a Pro plan");
-    expect(data.code).toBe("LIMIT_EXCEEDED");
+    expect(data.code).toBe("BILLING_LIMIT");
     expect(mockProvider.joinMeeting).not.toHaveBeenCalled();
   });
 
-  it("returns 429 when meeting minute limit is exhausted", async () => {
+  it("returns 429 when silent meeting minute limit is exhausted", async () => {
     const meeting = fakeMeeting({ metadata: { silent: true } });
     mockDb.where.mockResolvedValueOnce([meeting]);
 

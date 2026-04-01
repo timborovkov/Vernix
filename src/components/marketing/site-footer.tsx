@@ -11,6 +11,12 @@ const PRODUCT_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
+const DEVELOPER_LINKS = [
+  { href: "/docs", label: "API Docs" },
+  { href: "/api/v1/openapi.json", label: "OpenAPI Spec" },
+  { href: "/llms.txt", label: "llms.txt" },
+];
+
 const LEGAL_LINKS = [
   { href: "/terms", label: "Terms of Service" },
   { href: "/privacy", label: "Privacy Policy" },
@@ -23,7 +29,7 @@ export function SiteFooter() {
   return (
     <footer className="border-border border-t">
       <div className="mx-auto max-w-6xl px-4 py-12">
-        <div className="grid gap-8 sm:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-4">
           <div>
             <div className="mb-3">
               <Image
@@ -53,6 +59,23 @@ export function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="mb-3 text-sm font-medium">Developers</h3>
+            <ul className="space-y-2">
+              {DEVELOPER_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    target="_blank"
                     className="text-muted-foreground hover:text-foreground text-sm transition-colors"
                   >
                     {link.label}

@@ -95,3 +95,7 @@ Go to **Recall Dashboard → Webhooks → Add Endpoint** and configure:
 - **Streaming chat** on meeting detail and dashboard pages with tool-call visualization and source citations
 - The dashboard provides **meeting notes**, transcript timeline, search, and filtering
 - **Silent Mode** — a per-meeting toggle that changes the agent from a voice participant to a passive text listener. The bot joins without audio or screen presence, monitors the live transcript server-side, and responds via the meeting's built-in chat when addressed by name (Vernix). Enable it in the "New Meeting" dialog or on the meeting detail page before the agent joins. Responses are rate-limited to 1 per 30 seconds to prevent chat spam.
+
+## License
+
+Vernix is licensed under the [Elastic License 2.0 (ELv2)](LICENSE). You can use, copy, distribute, and modify the software, with the exception of offering it as a hosted or managed service. See the [LICENSE](LICENSE) file for full terms.
