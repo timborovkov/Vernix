@@ -45,10 +45,7 @@ export async function runBillingRetry() {
       );
       retried++;
     } catch (err) {
-      console.error(
-        `[Billing Retry] Failed to sync event ${event.id}:`,
-        err
-      );
+      console.error(`[Billing Retry] Failed to sync event ${event.id}:`, err);
     }
   }
 
