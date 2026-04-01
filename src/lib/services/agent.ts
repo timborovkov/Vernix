@@ -35,11 +35,10 @@ export async function joinMeeting(
     );
   }
 
+  const silent = Boolean((meeting.metadata as Record<string, unknown>)?.silent);
+
   // Billing check (skip when called from autoJoin — createMeeting already checked)
   if (!opts?.skipBillingCheck) {
-    const silent = Boolean(
-      (meeting.metadata as Record<string, unknown>)?.silent
-    );
     const { limits, period } = await requireLimits(userId);
     const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
       getActiveMeetingCount(userId),
