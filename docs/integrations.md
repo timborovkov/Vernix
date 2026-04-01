@@ -68,8 +68,7 @@ OAuth integrations use two strategies depending on provider support:
 | ---------- | -------------------- | ------------------- |
 | Notion     | Dynamic registration | `none` (public)     |
 | Linear     | Dynamic registration | `none` (public)     |
-| Jira       | Dynamic registration | `none` (public)     |
-| Confluence | Dynamic registration | `none` (public)     |
+| Atlassian  | Dynamic registration | `none` (public)     |
 | Asana      | Dynamic registration | `none` (public)     |
 | Figma      | Dynamic registration | `none` (public)     |
 | GitLab     | Dynamic registration | server-assigned     |

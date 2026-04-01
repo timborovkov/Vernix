@@ -378,13 +378,13 @@ const CATALOG: Integration[] = [
 
   // ── OAuth integrations (dynamic registration) ────────────────────────
   {
-    id: "jira",
-    name: "Jira",
+    id: "atlassian",
+    name: "Atlassian",
     description:
-      "Look up tickets, check sprint boards, and track project progress.",
-    logo: "/integrations/jira.svg",
+      "Access Jira issues, Confluence pages, and Compass services from one connection.",
+    logo: "/integrations/atlassian.svg",
     category: "project-management",
-    tags: ["issues", "sprints", "agile"],
+    tags: ["issues", "sprints", "wiki", "docs", "agile"],
     featured: true,
     status: "available",
     serverUrl: "https://mcp.atlassian.com/v1/mcp",
@@ -392,33 +392,13 @@ const CATALOG: Integration[] = [
     docsUrl:
       "https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/",
     setupInstructions:
-      "Click Connect to authorize Vernix with your Atlassian account. Covers Jira and Confluence.",
+      "Click Connect to authorize Vernix with your Atlassian account. Covers Jira, Confluence, and Compass.",
     examplePrompts: [
       "What's the status of PROJ-123?",
-      "How many tickets are in the current sprint?",
+      "What does our architecture doc say about the auth flow?",
     ],
     sampleResponses: [
       "PROJ-123 is in progress, assigned to Alice, due Friday.",
-    ],
-  },
-  {
-    id: "confluence",
-    name: "Confluence",
-    description: "Search wiki pages, spaces, and documentation.",
-    logo: "/integrations/confluence.svg",
-    category: "productivity",
-    tags: ["wiki", "docs", "knowledge-base"],
-    featured: true,
-    status: "available",
-    serverUrl: "https://mcp.atlassian.com/v1/mcp",
-    authMode: "oauth",
-    docsUrl:
-      "https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/",
-    setupInstructions:
-      "Click Connect to authorize Vernix with your Atlassian account. Covers Jira and Confluence.",
-    examplePrompts: ["What does our architecture doc say about the auth flow?"],
-    sampleResponses: [
-      "The auth doc describes a JWT-based flow with refresh tokens.",
     ],
   },
   {
