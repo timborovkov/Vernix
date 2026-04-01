@@ -40,7 +40,10 @@ export async function POST(request: Request) {
     }
     if (error instanceof BillingError) {
       return NextResponse.json(
-        { error: error.message, code: error.statusCode === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED" },
+        {
+          error: error.message,
+          code: error.statusCode === 429 ? "RATE_LIMITED" : "LIMIT_EXCEEDED",
+        },
         { status: error.statusCode }
       );
     }
