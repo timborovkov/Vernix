@@ -243,7 +243,8 @@ describe("createMeeting", () => {
       true, // !silent -> voice
       expect.anything(), // usedMinutes
       expect.anything(), // activeMeetings
-      expect.anything() // monthlyCount
+      expect.anything(), // monthlyCount
+      expect.anything() // monthlyVoiceMeetingCount
     );
   });
 });
