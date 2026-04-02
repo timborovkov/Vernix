@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { trackSignUp } from "@/lib/analytics";
 
 export default function AcceptTermsPage() {
   const { data: session, update: updateSession } = useSession();
@@ -38,6 +39,7 @@ export default function AcceptTermsPage() {
       // Try to refresh JWT (triggers jwt callback with trigger:"update" which re-reads DB)
       // The API also sets a terms_accepted cookie as fallback in case JWT doesn't refresh
       await updateSession().catch(() => {});
+      trackSignUp("sso");
       window.location.href = "/dashboard";
     } catch {
       setLoading(false);

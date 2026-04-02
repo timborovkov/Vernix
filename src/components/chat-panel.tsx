@@ -12,6 +12,7 @@ import Link from "next/link";
 import { PRICING, PLANS, LIMITS } from "@/lib/billing/constants";
 import { useBilling } from "@/hooks/use-billing";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+import { trackChatMessageSent } from "@/lib/analytics";
 
 interface ChatPanelProps {
   meetingId?: string;
@@ -61,6 +62,7 @@ export function ChatPanel({
     if (!inputValue.trim() || isLoading) return;
     if (error) clearError();
     sendMessage({ text: inputValue });
+    trackChatMessageSent();
     setInputValue("");
   };
 

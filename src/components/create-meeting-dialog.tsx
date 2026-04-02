@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Mic } from "lucide-react";
 import { isBillingError } from "@/lib/billing/errors";
+import { trackMeetingCreated } from "@/lib/analytics";
 import { useBilling } from "@/hooks/use-billing";
 import {
   UpgradeDialog,
@@ -63,6 +64,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
         voiceLimitReached || silent || undefined,
         noRecording || undefined
       );
+      trackMeetingCreated(silent || voiceDisabled);
       setTitle("");
       setJoinLink("");
       setAgenda("");

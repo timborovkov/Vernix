@@ -20,9 +20,11 @@ import {
   Clock,
   Zap,
 } from "lucide-react";
+import { useEffect } from "react";
 import { PRICING, PLANS, LIMITS, DISPLAY } from "@/lib/billing/constants";
 import { useBilling } from "@/hooks/use-billing";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+import { trackPaywallShown } from "@/lib/analytics";
 
 // ---------------------------------------------------------------------------
 // Paywall trigger types — each one maps to specific copy and value props
@@ -220,6 +222,10 @@ export function UpgradeDialog({
   const { billing } = useBilling();
   const copy = TRIGGER_COPY[trigger];
   const Icon = copy.icon;
+
+  useEffect(() => {
+    if (open) trackPaywallShown(trigger);
+  }, [open, trigger]);
 
   const isPro = billing?.plan === PLANS.PRO;
   const isTrialing = billing?.trialing;

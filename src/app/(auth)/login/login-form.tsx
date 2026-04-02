@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SsoButtons } from "@/components/auth/sso-buttons";
+import { trackLogin } from "@/lib/analytics";
 
 interface LoginFormProps {
   enableGoogle: boolean;
@@ -43,6 +44,7 @@ export function LoginForm({ enableGoogle, enableGithub }: LoginFormProps) {
       if (result?.error) {
         setError("Invalid email or password");
       } else {
+        trackLogin("credentials");
         router.push("/dashboard");
         router.refresh();
       }

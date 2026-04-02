@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { captureUtmParams } from "@/lib/analytics";
 
 type ConsentChoice = "accepted" | "rejected";
 
@@ -97,6 +98,10 @@ export function CookieConsentBanner({
     getConsentServerSnapshot
   );
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+
+  useEffect(() => {
+    captureUtmParams();
+  }, []);
 
   useEffect(() => {
     if (analyticsEnabled && consentChoice) {

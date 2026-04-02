@@ -1,12 +1,5 @@
 # TODO
 
-## Google Analytics Sales Funnel
-
-- **Funnel events** — Define and instrument key conversion events: landing page → signup → first meeting → upgrade
-- **Goal configuration** — Set up GA4 conversions for signup, first meeting created, plan upgrade
-- **Attribution** — UTM parameter tracking across signup flow for campaign attribution
-- **Feature usage event tracking** — Track key in-product feature usage events for product analytics.
-
 ## Security Hardening & Infra Go-Live Check
 
 - **Migrate from Next.js middleware to proxy** - The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy

@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { SsoButtons } from "@/components/auth/sso-buttons";
 import { DISPLAY } from "@/lib/billing/constants";
+import { trackSignUp } from "@/lib/analytics";
 
 interface RegisterFormProps {
   enableGoogle: boolean;
@@ -58,6 +59,7 @@ export function RegisterForm({
       if (result?.error) {
         setError("Account created but sign-in failed. Try logging in.");
       } else {
+        trackSignUp("credentials");
         router.push("/welcome");
         router.refresh();
       }
