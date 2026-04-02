@@ -627,10 +627,7 @@ export function SettingsForm({
                     checked={profile.emailPreferences?.product !== false}
                     onChange={(e) =>
                       updateProfile({
-                        emailPreferences: {
-                          ...profile.emailPreferences,
-                          product: e.target.checked,
-                        },
+                        emailPreferences: { product: e.target.checked },
                       })
                     }
                     disabled={updatingProfile}
@@ -649,10 +646,7 @@ export function SettingsForm({
                     checked={profile.emailPreferences?.marketing !== false}
                     onChange={(e) =>
                       updateProfile({
-                        emailPreferences: {
-                          ...profile.emailPreferences,
-                          marketing: e.target.checked,
-                        },
+                        emailPreferences: { marketing: e.target.checked },
                       })
                     }
                     disabled={updatingProfile}
