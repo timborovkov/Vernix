@@ -222,3 +222,23 @@ Tests must verify **real behavior**, not just confirm that mocks return what you
 ## Environment
 
 Copy `.env.example` to `.env.local`. Required: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `MEETING_BOT_PROVIDER`. For Recall: `RECALL_API_KEY`, `RECALL_API_URL`. For knowledge base: `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_REGION`. For billing: `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, `NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_MONTHLY`, `NEXT_PUBLIC_POLAR_PRODUCT_ID_PRO_ANNUAL`, `POLAR_SERVER`.
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health
