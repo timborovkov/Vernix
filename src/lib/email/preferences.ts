@@ -4,7 +4,9 @@ import type { EmailPreferences } from "@/lib/db/schema";
 type EmailCategory = "marketing" | "product" | "transactional";
 
 function getSecret(): string {
-  return process.env.AUTH_SECRET ?? "";
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) throw new Error("AUTH_SECRET is not set");
+  return secret;
 }
 
 /**

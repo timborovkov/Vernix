@@ -23,7 +23,9 @@ const LEGAL_LINKS = [
   { href: "/cookie-policy", label: "Cookie Policy" },
 ];
 
-const isAnalyticsEnabled = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+const isAnalyticsEnabled =
+  Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) ||
+  Boolean(process.env.NEXT_PUBLIC_CONTENTSQUARE_TAG);
 
 export function SiteFooter() {
   return (
