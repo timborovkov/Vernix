@@ -55,6 +55,8 @@ export const POST = Webhooks({
           trialEndsAt,
           currentPeriodStart: new Date(payload.data.currentPeriodStart),
           currentPeriodEnd: new Date(payload.data.currentPeriodEnd),
+          churnedAt: null,
+          winBackEmailSentAt: null,
           updatedAt: new Date(),
         })
         .where(eq(users.id, externalId));
@@ -101,6 +103,8 @@ export const POST = Webhooks({
           polarSubscriptionId: payload.data.id,
           currentPeriodStart: new Date(payload.data.currentPeriodStart),
           currentPeriodEnd: new Date(payload.data.currentPeriodEnd),
+          churnedAt: null,
+          winBackEmailSentAt: null,
           updatedAt: new Date(),
         })
         .where(eq(users.id, externalId));
