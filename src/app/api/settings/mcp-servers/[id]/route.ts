@@ -52,15 +52,22 @@ export async function PATCH(
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
   if (typeof enabled === "boolean") {
     if (enabled) {
-      // Billing: enforce MCP server connection limit when re-enabling
-      const { limits } = await requireLimits(user.id);
-      const enabledCount = await getEnabledMcpServerCount(user.id);
-      const mcpCheck = canAddMcpServer(limits, enabledCount);
-      if (!mcpCheck.allowed) {
-        return NextResponse.json(
-          { error: mcpCheck.reason, code: "BILLING_LIMIT" },
-          { status: 403 }
-        );
+      // Only check billing when transitioning from disabled to enabled.
+      // Fetch current state to avoid blocking updates on already-enabled servers.
+      const [current] = await db
+        .select({ enabled: mcpServers.enabled })
+        .from(mcpServers)
+        .where(and(eq(mcpServers.id, id), eq(mcpServers.userId, user.id)));
+      if (current && !current.enabled) {
+        const { limits } = await requireLimits(user.id);
+        const enabledCount = await getEnabledMcpServerCount(user.id);
+        const mcpCheck = canAddMcpServer(limits, enabledCount);
+        if (!mcpCheck.allowed) {
+          return NextResponse.json(
+            { error: mcpCheck.reason, code: "BILLING_LIMIT" },
+            { status: 403 }
+          );
+        }
       }
     }
     updates.enabled = enabled;
