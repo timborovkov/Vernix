@@ -40,7 +40,6 @@ export const FREE_TRIAL = {
 export const LIMITS = {
   [PLANS.FREE]: {
     meetingMinutesPerMonth: 30, // voice + silent combined
-    voiceEnabled: true,
     voiceMeetingsPerMonth: 1,
     documentsCount: 5,
     maxDocumentSizeMB: 10,
@@ -58,7 +57,6 @@ export const LIMITS = {
   },
   [PLANS.PRO]: {
     meetingMinutesPerMonth: null, // governed by credits
-    voiceEnabled: true,
     voiceMeetingsPerMonth: null, // unlimited
     documentsCount: 200,
     maxDocumentSizeMB: 25,
