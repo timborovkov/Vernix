@@ -37,16 +37,22 @@ function updateConsentMode(choice: ConsentChoice, retries = 10) {
   });
 }
 
-/** Load Contentsquare tag only after consent. No consent mode — script must not load at all without opt-in. */
+/** Load or remove Contentsquare tag based on consent. No consent mode — script must not exist without opt-in. */
 function loadContentsquare(choice: ConsentChoice) {
   const tag = process.env.NEXT_PUBLIC_CONTENTSQUARE_TAG;
-  if (!tag || choice !== "accepted") return;
-  if (document.getElementById("contentsquare-tag")) return;
-  const script = document.createElement("script");
-  script.id = "contentsquare-tag";
-  script.src = `https://t.contentsquare.net/uxa/${tag}.js`;
-  script.async = true;
-  document.head.appendChild(script);
+  if (!tag) return;
+
+  if (choice === "accepted") {
+    if (document.getElementById("contentsquare-tag")) return;
+    const script = document.createElement("script");
+    script.id = "contentsquare-tag";
+    script.src = `https://t.contentsquare.net/uxa/${tag}.js`;
+    script.async = true;
+    document.head.appendChild(script);
+  } else {
+    const existing = document.getElementById("contentsquare-tag");
+    if (existing) existing.remove();
+  }
 }
 
 const consentListeners = new Set<() => void>();
