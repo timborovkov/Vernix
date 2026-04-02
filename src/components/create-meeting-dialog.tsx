@@ -61,7 +61,7 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
         silent || undefined,
         noRecording || undefined
       );
-      trackMeetingCreated(silent);
+      trackMeetingCreated(silent || voiceDisabled);
       setTitle("");
       setJoinLink("");
       setAgenda("");
