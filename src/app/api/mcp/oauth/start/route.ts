@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
-import { and, eq } from "drizzle-orm";
 import { auth } from "@modelcontextprotocol/sdk/client/auth.js";
 import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
@@ -58,40 +57,22 @@ export async function POST(request: Request) {
     integrationName = integration.name;
   }
 
-  // Find or create MCP server record
-  // Include catalogIntegrationId in lookup so integrations sharing a URL
-  // (e.g. Jira and Confluence both use mcp.atlassian.com) get separate records
+  // Always create a new MCP server record to support multiple connections
+  // (e.g. two Slack workspaces for different teams)
   const catalogId =
     parsed.data.integrationId === "custom" ? null : parsed.data.integrationId;
-  let serverId: string;
-  const [existing] = await db
-    .select({ id: mcpServers.id })
-    .from(mcpServers)
-    .where(
-      and(
-        eq(mcpServers.userId, user.id),
-        eq(mcpServers.url, serverUrl),
-        eq(mcpServers.authType, "oauth"),
-        catalogId ? eq(mcpServers.catalogIntegrationId, catalogId) : undefined
-      )
-    );
-
-  if (existing) {
-    serverId = existing.id;
-  } else {
-    const [created] = await db
-      .insert(mcpServers)
-      .values({
-        userId: user.id,
-        name: integrationName,
-        url: serverUrl,
-        authType: "oauth",
-        catalogIntegrationId: catalogId,
-        enabled: false, // enabled after OAuth callback succeeds
-      })
-      .returning({ id: mcpServers.id });
-    serverId = created.id;
-  }
+  const [created] = await db
+    .insert(mcpServers)
+    .values({
+      userId: user.id,
+      name: integrationName,
+      url: serverUrl,
+      authType: "oauth",
+      catalogIntegrationId: catalogId,
+      enabled: false, // enabled after OAuth callback succeeds
+    })
+    .returning({ id: mcpServers.id });
+  const serverId = created.id;
 
   // Initiate OAuth flow via MCP SDK
   const provider = new VernixOAuthProvider(user.id, serverId, serverUrl);

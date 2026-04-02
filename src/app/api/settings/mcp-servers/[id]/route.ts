@@ -32,6 +32,7 @@ export async function PATCH(
     authKeyParam,
     authUsername,
     authPassword,
+    disabledTools,
   } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof name === "string" && name.length > 0) updates.name = name;
@@ -105,6 +106,12 @@ export async function PATCH(
     updates.authUsername = authUsername || null;
   if (typeof authPassword === "string")
     updates.authPassword = authPassword || null;
+  if (
+    Array.isArray(disabledTools) &&
+    disabledTools.every((t) => typeof t === "string")
+  ) {
+    updates.disabledTools = disabledTools;
+  }
 
   const [updated] = await db
     .update(mcpServers)
@@ -116,6 +123,7 @@ export async function PATCH(
       url: mcpServers.url,
       authType: mcpServers.authType,
       enabled: mcpServers.enabled,
+      disabledTools: mcpServers.disabledTools,
       createdAt: mcpServers.createdAt,
       updatedAt: mcpServers.updatedAt,
     });

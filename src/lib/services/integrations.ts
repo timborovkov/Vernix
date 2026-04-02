@@ -14,6 +14,9 @@ export async function listConnectedIntegrations(userId: string) {
       name: mcpServers.name,
       catalogIntegrationId: mcpServers.catalogIntegrationId,
       enabled: mcpServers.enabled,
+      disabledTools: mcpServers.disabledTools,
+      cachedTools: mcpServers.cachedTools,
+      toolsCachedAt: mcpServers.toolsCachedAt,
       createdAt: mcpServers.createdAt,
     })
     .from(mcpServers)
@@ -27,6 +30,7 @@ export async function listConnectedIntegrations(userId: string) {
     const catalogEntry = s.catalogIntegrationId
       ? catalogMap.get(s.catalogIntegrationId)
       : null;
+    const disabledSet = new Set(s.disabledTools ?? []);
     return {
       id: s.id,
       name: s.name,
@@ -35,6 +39,12 @@ export async function listConnectedIntegrations(userId: string) {
       integrationName: catalogEntry?.name ?? null,
       integrationCategory: catalogEntry?.category ?? null,
       integrationLogo: catalogEntry?.logo ?? null,
+      tools:
+        s.cachedTools?.map((t) => ({
+          ...t,
+          enabled: !disabledSet.has(t.name),
+        })) ?? null,
+      toolsCachedAt: s.toolsCachedAt,
       createdAt: s.createdAt,
     };
   });

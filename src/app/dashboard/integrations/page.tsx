@@ -43,6 +43,8 @@ function IntegrationsContent() {
     deleteServer,
     toggleServer,
     testServer,
+    fetchTools,
+    toggleTool,
     startOAuth,
     oauthLoading,
   } = useMcpServers({
@@ -87,21 +89,22 @@ function IntegrationsContent() {
         return enabledCount < limit;
       })();
 
-  // Match connected servers to catalog entries by catalogIntegrationId first, then name/URL fallback
-  const connectedIds = new Set(
-    servers
-      .filter((s) => s.enabled)
-      .map((s) => {
-        if (s.catalogIntegrationId) return s.catalogIntegrationId;
-        const match = integrations.find(
-          (i) =>
-            s.name.toLowerCase() === i.name.toLowerCase() ||
-            s.url.toLowerCase().includes(i.id)
-        );
-        return match?.id;
-      })
-      .filter(Boolean) as string[]
-  );
+  // Group connected servers by catalog integration ID
+  const connectionsByIntegration = new Map<string, typeof servers>();
+  for (const s of servers) {
+    const catalogId =
+      s.catalogIntegrationId ??
+      integrations.find(
+        (i) =>
+          s.name.toLowerCase() === i.name.toLowerCase() ||
+          s.url.toLowerCase().includes(i.id)
+      )?.id;
+    if (catalogId) {
+      const existing = connectionsByIntegration.get(catalogId) ?? [];
+      existing.push(s);
+      connectionsByIntegration.set(catalogId, existing);
+    }
+  }
 
   // Custom servers: no catalogIntegrationId, or catalog match not found
   const customServers = servers.filter((s) => {
@@ -129,8 +132,8 @@ function IntegrationsContent() {
 
   // Sort: connected first, then featured, then available, then coming-soon
   const sorted = [...filtered].sort((a, b) => {
-    const aConnected = connectedIds.has(a.id) ? 0 : 1;
-    const bConnected = connectedIds.has(b.id) ? 0 : 1;
+    const aConnected = connectionsByIntegration.has(a.id) ? 0 : 1;
+    const bConnected = connectionsByIntegration.has(b.id) ? 0 : 1;
     if (aConnected !== bConnected) return aConnected - bConnected;
     if (a.featured !== b.featured) return a.featured ? -1 : 1;
     if (a.status !== b.status) return a.status === "available" ? -1 : 1;
@@ -146,14 +149,8 @@ function IntegrationsContent() {
     setConnectingIntegration(integration);
   };
 
-  const handleDisconnect = (integration: Integration) => {
-    const server = servers.find(
-      (s) =>
-        s.catalogIntegrationId === integration.id ||
-        s.name.toLowerCase() === integration.name.toLowerCase() ||
-        s.url.toLowerCase().includes(integration.id)
-    );
-    if (server) deleteServer(server.id);
+  const handleDisconnect = (serverId: string) => {
+    deleteServer(serverId);
   };
 
   const handleAddServer = async (params: Parameters<typeof addServer>[0]) => {
@@ -228,13 +225,15 @@ function IntegrationsContent() {
               onTest={testServer}
               onToggle={toggleServer}
               onDelete={deleteServer}
+              onFetchTools={fetchTools}
+              onToggleTool={toggleTool}
             />
           ))}
         </div>
       )}
 
       {/* First integration nudge */}
-      {customServers.length === 0 && connectedIds.size === 0 && (
+      {customServers.length === 0 && connectionsByIntegration.size === 0 && (
         <Card className="border-ring/20 bg-ring/5 mb-6">
           <CardContent className="flex items-center gap-3 p-4">
             <Plug className="text-ring h-5 w-5 shrink-0" />
@@ -288,17 +287,12 @@ function IntegrationsContent() {
           <IntegrationCard
             key={integration.id}
             integration={integration}
-            connected={connectedIds.has(integration.id)}
-            serverId={
-              servers.find(
-                (s) =>
-                  s.catalogIntegrationId === integration.id ||
-                  s.name.toLowerCase() === integration.name.toLowerCase()
-              )?.id
-            }
+            connections={connectionsByIntegration.get(integration.id) ?? []}
             onConnect={handleConnect}
             onDisconnect={handleDisconnect}
             onTest={testServer}
+            onFetchTools={fetchTools}
+            onToggleTool={toggleTool}
           />
         ))}
       </div>
