@@ -1032,6 +1032,25 @@ List endpoints use cursor-based pagination. Pass \`limit\` (1-100, default 20) a
                               type: "string",
                               nullable: true,
                             },
+                            tools: {
+                              type: "array",
+                              nullable: true,
+                              description:
+                                "Cached tools discovered from this integration, with enabled/disabled status",
+                              items: {
+                                type: "object",
+                                properties: {
+                                  name: { type: "string" },
+                                  description: { type: "string" },
+                                  enabled: { type: "boolean" },
+                                },
+                              },
+                            },
+                            toolsCachedAt: {
+                              type: "string",
+                              format: "date-time",
+                              nullable: true,
+                            },
                             createdAt: {
                               type: "string",
                               format: "date-time",

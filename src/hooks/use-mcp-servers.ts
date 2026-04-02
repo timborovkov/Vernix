@@ -19,6 +19,9 @@ interface McpServerInfo {
   authType: McpAuthType;
   catalogIntegrationId: string | null;
   enabled: boolean;
+  disabledTools: string[] | null;
+  cachedTools: { name: string; description: string }[] | null;
+  toolsCachedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -177,7 +180,81 @@ export function useMcpServers(opts?: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+    const result = await res.json();
+    // Refresh server list to pick up cached tools
+    if (result.success) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
+    }
+    return result;
+  };
+
+  const fetchTools = async (
+    serverId: string
+  ): Promise<{
+    tools: { name: string; description: string; enabled: boolean }[];
+    cachedAt: string | null;
+    stale?: boolean;
+  }> => {
+    const res = await fetch(`/api/settings/mcp-servers/${serverId}/tools`);
+    if (!res.ok) throw new Error("Failed to fetch tools");
     return res.json();
+  };
+
+  const toggleToolMutation = useMutation({
+    mutationFn: async ({
+      serverId,
+      disabledTools,
+    }: {
+      serverId: string;
+      disabledTools: string[];
+    }) => {
+      const res = await fetch(`/api/settings/mcp-servers/${serverId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disabledTools }),
+      });
+      if (!res.ok) throw new Error("Failed to update tool settings");
+      return res.json();
+    },
+    onMutate: async ({ serverId, disabledTools }) => {
+      // Cancel outgoing refetches so they don't overwrite optimistic update
+      await queryClient.cancelQueries({ queryKey: queryKeys.mcpServers.all });
+      const previous = queryClient.getQueryData<McpServerInfo[]>(
+        queryKeys.mcpServers.all
+      );
+      // Optimistically update the cache to prevent stale reads on rapid toggles
+      queryClient.setQueryData<McpServerInfo[]>(
+        queryKeys.mcpServers.all,
+        (old) =>
+          old?.map((s) => (s.id === serverId ? { ...s, disabledTools } : s)) ??
+          []
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      // Roll back on failure
+      if (context?.previous) {
+        queryClient.setQueryData(queryKeys.mcpServers.all, context.previous);
+      }
+      toast.error("Failed to update tool settings");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
+    },
+  });
+
+  const toggleTool = (serverId: string, toolName: string, enabled: boolean) => {
+    // Read from query cache to get the latest optimistic state
+    const cached = queryClient.getQueryData<McpServerInfo[]>(
+      queryKeys.mcpServers.all
+    );
+    const server = cached?.find((s) => s.id === serverId);
+    if (!server) return; // Cache not loaded yet
+    const current = server.disabledTools ?? [];
+    const disabledTools = enabled
+      ? current.filter((t) => t !== toolName)
+      : [...current, toolName];
+    toggleToolMutation.mutate({ serverId, disabledTools });
   };
 
   return {
@@ -191,6 +268,8 @@ export function useMcpServers(opts?: {
     },
     oauthLoading: oauthMutation.isPending,
     testServer,
+    fetchTools,
+    toggleTool,
     toggleServer: (id: string, enabled: boolean) =>
       toggleMutation.mutate({ id, enabled }),
     deleteServer: (id: string) => deleteMutation.mutate(id),

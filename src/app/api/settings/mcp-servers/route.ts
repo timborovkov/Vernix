@@ -49,6 +49,9 @@ export async function GET() {
       authType: mcpServers.authType,
       catalogIntegrationId: mcpServers.catalogIntegrationId,
       enabled: mcpServers.enabled,
+      disabledTools: mcpServers.disabledTools,
+      cachedTools: mcpServers.cachedTools,
+      toolsCachedAt: mcpServers.toolsCachedAt,
       createdAt: mcpServers.createdAt,
       updatedAt: mcpServers.updatedAt,
     })

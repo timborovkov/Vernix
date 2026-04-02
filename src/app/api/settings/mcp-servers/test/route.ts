@@ -5,9 +5,10 @@ import { requireSessionUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
-import { connectMcpClient, isSsrfUrl } from "@/lib/mcp/transport";
+import { isSsrfUrl } from "@/lib/mcp/transport";
 import { buildAuthHeaders, buildAuthUrl } from "@/lib/mcp/auth";
 import { VernixOAuthProvider } from "@/lib/mcp/oauth-provider";
+import { probe } from "@/lib/mcp/probe";
 
 // Accept either an existing server ID or raw connection params for testing before saving
 const testSchema = z.union([
@@ -26,30 +27,6 @@ const testSchema = z.union([
     apiKey: z.string().optional(),
   }),
 ]);
-
-async function probe(
-  url: string,
-  headers: Record<string, string>,
-  authProvider?: OAuthClientProvider
-): Promise<{
-  toolCount: number;
-  tools: { name: string; description: string }[];
-}> {
-  const client = await connectMcpClient(url, headers, authProvider);
-
-  try {
-    const { tools } = await client.listTools();
-    return {
-      toolCount: tools.length,
-      tools: tools.map((t) => ({
-        name: t.name,
-        description: t.description ?? "",
-      })),
-    };
-  } finally {
-    await client.close().catch(() => {});
-  }
-}
 
 export async function POST(request: Request) {
   const user = await requireSessionUser();
@@ -73,6 +50,7 @@ export async function POST(request: Request) {
   let url: string;
   let headers: Record<string, string>;
   let authProvider: OAuthClientProvider | undefined;
+  let serverId: string | undefined;
 
   if ("id" in parsed.data) {
     const [server] = await db
@@ -88,6 +66,7 @@ export async function POST(request: Request) {
 
     url = buildAuthUrl(server.url, server);
     headers = buildAuthHeaders(server);
+    serverId = server.id;
     if (server.authType === "oauth") {
       authProvider = new VernixOAuthProvider(user.id, server.id, server.url);
     }
@@ -134,6 +113,20 @@ export async function POST(request: Request) {
       timeout,
     ]);
     clearTimeout(timeoutId!);
+
+    // Cache discovered tools on the server record
+    if (serverId && result.tools.length > 0) {
+      db.update(mcpServers)
+        .set({ cachedTools: result.tools, toolsCachedAt: new Date() })
+        .where(eq(mcpServers.id, serverId))
+        .catch((e) =>
+          console.warn(
+            "[MCP] Failed to cache tools:",
+            e instanceof Error ? e.message : e
+          )
+        );
+    }
+
     return NextResponse.json({ success: true, ...result });
   } catch (error) {
     clearTimeout(timeoutId!);

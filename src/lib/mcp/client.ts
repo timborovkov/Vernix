@@ -157,7 +157,12 @@ export class McpClientManager {
     }
 
     const { tools } = await client.listTools();
+
+    // Filter out disabled tools
+    const disabledSet = new Set(server.disabledTools ?? []);
+
     for (const tool of tools) {
+      if (disabledSet.has(tool.name)) continue;
       const namespacedName = this.makeToolName(server.id, tool.name);
       this.tools.push({
         serverId: server.id,
@@ -173,6 +178,23 @@ export class McpClientManager {
         originalName: tool.name,
       });
     }
+
+    // Cache discovered tools (all tools, not just enabled — cache is for display)
+    db.update(mcpServers)
+      .set({
+        cachedTools: tools.map((t) => ({
+          name: t.name,
+          description: t.description ?? "",
+        })),
+        toolsCachedAt: new Date(),
+      })
+      .where(eq(mcpServers.id, server.id))
+      .catch((e) =>
+        console.warn(
+          "[MCP] Failed to cache tools:",
+          e instanceof Error ? e.message : e
+        )
+      );
 
     this.clients.set(server.id, client);
   }

@@ -242,6 +242,10 @@ export const mcpServers = pgTable("mcp_servers", {
   authPassword: text("auth_password"), // for 'basic' mode
   catalogIntegrationId: text("catalog_integration_id"), // links to catalog id (e.g. "slack")
   enabled: boolean("enabled").default(true).notNull(),
+  disabledTools: jsonb("disabled_tools").$type<string[]>().default([]),
+  cachedTools:
+    jsonb("cached_tools").$type<{ name: string; description: string }[]>(),
+  toolsCachedAt: timestamp("tools_cached_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

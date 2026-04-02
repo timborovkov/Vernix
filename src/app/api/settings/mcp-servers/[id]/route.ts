@@ -32,6 +32,7 @@ export async function PATCH(
     authKeyParam,
     authUsername,
     authPassword,
+    disabledTools,
   } = body as Record<string, unknown>;
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (typeof name === "string" && name.length > 0) updates.name = name;
@@ -105,6 +106,23 @@ export async function PATCH(
     updates.authUsername = authUsername || null;
   if (typeof authPassword === "string")
     updates.authPassword = authPassword || null;
+  if (Array.isArray(disabledTools)) {
+    if (
+      disabledTools.length > 500 ||
+      !disabledTools.every(
+        (t) => typeof t === "string" && t.length > 0 && t.length <= 200
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Invalid disabledTools: must be an array of non-empty strings (max 500 items, max 200 chars each)",
+        },
+        { status: 400 }
+      );
+    }
+    updates.disabledTools = [...new Set(disabledTools as string[])];
+  }
 
   const [updated] = await db
     .update(mcpServers)
@@ -116,6 +134,7 @@ export async function PATCH(
       url: mcpServers.url,
       authType: mcpServers.authType,
       enabled: mcpServers.enabled,
+      disabledTools: mcpServers.disabledTools,
       createdAt: mcpServers.createdAt,
       updatedAt: mcpServers.updatedAt,
     });
