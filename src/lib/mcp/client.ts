@@ -190,7 +190,10 @@ export class McpClientManager {
       })
       .where(eq(mcpServers.id, server.id))
       .catch((e) =>
-        console.warn("[MCP] Failed to cache tools:", e instanceof Error ? e.message : e)
+        console.warn(
+          "[MCP] Failed to cache tools:",
+          e instanceof Error ? e.message : e
+        )
       );
 
     this.clients.set(server.id, client);
