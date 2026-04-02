@@ -226,9 +226,8 @@ export function useMcpServers(opts?: {
       queryClient.setQueryData<McpServerInfo[]>(
         queryKeys.mcpServers.all,
         (old) =>
-          old?.map((s) =>
-            s.id === serverId ? { ...s, disabledTools } : s
-          ) ?? []
+          old?.map((s) => (s.id === serverId ? { ...s, disabledTools } : s)) ??
+          []
       );
       return { previous };
     },
