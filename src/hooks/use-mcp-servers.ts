@@ -37,6 +37,10 @@ export interface AddServerParams {
   apiKey?: string;
 }
 
+interface BillingAwareError extends Error {
+  isBillingLimit?: boolean;
+}
+
 async function fetchServers(): Promise<McpServerInfo[]> {
   const res = await fetch("/api/settings/mcp-servers");
   if (!res.ok) throw new Error("Failed to load MCP servers");
@@ -44,7 +48,10 @@ async function fetchServers(): Promise<McpServerInfo[]> {
   return data.servers;
 }
 
-export function useMcpServers() {
+export function useMcpServers(opts?: {
+  onBillingError?: (message: string) => void;
+}) {
+  const { onBillingError } = opts ?? {};
   const queryClient = useQueryClient();
 
   const { data: servers = [], isLoading: loading } = useQuery({
@@ -60,14 +67,25 @@ export function useMcpServers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(params),
       });
-      if (!res.ok) throw new Error("Failed to add MCP server");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const err = new Error(data.error ?? "Failed to add MCP server");
+        (err as BillingAwareError).isBillingLimit = res.status === 403;
+        throw err;
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
       toast.success("MCP server added");
     },
-    onError: () => toast.error("Failed to add MCP server"),
+    onError: (err: BillingAwareError) => {
+      if (err.isBillingLimit) {
+        onBillingError?.(err.message);
+      } else {
+        toast.error(err.message);
+      }
+    },
   });
 
   const toggleMutation = useMutation({
@@ -77,13 +95,25 @@ export function useMcpServers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ enabled }),
       });
-      if (!res.ok) throw new Error("Failed to update server");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const err = new Error(data.error ?? "Failed to update server");
+        (err as BillingAwareError).isBillingLimit =
+          res.status === 403 && data.code === "BILLING_LIMIT";
+        throw err;
+      }
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.mcpServers.all });
     },
-    onError: () => toast.error("Failed to update server"),
+    onError: (err: BillingAwareError) => {
+      if (err.isBillingLimit) {
+        onBillingError?.(err.message);
+      } else {
+        toast.error(err.message);
+      }
+    },
   });
 
   const deleteMutation = useMutation({
