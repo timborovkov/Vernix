@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { PRICING, PLANS, DISPLAY, LIMITS } from "@/lib/billing/constants";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
+import { trackBeginCheckout, trackTrialStarted } from "@/lib/analytics";
 
 const PRO_FEATURES = [
   {
@@ -112,6 +113,8 @@ export default function WelcomePage() {
               <button
                 type="button"
                 onClick={() => {
+                  trackBeginCheckout("monthly");
+                  trackTrialStarted("monthly");
                   window.location.href = getCheckoutUrl("monthly");
                 }}
                 className="border-border hover:border-ring flex-1 rounded-lg border p-3 text-left transition-colors"
