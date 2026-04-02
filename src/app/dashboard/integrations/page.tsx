@@ -33,6 +33,10 @@ export default function IntegrationsPage() {
 }
 
 function IntegrationsContent() {
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
+    null
+  );
+
   const {
     servers,
     addServer,
@@ -41,7 +45,9 @@ function IntegrationsContent() {
     testServer,
     startOAuth,
     oauthLoading,
-  } = useMcpServers();
+  } = useMcpServers({
+    onBillingError: () => setPaywallTrigger("integration_limit"),
+  });
   const { billing, loading: billingLoading } = useBilling();
   const searchParams = useSearchParams();
 
@@ -68,9 +74,6 @@ function IntegrationsContent() {
   >("all");
   const [connectingIntegration, setConnectingIntegration] =
     useState<Integration | null>(null);
-  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
-    null
-  );
 
   const integrations = getIntegrations();
   // Default to true while billing loads so Pro users don't see a flash of disabled buttons
