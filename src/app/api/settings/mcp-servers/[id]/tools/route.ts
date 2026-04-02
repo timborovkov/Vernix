@@ -73,7 +73,9 @@ export async function GET(
     db.update(mcpServers)
       .set({ cachedTools: result.tools, toolsCachedAt: now })
       .where(eq(mcpServers.id, id))
-      .catch(() => {});
+      .catch((e) =>
+        console.warn("[MCP] Failed to cache tools:", e instanceof Error ? e.message : e)
+      );
 
     return NextResponse.json({
       tools: result.tools.map((t) => ({
