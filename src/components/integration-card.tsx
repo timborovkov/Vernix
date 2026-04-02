@@ -221,13 +221,16 @@ export function IntegrationCard({
                                     toast.success(
                                       `Connected — ${result.toolCount} tools available`
                                     );
-                                    // Refresh tools after test
+                                    // Refresh tools after test (separate error handling)
                                     if (onFetchTools) {
-                                      const fresh = await onFetchTools(conn.id);
-                                      setToolsById((prev) => ({
-                                        ...prev,
-                                        [conn.id]: fresh.tools,
-                                      }));
+                                      onFetchTools(conn.id)
+                                        .then((fresh) =>
+                                          setToolsById((prev) => ({
+                                            ...prev,
+                                            [conn.id]: fresh.tools,
+                                          }))
+                                        )
+                                        .catch(() => {});
                                     }
                                   } else {
                                     toast.error(
