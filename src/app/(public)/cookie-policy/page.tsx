@@ -100,6 +100,24 @@ export default function CookiePolicyPage() {
                   <td className="py-2 pr-4">Consent (Art. 6(1)(a))</td>
                   <td className="py-2">Up to 14 months</td>
                 </tr>
+                <tr>
+                  <td className="py-2 pr-4 font-medium">Analytics</td>
+                  <td className="py-2 pr-4">
+                    <a
+                      href="https://contentsquare.com/privacy-center/"
+                      className="text-foreground underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Contentsquare
+                    </a>
+                  </td>
+                  <td className="py-2 pr-4">
+                    Heatmaps, session replays, click tracking, and UX analytics
+                  </td>
+                  <td className="py-2 pr-4">Consent (Art. 6(1)(a))</td>
+                  <td className="py-2">Up to 13 months</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -147,8 +165,31 @@ export default function CookiePolicyPage() {
         </section>
 
         <section>
+          <h2 className="mb-2 text-lg font-semibold">5. Contentsquare</h2>
+          <p className="text-muted-foreground text-sm">
+            Contentsquare provides heatmaps, session replays, and UX analytics
+            to help us understand how visitors interact with pages. The
+            Contentsquare tag is only loaded after you explicitly accept
+            analytics cookies in our consent banner — it does not load or
+            collect any data before consent. Data may be transferred to
+            Contentsquare servers in the EU and the United States under Standard
+            Contractual Clauses. Data is retained for up to 13 months. You can
+            learn more about Contentsquare&apos;s data practices in their{" "}
+            <a
+              href="https://contentsquare.com/privacy-center/"
+              className="text-foreground underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy Center
+            </a>
+            .
+          </p>
+        </section>
+
+        <section>
           <h2 className="mb-2 text-lg font-semibold">
-            5. Managing Your Preferences
+            6. Managing Your Preferences
           </h2>
           <p className="text-muted-foreground text-sm">
             You can update your cookie choices at any time by selecting{" "}
@@ -161,13 +202,13 @@ export default function CookiePolicyPage() {
 
         <section>
           <h2 className="mb-2 text-lg font-semibold">
-            6. International Transfers
+            7. International Transfers
           </h2>
           <p className="text-muted-foreground text-sm">
             Cookie and telemetry data may be transferred to the United States by
-            Google and Sentry. These transfers are governed by Standard
-            Contractual Clauses and, where applicable, adequacy decisions. For
-            further details, see Section 7 of our{" "}
+            Google, Contentsquare, and Sentry. These transfers are governed by
+            Standard Contractual Clauses and, where applicable, adequacy
+            decisions. For further details, see Section 7 of our{" "}
             <Link href="/privacy" className="text-foreground underline">
               Privacy Policy
             </Link>
@@ -176,7 +217,7 @@ export default function CookiePolicyPage() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-lg font-semibold">7. Contact</h2>
+          <h2 className="mb-2 text-lg font-semibold">8. Contact</h2>
           <p className="text-muted-foreground text-sm">
             If you have questions about this Cookie Policy, contact Nyxone OÜ
             (registry code 16172329), Harju maakond, Tallinn, Kesklinna

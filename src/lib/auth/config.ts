@@ -15,6 +15,12 @@ export const authConfig: NextAuthConfig = {
             ? taa
             : taa.toISOString()
           : null;
+        const eva = user.emailVerifiedAt;
+        token.emailVerifiedAt = eva
+          ? typeof eva === "string"
+            ? eva
+            : eva.toISOString()
+          : null;
       }
       return token;
     },
@@ -23,6 +29,7 @@ export const authConfig: NextAuthConfig = {
         session.user.id = token.id as string;
         session.user.image = (token.image as string) ?? null;
         session.user.termsAcceptedAt = token.termsAcceptedAt ?? null;
+        session.user.emailVerifiedAt = token.emailVerifiedAt ?? null;
       }
       return session;
     },

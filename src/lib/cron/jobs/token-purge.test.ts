@@ -30,23 +30,27 @@ describe("runTokenPurge", () => {
   });
 
   it("returns zero when no expired tokens", async () => {
-    mockDb.returning.mockResolvedValueOnce([]);
+    mockDb.returning
+      .mockResolvedValueOnce([]) // password reset tokens
+      .mockResolvedValueOnce([]); // email verification tokens
 
     const result = await runTokenPurge();
 
     expect(result.purged).toBe(0);
+    expect(result.purgedReset).toBe(0);
+    expect(result.purgedVerify).toBe(0);
   });
 
   it("deletes expired tokens and returns count", async () => {
-    mockDb.returning.mockResolvedValueOnce([
-      { id: "t1" },
-      { id: "t2" },
-      { id: "t3" },
-    ]);
+    mockDb.returning
+      .mockResolvedValueOnce([{ id: "t1" }, { id: "t2" }, { id: "t3" }]) // password reset
+      .mockResolvedValueOnce([{ id: "v1" }]); // email verification
 
     const result = await runTokenPurge();
 
-    expect(result.purged).toBe(3);
-    expect(mockDb.delete).toHaveBeenCalled();
+    expect(result.purged).toBe(4);
+    expect(result.purgedReset).toBe(3);
+    expect(result.purgedVerify).toBe(1);
+    expect(mockDb.delete).toHaveBeenCalledTimes(2);
   });
 });

@@ -18,6 +18,8 @@ declare global {
 }
 
 function updateConsentMode(choice: ConsentChoice, retries = 10) {
+  // GA not configured — nothing to update
+  if (!process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) return;
   if (typeof window.gtag !== "function") {
     if (retries > 0) {
       setTimeout(() => updateConsentMode(choice, retries - 1), 100);
@@ -33,6 +35,24 @@ function updateConsentMode(choice: ConsentChoice, retries = 10) {
     ad_user_data: "denied",
     ad_personalization: "denied",
   });
+}
+
+/** Load or remove Contentsquare tag based on consent. No consent mode — script must not exist without opt-in. */
+function loadContentsquare(choice: ConsentChoice) {
+  const tag = process.env.NEXT_PUBLIC_CONTENTSQUARE_TAG;
+  if (!tag) return;
+
+  if (choice === "accepted") {
+    if (document.getElementById("contentsquare-tag")) return;
+    const script = document.createElement("script");
+    script.id = "contentsquare-tag";
+    script.src = `https://t.contentsquare.net/uxa/${tag}.js`;
+    script.async = true;
+    document.head.appendChild(script);
+  } else {
+    const existing = document.getElementById("contentsquare-tag");
+    if (existing) existing.remove();
+  }
 }
 
 const consentListeners = new Set<() => void>();
@@ -81,6 +101,7 @@ export function CookieConsentBanner({
   useEffect(() => {
     if (analyticsEnabled && consentChoice) {
       updateConsentMode(consentChoice);
+      loadContentsquare(consentChoice);
     }
   }, [analyticsEnabled, consentChoice]);
 

@@ -28,6 +28,18 @@ vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/email/send", () => ({ sendEmail: mockSendEmail }));
 vi.mock("@/lib/email/templates", () => ({
   getLastChanceRetentionHtml: mockLastChanceTemplate,
+  getTrialStartedEmailHtml: vi
+    .fn()
+    .mockReturnValue("<html>trial-started</html>"),
+  getTrialExpiredEmailHtml: vi
+    .fn()
+    .mockReturnValue("<html>trial-expired</html>"),
+}));
+vi.mock("@/lib/email/preferences", () => ({
+  shouldSendEmail: vi.fn().mockReturnValue(true),
+  buildUnsubscribeUrl: vi
+    .fn()
+    .mockReturnValue("https://vernix.app/api/email/unsubscribe?test=1"),
 }));
 
 // Capture the handler callbacks passed to Webhooks() — must be hoisted
@@ -182,6 +194,7 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
           email: "user@example.com",
           name: "Test User",
           lastRetentionEmailSentAt: null,
+          emailPreferences: null,
         },
       ])
       .mockImplementation(() => mockDb);
@@ -196,7 +209,8 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
     );
     expect(mockLastChanceTemplate).toHaveBeenCalledWith(
       "Test User",
-      new Date(PERIOD_END)
+      new Date(PERIOD_END),
+      expect.any(String)
     );
 
     expect(mockDb.set).toHaveBeenCalledWith(
@@ -215,6 +229,7 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
         email: "user@example.com",
         name: "Test User",
         lastRetentionEmailSentAt: new Date(),
+        emailPreferences: null,
       },
     ]);
 
@@ -226,6 +241,17 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
 
 describe("Polar webhook: onSubscriptionRevoked", () => {
   it("downgrades to free and clears subscription fields", async () => {
+    // First where() = select user for email, then subsequent where() = update
+    mockDb.where
+      .mockResolvedValueOnce([
+        {
+          name: "Test User",
+          email: "user@example.com",
+          emailPreferences: null,
+        },
+      ])
+      .mockImplementation(() => mockDb);
+
     await capturedHandlers.onSubscriptionRevoked(
       subscriptionPayload({ currentPeriodEnd: "2020-01-01T00:00:00Z" })
     );
@@ -237,12 +263,23 @@ describe("Polar webhook: onSubscriptionRevoked", () => {
         trialEndsAt: null,
         currentPeriodStart: null,
         currentPeriodEnd: null,
+        churnedAt: expect.any(Date),
       })
     );
   });
 
   it("always downgrades even when period end is in the future", async () => {
     const futureEnd = new Date(Date.now() + 1000 * 60 * 60).toISOString();
+
+    mockDb.where
+      .mockResolvedValueOnce([
+        {
+          name: "Test User",
+          email: "user@example.com",
+          emailPreferences: null,
+        },
+      ])
+      .mockImplementation(() => mockDb);
 
     await capturedHandlers.onSubscriptionRevoked(
       subscriptionPayload({ currentPeriodEnd: futureEnd })

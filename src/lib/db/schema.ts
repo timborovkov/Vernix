@@ -22,6 +22,13 @@ export const meetingStatusEnum = pgEnum("meeting_status", [
   "failed",
 ]);
 
+export interface EmailPreferences {
+  /** Upgrade reminders, win-back, retention emails (default: true) */
+  marketing?: boolean;
+  /** Trial lifecycle, first meeting, check-in emails (default: true) */
+  product?: boolean;
+}
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
@@ -43,6 +50,27 @@ export const users = pgTable("users", {
     withTimezone: true,
   }),
   currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+  // Email lifecycle tracking
+  firstMeetingEmailSentAt: timestamp("first_meeting_email_sent_at", {
+    withTimezone: true,
+  }),
+  midTrialEmailSentAt: timestamp("mid_trial_email_sent_at", {
+    withTimezone: true,
+  }),
+  trialWarningEmailSentAt: timestamp("trial_warning_email_sent_at", {
+    withTimezone: true,
+  }),
+  churnedAt: timestamp("churned_at", { withTimezone: true }),
+  winBackEmailSentAt: timestamp("win_back_email_sent_at", {
+    withTimezone: true,
+  }),
+  emailPreferences: jsonb("email_preferences")
+    .$type<EmailPreferences>()
+    .default({}),
+  // Profile
+  emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
+  phone: text("phone"),
+  company: text("company"),
   timezone: text("timezone"), // IANA timezone e.g. "America/New_York", null = browser auto
   termsAcceptedAt: timestamp("terms_accepted_at", { withTimezone: true }),
   lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
@@ -78,6 +106,18 @@ export const accounts = pgTable(
 export type Account = typeof accounts.$inferSelect;
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .references(() => users.id, { onDelete: "cascade" })

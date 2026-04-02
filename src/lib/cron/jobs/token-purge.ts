@@ -1,21 +1,32 @@
 import { db } from "@/lib/db";
-import { passwordResetTokens } from "@/lib/db/schema";
+import { passwordResetTokens, emailVerificationTokens } from "@/lib/db/schema";
 import { lt } from "drizzle-orm";
 
 /**
- * Purge expired password reset tokens.
- * Tokens expire after 1 hour; this catches any that weren't cleaned up
- * opportunistically during new token creation.
+ * Purge expired password reset and email verification tokens.
+ * Password reset tokens expire after 1 hour, verification tokens after 24 hours.
  */
 export async function runTokenPurge() {
-  const result = await db
+  const now = new Date();
+
+  const resetResult = await db
     .delete(passwordResetTokens)
-    .where(lt(passwordResetTokens.expiresAt, new Date()))
+    .where(lt(passwordResetTokens.expiresAt, now))
     .returning({ id: passwordResetTokens.id });
 
-  const purged = result.length;
+  const verifyResult = await db
+    .delete(emailVerificationTokens)
+    .where(lt(emailVerificationTokens.expiresAt, now))
+    .returning({ id: emailVerificationTokens.id });
+
+  const purgedReset = resetResult.length;
+  const purgedVerify = verifyResult.length;
+  const purged = purgedReset + purgedVerify;
+
   if (purged > 0) {
-    console.log(`[Token Purge] Deleted ${purged} expired reset tokens`);
+    console.log(
+      `[Token Purge] Deleted ${purgedReset} expired reset tokens, ${purgedVerify} expired verification tokens`
+    );
   }
-  return { purged };
+  return { purged, purgedReset, purgedVerify };
 }

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { sendEmail } from "@/lib/email/send";
 import { getFreePlanUpgradeReminderHtml } from "@/lib/email/templates";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
 export async function runUpgradeReminders() {
   const now = new Date();
@@ -14,6 +15,7 @@ export async function runUpgradeReminders() {
       id: users.id,
       email: users.email,
       name: users.name,
+      emailPreferences: users.emailPreferences,
     })
     .from(users)
     .where(
@@ -29,10 +31,14 @@ export async function runUpgradeReminders() {
 
   const sent: string[] = [];
   for (const user of eligibleUsers) {
+    if (!shouldSendEmail(user.emailPreferences, "marketing")) continue;
+
+    const unsubscribeUrl = buildUnsubscribeUrl(user.id, "marketing");
     await sendEmail({
       to: user.email,
       subject: "Unlock more with Vernix Pro",
-      html: getFreePlanUpgradeReminderHtml(user.name),
+      html: getFreePlanUpgradeReminderHtml(user.name, unsubscribeUrl),
+      unsubscribeUrl,
     });
 
     await db

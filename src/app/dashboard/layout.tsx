@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { EmailVerificationBanner } from "@/components/email-verification-banner";
 
 export const metadata: Metadata = {
   title: "Dashboard — Vernix",
@@ -15,6 +16,7 @@ export default function DashboardLayout({
   return (
     <>
       <DashboardHeader />
+      <EmailVerificationBanner />
       <div className="flex-1">{children}</div>
       <footer className="border-border text-muted-foreground border-t py-6">
         <div className="container mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-xs">

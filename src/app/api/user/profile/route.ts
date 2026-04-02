@@ -17,6 +17,10 @@ export async function GET() {
       image: users.image,
       hasPassword: users.passwordHash,
       timezone: users.timezone,
+      phone: users.phone,
+      company: users.company,
+      emailVerifiedAt: users.emailVerifiedAt,
+      emailPreferences: users.emailPreferences,
     })
     .from(users)
     .where(eq(users.id, userOrRes.id));
@@ -41,11 +45,20 @@ export async function GET() {
     image: user.image,
     hasPassword: !!user.hasPassword,
     timezone: user.timezone,
+    phone: user.phone,
+    company: user.company,
+    emailVerifiedAt: user.emailVerifiedAt,
+    emailPreferences: user.emailPreferences,
     accounts: linkedAccounts,
   });
 }
 
 const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"));
+
+const emailPreferencesSchema = z.object({
+  marketing: z.boolean().optional(),
+  product: z.boolean().optional(),
+});
 
 const updateSchema = z.object({
   name: z.string().min(1, "Name is required").optional(),
@@ -54,6 +67,9 @@ const updateSchema = z.object({
     .refine((tz) => VALID_TIMEZONES.has(tz), "Invalid timezone")
     .nullable()
     .optional(),
+  phone: z.string().max(30).nullable().optional(),
+  company: z.string().max(100).nullable().optional(),
+  emailPreferences: emailPreferencesSchema.optional(),
 });
 
 export async function PATCH(request: Request) {
@@ -75,7 +91,14 @@ export async function PATCH(request: Request) {
     );
   }
 
-  if (parsed.data.name === undefined && parsed.data.timezone === undefined) {
+  const { name, timezone, phone, company, emailPreferences } = parsed.data;
+  if (
+    name === undefined &&
+    timezone === undefined &&
+    phone === undefined &&
+    company === undefined &&
+    emailPreferences === undefined
+  ) {
     return NextResponse.json(
       { error: "At least one field required" },
       { status: 400 }
@@ -83,9 +106,20 @@ export async function PATCH(request: Request) {
   }
 
   const updates: Partial<typeof users.$inferInsert> = { updatedAt: new Date() };
-  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
-  if (parsed.data.timezone !== undefined)
-    updates.timezone = parsed.data.timezone;
+  if (name !== undefined) updates.name = name;
+  if (timezone !== undefined) updates.timezone = timezone;
+  if (phone !== undefined) updates.phone = phone;
+  if (company !== undefined) updates.company = company;
+  if (emailPreferences !== undefined) {
+    // Merge with current DB state to avoid overwriting opt-outs from unsubscribe links
+    const [current] = await db
+      .select({ emailPreferences: users.emailPreferences })
+      .from(users)
+      .where(eq(users.id, userOrRes.id));
+    const existing =
+      (current?.emailPreferences as Record<string, unknown>) ?? {};
+    updates.emailPreferences = { ...existing, ...emailPreferences };
+  }
 
   const [updated] = await db
     .update(users)

@@ -6,6 +6,8 @@ import { users } from "@/lib/db/schema";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { sendEmail } from "@/lib/email/send";
 import { getWelcomeEmailHtml } from "@/lib/email/templates";
+import { createEmailVerificationToken } from "@/lib/auth/email-verification";
+import { getEmailVerificationHtml } from "@/lib/email/templates";
 
 const registerSchema = z.object({
   email: z.email(),
@@ -64,6 +66,21 @@ export async function POST(request: Request) {
       subject: "Welcome to Vernix",
       html: getWelcomeEmailHtml(name),
     }).catch((err) => console.error("[Register] Welcome email failed:", err));
+
+    // Fire-and-forget verification email
+    createEmailVerificationToken(user.id)
+      .then((token) => {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+        const verifyUrl = `${appUrl}/api/auth/verify-email?token=${token}`;
+        return sendEmail({
+          to: email,
+          subject: "Verify your Vernix email",
+          html: getEmailVerificationHtml(name, verifyUrl),
+        });
+      })
+      .catch((err) =>
+        console.error("[Register] Verification email failed:", err)
+      );
 
     return NextResponse.json({ success: true, user });
   } catch (error) {

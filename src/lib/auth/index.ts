@@ -67,6 +67,7 @@ providers.push(
         name: user.name,
         image: user.image,
         termsAcceptedAt: user.termsAcceptedAt,
+        emailVerifiedAt: user.emailVerifiedAt,
       };
     },
   })
@@ -118,10 +119,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         );
 
       if (existingAccount) {
-        // Returning SSO user — load termsAcceptedAt from DB
+        // Returning SSO user — load termsAcceptedAt + emailVerifiedAt from DB
         const [dbUser] = await db
           .select({
             termsAcceptedAt: users.termsAcceptedAt,
+            emailVerifiedAt: users.emailVerifiedAt,
             image: users.image,
           })
           .from(users)
@@ -129,6 +131,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         user.id = existingAccount.userId;
         user.image = dbUser?.image ?? user.image;
         user.termsAcceptedAt = dbUser?.termsAcceptedAt ?? null;
+        user.emailVerifiedAt = dbUser?.emailVerifiedAt ?? null;
 
         // Track last activity for inactive account detection (fire-and-forget)
         Promise.resolve(
@@ -167,16 +170,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .onConflictDoNothing();
         user.id = existingUser.id;
 
-        // Persist OAuth avatar to DB if user doesn't have one yet
+        // Persist OAuth avatar and mark email verified if not already
         const oauthImage = getOAuthImage(oauthProfile);
-        if (oauthImage && !existingUser.image) {
+        const updates: Record<string, unknown> = { updatedAt: new Date() };
+        if (oauthImage && !existingUser.image) updates.image = oauthImage;
+        if (!existingUser.emailVerifiedAt) updates.emailVerifiedAt = new Date();
+        if (Object.keys(updates).length > 1) {
           await db
             .update(users)
-            .set({ image: oauthImage, updatedAt: new Date() })
+            .set(updates)
             .where(eq(users.id, existingUser.id));
         }
         user.image = existingUser.image ?? oauthImage;
         user.termsAcceptedAt = existingUser.termsAcceptedAt ?? null;
+        user.emailVerifiedAt =
+          existingUser.emailVerifiedAt ??
+          (updates.emailVerifiedAt as Date) ??
+          null;
 
         // Track last activity for inactive account detection (fire-and-forget)
         Promise.resolve(
@@ -191,6 +201,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // New user — create account
       const image = getOAuthImage(oauthProfile);
+      const providerVerified = isEmailVerified(account.provider);
 
       const [newUser] = await db
         .insert(users)
@@ -199,6 +210,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name ?? email.split("@")[0],
           passwordHash: null,
           image,
+          ...(providerVerified && { emailVerifiedAt: new Date() }),
         })
         .returning({ id: users.id });
 
@@ -214,6 +226,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.id = newUser.id;
       user.image = image;
       user.termsAcceptedAt = null; // new OAuth user, terms not yet accepted
+      user.emailVerifiedAt = providerVerified ? new Date() : null;
       return true;
     },
     async jwt({ token, user, trigger }) {
@@ -225,15 +238,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             >[0])
           : token) ?? token;
 
-      // On session update, re-read termsAcceptedAt from DB
+      // On session update, re-read termsAcceptedAt + emailVerifiedAt from DB
       if (trigger === "update" && base.id) {
         const [dbUser] = await db
-          .select({ termsAcceptedAt: users.termsAcceptedAt })
+          .select({
+            termsAcceptedAt: users.termsAcceptedAt,
+            emailVerifiedAt: users.emailVerifiedAt,
+          })
           .from(users)
           .where(eq(users.id, base.id as string));
         if (dbUser) {
           base.termsAcceptedAt = dbUser.termsAcceptedAt
             ? dbUser.termsAcceptedAt.toISOString()
+            : null;
+          base.emailVerifiedAt = dbUser.emailVerifiedAt
+            ? dbUser.emailVerifiedAt.toISOString()
             : null;
         }
       }

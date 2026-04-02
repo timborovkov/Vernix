@@ -263,7 +263,10 @@ describe("stopMeeting", () => {
       status: "active",
       metadata: { botId: "bot-111" },
     });
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockDb.where
+      .mockResolvedValueOnce([meeting]) // initial fetch
+      .mockImplementationOnce(() => mockDb) // processing update
+      .mockResolvedValueOnce([{ status: "completed" }]); // re-fetch
     mockLeaveMeeting.mockResolvedValueOnce(undefined);
 
     await stopMeeting(USER_ID, meeting.id);
@@ -276,7 +279,10 @@ describe("stopMeeting", () => {
       status: "joining",
       metadata: { botId: "bot-222" },
     });
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockImplementationOnce(() => mockDb)
+      .mockResolvedValueOnce([{ status: "completed" }]);
     mockLeaveMeeting.mockResolvedValueOnce(undefined);
 
     await stopMeeting(USER_ID, meeting.id);
@@ -289,7 +295,10 @@ describe("stopMeeting", () => {
       status: "processing",
       metadata: { botId: "bot-333" },
     });
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockDb.where
+      .mockResolvedValueOnce([meeting]) // initial fetch
+      .mockImplementationOnce(() => mockDb) // processing update
+      .mockResolvedValueOnce([{ status: "completed" }]); // re-fetch
 
     await stopMeeting(USER_ID, meeting.id);
 
@@ -301,7 +310,10 @@ describe("stopMeeting", () => {
       status: "active",
       metadata: { botId: "bot-444" },
     });
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockImplementationOnce(() => mockDb)
+      .mockResolvedValueOnce([{ status: "processing" }]);
     mockLeaveMeeting.mockResolvedValueOnce(undefined);
 
     const result = await stopMeeting(USER_ID, meeting.id);
@@ -327,7 +339,10 @@ describe("stopMeeting", () => {
       status: "active",
       metadata: { botId: "bot-555" },
     });
-    mockDb.where.mockResolvedValueOnce([meeting]);
+    mockDb.where
+      .mockResolvedValueOnce([meeting])
+      .mockImplementationOnce(() => mockDb)
+      .mockResolvedValueOnce([{ status: "processing" }]);
     mockLeaveMeeting.mockRejectedValueOnce(new Error("Bot already left"));
 
     const result = await stopMeeting(USER_ID, meeting.id);

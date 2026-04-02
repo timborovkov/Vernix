@@ -89,7 +89,7 @@ describe("searchMeetings", () => {
     ).rejects.toThrow("Meeting not found");
   });
 
-  it("translates EmbeddingError to generic Error", async () => {
+  it("translates EmbeddingError to SearchError", async () => {
     mockGetRAGContext.mockRejectedValueOnce(
       new EmbeddingError("OpenAI embedding failed")
     );
@@ -99,7 +99,7 @@ describe("searchMeetings", () => {
     );
   });
 
-  it("translates AllSearchesFailedError to generic Error", async () => {
+  it("translates AllSearchesFailedError to SearchError", async () => {
     mockGetRAGContext.mockRejectedValueOnce(new AllSearchesFailedError());
 
     await expect(searchMeetings(USER_ID, { query: "test" })).rejects.toThrow(

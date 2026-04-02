@@ -9,7 +9,9 @@ import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
 
 const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-const isAnalyticsEnabled = Boolean(gaMeasurementId);
+const contentsquareTag = process.env.NEXT_PUBLIC_CONTENTSQUARE_TAG;
+const isAnalyticsEnabled =
+  Boolean(gaMeasurementId) || Boolean(contentsquareTag);
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

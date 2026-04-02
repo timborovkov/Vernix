@@ -63,6 +63,16 @@ vi.mock("@/lib/meeting-bot", () => ({
 vi.mock("@/lib/storage/operations", () => ({
   uploadFile: mockUploadFile,
 }));
+vi.mock("@/lib/email/send", () => ({
+  sendEmail: vi.fn().mockResolvedValue({ success: true }),
+}));
+vi.mock("@/lib/email/templates", () => ({
+  getFirstMeetingEmailHtml: vi.fn().mockReturnValue("<html>first</html>"),
+}));
+vi.mock("@/lib/email/preferences", () => ({
+  shouldSendEmail: vi.fn().mockReturnValue(false), // Skip email logic in processing tests
+  buildUnsubscribeUrl: vi.fn().mockReturnValue(""),
+}));
 
 import { processMeetingEnd } from "./processing";
 
@@ -145,7 +155,9 @@ describe("processMeetingEnd", () => {
     });
 
     // Mock the meeting metadata query (noRecording check)
+    // Extra where calls: completed update, first-meeting-email user lookup, first-meeting-email count
     mockDb.where.mockResolvedValueOnce(undefined); // completed status update
+    mockDb.where.mockResolvedValueOnce([]); // first meeting email user lookup (empty = skip)
     mockDb.where.mockResolvedValueOnce([{ metadata: {} }]); // noRecording check
 
     // Mock fetch for recording download
@@ -187,8 +199,9 @@ describe("processMeetingEnd", () => {
       status_changes: [],
     });
 
-    // completed status update + noRecording check
+    // completed status update + first-meeting-email + noRecording check
     mockDb.where.mockResolvedValueOnce(undefined);
+    mockDb.where.mockResolvedValueOnce([]); // first meeting email user lookup
     mockDb.where.mockResolvedValueOnce([{ metadata: {} }]);
 
     // fetch fails
@@ -219,8 +232,9 @@ describe("processMeetingEnd", () => {
       status_changes: [],
     });
 
-    // completed status update + noRecording check returns noRecording: true
+    // completed status update + first-meeting-email + noRecording check
     mockDb.where.mockResolvedValueOnce(undefined);
+    mockDb.where.mockResolvedValueOnce([]); // first meeting email user lookup
     mockDb.where.mockResolvedValueOnce([{ metadata: { noRecording: true } }]);
 
     await processMeetingEnd("meeting-1", "user-1", "col-1", {

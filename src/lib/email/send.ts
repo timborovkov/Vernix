@@ -8,6 +8,8 @@ interface SendEmailOptions {
   html: string;
   text?: string;
   replyTo?: string;
+  /** When provided, adds List-Unsubscribe header for email clients */
+  unsubscribeUrl?: string;
 }
 
 export async function sendEmail(
@@ -21,6 +23,12 @@ export async function sendEmail(
   }
 
   try {
+    const headers: Record<string, string> = {};
+    if (options.unsubscribeUrl) {
+      headers["List-Unsubscribe"] = `<${options.unsubscribeUrl}>`;
+      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
+    }
+
     const { error } = await resend.emails.send({
       from: FROM,
       to: Array.isArray(options.to) ? options.to : [options.to],
@@ -28,6 +36,7 @@ export async function sendEmail(
       html: options.html,
       text: options.text,
       replyTo: options.replyTo,
+      ...(Object.keys(headers).length > 0 && { headers }),
     });
 
     if (error) {

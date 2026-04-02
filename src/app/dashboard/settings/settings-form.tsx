@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Link2, Lock, Globe } from "lucide-react";
+import { ArrowLeft, User, Link2, Lock, Globe, Mail } from "lucide-react";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 
 interface SettingsFormProps {
@@ -35,12 +35,18 @@ export function SettingsForm({
     changingPassword,
     updateTimezone,
     updatingTimezone,
+    updateProfile,
+    updatingProfile,
     unlinkAccount,
     unlinkingAccount,
   } = useProfile();
 
   const [editName, setEditName] = useState("");
   const [nameEditing, setNameEditing] = useState(false);
+  const [editPhone, setEditPhone] = useState("");
+  const [phoneEditing, setPhoneEditing] = useState(false);
+  const [editCompany, setEditCompany] = useState("");
+  const [companyEditing, setCompanyEditing] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [tzSearch, setTzSearch] = useState("");
@@ -174,6 +180,122 @@ export function SettingsForm({
                     <p className="text-muted-foreground text-sm">
                       {profile.email}
                     </p>
+                  </div>
+                </div>
+                {/* Phone */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-xs font-medium">
+                      Phone
+                    </p>
+                    {phoneEditing ? (
+                      <div className="mt-1 flex items-center gap-2">
+                        <Input
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          placeholder="Optional"
+                          className="max-w-xs"
+                          maxLength={30}
+                        />
+                        <Button
+                          size="xs"
+                          disabled={updatingProfile}
+                          onClick={async () => {
+                            await updateProfile({
+                              phone: editPhone || null,
+                            });
+                            setPhoneEditing(false);
+                          }}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => setPhoneEditing(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">
+                          {profile.phone || (
+                            <span className="text-muted-foreground">
+                              Not set
+                            </span>
+                          )}
+                        </p>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditPhone(profile.phone ?? "");
+                            setPhoneEditing(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Company */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-muted-foreground text-xs font-medium">
+                      Company
+                    </p>
+                    {companyEditing ? (
+                      <div className="mt-1 flex items-center gap-2">
+                        <Input
+                          value={editCompany}
+                          onChange={(e) => setEditCompany(e.target.value)}
+                          placeholder="Optional"
+                          className="max-w-xs"
+                          maxLength={100}
+                        />
+                        <Button
+                          size="xs"
+                          disabled={updatingProfile}
+                          onClick={async () => {
+                            await updateProfile({
+                              company: editCompany || null,
+                            });
+                            setCompanyEditing(false);
+                          }}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => setCompanyEditing(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm">
+                          {profile.company || (
+                            <span className="text-muted-foreground">
+                              Not set
+                            </span>
+                          )}
+                        </p>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          onClick={() => {
+                            setEditCompany(profile.company ?? "");
+                            setCompanyEditing(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
@@ -475,6 +597,65 @@ export function SettingsForm({
                 ))}
               </div>
             </div>
+          </CardContent>
+        </Card>
+        {/* Email Preferences */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Mail className="h-4 w-4" />
+              Email Preferences
+            </CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Choose which emails you receive. Transactional emails (password
+              resets, email verification) cannot be disabled.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {profile ? (
+              <div className="space-y-3">
+                <label className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Product updates</p>
+                    <p className="text-muted-foreground text-xs">
+                      Trial reminders, meeting summaries, check-ins
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="accent-foreground h-4 w-4"
+                    checked={profile.emailPreferences?.product !== false}
+                    onChange={(e) =>
+                      updateProfile({
+                        emailPreferences: { product: e.target.checked },
+                      })
+                    }
+                    disabled={updatingProfile}
+                  />
+                </label>
+                <label className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Marketing emails</p>
+                    <p className="text-muted-foreground text-xs">
+                      Upgrade reminders, retention, win-back offers
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="accent-foreground h-4 w-4"
+                    checked={profile.emailPreferences?.marketing !== false}
+                    onChange={(e) =>
+                      updateProfile({
+                        emailPreferences: { marketing: e.target.checked },
+                      })
+                    }
+                    disabled={updatingProfile}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="bg-muted h-16 animate-pulse rounded-md" />
+            )}
           </CardContent>
         </Card>
       </div>

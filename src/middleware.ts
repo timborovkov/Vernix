@@ -15,6 +15,8 @@ const PUBLIC_AGENT_PATHS = [
   "/api/agent/wake-detect",
   "/api/mcp",
   "/api/mcp/oauth/callback",
+  "/api/auth/verify-email",
+  "/api/email/unsubscribe",
 ];
 
 const { auth } = NextAuth(authConfig);

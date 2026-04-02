@@ -8,6 +8,11 @@ interface LinkedAccount {
   createdAt: string;
 }
 
+interface EmailPreferences {
+  marketing?: boolean;
+  product?: boolean;
+}
+
 interface Profile {
   id: string;
   name: string;
@@ -15,6 +20,10 @@ interface Profile {
   image: string | null;
   hasPassword: boolean;
   timezone: string | null;
+  phone: string | null;
+  company: string | null;
+  emailVerifiedAt: string | null;
+  emailPreferences: EmailPreferences | null;
   accounts: LinkedAccount[];
 }
 
@@ -96,6 +105,32 @@ export function useProfile() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const updateProfile = useMutation({
+    mutationFn: async (
+      fields: Partial<
+        Pick<Profile, "name" | "timezone" | "phone" | "company"> & {
+          emailPreferences: EmailPreferences;
+        }
+      >
+    ) => {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to update");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.profile.all });
+      toast.success("Profile updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const unlinkAccount = useMutation({
     mutationFn: async (provider: string) => {
       const res = await fetch("/api/user/accounts", {
@@ -125,6 +160,8 @@ export function useProfile() {
     changingPassword: changePassword.isPending,
     updateTimezone: updateTimezone.mutateAsync,
     updatingTimezone: updateTimezone.isPending,
+    updateProfile: updateProfile.mutateAsync,
+    updatingProfile: updateProfile.isPending,
     unlinkAccount: unlinkAccount.mutateAsync,
     unlinkingAccount: unlinkAccount.isPending,
   };
