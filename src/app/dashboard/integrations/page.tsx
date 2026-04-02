@@ -188,8 +188,8 @@ function IntegrationsContent() {
             size="sm"
             variant="outline"
             onClick={() => {
-              if (!mcpEnabled) {
-                setPaywallTrigger("api_access");
+              if (!canAddMore) {
+                setPaywallTrigger("integration_limit");
                 return;
               }
               setConnectingIntegration({
