@@ -86,10 +86,11 @@ export function ConnectedServerCard({
       setTestResult(result);
       if (result.success) {
         toast.success(`Connected — ${result.toolCount} tools available`);
-        // Refresh tools after test
+        // Refresh tools after test (separate error handling to avoid clobbering test result)
         if (onFetchTools) {
-          const fresh = await onFetchTools(server.id);
-          setTools(fresh.tools);
+          onFetchTools(server.id)
+            .then((fresh) => setTools(fresh.tools))
+            .catch(() => {});
         }
       } else {
         toast.error(result.error ?? "Connection failed");
