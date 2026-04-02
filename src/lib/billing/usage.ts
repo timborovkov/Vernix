@@ -1,5 +1,11 @@
 import { db } from "@/lib/db";
-import { usageEvents, users, meetings, documents } from "@/lib/db/schema";
+import {
+  usageEvents,
+  users,
+  meetings,
+  documents,
+  mcpServers,
+} from "@/lib/db/schema";
 import { and, eq, gte, sql, lte } from "drizzle-orm";
 import { USAGE_RATES, MONTHLY_CREDIT, type Plan } from "./constants";
 
@@ -61,6 +67,7 @@ export async function recordUsageEvent(
 export interface UsageSummary {
   voiceMinutes: number;
   silentMinutes: number;
+  voiceMeetingsUsed: number;
   totalCostEur: number;
   creditEur: number;
   overageEur: number;
@@ -109,6 +116,7 @@ export async function getUsageSummary(
   return {
     voiceMinutes,
     silentMinutes,
+    voiceMeetingsUsed: 0, // populated by billing API from getMonthlyVoiceMeetingCount
     totalCostEur,
     creditEur,
     overageEur,
@@ -165,6 +173,39 @@ export async function getMonthlyMeetingCount(userId: string): Promise<number> {
       and(eq(meetings.userId, userId), gte(meetings.createdAt, startOfMonth))
     );
 
+  return Number(row?.count ?? 0);
+}
+
+export async function getMonthlyVoiceMeetingCount(
+  userId: string
+): Promise<number> {
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const [row] = await db
+    .select({
+      count: sql<string>`count(*)`,
+    })
+    .from(meetings)
+    .where(
+      and(
+        eq(meetings.userId, userId),
+        gte(meetings.createdAt, startOfMonth),
+        sql`coalesce((${meetings.metadata}->>'silent')::boolean, false) = false`
+      )
+    );
+
+  return Number(row?.count ?? 0);
+}
+
+export async function getEnabledMcpServerCount(
+  userId: string
+): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<string>`count(*)` })
+    .from(mcpServers)
+    .where(and(eq(mcpServers.userId, userId), eq(mcpServers.enabled, true)));
   return Number(row?.count ?? 0);
 }
 

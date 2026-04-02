@@ -39,8 +39,8 @@ export const FREE_TRIAL = {
 /** Per-plan hard caps */
 export const LIMITS = {
   [PLANS.FREE]: {
-    meetingMinutesPerMonth: 30, // silent only
-    voiceEnabled: false,
+    meetingMinutesPerMonth: 30, // voice + silent combined
+    voiceMeetingsPerMonth: 1,
     documentsCount: 5,
     maxDocumentSizeMB: 10,
     docUploadsPerMonth: 5,
@@ -50,14 +50,14 @@ export const LIMITS = {
     concurrentMeetings: 1,
     meetingsPerMonth: 5,
     apiEnabled: false,
-    mcpEnabled: false,
+    mcpEnabled: true,
     apiRequestsPerDay: 0,
-    mcpServerConnections: 0,
+    mcpServerConnections: 1,
     mcpClientConnections: 0,
   },
   [PLANS.PRO]: {
     meetingMinutesPerMonth: null, // governed by credits
-    voiceEnabled: true,
+    voiceMeetingsPerMonth: null, // unlimited
     documentsCount: 200,
     maxDocumentSizeMB: 25,
     docUploadsPerMonth: 50,
@@ -97,6 +97,7 @@ export const DISPLAY = {
   voiceRate: `${eur(USAGE_RATES.voice)}/hr`,
   silentRate: `${eur(USAGE_RATES.silent)}/hr`,
   monthlyCredit: eur(MONTHLY_CREDIT[PLANS.PRO]),
+  freeVoiceMeetings: `${LIMITS[PLANS.FREE].voiceMeetingsPerMonth}`,
   trialDays: `${FREE_TRIAL.days}`,
   trialMinutes: `${FREE_TRIAL.totalMinutes}`,
   voiceHoursPerCredit: `${Math.floor(MONTHLY_CREDIT[PLANS.PRO] / USAGE_RATES.voice)}`,

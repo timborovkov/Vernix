@@ -186,36 +186,11 @@ describe("POST /api/meetings", () => {
     expect(mockCreateMeetingCollection).not.toHaveBeenCalled();
   });
 
-  it("returns 403 when voice is disabled on free plan", async () => {
-    // Override requireLimits to return limits with voice disabled
-    const { requireLimits } = await import("@/lib/billing/enforce");
-    vi.mocked(requireLimits).mockResolvedValueOnce({
-      limits: {
-        meetingMinutesPerMonth: 30,
-        voiceEnabled: false,
-        documentsCount: 5,
-        maxDocumentSizeMB: 10,
-        docUploadsPerMonth: 5,
-        totalStorageMB: 50,
-        ragQueriesPerDay: 20,
-        meetingScopedDocs: 1,
-        concurrentMeetings: 1,
-        meetingsPerMonth: 5,
-        apiEnabled: false,
-        mcpEnabled: false,
-        apiRequestsPerDay: 0,
-        mcpServerConnections: 0,
-        mcpClientConnections: 0,
-      },
-      period: {
-        start: new Date(),
-        end: new Date(),
-      },
-      plan: "free" as const,
-    });
+  it("returns 429 when voice meeting limit reached on free plan", async () => {
+    // Override canStartMeeting to block voice meeting
     vi.mocked(canStartMeeting).mockReturnValueOnce({
       allowed: false,
-      reason: "Voice meetings require a Pro plan",
+      reason: "Monthly voice meeting limit reached",
     });
 
     const req = createJsonRequest("http://localhost/api/meetings", {
@@ -230,8 +205,8 @@ describe("POST /api/meetings", () => {
     const response = await POST(req);
     const { status, data } = await parseJsonResponse(response);
 
-    expect(status).toBe(403);
-    expect(data.error).toBe("Voice meetings require a Pro plan");
-    expect(data.code).toBe("BILLING_LIMIT");
+    expect(status).toBe(429);
+    expect(data.error).toBe("Monthly voice meeting limit reached");
+    expect(data.code).toBe("RATE_LIMITED");
   });
 });

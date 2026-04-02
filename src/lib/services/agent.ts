@@ -9,6 +9,7 @@ import {
   getActiveMeetingCount,
   getUsedMinutes,
   getMonthlyMeetingCount,
+  getMonthlyVoiceMeetingCount,
 } from "@/lib/billing/usage";
 import { NotFoundError, BillingError, ConflictError } from "@/lib/api/errors";
 
@@ -40,23 +41,23 @@ export async function joinMeeting(
   // Billing check (skip when called from autoJoin — createMeeting already checked)
   if (!opts?.skipBillingCheck) {
     const { limits, period } = await requireLimits(userId);
-    const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
-      getActiveMeetingCount(userId),
-      getUsedMinutes(userId, period.start, period.end),
-      getMonthlyMeetingCount(userId),
-    ]);
+    const [activeMeetings, usedMinutes, monthlyCount, voiceCount] =
+      await Promise.all([
+        getActiveMeetingCount(userId),
+        getUsedMinutes(userId, period.start, period.end),
+        getMonthlyMeetingCount(userId),
+        getMonthlyVoiceMeetingCount(userId),
+      ]);
     const check = canStartMeeting(
       limits,
       !silent,
       usedMinutes,
       activeMeetings,
-      monthlyCount
+      monthlyCount,
+      voiceCount
     );
     if (!check.allowed) {
-      throw new BillingError(
-        check.reason!,
-        !silent && !limits.voiceEnabled ? 403 : 429
-      );
+      throw new BillingError(check.reason!, 429);
     }
   }
 

@@ -34,7 +34,10 @@ interface CreateMeetingDialogProps {
 
 export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
   const { billing } = useBilling();
-  const voiceDisabled = billing ? !billing.limits.voiceEnabled : false;
+  const voiceLimitReached = billing
+    ? billing.limits.voiceMeetingsPerMonth !== null &&
+      billing.usage.voiceMeetingsUsed >= billing.limits.voiceMeetingsPerMonth
+    : false;
 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -58,10 +61,10 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
         title,
         joinLink,
         agenda || undefined,
-        silent || undefined,
+        voiceLimitReached || silent || undefined,
         noRecording || undefined
       );
-      trackMeetingCreated(silent || voiceDisabled);
+      trackMeetingCreated(voiceLimitReached || silent);
       setTitle("");
       setJoinLink("");
       setAgenda("");
@@ -131,9 +134,11 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
             <input
               type="checkbox"
               id="silent"
-              checked={voiceDisabled ? true : silent}
-              onChange={(e) => !voiceDisabled && setSilent(e.target.checked)}
-              disabled={voiceDisabled}
+              checked={voiceLimitReached ? true : silent}
+              onChange={(e) =>
+                !voiceLimitReached && setSilent(e.target.checked)
+              }
+              disabled={voiceLimitReached}
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300"
             />
             <div>
@@ -158,25 +163,24 @@ export function CreateMeetingDialog({ onCreate }: CreateMeetingDialogProps) {
               </p>
             </div>
           </div>
-          {voiceDisabled && (
+          {voiceLimitReached && (
             <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
               <Mic className="text-muted-foreground h-4 w-4 shrink-0" />
               <p className="text-muted-foreground text-xs">
-                Want the agent to answer out loud, pull live data, and take
-                action?{" "}
+                You&apos;ve used your free voice meeting this month.{" "}
                 <a
                   href="/pricing"
                   className="text-foreground underline underline-offset-2"
                 >
-                  Start a Pro trial
+                  Upgrade to Pro
                 </a>{" "}
-                to connect your tools and unlock the voice agent.
+                for unlimited voice meetings.
               </p>
             </div>
           )}
           <p className="text-muted-foreground text-xs">
             Supports Zoom, Google Meet, Microsoft Teams, and Cisco Webex.{" "}
-            {silent || voiceDisabled
+            {silent || voiceLimitReached
               ? "The agent will listen passively and respond via call chat when called by name (Vernix)."
               : "The AI agent will join and respond when called by name (Vernix, Agent, or Assistant)."}
           </p>

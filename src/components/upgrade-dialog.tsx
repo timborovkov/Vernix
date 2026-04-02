@@ -32,6 +32,7 @@ import { trackPaywallShown } from "@/lib/analytics";
 
 export type PaywallTrigger =
   | "voice_gate"
+  | "voice_meeting_count"
   | "meeting_minutes"
   | "meeting_count"
   | "concurrent_meetings"
@@ -42,6 +43,7 @@ export type PaywallTrigger =
   | "rag_queries"
   | "api_access"
   | "api_rate"
+  | "integration_limit"
   | "generic_feature"
   | "generic_quota";
 
@@ -61,6 +63,13 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
       "Connect your tools and get an assistant that answers questions with real business data during calls. Ask it to look things up, take action, or pull reports, live.",
     proValue: `Tool integrations, voice agent, unlimited calls with ${DISPLAY.monthlyCredit} monthly credit`,
     limitType: "feature",
+  },
+  voice_meeting_count: {
+    icon: Mic,
+    title: "Voice meeting limit reached",
+    description: `You've used your ${DISPLAY.freeVoiceMeetings} free voice meeting this month. Upgrade to Pro or start a free trial for unlimited voice meetings.`,
+    proValue: `Unlimited voice meetings with ${DISPLAY.monthlyCredit} monthly credit`,
+    limitType: "quota",
   },
   meeting_minutes: {
     icon: Clock,
@@ -121,10 +130,17 @@ const TRIGGER_COPY: Record<PaywallTrigger, TriggerCopy> = {
   },
   api_access: {
     icon: Zap,
-    title: "Integrations require Pro",
+    title: "API access requires Pro",
     description:
-      "Connect tools like Slack, Linear, GitHub, or your CRM. The agent pulls live data and takes action during your calls.",
-    proValue: `Tool integrations, ${LIMITS[PLANS.PRO].apiRequestsPerDay} API requests/day`,
+      "Access the Vernix API to build custom integrations and automations.",
+    proValue: `${LIMITS[PLANS.PRO].apiRequestsPerDay.toLocaleString("en")} API requests/day`,
+    limitType: "feature",
+  },
+  integration_limit: {
+    icon: Zap,
+    title: "Integration limit reached",
+    description: `Free accounts include ${LIMITS[PLANS.FREE].mcpServerConnections} tool integration. Upgrade to Pro for unlimited integrations.`,
+    proValue: "Unlimited tool integrations",
     limitType: "feature",
   },
   api_rate: {
@@ -160,7 +176,9 @@ export function detectPaywallTrigger(
 ): PaywallTrigger {
   const msg = errorMessage.toLowerCase();
 
+  if (msg.includes("voice meeting limit")) return "voice_meeting_count";
   if (msg.includes("voice")) return "voice_gate";
+  if (msg.includes("integration")) return "integration_limit";
   if (
     msg.includes("minutes exhausted") ||
     msg.includes("monthly meeting minutes")

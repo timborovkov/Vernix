@@ -57,7 +57,7 @@ vi.mock("@/lib/billing/enforce", () => ({
   requireLimits: vi.fn().mockResolvedValue({
     limits: {
       meetingMinutesPerMonth: null,
-      voiceEnabled: true,
+      voiceMeetingsPerMonth: null,
       documentsCount: 200,
       maxDocumentSizeMB: 25,
       docUploadsPerMonth: 50,
@@ -86,6 +86,8 @@ vi.mock("@/lib/billing/usage", () => ({
   getActiveMeetingCount: vi.fn().mockResolvedValue(0),
   getUsedMinutes: vi.fn().mockResolvedValue(0),
   getMonthlyMeetingCount: vi.fn().mockResolvedValue(0),
+  getMonthlyVoiceMeetingCount: vi.fn().mockResolvedValue(0),
+  getEnabledMcpServerCount: vi.fn().mockResolvedValue(0),
   getDocumentCount: vi.fn().mockResolvedValue(0),
   getMonthlyDocUploads: vi.fn().mockResolvedValue(0),
   getTotalStorageMB: vi.fn().mockResolvedValue(0),
@@ -95,6 +97,7 @@ vi.mock("@/lib/billing/usage", () => ({
   getUsageSummary: vi.fn().mockResolvedValue({
     voiceMinutes: 0,
     silentMinutes: 0,
+    voiceMeetingsUsed: 0,
     totalCostEur: 0,
     creditEur: 0,
     overageEur: 0,
@@ -111,7 +114,7 @@ vi.mock("@/lib/billing/usage", () => ({
 vi.mock("@/lib/billing/limits", () => ({
   getEffectiveLimits: vi.fn().mockReturnValue({
     meetingMinutesPerMonth: null,
-    voiceEnabled: true,
+    voiceMeetingsPerMonth: null,
     documentsCount: 200,
     maxDocumentSizeMB: 25,
     docUploadsPerMonth: 50,
@@ -132,6 +135,7 @@ vi.mock("@/lib/billing/limits", () => ({
   canUploadDocument: vi.fn().mockReturnValue({ allowed: true }),
   canMakeRagQuery: vi.fn().mockReturnValue({ allowed: true }),
   canMakeApiRequest: vi.fn().mockReturnValue({ allowed: true }),
+  canAddMcpServer: vi.fn().mockReturnValue({ allowed: true }),
 }));
 
 afterEach(() => {

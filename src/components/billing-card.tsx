@@ -148,11 +148,13 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
             limit={billing.limits.meetingMinutesPerMonth}
             unit="min"
           />
-          {!billing.limits.voiceEnabled && (
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Voice agent</span>
-              <span className="text-muted-foreground">Pro only</span>
-            </div>
+          {billing.limits.voiceMeetingsPerMonth !== null && (
+            <UsageBar
+              label="Voice meetings"
+              used={billing.usage.voiceMeetingsUsed}
+              limit={billing.limits.voiceMeetingsPerMonth}
+              unit=""
+            />
           )}
           <UsageBar
             label="RAG queries today"

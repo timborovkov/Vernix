@@ -7,7 +7,7 @@ import { LIMITS, TRIAL_LIMITS, PLANS } from "./constants";
 
 export interface EffectiveLimits {
   meetingMinutesPerMonth: number | null;
-  voiceEnabled: boolean;
+  voiceMeetingsPerMonth: number | null;
   documentsCount: number;
   maxDocumentSizeMB: number;
   docUploadsPerMonth: number;
@@ -58,10 +58,15 @@ export function canStartMeeting(
   isVoice: boolean,
   usedMinutes: number,
   activeMeetings: number,
-  monthlyMeetingCount: number
+  monthlyMeetingCount: number,
+  monthlyVoiceMeetingCount: number
 ): LimitCheck {
-  if (isVoice && !limits.voiceEnabled) {
-    return { allowed: false, reason: "Voice meetings require a Pro plan" };
+  if (
+    isVoice &&
+    limits.voiceMeetingsPerMonth !== null &&
+    monthlyVoiceMeetingCount >= limits.voiceMeetingsPerMonth
+  ) {
+    return { allowed: false, reason: "Monthly voice meeting limit reached" };
   }
 
   if (activeMeetings >= limits.concurrentMeetings) {
@@ -137,6 +142,25 @@ export function canMakeApiRequest(
   }
   if (dailyCount >= limits.apiRequestsPerDay) {
     return { allowed: false, reason: "Daily API request limit reached" };
+  }
+  return { allowed: true };
+}
+
+export function canAddMcpServer(
+  limits: EffectiveLimits,
+  currentEnabledCount: number
+): LimitCheck {
+  if (!limits.mcpEnabled) {
+    return { allowed: false, reason: "Integrations require a Pro plan" };
+  }
+  if (
+    limits.mcpServerConnections !== null &&
+    currentEnabledCount >= limits.mcpServerConnections
+  ) {
+    return {
+      allowed: false,
+      reason: `Maximum ${limits.mcpServerConnections} integration${limits.mcpServerConnections === 1 ? "" : "s"} on your plan`,
+    };
   }
   return { allowed: true };
 }

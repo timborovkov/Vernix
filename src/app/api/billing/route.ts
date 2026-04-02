@@ -3,7 +3,11 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { requireSessionUser } from "@/lib/auth/session";
-import { getUsageSummary, getEffectivePeriod } from "@/lib/billing/usage";
+import {
+  getUsageSummary,
+  getEffectivePeriod,
+  getMonthlyVoiceMeetingCount,
+} from "@/lib/billing/usage";
 import {
   getEffectiveLimits,
   isTrialActive,
@@ -37,12 +41,11 @@ export async function GET() {
 
   const plan = user.plan as Plan;
   const period = getEffectivePeriod(user);
-  const usage = await getUsageSummary(
-    sessionUser.id,
-    plan,
-    period.start,
-    period.end
-  );
+  const [usage, voiceMeetingsUsed] = await Promise.all([
+    getUsageSummary(sessionUser.id, plan, period.start, period.end),
+    getMonthlyVoiceMeetingCount(sessionUser.id),
+  ]);
+  usage.voiceMeetingsUsed = voiceMeetingsUsed;
   // Trial is Polar-only: requires both trialEndsAt and an active subscription
   const effectiveTrialEndsAt = user.polarSubscriptionId
     ? user.trialEndsAt

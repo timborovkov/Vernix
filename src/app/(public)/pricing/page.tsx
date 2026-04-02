@@ -12,11 +12,13 @@ import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 import { trackPricingPageViewed } from "@/lib/analytics";
 
 const FREE_FEATURES = [
-  `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent calls per month`,
+  `${LIMITS[PLANS.FREE].voiceMeetingsPerMonth} voice meeting per month`,
+  `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of calls per month`,
   "Live transcription",
   "AI summaries and action items",
   `RAG chat (${LIMITS[PLANS.FREE].ragQueriesPerDay} queries/day)`,
   `${LIMITS[PLANS.FREE].documentsCount} knowledge base documents`,
+  `${LIMITS[PLANS.FREE].mcpServerConnections} tool integration`,
 ];
 
 const PRO_FEATURES = [

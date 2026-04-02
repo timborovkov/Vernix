@@ -5,6 +5,9 @@ import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { invalidateMcpCache } from "@/lib/mcp/client";
 import { isSsrfUrl } from "@/lib/mcp/transport";
+import { requireLimits } from "@/lib/billing/enforce";
+import { canAddMcpServer } from "@/lib/billing/limits";
+import { getEnabledMcpServerCount } from "@/lib/billing/usage";
 
 const authKeyParamPattern = /^[a-zA-Z0-9_-]+$/;
 
@@ -47,7 +50,28 @@ export async function PATCH(
     updates.url = url;
   }
   if (typeof apiKey === "string") updates.apiKey = apiKey || null;
-  if (typeof enabled === "boolean") updates.enabled = enabled;
+  if (typeof enabled === "boolean") {
+    if (enabled) {
+      // Only check billing when transitioning from disabled to enabled.
+      // Fetch current state to avoid blocking updates on already-enabled servers.
+      const [current] = await db
+        .select({ enabled: mcpServers.enabled })
+        .from(mcpServers)
+        .where(and(eq(mcpServers.id, id), eq(mcpServers.userId, user.id)));
+      if (current && !current.enabled) {
+        const { limits } = await requireLimits(user.id);
+        const enabledCount = await getEnabledMcpServerCount(user.id);
+        const mcpCheck = canAddMcpServer(limits, enabledCount);
+        if (!mcpCheck.allowed) {
+          return NextResponse.json(
+            { error: mcpCheck.reason, code: "BILLING_LIMIT" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+    updates.enabled = enabled;
+  }
   const validAuthTypes = [
     "none",
     "bearer",

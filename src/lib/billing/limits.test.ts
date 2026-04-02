@@ -12,22 +12,27 @@ import {
   canUploadDocument,
   canMakeRagQuery,
   canMakeApiRequest,
+  canAddMcpServer,
 } from "./limits";
 import { LIMITS, PLANS } from "./constants";
 
 describe("getEffectiveLimits", () => {
   it("returns free limits for free plan with no trial", () => {
     const limits = getEffectiveLimits("free", null);
-    expect(limits.voiceEnabled).toBe(false);
+
+    expect(limits.voiceMeetingsPerMonth).toBe(1);
     expect(limits.meetingMinutesPerMonth).toBe(30);
     expect(limits.documentsCount).toBe(5);
     expect(limits.apiEnabled).toBe(false);
+    expect(limits.mcpEnabled).toBe(true);
+    expect(limits.mcpServerConnections).toBe(1);
   });
 
   it("returns trial limits for free plan with active trial", () => {
     const future = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const limits = getEffectiveLimits("free", future);
-    expect(limits.voiceEnabled).toBe(true);
+
+    expect(limits.voiceMeetingsPerMonth).toBeNull(); // unlimited during trial
     expect(limits.meetingMinutesPerMonth).toBe(90); // 90-minute trial cap
     expect(limits.documentsCount).toBe(200);
     expect(limits.apiEnabled).toBe(true); // trial includes full Pro features
@@ -36,13 +41,15 @@ describe("getEffectiveLimits", () => {
   it("returns free limits when trial has expired", () => {
     const past = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const limits = getEffectiveLimits("free", past);
-    expect(limits.voiceEnabled).toBe(false);
+
+    expect(limits.voiceMeetingsPerMonth).toBe(1);
     expect(limits.meetingMinutesPerMonth).toBe(30);
   });
 
   it("returns pro limits for pro plan regardless of trial", () => {
     const limits = getEffectiveLimits("pro", null);
-    expect(limits.voiceEnabled).toBe(true);
+
+    expect(limits.voiceMeetingsPerMonth).toBeNull();
     expect(limits.meetingMinutesPerMonth).toBeNull();
     expect(limits.apiEnabled).toBe(true);
     expect(limits.apiRequestsPerDay).toBe(1000);
@@ -86,53 +93,63 @@ describe("canStartMeeting", () => {
   const freeLimits = LIMITS[PLANS.FREE];
   const proLimits = LIMITS[PLANS.PRO];
 
-  it("blocks voice meetings on free plan", () => {
-    const result = canStartMeeting(freeLimits, true, 0, 0, 0);
+  it("allows first voice meeting on free plan", () => {
+    const result = canStartMeeting(freeLimits, true, 0, 0, 0, 0);
+    expect(result.allowed).toBe(true);
+  });
+
+  it("blocks second voice meeting on free plan", () => {
+    const result = canStartMeeting(freeLimits, true, 0, 0, 1, 1);
     expect(result.allowed).toBe(false);
-    expect(result.reason).toContain("Pro plan");
+    expect(result.reason).toContain("voice meeting limit");
   });
 
   it("allows silent meetings on free plan within limits", () => {
-    const result = canStartMeeting(freeLimits, false, 0, 0, 0);
+    const result = canStartMeeting(freeLimits, false, 0, 0, 0, 0);
     expect(result.allowed).toBe(true);
   });
 
   it("blocks when concurrent meeting limit reached", () => {
-    const result = canStartMeeting(freeLimits, false, 0, 1, 0);
+    const result = canStartMeeting(freeLimits, false, 0, 1, 0, 0);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("concurrent");
   });
 
   it("blocks when monthly meeting count reached", () => {
-    const result = canStartMeeting(freeLimits, false, 0, 0, 5);
+    const result = canStartMeeting(freeLimits, false, 0, 0, 5, 0);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("Monthly meeting limit");
   });
 
   it("blocks when monthly minutes exhausted on free plan", () => {
-    const result = canStartMeeting(freeLimits, false, 30, 0, 0);
+    const result = canStartMeeting(freeLimits, false, 30, 0, 0, 0);
     expect(result.allowed).toBe(false);
     expect(result.reason).toContain("minutes exhausted");
   });
 
   it("allows meeting when under minute limit", () => {
-    const result = canStartMeeting(freeLimits, false, 29, 0, 0);
+    const result = canStartMeeting(freeLimits, false, 29, 0, 0, 0);
     expect(result.allowed).toBe(true);
   });
 
   it("allows voice meetings on pro plan", () => {
-    const result = canStartMeeting(proLimits, true, 0, 0, 0);
+    const result = canStartMeeting(proLimits, true, 0, 0, 0, 0);
     expect(result.allowed).toBe(true);
   });
 
   it("pro plan has no minute cap (null meetingMinutesPerMonth)", () => {
-    const result = canStartMeeting(proLimits, true, 10000, 0, 0);
+    const result = canStartMeeting(proLimits, true, 10000, 0, 0, 0);
+    expect(result.allowed).toBe(true);
+  });
+
+  it("pro plan has no voice meeting cap", () => {
+    const result = canStartMeeting(proLimits, true, 0, 0, 0, 100);
     expect(result.allowed).toBe(true);
   });
 
   it("pro plan allows up to 5 concurrent meetings", () => {
-    expect(canStartMeeting(proLimits, true, 0, 4, 0).allowed).toBe(true);
-    expect(canStartMeeting(proLimits, true, 0, 5, 0).allowed).toBe(false);
+    expect(canStartMeeting(proLimits, true, 0, 4, 0, 0).allowed).toBe(true);
+    expect(canStartMeeting(proLimits, true, 0, 5, 0, 0).allowed).toBe(false);
   });
 });
 
@@ -202,6 +219,27 @@ describe("canMakeApiRequest", () => {
 
   it("allows API requests on pro within limit", () => {
     const result = canMakeApiRequest(proLimits, 999);
+    expect(result.allowed).toBe(true);
+  });
+});
+
+describe("canAddMcpServer", () => {
+  const freeLimits = LIMITS[PLANS.FREE];
+  const proLimits = LIMITS[PLANS.PRO];
+
+  it("allows first integration on free plan", () => {
+    const result = canAddMcpServer(freeLimits, 0);
+    expect(result.allowed).toBe(true);
+  });
+
+  it("blocks second integration on free plan", () => {
+    const result = canAddMcpServer(freeLimits, 1);
+    expect(result.allowed).toBe(false);
+    expect(result.reason).toContain("Maximum 1 integration");
+  });
+
+  it("allows unlimited integrations on pro plan", () => {
+    const result = canAddMcpServer(proLimits, 50);
     expect(result.allowed).toBe(true);
   });
 });

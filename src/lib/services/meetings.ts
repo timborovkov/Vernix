@@ -15,6 +15,7 @@ import {
   getActiveMeetingCount,
   getUsedMinutes,
   getMonthlyMeetingCount,
+  getMonthlyVoiceMeetingCount,
 } from "@/lib/billing/usage";
 import { NotFoundError, BillingError, ValidationError } from "@/lib/api/errors";
 import { decodeCursor, buildPaginationMeta } from "@/lib/api/pagination";
@@ -85,23 +86,23 @@ export async function createMeeting(
   // Billing check
   const silent = input.silent ?? false;
   const { limits, period } = await requireLimits(userId);
-  const [activeMeetings, usedMinutes, monthlyCount] = await Promise.all([
-    getActiveMeetingCount(userId),
-    getUsedMinutes(userId, period.start, period.end),
-    getMonthlyMeetingCount(userId),
-  ]);
+  const [activeMeetings, usedMinutes, monthlyCount, voiceCount] =
+    await Promise.all([
+      getActiveMeetingCount(userId),
+      getUsedMinutes(userId, period.start, period.end),
+      getMonthlyMeetingCount(userId),
+      getMonthlyVoiceMeetingCount(userId),
+    ]);
   const check = canStartMeeting(
     limits,
     !silent,
     usedMinutes,
     activeMeetings,
-    monthlyCount
+    monthlyCount,
+    voiceCount
   );
   if (!check.allowed) {
-    throw new BillingError(
-      check.reason!,
-      !silent && !limits.voiceEnabled ? 403 : 429
-    );
+    throw new BillingError(check.reason!, 429);
   }
 
   const collectionName = `meeting_${randomUUID().replace(/-/g, "")}`;

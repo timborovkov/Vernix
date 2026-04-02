@@ -6,6 +6,9 @@ import { db } from "@/lib/db";
 import { mcpServers } from "@/lib/db/schema";
 import { invalidateMcpCache } from "@/lib/mcp/client";
 import { isSsrfUrl } from "@/lib/mcp/transport";
+import { requireLimits } from "@/lib/billing/enforce";
+import { canAddMcpServer } from "@/lib/billing/limits";
+import { getEnabledMcpServerCount } from "@/lib/billing/usage";
 
 const authTypeEnum = z.enum([
   "none",
@@ -74,6 +77,14 @@ export async function POST(request: Request) {
       { error: "URL resolves to a private or restricted address" },
       { status: 400 }
     );
+  }
+
+  // Billing: enforce MCP server connection limit
+  const { limits } = await requireLimits(user.id);
+  const enabledCount = await getEnabledMcpServerCount(user.id);
+  const mcpCheck = canAddMcpServer(limits, enabledCount);
+  if (!mcpCheck.allowed) {
+    return NextResponse.json({ error: mcpCheck.reason }, { status: 403 });
   }
 
   // Legacy: if apiKey is provided without authType, treat as bearer

@@ -33,6 +33,10 @@ export default function IntegrationsPage() {
 }
 
 function IntegrationsContent() {
+  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
+    null
+  );
+
   const {
     servers,
     addServer,
@@ -41,7 +45,9 @@ function IntegrationsContent() {
     testServer,
     startOAuth,
     oauthLoading,
-  } = useMcpServers();
+  } = useMcpServers({
+    onBillingError: () => setPaywallTrigger("integration_limit"),
+  });
   const { billing, loading: billingLoading } = useBilling();
   const searchParams = useSearchParams();
 
@@ -68,15 +74,18 @@ function IntegrationsContent() {
   >("all");
   const [connectingIntegration, setConnectingIntegration] =
     useState<Integration | null>(null);
-  const [paywallTrigger, setPaywallTrigger] = useState<PaywallTrigger | null>(
-    null
-  );
 
   const integrations = getIntegrations();
-  // Default to true while billing loads so Pro users don't see a flash of disabled buttons
-  const mcpEnabled = billingLoading
+  // Check if user can add more integrations (mcpEnabled + under server connection limit)
+  const canAddMore = billingLoading
     ? true
-    : (billing?.limits.mcpEnabled ?? false);
+    : (() => {
+        if (!billing?.limits.mcpEnabled) return false;
+        const limit = billing.limits.mcpServerConnections;
+        if (limit === null) return true; // unlimited
+        const enabledCount = servers.filter((s) => s.enabled).length;
+        return enabledCount < limit;
+      })();
 
   // Match connected servers to catalog entries by catalogIntegrationId first, then name/URL fallback
   const connectedIds = new Set(
@@ -129,8 +138,8 @@ function IntegrationsContent() {
   });
 
   const handleConnect = (integration: Integration) => {
-    if (!mcpEnabled) {
-      setPaywallTrigger("api_access");
+    if (!canAddMore) {
+      setPaywallTrigger("integration_limit");
       return;
     }
     if (integration.status === "coming-soon") return;
@@ -179,8 +188,8 @@ function IntegrationsContent() {
             size="sm"
             variant="outline"
             onClick={() => {
-              if (!mcpEnabled) {
-                setPaywallTrigger("api_access");
+              if (!canAddMore) {
+                setPaywallTrigger("integration_limit");
                 return;
               }
               setConnectingIntegration({
