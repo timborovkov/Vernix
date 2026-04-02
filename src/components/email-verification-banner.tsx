@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { trackEmailVerified } from "@/lib/analytics";
 
 export function EmailVerificationBanner() {
   const { data: session, update: updateSession } = useSession();
@@ -13,6 +14,7 @@ export function EmailVerificationBanner() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "1") {
+      trackEmailVerified();
       updateSession();
     }
   }, [updateSession]);

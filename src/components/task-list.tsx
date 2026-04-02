@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Circle, Trash2, Plus, User } from "lucide-react";
+import { trackTaskCreated } from "@/lib/analytics";
 
 interface TaskListProps {
   tasks: Task[];
@@ -29,6 +30,7 @@ export function TaskList({
     e.preventDefault();
     if (!newTitle.trim()) return;
     onAdd(newTitle.trim());
+    trackTaskCreated();
     setNewTitle("");
   };
 

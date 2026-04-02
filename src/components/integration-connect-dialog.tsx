@@ -15,6 +15,7 @@ import {
 import { ExternalLink } from "lucide-react";
 import type { Integration } from "@/lib/integrations/catalog";
 import type { AddServerParams, McpAuthType } from "@/hooks/use-mcp-servers";
+import { trackIntegrationConnected } from "@/lib/analytics";
 
 interface IntegrationConnectDialogProps {
   integration: Integration | null;
@@ -139,6 +140,7 @@ export function IntegrationConnectDialog({
       }
 
       await onConnect(params);
+      trackIntegrationConnected(integration.name);
       onOpenChange(false);
     } catch {
       // Error handled by hook toast

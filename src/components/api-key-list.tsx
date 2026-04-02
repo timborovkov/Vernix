@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Key, Trash2, Plus, Copy, Check } from "lucide-react";
 import { formatDate } from "@/lib/date";
 import { useTimezone } from "@/hooks/use-timezone";
+import { trackApiKeyCreated } from "@/lib/analytics";
 
 interface ApiKeyInfo {
   id: string;
@@ -45,6 +46,7 @@ export function ApiKeyList({ keys, onCreate, onDelete }: ApiKeyListProps) {
     const raw = await onCreate(name.trim());
     setCreating(false);
     if (raw) {
+      trackApiKeyCreated();
       setNewKey(raw);
       setName("");
     }

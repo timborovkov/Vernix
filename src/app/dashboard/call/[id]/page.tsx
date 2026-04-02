@@ -25,6 +25,7 @@ import {
   ListChecks,
   ScrollText,
 } from "lucide-react";
+import { trackMeetingExport } from "@/lib/analytics";
 
 const TABS = [
   { id: "overview", label: "Overview", icon: LayoutList },
@@ -155,7 +156,12 @@ export default function MeetingDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            render={<a href={`/api/meetings/${id}/export?format=md`} />}
+            render={
+              <a
+                href={`/api/meetings/${id}/export?format=md`}
+                onClick={() => trackMeetingExport("md")}
+              />
+            }
           >
             <Download className="mr-1 h-3.5 w-3.5" />
             MD
@@ -163,7 +169,12 @@ export default function MeetingDetailPage() {
           <Button
             variant="outline"
             size="sm"
-            render={<a href={`/api/meetings/${id}/export?format=pdf`} />}
+            render={
+              <a
+                href={`/api/meetings/${id}/export?format=pdf`}
+                onClick={() => trackMeetingExport("pdf")}
+              />
+            }
           >
             <Download className="mr-1 h-3.5 w-3.5" />
             PDF

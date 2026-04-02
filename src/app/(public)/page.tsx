@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
+import { LandingCta } from "@/components/landing-cta";
 import {
   Mic,
   FileText,
@@ -195,13 +196,17 @@ export default async function LandingPage() {
           happen automatically.
         </p>
         <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
-          <Button variant="accent" size="lg" render={<Link href={ctaHref} />}>
-            {ctaText}
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="lg" render={<a href="#how" />}>
-            See How It Works
-          </Button>
+          <LandingCta location="hero">
+            <Button variant="accent" size="lg" render={<Link href={ctaHref} />}>
+              {ctaText}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </LandingCta>
+          <LandingCta location="how_it_works">
+            <Button variant="outline" size="lg" render={<a href="#how" />}>
+              See How It Works
+            </Button>
+          </LandingCta>
         </div>
         <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
           No credit card required. Free forever, upgrade anytime.
@@ -285,21 +290,25 @@ export default async function LandingPage() {
 
           {/* Mid-page CTA */}
           <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Button
-              variant="accent"
-              size="lg"
-              render={<Link href="/register" />}
-            >
-              Try Vernix Free
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              render={<Link href="/pricing" />}
-            >
-              See Pricing
-            </Button>
+            <LandingCta location="mid_page">
+              <Button
+                variant="accent"
+                size="lg"
+                render={<Link href="/register" />}
+              >
+                Try Vernix Free
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </LandingCta>
+            <LandingCta location="pricing_link">
+              <Button
+                variant="outline"
+                size="lg"
+                render={<Link href="/pricing" />}
+              >
+                See Pricing
+              </Button>
+            </LandingCta>
           </div>
         </div>
       </section>
@@ -355,10 +364,12 @@ export default async function LandingPage() {
             No credit card required. {DISPLAY.trialDays}-day Pro trial when you
             upgrade.
           </p>
-          <Button size="lg" variant="accent" render={<Link href={ctaHref} />}>
-            {isLoggedIn ? "Go to Dashboard" : "Try Vernix on Your Next Call"}
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+          <LandingCta location="bottom">
+            <Button size="lg" variant="accent" render={<Link href={ctaHref} />}>
+              {isLoggedIn ? "Go to Dashboard" : "Try Vernix on Your Next Call"}
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+          </LandingCta>
           <p className="text-muted-foreground mt-4 text-xs">
             Set up in under 60 seconds. Your data stays after the trial.
           </p>

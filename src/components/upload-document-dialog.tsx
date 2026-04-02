@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Upload } from "lucide-react";
 import { isBillingError } from "@/lib/billing/errors";
+import { trackDocumentUploaded } from "@/lib/analytics";
 import {
   UpgradeDialog,
   detectPaywallTrigger,
@@ -56,6 +57,9 @@ export function UploadDocumentDialog({
 
     try {
       await onUpload(selectedFile);
+      trackDocumentUploaded(
+        selectedFile.name.split(".").pop()?.toLowerCase() ?? "unknown"
+      );
       setSelectedFile(null);
       if (inputRef.current) inputRef.current.value = "";
       setOpen(false);

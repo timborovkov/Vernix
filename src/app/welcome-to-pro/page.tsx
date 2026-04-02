@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
+import { trackPurchase } from "@/lib/analytics";
 
 const UNLOCKED_FEATURES = [
   {
@@ -64,6 +65,14 @@ export default function WelcomeToProPage() {
       router.replace("/dashboard");
     }
   }, [loading, billing, error, hasAccess, router]);
+
+  useEffect(() => {
+    const key = "vernix_purchase_tracked";
+    if (!loading && hasAccess && billing && !sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, "1");
+      trackPurchase(billing.plan, billing.trialing ?? false);
+    }
+  }, [loading, hasAccess, billing]);
 
   if (!loading && (!billing || error || !hasAccess)) return null;
 
