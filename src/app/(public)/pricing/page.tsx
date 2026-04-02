@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ArrowRight } from "lucide-react";
 import { getCheckoutUrl } from "@/lib/billing/checkout-url";
 import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
+import { trackPricingPageViewed } from "@/lib/analytics";
 
 const FREE_FEATURES = [
   `${LIMITS[PLANS.FREE].meetingMinutesPerMonth} minutes of silent calls per month`,
@@ -40,6 +41,10 @@ const USAGE_RATE_ROWS = [
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    trackPricingPageViewed();
+  }, []);
 
   const price = annual ? DISPLAY.proAnnual : DISPLAY.proMonthly;
   const period = annual ? "/ mo, billed annually" : "/ month";

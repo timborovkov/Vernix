@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { formatTime } from "@/lib/format";
 import { Search, Clock } from "lucide-react";
 import type { TranscriptPoint } from "@/lib/vector/scroll";
+import { trackSearchPerformed } from "@/lib/analytics";
 
 interface SearchResult {
   text: string;
@@ -34,6 +35,7 @@ export function TranscriptTab({
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(query);
+    trackSearchPerformed();
   };
 
   return (
