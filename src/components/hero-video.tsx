@@ -15,7 +15,7 @@ export function HeroVideo() {
   }
 
   return (
-    <div className="relative mx-auto max-w-4xl overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
+    <div className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl border border-white/10 shadow-2xl">
       <video
         ref={videoRef}
         src="/demo/demo-v1.mp4"

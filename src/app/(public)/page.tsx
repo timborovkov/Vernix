@@ -170,66 +170,70 @@ export default async function LandingPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Hero */}
-      <section className="relative mx-auto max-w-3xl px-4 py-24 text-center">
+      <section className="relative px-4 pt-24 pb-20 text-center">
         <HeroBg />
-        <div className="animate-fade-up mb-8 flex justify-center">
-          <Image
-            src="/brand/icon/icon.svg"
-            alt="Vernix logo"
-            width={72}
-            height={72}
-            className="dark:hidden"
-          />
-          <Image
-            src="/brand/icon/icon-dark.png"
-            alt="Vernix logo"
-            width={72}
-            height={72}
-            className="hidden dark:block"
-          />
+        <div className="mx-auto max-w-3xl">
+          <div className="animate-fade-up mb-8 flex justify-center">
+            <Image
+              src="/brand/icon/icon.svg"
+              alt="Vernix logo"
+              width={72}
+              height={72}
+              className="dark:hidden"
+            />
+            <Image
+              src="/brand/icon/icon-dark.png"
+              alt="Vernix logo"
+              width={72}
+              height={72}
+              className="hidden dark:block"
+            />
+          </div>
+          <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
+            An AI assistant in every call that knows your business
+          </h1>
+          <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
+            Vernix joins your video calls, connects to your tools, and answers
+            questions with real data. Transcripts, summaries, and action items
+            happen automatically.
+          </p>
+          <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
+            <LandingCta location="hero">
+              <Button
+                variant="accent"
+                size="lg"
+                render={<Link href={ctaHref} />}
+              >
+                {ctaText}
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </LandingCta>
+            <LandingCta location="how_it_works">
+              <Button variant="outline" size="lg" render={<a href="#how" />}>
+                See How It Works
+              </Button>
+            </LandingCta>
+          </div>
+          <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
+            No credit card required. Free forever, upgrade anytime.
+          </p>
+          <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
+            <Video className="mr-1 h-4 w-4" />
+            {PLATFORMS.map((p, i) => (
+              <span key={p}>
+                {p}
+                {i < PLATFORMS.length - 1 && (
+                  <span className="mx-1 opacity-30">/</span>
+                )}
+              </span>
+            ))}
+          </div>
         </div>
-        <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
-          An AI assistant in every call that knows your business
-        </h1>
-        <p className="animate-fade-up text-muted-foreground mx-auto mb-8 max-w-xl text-lg delay-200">
-          Vernix joins your video calls, connects to your tools, and answers
-          questions with real data. Transcripts, summaries, and action items
-          happen automatically.
-        </p>
-        <div className="animate-fade-up flex flex-col justify-center gap-3 delay-300 sm:flex-row">
-          <LandingCta location="hero">
-            <Button variant="accent" size="lg" render={<Link href={ctaHref} />}>
-              {ctaText}
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-          </LandingCta>
-          <LandingCta location="how_it_works">
-            <Button variant="outline" size="lg" render={<a href="#how" />}>
-              See How It Works
-            </Button>
-          </LandingCta>
+        <div className="animate-fade-up mx-auto mt-12 max-w-5xl delay-500">
+          <ScrollReveal>
+            <HeroVideo />
+          </ScrollReveal>
         </div>
-        <p className="animate-fade-up text-muted-foreground mt-4 text-xs delay-300">
-          No credit card required. Free forever, upgrade anytime.
-        </p>
-        <div className="animate-fade-up text-muted-foreground mt-8 flex flex-wrap items-center justify-center gap-x-1 text-sm delay-400">
-          <Video className="mr-1 h-4 w-4" />
-          {PLATFORMS.map((p, i) => (
-            <span key={p}>
-              {p}
-              {i < PLATFORMS.length - 1 && (
-                <span className="mx-1 opacity-30">/</span>
-              )}
-            </span>
-          ))}
-        </div>
-      </section>
-
-      {/* Demo video */}
-      <section className="px-4 pb-20">
-        <ScrollReveal>
-          <HeroVideo />
-        </ScrollReveal>
       </section>
 
       {/* Pain points */}
