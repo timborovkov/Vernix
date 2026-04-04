@@ -141,13 +141,12 @@ export async function flushTelemetry(
     wakeDetectCalls: accumulator.wakeDetectCalls ?? 0,
   };
 
-  // Write final voiceTelemetry and remove the accumulator
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { _telemetryAccumulator: _removed, ...cleanMetadata } = metadata;
+  // Atomically set voiceTelemetry and remove _telemetryAccumulator
+  // without overwriting concurrent changes to other metadata keys
   await db
     .update(meetings)
     .set({
-      metadata: { ...cleanMetadata, voiceTelemetry: flushed },
+      metadata: sql`(COALESCE(${meetings.metadata}, '{}'::jsonb) - '_telemetryAccumulator') || ${JSON.stringify({ voiceTelemetry: flushed })}::jsonb`,
       updatedAt: new Date(),
     })
     .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
