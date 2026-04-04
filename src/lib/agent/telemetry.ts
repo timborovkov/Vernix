@@ -10,6 +10,22 @@ export interface FlushedTelemetry {
 }
 
 /**
+ * Ensure _telemetryAccumulator exists in metadata, then return the metadata
+ * expression ready for nested jsonb_set calls.
+ *
+ * jsonb_set's `create_missing` (4th param) only creates the *leaf* key,
+ * not intermediate objects. So we first guarantee the parent object exists
+ * via a top-level jsonb_set, then nested paths work reliably.
+ */
+function withAccumulator() {
+  return sql`jsonb_set(
+    COALESCE(${meetings.metadata}, '{}'::jsonb),
+    '{_telemetryAccumulator}',
+    COALESCE(${meetings.metadata}->'_telemetryAccumulator', '{}'::jsonb)
+  )`;
+}
+
+/**
  * Atomically increment activation count in metadata._telemetryAccumulator.
  * Persists directly to Postgres — safe across serverless invocations.
  */
@@ -19,7 +35,7 @@ export async function recordActivation(meetingId: string): Promise<void> {
     .set({
       metadata: sql`jsonb_set(
         jsonb_set(
-          COALESCE(${meetings.metadata}, '{}'::jsonb),
+          ${withAccumulator()},
           '{_telemetryAccumulator,activationCount}',
           to_jsonb(COALESCE((${meetings.metadata}->'_telemetryAccumulator'->>'activationCount')::int, 0) + 1)
         ),
@@ -44,7 +60,7 @@ export async function recordSessionEnd(
     .set({
       metadata: sql`jsonb_set(
         jsonb_set(
-          COALESCE(${meetings.metadata}, '{}'::jsonb),
+          ${withAccumulator()},
           '{_telemetryAccumulator,totalConnectedMs}',
           to_jsonb(COALESCE((${meetings.metadata}->'_telemetryAccumulator'->>'totalConnectedMs')::int, 0) + ${durationMs}::int)
         ),
@@ -64,7 +80,7 @@ export async function recordWakeDetectCall(meetingId: string): Promise<void> {
     .update(meetings)
     .set({
       metadata: sql`jsonb_set(
-        COALESCE(${meetings.metadata}, '{}'::jsonb),
+        ${withAccumulator()},
         '{_telemetryAccumulator,wakeDetectCalls}',
         to_jsonb(COALESCE((${meetings.metadata}->'_telemetryAccumulator'->>'wakeDetectCalls')::int, 0) + 1)
       )`,
