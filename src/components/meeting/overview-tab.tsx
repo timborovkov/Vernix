@@ -64,6 +64,18 @@ export function OverviewTab({
         isHost?: boolean;
       }>
     | undefined;
+  const participantEventEntries =
+    participantEvents?.filter(
+      (
+        p
+      ): p is { name: string; email?: string | null; isHost?: boolean } =>
+        Boolean(p.name)
+    ) ?? [];
+  const visibleParticipantEvents =
+    participantEventEntries.length > 0 ? participantEventEntries : undefined;
+  const visibleParticipants = visibleParticipantEvents
+    ? visibleParticipantEvents
+    : participants;
   const toolCallLog = metadata.toolCallLog as
     | Array<{
         timestamp: number;
@@ -354,18 +366,15 @@ export function OverviewTab({
         )}
 
       {/* Participants */}
-      {(participantEvents?.length ? participantEvents : participants).length >
-        0 && (
+      {visibleParticipants.length > 0 && (
         <div>
           <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
             <Users className="h-4 w-4" />
             Participants
           </h2>
           <div className="flex flex-wrap gap-2">
-            {participantEvents
-              ? participantEvents
-                  .filter((p) => p.name)
-                  .map((p) => (
+            {visibleParticipantEvents
+              ? visibleParticipantEvents.map((p) => (
                     <Badge
                       key={p.name}
                       variant={p.isHost ? "default" : "secondary"}
