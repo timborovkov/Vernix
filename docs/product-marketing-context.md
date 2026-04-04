@@ -1,6 +1,6 @@
 # Product Marketing Context
 
-_Last updated: 2026-03-28_
+_Last updated: 2026-04-03_
 
 ## Product Overview
 
@@ -8,7 +8,7 @@ _Last updated: 2026-03-28_
 **What it does:** Vernix joins Zoom, Meet, Teams, and Webex calls as a participant. It connects to tools like Slack, Linear, GitHub, or your CRM via integrations, then answers questions and takes action during the call using live data. It also transcribes in real time, generates summaries, extracts action items, and provides searchable meeting history.
 **Product category:** AI meeting assistant with tool integrations
 **Product type:** SaaS (web app)
-**Business model:** Freemium. Free (5 silent meetings/month, 30 min). Pro (€29/mo or €24/mo annual, 14-day free trial via Polar).
+**Business model:** Freemium. Free (5 meetings/month, 1 voice + silent, 30 min total). Pro (€29/mo or €24/mo annual, 14-day free trial via Polar).
 
 ## Target Audience
 
