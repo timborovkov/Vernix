@@ -18,8 +18,11 @@ const { mockDb } = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
+const mockRecordActivation = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
 vi.mock("@/lib/agent/telemetry", () => ({
-  recordActivation: vi.fn(),
+  recordActivation: mockRecordActivation,
 }));
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

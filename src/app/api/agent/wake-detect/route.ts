@@ -93,7 +93,9 @@ export async function POST(request: Request) {
     });
 
     transcribedText = transcription.text;
-    recordWakeDetectCall(meetingId);
+    recordWakeDetectCall(meetingId).catch((err) =>
+      console.error("[Wake Detect] Telemetry record failed:", err)
+    );
   } catch (err) {
     console.error("[Wake Detect] Transcription failed:", err);
     return NextResponse.json({ activated: false });
@@ -131,7 +133,9 @@ export async function POST(request: Request) {
       and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
     );
 
-  recordActivation(meetingId);
+  recordActivation(meetingId).catch((err) =>
+    console.error("[Wake Detect] Telemetry record failed:", err)
+  );
 
   return NextResponse.json({
     activated: true,

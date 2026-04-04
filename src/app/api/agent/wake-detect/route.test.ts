@@ -28,9 +28,15 @@ vi.mock("@/lib/openai/client", () => ({
     },
   }),
 }));
+const mockRecordActivation = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
+const mockRecordWakeDetectCall = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
 vi.mock("@/lib/agent/telemetry", () => ({
-  recordActivation: vi.fn(),
-  recordWakeDetectCall: vi.fn(),
+  recordActivation: mockRecordActivation,
+  recordWakeDetectCall: mockRecordWakeDetectCall,
 }));
 
 import { POST } from "./route";
@@ -53,6 +59,8 @@ describe("POST /api/agent/wake-detect", () => {
     vi.clearAllMocks();
     resetRateLimits();
     mockTranscriptionsCreate.mockResolvedValue({ text: "" });
+    mockRecordActivation.mockResolvedValue(undefined);
+    mockRecordWakeDetectCall.mockResolvedValue(undefined);
   });
 
   it("returns 400 for invalid JSON", async () => {

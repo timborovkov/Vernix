@@ -138,7 +138,9 @@ async function flushVoiceBuffer(
       })
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
 
-    recordActivation(meetingId);
+    recordActivation(meetingId).catch((err) =>
+      console.error("[Voice Activation] Telemetry record failed:", err)
+    );
     console.log(`[Voice Activation] Activated for meeting ${meetingId}`);
   } catch (err) {
     resetRateLimitKey(rateLimitKey);

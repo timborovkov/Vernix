@@ -99,7 +99,9 @@ export async function POST(request: Request) {
 
     // Record session end telemetry when transitioning to idle
     if (newState === "idle" && sessionDurationMs != null) {
-      recordSessionEnd(meetingId, sessionDurationMs);
+      recordSessionEnd(meetingId, sessionDurationMs).catch((err) =>
+        console.error("[Activation Status] Telemetry record failed:", err)
+      );
     }
 
     // Return the state we just wrote — no second DB read needed

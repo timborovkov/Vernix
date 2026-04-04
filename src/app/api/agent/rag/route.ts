@@ -10,6 +10,7 @@ import {
   EmbeddingError,
 } from "@/lib/agent/rag";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { logToolCall } from "@/lib/agent/tool-log";
 
 const ragSchema = z.object({
   meetingId: z.uuid(),
@@ -64,12 +65,22 @@ export async function POST(request: Request) {
   }
 
   try {
+    const start = Date.now();
     const results = await getRAGContext(query, {
       userId: meeting.userId,
       boostMeetingId: meetingId,
     });
     const context =
       formatContextForPrompt(results) || "No relevant context found.";
+
+    logToolCall(meetingId, {
+      timestamp: start,
+      toolName: "search_meeting_context",
+      args: { query },
+      result: context,
+      durationMs: Date.now() - start,
+      source: "voice",
+    }).catch(() => {});
 
     return NextResponse.json({ context });
   } catch (error) {

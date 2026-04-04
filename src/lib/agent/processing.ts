@@ -171,8 +171,9 @@ async function captureRecordingAndParticipants(
     }
   }
 
-  // Capture participant events
+  // Capture participant events and merge into participants list
   const recordingId = bot.recordings?.[0]?.id;
+  let allParticipantNames: string[] = [];
   if (recordingId && provider.getParticipantEvents) {
     try {
       const events = await provider.getParticipantEvents(recordingId);
@@ -182,28 +183,48 @@ async function captureRecordingAndParticipants(
         isHost: p.is_host,
         events: p.events,
       }));
+      allParticipantNames = events
+        .map((p) => p.name)
+        .filter((name): name is string => !!name);
       console.log(`[Processing] Captured ${events.length} participant records`);
     } catch (err) {
       console.error("[Processing] Participant capture failed:", err);
     }
   }
 
-  // Persist to meeting metadata
-  if (Object.keys(updates).length > 0) {
+  // Persist to meeting metadata and merge participants
+  if (Object.keys(updates).length > 0 || allParticipantNames.length > 0) {
     const [current] = await db
-      .select({ metadata: meetings.metadata })
+      .select({
+        metadata: meetings.metadata,
+        participants: meetings.participants,
+      })
       .from(meetings)
       .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
     if (current) {
+      const updateSet: Record<string, unknown> = {
+        updatedAt: new Date(),
+      };
+
+      if (Object.keys(updates).length > 0) {
+        updateSet.metadata = {
+          ...((current.metadata as Record<string, unknown>) ?? {}),
+          ...updates,
+        };
+      }
+
+      // Merge all Recall participants into the participants column
+      if (allParticipantNames.length > 0) {
+        const existingParticipants = (current.participants as string[]) ?? [];
+        const merged = [
+          ...new Set([...existingParticipants, ...allParticipantNames]),
+        ];
+        updateSet.participants = merged;
+      }
+
       await db
         .update(meetings)
-        .set({
-          metadata: {
-            ...((current.metadata as Record<string, unknown>) ?? {}),
-            ...updates,
-          },
-          updatedAt: new Date(),
-        })
+        .set(updateSet)
         .where(and(eq(meetings.id, meetingId), eq(meetings.userId, userId)));
     }
   }

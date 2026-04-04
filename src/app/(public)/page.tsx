@@ -8,6 +8,7 @@ import { ScrollReveal } from "@/components/scroll-reveal";
 import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
 import { LandingCta } from "@/components/landing-cta";
+import { HeroVideo } from "@/components/hero-video";
 import {
   Mic,
   FileText,
@@ -222,6 +223,13 @@ export default async function LandingPage() {
             </span>
           ))}
         </div>
+      </section>
+
+      {/* Demo video */}
+      <section className="px-4 pb-20">
+        <ScrollReveal>
+          <HeroVideo />
+        </ScrollReveal>
       </section>
 
       {/* Pain points */}
