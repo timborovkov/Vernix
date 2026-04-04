@@ -354,7 +354,8 @@ export function OverviewTab({
         )}
 
       {/* Participants */}
-      {(participantEvents ?? participants).length > 0 && (
+      {(participantEvents?.length ? participantEvents : participants).length >
+        0 && (
         <div>
           <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
             <Users className="h-4 w-4" />
