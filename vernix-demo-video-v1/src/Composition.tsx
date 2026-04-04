@@ -5,7 +5,6 @@ import {
   Sequence,
   staticFile,
   useVideoConfig,
-  interpolate,
 } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
@@ -32,7 +31,7 @@ const SCENE_COMPONENTS = [
 ];
 
 export const DemoVideo: React.FC<DemoVideoProps> = ({ sceneDurations }) => {
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   if (!sceneDurations || sceneDurations.length === 0) {
     return null;
