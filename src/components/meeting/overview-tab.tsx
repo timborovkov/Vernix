@@ -66,9 +66,7 @@ export function OverviewTab({
     | undefined;
   const participantEventEntries =
     participantEvents?.filter(
-      (
-        p
-      ): p is { name: string; email?: string | null; isHost?: boolean } =>
+      (p): p is { name: string; email?: string | null; isHost?: boolean } =>
         Boolean(p.name)
     ) ?? [];
   const visibleParticipantEvents =
@@ -375,23 +373,21 @@ export function OverviewTab({
           <div className="flex flex-wrap gap-2">
             {visibleParticipantEvents
               ? visibleParticipantEvents.map((p) => (
-                    <Badge
-                      key={p.name}
-                      variant={p.isHost ? "default" : "secondary"}
-                      title={
-                        [p.isHost && "Host", p.email]
-                          .filter(Boolean)
-                          .join(" · ") || undefined
-                      }
-                    >
-                      {p.name}
-                      {p.isHost && (
-                        <span className="ml-1 text-[10px] opacity-70">
-                          host
-                        </span>
-                      )}
-                    </Badge>
-                  ))
+                  <Badge
+                    key={p.name}
+                    variant={p.isHost ? "default" : "secondary"}
+                    title={
+                      [p.isHost && "Host", p.email]
+                        .filter(Boolean)
+                        .join(" · ") || undefined
+                    }
+                  >
+                    {p.name}
+                    {p.isHost && (
+                      <span className="ml-1 text-[10px] opacity-70">host</span>
+                    )}
+                  </Badge>
+                ))
               : participants.map((name) => (
                   <Badge key={name} variant="secondary">
                     {name}
