@@ -14,7 +14,6 @@
 ## Marketing materials
 
 - **Demo video** — Create a new demo video for the website, explaining what Vernix is, how it works, and how to use it. Something like a Loom
-- **Animated video** — Create a new animated video for the website, explaining what Vernix is, how it works, and how to use it. Using https://www.remotion.dev/
 - **Visual assets using Recraft** — Create a visual assets for marketing, showing features, use cases, and benefits using Recraft.
 - **Launch posts** - Linkedin, Hacker News, Reddit, Product Hunt, Twitter, Instagram, etc. Write 3 launch posts. Explain the story, the hackathon project, the problem we solved, the solution, the benefits, the technology stack, etc.
 
