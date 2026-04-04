@@ -34,6 +34,7 @@
   "exclude": [
     "node_modules",
     "vitest.config.ts",
-    "vitest.integration.config.ts"
+    "vitest.integration.config.ts",
+    "vernix-demo-video-v1"
   ]
 }
