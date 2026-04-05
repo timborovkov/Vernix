@@ -22,7 +22,7 @@ function format(
   }
 }
 
-/** e.g. "Jan 5, 2026, 3:42 PM" */
+/** e.g. "Jan 5, 2026, 15:42" */
 export function formatDateTime(
   date: Date | string,
   timezone: string | null
@@ -31,8 +31,9 @@ export function formatDateTime(
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
+    hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 
@@ -45,6 +46,18 @@ export function formatDate(
     month: "short",
     day: "numeric",
     year: "numeric",
+  });
+}
+
+/** e.g. "14:32" — 24h wall-clock time */
+export function formatTimeOfDay(
+  date: Date | string,
+  timezone: string | null
+): string {
+  return format(date, timezone, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 

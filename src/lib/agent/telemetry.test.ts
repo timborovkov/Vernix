@@ -1,31 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  recordActivation,
-  recordSessionEnd,
-  recordWakeDetectCall,
-  flushTelemetry,
-  resetTelemetry,
-} from "./telemetry";
 
-vi.mock("@/lib/db", () => {
-  const mockUpdate = vi.fn().mockReturnValue({
-    set: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue(undefined),
-    }),
-  });
-  const mockSelect = vi.fn().mockReturnValue({
-    from: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue([{ metadata: {} }]),
-    }),
-  });
-  return {
-    db: {
-      select: mockSelect,
-      update: mockUpdate,
-    },
-  };
+const { mockDb } = vi.hoisted(() => {
+  const db: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const m of [
+    "select",
+    "from",
+    "where",
+    "orderBy",
+    "insert",
+    "values",
+    "returning",
+    "update",
+    "set",
+    "delete",
+  ]) {
+    db[m] = vi.fn().mockImplementation(() => db);
+  }
+  return { mockDb: db };
 });
 
+vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/db/schema", () => ({
   meetings: {
     id: "id",
@@ -35,109 +29,129 @@ vi.mock("@/lib/db/schema", () => ({
   },
 }));
 
+import {
+  recordActivation,
+  recordSessionEnd,
+  recordWakeDetectCall,
+  flushTelemetry,
+} from "./telemetry";
+
 beforeEach(() => {
-  resetTelemetry();
+  vi.clearAllMocks();
+  // Default: chainable mock
+  for (const m of ["select", "from", "where", "update", "set"]) {
+    mockDb[m].mockImplementation(() => mockDb);
+  }
 });
 
 describe("recordActivation", () => {
-  it("creates entry and increments count", async () => {
-    recordActivation("m1");
-    const result = await flushTelemetry("m1", "u1");
-    expect(result).not.toBeNull();
-    expect(result!.activationCount).toBe(1);
-  });
+  it("performs atomic DB update to increment activation count", async () => {
+    await recordActivation("m1");
 
-  it("increments count on subsequent calls", async () => {
-    recordActivation("m1");
-    recordActivation("m1");
-    recordActivation("m1");
-    const result = await flushTelemetry("m1", "u1");
-    expect(result!.activationCount).toBe(3);
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalled();
+    expect(mockDb.where).toHaveBeenCalled();
   });
 });
 
 describe("recordSessionEnd", () => {
-  it("accumulates total connected time and session durations", async () => {
-    recordActivation("m1");
-    recordSessionEnd("m1", 3000);
-    recordSessionEnd("m1", 7000);
-    const result = await flushTelemetry("m1", "u1");
-    expect(result!.totalConnectedSeconds).toBe(10);
-  });
-});
+  it("performs atomic DB update to accumulate session duration", async () => {
+    await recordSessionEnd("m1", 5000);
 
-describe("flushTelemetry", () => {
-  it("persists to DB and returns flushed data", async () => {
-    recordActivation("m1");
-    recordSessionEnd("m1", 6000);
-
-    const result = await flushTelemetry("m1", "u1");
-
-    expect(result).toEqual({
-      activationCount: 1,
-      totalConnectedSeconds: 6,
-      avgSessionSeconds: 6,
-      wakeDetectCalls: 0,
-    });
-  });
-
-  it("clears in-memory data after flush", async () => {
-    recordActivation("m1");
-    await flushTelemetry("m1", "u1");
-
-    // Second flush should return null — data was cleared
-    const second = await flushTelemetry("m1", "u1");
-    expect(second).toBeNull();
-  });
-
-  it("returns null when no activations recorded", async () => {
-    const result = await flushTelemetry("m1", "u1");
-    expect(result).toBeNull();
-  });
-
-  it("returns null for entry with zero activations", async () => {
-    recordSessionEnd("m1", 5000);
-    const result = await flushTelemetry("m1", "u1");
-    expect(result).toBeNull();
-
-    // Entry should also be cleared
-    const second = await flushTelemetry("m1", "u1");
-    expect(second).toBeNull();
-  });
-
-  it("computes average session seconds correctly", async () => {
-    recordActivation("m1");
-    recordSessionEnd("m1", 3000);
-    recordSessionEnd("m1", 9000);
-
-    const result = await flushTelemetry("m1", "u1");
-
-    expect(result).toEqual({
-      activationCount: 1,
-      totalConnectedSeconds: 12,
-      avgSessionSeconds: 6,
-      wakeDetectCalls: 0,
-    });
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalled();
   });
 });
 
 describe("recordWakeDetectCall", () => {
-  it("tracks wake-detect API calls", async () => {
-    recordActivation("m1");
-    recordWakeDetectCall("m1");
-    recordWakeDetectCall("m1");
-    recordWakeDetectCall("m1");
-    const result = await flushTelemetry("m1", "u1");
-    expect(result!.wakeDetectCalls).toBe(3);
+  it("performs atomic DB update to increment wake-detect count", async () => {
+    await recordWakeDetectCall("m1");
+
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalled();
   });
 });
 
-describe("resetTelemetry", () => {
-  it("clears all entries", async () => {
-    recordActivation("m1");
-    recordActivation("m2");
-    resetTelemetry();
-    expect(await flushTelemetry("m1", "u1")).toBeNull();
-    expect(await flushTelemetry("m2", "u1")).toBeNull();
+describe("flushTelemetry", () => {
+  it("returns null when no accumulator exists in metadata", async () => {
+    mockDb.where.mockResolvedValueOnce([{ metadata: {} }]);
+
+    const result = await flushTelemetry("m1", "u1");
+    expect(result).toBeNull();
+  });
+
+  it("returns null when meeting not found", async () => {
+    mockDb.where.mockResolvedValueOnce([]);
+
+    const result = await flushTelemetry("m1", "u1");
+    expect(result).toBeNull();
+  });
+
+  it("computes flushed telemetry from accumulator and persists", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        metadata: {
+          _telemetryAccumulator: {
+            activationCount: 3,
+            totalConnectedMs: 12000,
+            sessionDurations: [3000, 9000],
+            wakeDetectCalls: 5,
+          },
+          otherField: "keep",
+        },
+      },
+    ]);
+
+    const result = await flushTelemetry("m1", "u1");
+
+    expect(result).toEqual({
+      activationCount: 3,
+      totalConnectedSeconds: 12,
+      avgSessionSeconds: 6,
+      wakeDetectCalls: 5,
+    });
+
+    // Should persist atomically via SQL (sets voiceTelemetry, removes accumulator)
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(mockDb.set).toHaveBeenCalled();
+  });
+
+  it("returns null when activationCount and wakeDetectCalls are both 0", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        metadata: {
+          _telemetryAccumulator: {
+            activationCount: 0,
+            totalConnectedMs: 0,
+            sessionDurations: [],
+            wakeDetectCalls: 0,
+          },
+        },
+      },
+    ]);
+
+    const result = await flushTelemetry("m1", "u1");
+    expect(result).toBeNull();
+  });
+
+  it("handles missing sessionDurations gracefully", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        metadata: {
+          _telemetryAccumulator: {
+            activationCount: 1,
+            wakeDetectCalls: 0,
+          },
+        },
+      },
+    ]);
+
+    const result = await flushTelemetry("m1", "u1");
+    expect(result).toEqual({
+      activationCount: 1,
+      totalConnectedSeconds: 0,
+      avgSessionSeconds: 0,
+      wakeDetectCalls: 0,
+    });
   });
 });

@@ -5,6 +5,7 @@ import { meetings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { McpClientManager } from "@/lib/mcp/client";
 import { rateLimitByIp } from "@/lib/rate-limit";
+import { logToolCall } from "@/lib/agent/tool-log";
 
 const mcpToolSchema = z.object({
   meetingId: z.uuid(),
@@ -59,8 +60,19 @@ export async function POST(request: Request) {
   }
 
   try {
+    const start = Date.now();
     const manager = await McpClientManager.connectForUser(meeting.userId);
     const result = await manager.callTool(toolName, args);
+
+    logToolCall(meetingId, {
+      timestamp: start,
+      toolName,
+      args,
+      result: typeof result === "string" ? result : JSON.stringify(result),
+      durationMs: Date.now() - start,
+      source: "voice",
+    }).catch(() => {});
+
     return NextResponse.json({ result });
   } catch (error) {
     console.error("[MCP Tool] Call failed:", error);

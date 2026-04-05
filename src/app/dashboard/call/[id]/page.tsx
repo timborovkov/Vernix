@@ -236,6 +236,8 @@ export default function MeetingDetailPage() {
             query={searchQuery}
             onQueryChange={setSearchQuery}
             onSearch={search}
+            startedAt={meeting.startedAt}
+            timezone={timezone}
           />
         )}
 

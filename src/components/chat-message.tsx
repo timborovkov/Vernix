@@ -4,7 +4,8 @@ import type { UIMessage } from "ai";
 import { isToolUIPart, getToolName } from "ai";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatTime, renderMarkdown } from "@/lib/format";
+import { formatTime } from "@/lib/format";
+import { Markdown } from "@/components/markdown";
 import {
   ChevronDown,
   ChevronUp,
@@ -210,12 +211,9 @@ export function ChatMessage({ message }: { message: UIMessage }) {
         ))}
 
         {textContent && (
-          <div
-            className="text-sm [&_li]:mt-0.5 [&_p]:leading-relaxed [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4"
-            dangerouslySetInnerHTML={{
-              __html: renderMarkdown(textContent),
-            }}
-          />
+          <Markdown className="[&_code]:bg-muted [&_pre]:bg-muted text-sm [&_a]:underline [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_li]:mt-0.5 [&_ol]:list-decimal [&_ol]:pl-4 [&_p]:leading-relaxed [&_pre]:overflow-auto [&_pre]:rounded [&_pre]:p-2 [&_pre]:text-xs [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4">
+            {textContent}
+          </Markdown>
         )}
 
         <SourcesList sources={sources} />
