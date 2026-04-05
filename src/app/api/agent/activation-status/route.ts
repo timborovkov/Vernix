@@ -89,10 +89,16 @@ export async function POST(request: Request) {
     }
 
     const activation: VoiceActivation = { state: newState };
-    const updatedMetadata = { ...metadata, voiceActivation: activation };
     await db
       .update(meetings)
-      .set({ metadata: updatedMetadata, updatedAt: new Date() })
+      .set({
+        metadata: sql`jsonb_set(
+          COALESCE(${meetings.metadata}, '{}'::jsonb),
+          '{voiceActivation}',
+          ${JSON.stringify(activation)}::jsonb
+        )`,
+        updatedAt: new Date(),
+      })
       .where(
         and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
       );
@@ -125,7 +131,11 @@ export async function POST(request: Request) {
     await db
       .update(meetings)
       .set({
-        metadata: { ...metadata, voiceActivation: consumed },
+        metadata: sql`jsonb_set(
+          COALESCE(${meetings.metadata}, '{}'::jsonb),
+          '{voiceActivation}',
+          ${JSON.stringify(consumed)}::jsonb
+        )`,
         updatedAt: new Date(),
       })
       .where(
