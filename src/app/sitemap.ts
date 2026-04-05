@@ -3,7 +3,9 @@ import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { getIntegrations } from "@/lib/integrations/catalog";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+const BASE_URL = (
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app"
+).replace(/^http:\/\/(?!localhost)/, "https://");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const posts = await getAllPosts();
@@ -35,6 +37,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 1,
+      videos: [
+        {
+          title: "Vernix Demo — AI Assistant for Video Calls",
+          description:
+            "See how Vernix joins your video calls, connects to your tools, and answers questions with live business data.",
+          thumbnail_loc: `${BASE_URL}/demo/demo-v1-poster.jpg`,
+          content_loc: `${BASE_URL}/demo/demo-v1.mp4`,
+        },
+      ],
     },
     {
       url: `${BASE_URL}/features/integrations`,

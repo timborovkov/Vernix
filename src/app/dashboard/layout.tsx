@@ -5,7 +5,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
 
 export const metadata: Metadata = {
-  title: "Dashboard — Vernix",
+  title: {
+    default: "Dashboard — Vernix",
+    template: "%s — Vernix",
+  },
 };
 
 export default function DashboardLayout({

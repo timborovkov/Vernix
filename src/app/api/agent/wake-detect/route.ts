@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { rateLimitByIp } from "@/lib/rate-limit";
 import { verifyBotSecret } from "@/lib/agent/verify-bot-secret";
 import { getOpenAIClient } from "@/lib/openai/client";
@@ -93,7 +93,9 @@ export async function POST(request: Request) {
     });
 
     transcribedText = transcription.text;
-    recordWakeDetectCall(meetingId);
+    recordWakeDetectCall(meetingId).catch((err) =>
+      console.error("[Wake Detect] Telemetry record failed:", err)
+    );
   } catch (err) {
     console.error("[Wake Detect] Transcription failed:", err);
     return NextResponse.json({ activated: false });
@@ -124,14 +126,20 @@ export async function POST(request: Request) {
   await db
     .update(meetings)
     .set({
-      metadata: { ...metadata, voiceActivation: activation },
+      metadata: sql`jsonb_set(
+        COALESCE(${meetings.metadata}, '{}'::jsonb),
+        '{voiceActivation}',
+        ${JSON.stringify(activation)}::jsonb
+      )`,
       updatedAt: new Date(),
     })
     .where(
       and(eq(meetings.id, meetingId), eq(meetings.userId, meeting.userId))
     );
 
-  recordActivation(meetingId);
+  recordActivation(meetingId).catch((err) =>
+    console.error("[Wake Detect] Telemetry record failed:", err)
+  );
 
   return NextResponse.json({
     activated: true,

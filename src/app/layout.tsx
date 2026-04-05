@@ -27,7 +27,10 @@ const disableIndexing = process.env.NEXT_PUBLIC_DISABLE_INDEXING === "true";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
+    (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
+      /^http:\/\/(?!localhost)/,
+      "https://"
+    )
   ),
   title: "Vernix — AI Assistant for Video Calls | Live Data from Your Tools",
   description:

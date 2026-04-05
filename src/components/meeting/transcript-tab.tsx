@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatTimeOfDay } from "@/lib/date";
 import { formatTime } from "@/lib/format";
 import { Search, Clock } from "lucide-react";
 import type { TranscriptPoint } from "@/lib/vector/scroll";
@@ -22,6 +23,8 @@ interface TranscriptTabProps {
   query: string;
   onQueryChange: (value: string) => void;
   onSearch: (query: string) => void;
+  startedAt?: Date | string | null;
+  timezone: string;
 }
 
 export function TranscriptTab({
@@ -31,7 +34,18 @@ export function TranscriptTab({
   query,
   onQueryChange,
   onSearch,
+  startedAt,
+  timezone,
 }: TranscriptTabProps) {
+  const startMs = startedAt ? new Date(startedAt).getTime() : null;
+
+  /** Convert relative ms to wall-clock time string, or fall back to relative */
+  const displayTime = (relativeMs: number) => {
+    if (startMs) {
+      return formatTimeOfDay(new Date(startMs + relativeMs), timezone);
+    }
+    return formatTime(relativeMs);
+  };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch(query);
@@ -65,7 +79,7 @@ export function TranscriptTab({
                   <span className="font-medium">{result.speaker}</span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatTime(result.timestamp_ms)}
+                    {displayTime(result.timestamp_ms)}
                   </span>
                   <span className="ml-auto">
                     Score: {result.score.toFixed(2)}
@@ -89,8 +103,8 @@ export function TranscriptTab({
           <div className="max-h-[600px] space-y-3 overflow-y-auto pr-2">
             {transcript.map((segment, i) => (
               <div key={i} className="flex gap-3">
-                <div className="text-muted-foreground w-12 shrink-0 pt-0.5 text-right text-xs">
-                  {formatTime(segment.timestampMs)}
+                <div className="text-muted-foreground w-14 shrink-0 pt-0.5 text-right text-xs">
+                  {displayTime(segment.timestampMs)}
                 </div>
                 <div>
                   <span className="text-xs font-semibold tracking-wide text-blue-500 uppercase">

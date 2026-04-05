@@ -19,7 +19,7 @@ const { mockDb } = vi.hoisted(() => {
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/agent/telemetry", () => ({
-  recordSessionEnd: vi.fn(),
+  recordSessionEnd: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { POST } from "./route";
@@ -119,13 +119,12 @@ describe("POST /api/agent/activation-status", () => {
     expect(data.state).toBe("activated");
     expect(data.muted).toBe(false);
     expect(data.transcriptWindow).toBe("Alice: hello");
-    // Should consume the activated state by writing "responding" to DB
+    // Should consume the activated state by writing to DB atomically
     expect(mockDb.update).toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        metadata: expect.objectContaining({
-          voiceActivation: { state: "responding" },
-        }),
+        metadata: expect.anything(),
+        updatedAt: expect.any(Date),
       })
     );
   });
@@ -177,9 +176,8 @@ describe("POST /api/agent/activation-status", () => {
     expect(mockDb.update).toHaveBeenCalled();
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({
-        metadata: expect.objectContaining({
-          voiceActivation: { state: "responding" },
-        }),
+        metadata: expect.anything(),
+        updatedAt: expect.any(Date),
       })
     );
   });

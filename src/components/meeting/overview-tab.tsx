@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { renderMarkdown } from "@/lib/format";
+import { Markdown } from "@/components/markdown";
 import { RecordingPlayer } from "./recording-player";
 import {
   Save,
@@ -18,6 +18,9 @@ import {
   OctagonX,
   ExternalLink,
   RefreshCw,
+  Wrench,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import type { Meeting } from "@/lib/db/schema";
 
@@ -37,6 +40,7 @@ export function OverviewTab({
   const [silentSaving, setSilentSaving] = useState(false);
   const [muteSaving, setMuteSaving] = useState(false);
   const [stopping, setStopping] = useState(false);
+  const [toolLogExpanded, setToolLogExpanded] = useState(false);
 
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
   const summary = metadata.summary as string | undefined;
@@ -53,6 +57,33 @@ export function OverviewTab({
       }
     | undefined;
   const participants = (meeting.participants as string[]) ?? [];
+  const participantEvents = metadata.participantEvents as
+    | Array<{
+        name: string | null;
+        email?: string | null;
+        isHost?: boolean;
+      }>
+    | undefined;
+  const participantEventEntries =
+    participantEvents?.filter(
+      (p): p is { name: string; email?: string | null; isHost?: boolean } =>
+        Boolean(p.name)
+    ) ?? [];
+  const visibleParticipantEvents =
+    participantEventEntries.length > 0 ? participantEventEntries : undefined;
+  const visibleParticipants = visibleParticipantEvents
+    ? visibleParticipantEvents
+    : participants;
+  const toolCallLog = metadata.toolCallLog as
+    | Array<{
+        timestamp: number;
+        toolName: string;
+        args?: Record<string, unknown>;
+        result?: string;
+        durationMs: number;
+        source: "voice" | "silent";
+      }>
+    | undefined;
   const isEditable =
     meeting.status === "pending" ||
     meeting.status === "joining" ||
@@ -255,10 +286,7 @@ export function OverviewTab({
               Generating summary...
             </p>
           ) : summary ? (
-            <div
-              className="space-y-2 text-sm [&_li]:mt-1 [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5"
-              dangerouslySetInnerHTML={{ __html: renderMarkdown(summary) }}
-            />
+            <Markdown>{summary}</Markdown>
           ) : (
             <div className="flex items-center gap-3">
               <p className="text-muted-foreground italic">
@@ -336,20 +364,96 @@ export function OverviewTab({
         )}
 
       {/* Participants */}
-      {participants.length > 0 && (
+      {visibleParticipants.length > 0 && (
         <div>
           <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
             <Users className="h-4 w-4" />
             Participants
           </h2>
           <div className="flex flex-wrap gap-2">
-            {participants.map((name) => (
-              <Badge key={name} variant="secondary">
-                {name}
-              </Badge>
-            ))}
+            {visibleParticipantEvents
+              ? visibleParticipantEvents.map((p) => (
+                  <Badge
+                    key={p.name}
+                    variant={p.isHost ? "default" : "secondary"}
+                    title={
+                      [p.isHost && "Host", p.email]
+                        .filter(Boolean)
+                        .join(" · ") || undefined
+                    }
+                  >
+                    {p.name}
+                    {p.isHost && (
+                      <span className="ml-1 text-[10px] opacity-70">host</span>
+                    )}
+                  </Badge>
+                ))
+              : participants.map((name) => (
+                  <Badge key={name} variant="secondary">
+                    {name}
+                  </Badge>
+                ))}
           </div>
         </div>
+      )}
+
+      {/* Tool Call Log */}
+      {toolCallLog && toolCallLog.length > 0 && (
+        <Card>
+          <CardHeader
+            className="cursor-pointer"
+            onClick={() => setToolLogExpanded(!toolLogExpanded)}
+          >
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Wrench className="h-4 w-4" />
+              Tool Calls
+              <Badge variant="secondary" className="ml-1">
+                {toolCallLog.length}
+              </Badge>
+              <span className="ml-auto">
+                {toolLogExpanded ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          {toolLogExpanded && (
+            <CardContent>
+              <div className="space-y-2">
+                {toolCallLog.map((entry, i) => (
+                  <div
+                    key={i}
+                    className="bg-muted/50 rounded-md px-3 py-2 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">
+                        {entry.toolName.replace(/_/g, " ")}
+                      </span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {entry.source}
+                      </Badge>
+                      <span className="text-muted-foreground ml-auto text-xs">
+                        {entry.durationMs}ms
+                      </span>
+                    </div>
+                    {entry.args && Object.keys(entry.args).length > 0 && (
+                      <pre className="text-muted-foreground mt-1 text-xs">
+                        {JSON.stringify(entry.args, null, 2)}
+                      </pre>
+                    )}
+                    {entry.result && (
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                        {entry.result}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
       )}
     </div>
   );
