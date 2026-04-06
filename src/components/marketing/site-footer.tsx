@@ -12,6 +12,7 @@ const PRODUCT_LINKS = [
 ];
 
 const DEVELOPER_LINKS = [
+  { href: "https://github.com/timborovkov/Vernix", label: "GitHub" },
   { href: "/docs", label: "API Docs" },
   { href: "/api/v1/openapi.json", label: "OpenAPI Spec" },
   { href: "/llms.txt", label: "llms.txt" },
