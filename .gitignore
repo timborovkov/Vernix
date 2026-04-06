@@ -51,3 +51,5 @@ next-env.d.ts
 # Internal docs (not public)
 /internal-docs
 TODO.md
+CLAUDE.md
+AGENTS.md
