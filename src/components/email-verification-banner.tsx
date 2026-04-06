@@ -15,7 +15,14 @@ export function EmailVerificationBanner() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("verified") === "1") {
       trackEmailVerified();
-      updateSession();
+      updateSession().then(() => {
+        toast.success("Email verified successfully");
+      });
+      // Clean up the query param
+      const url = new URL(window.location.href);
+      // eslint-disable-next-line drizzle/enforce-delete-with-where -- URLSearchParams, not DB
+      url.searchParams.delete("verified");
+      window.history.replaceState({}, "", url.pathname + url.search);
     }
   }, [updateSession]);
 

@@ -40,7 +40,7 @@ export default function AcceptTermsPage() {
       // The API also sets a terms_accepted cookie as fallback in case JWT doesn't refresh
       await updateSession().catch(() => {});
       trackSignUp("sso");
-      window.location.href = "/dashboard";
+      window.location.href = "/welcome";
     } catch {
       setLoading(false);
       setError("Something went wrong. Please try again.");
