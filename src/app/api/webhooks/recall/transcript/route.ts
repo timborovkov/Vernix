@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { z } from "zod/v4";
 import { db } from "@/lib/db";
 import { meetings } from "@/lib/db/schema";
@@ -205,21 +205,24 @@ export async function POST(request: Request) {
     typeof metadata.botId === "string" &&
     speaker !== "Vernix Agent"
   ) {
-    const userId = meeting.userId;
-    const botId = metadata.botId;
-    import("@/lib/agent/silent")
-      .then(({ handleSilentTranscript }) =>
-        handleSilentTranscript(
+    const silentUserId = meeting.userId;
+    const silentBotId = metadata.botId;
+    after(async () => {
+      try {
+        const { handleSilentTranscript } = await import("@/lib/agent/silent");
+        await handleSilentTranscript(
           meeting.id,
-          userId,
-          botId,
+          silentUserId,
+          silentBotId,
           speaker,
           text,
           timestampMs,
           (metadata.agenda as string) ?? null
-        )
-      )
-      .catch((err) => console.error("[Silent Agent] Error:", err));
+        );
+      } catch (err) {
+        console.error("[Silent Agent] Error:", err);
+      }
+    });
   }
 
   // Voice agent (non-silent): monitor transcript for wake words
