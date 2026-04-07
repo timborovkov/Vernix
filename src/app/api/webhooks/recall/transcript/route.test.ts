@@ -23,6 +23,16 @@ const { mockDb, mockUpsert } = vi.hoisted(() => {
 const mockHandleVoiceTranscript = vi.fn();
 const mockHandleSilentTranscript = vi.fn();
 
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (fn: () => Promise<void>) => {
+      fn();
+    },
+  };
+});
+
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/vector/upsert", () => ({
   upsertTranscriptChunk: mockUpsert,
