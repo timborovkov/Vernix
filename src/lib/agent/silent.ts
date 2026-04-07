@@ -9,6 +9,10 @@ import { WAKE_WORDS } from "@/lib/agent/activation";
 const DEBOUNCE_MS = 3000;
 const RATE_LIMIT_INTERVAL_MS = 30_000;
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function containsMention(text: string): boolean {
   const lower = text.toLowerCase();
   return WAKE_WORDS.some((kw) => lower.includes(kw));
@@ -22,7 +26,7 @@ interface BufferedChunk {
 
 interface TranscriptBuffer {
   chunks: BufferedChunk[];
-  timer: ReturnType<typeof setTimeout> | null;
+  generation: number;
 }
 
 const buffers = new Map<string, TranscriptBuffer>();
@@ -136,7 +140,7 @@ async function flushBuffer(
   }
 }
 
-export function handleSilentTranscript(
+export async function handleSilentTranscript(
   meetingId: string,
   userId: string,
   botId: string,
@@ -144,30 +148,30 @@ export function handleSilentTranscript(
   text: string,
   timestampMs: number,
   agenda?: string | null
-): void {
+): Promise<void> {
   let buffer = buffers.get(meetingId);
   if (!buffer) {
-    buffer = { chunks: [], timer: null };
+    buffer = { chunks: [], generation: 0 };
     buffers.set(meetingId, buffer);
   }
 
   buffer.chunks.push({ speaker, text, timestampMs });
+  buffer.generation += 1;
+  const myGeneration = buffer.generation;
 
-  if (buffer.timer) {
-    clearTimeout(buffer.timer);
+  // Sleep-based debounce: the caller (after()) keeps the container alive
+  await sleep(DEBOUNCE_MS);
+
+  // If a newer chunk arrived during the sleep, let that call handle the flush
+  const current = buffers.get(meetingId);
+  if (!current || current.generation !== myGeneration) {
+    return;
   }
 
-  buffer.timer = setTimeout(() => {
-    flushBuffer(meetingId, userId, botId, agenda).catch((err) =>
-      console.error("[Silent Agent] Flush error:", err)
-    );
-  }, DEBOUNCE_MS);
+  await flushBuffer(meetingId, userId, botId, agenda);
 }
 
 /** Clear all buffers (for testing). */
 export function resetSilentBuffers(): void {
-  for (const buffer of buffers.values()) {
-    if (buffer.timer) clearTimeout(buffer.timer);
-  }
   buffers.clear();
 }
