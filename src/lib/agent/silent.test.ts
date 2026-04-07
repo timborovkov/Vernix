@@ -80,7 +80,7 @@ describe("handleSilentTranscript — speaker name isolation", () => {
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
     // Speaker display name contains "Vernix" but the spoken text does not
-    handleSilentTranscript(
+    const promise = handleSilentTranscript(
       "meeting-speaker",
       "user-1",
       "bot-speaker",
@@ -90,6 +90,7 @@ describe("handleSilentTranscript — speaker name isolation", () => {
     );
 
     await vi.runAllTimersAsync();
+    await promise;
 
     expect(sendChatMessage).not.toHaveBeenCalled();
   });
@@ -112,7 +113,7 @@ describe("handleSilentTranscript", () => {
     const { getMeetingBotProvider } = await import("@/lib/meeting-bot");
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
-    handleSilentTranscript(
+    const promise = handleSilentTranscript(
       "meeting-1",
       "user-1",
       "bot-1",
@@ -121,11 +122,12 @@ describe("handleSilentTranscript", () => {
       1000
     );
 
-    // Should not have fired yet
+    // Should not have fired yet (sleeping)
     expect(sendChatMessage).not.toHaveBeenCalled();
 
     // Fast-forward debounce timer
     await vi.runAllTimersAsync();
+    await promise;
 
     expect(sendChatMessage).toHaveBeenCalledOnce();
   });
@@ -134,7 +136,7 @@ describe("handleSilentTranscript", () => {
     const { getMeetingBotProvider } = await import("@/lib/meeting-bot");
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
-    handleSilentTranscript(
+    const promise = handleSilentTranscript(
       "meeting-2",
       "user-1",
       "bot-2",
@@ -144,6 +146,7 @@ describe("handleSilentTranscript", () => {
     );
 
     await vi.runAllTimersAsync();
+    await promise;
 
     expect(sendChatMessage).not.toHaveBeenCalled();
   });
@@ -153,7 +156,7 @@ describe("handleSilentTranscript", () => {
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
     // First mention — should respond
-    handleSilentTranscript(
+    const p1 = handleSilentTranscript(
       "meeting-3",
       "user-1",
       "bot-3",
@@ -162,12 +165,13 @@ describe("handleSilentTranscript", () => {
       1000
     );
     await vi.runAllTimersAsync();
+    await p1;
     expect(sendChatMessage).toHaveBeenCalledOnce();
 
     sendChatMessage.mockClear();
 
     // Second mention immediately — should be rate-limited
-    handleSilentTranscript(
+    const p2 = handleSilentTranscript(
       "meeting-3",
       "user-1",
       "bot-3",
@@ -176,6 +180,7 @@ describe("handleSilentTranscript", () => {
       2000
     );
     await vi.runAllTimersAsync();
+    await p2;
     expect(sendChatMessage).not.toHaveBeenCalled();
   });
 
@@ -183,7 +188,7 @@ describe("handleSilentTranscript", () => {
     const { getMeetingBotProvider } = await import("@/lib/meeting-bot");
     const sendChatMessage = vi.mocked(getMeetingBotProvider().sendChatMessage);
 
-    handleSilentTranscript(
+    const p1 = handleSilentTranscript(
       "meeting-4",
       "user-1",
       "bot-4",
@@ -192,12 +197,12 @@ describe("handleSilentTranscript", () => {
       1000
     );
 
-    // Advance 1 second (not yet 3s)
-    vi.advanceTimersByTime(1000);
+    // Advance 1 second (p1 still sleeping, not yet at 3s)
+    await vi.advanceTimersByTimeAsync(1000);
     expect(sendChatMessage).not.toHaveBeenCalled();
 
-    // New chunk arrives — timer resets
-    handleSilentTranscript(
+    // New chunk arrives — bumps generation, p1 will bail on wake
+    const p2 = handleSilentTranscript(
       "meeting-4",
       "user-1",
       "bot-4",
@@ -206,8 +211,11 @@ describe("handleSilentTranscript", () => {
       2000
     );
 
-    // Advance 3 more seconds — now should fire
+    // Advance remaining time for both sleeps to complete
     await vi.runAllTimersAsync();
+    await Promise.all([p1, p2]);
+
+    // p1 saw generation mismatch and bailed; p2 flushed
     expect(sendChatMessage).toHaveBeenCalledOnce();
   });
 });
