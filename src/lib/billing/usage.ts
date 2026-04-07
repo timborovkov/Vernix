@@ -192,6 +192,7 @@ export async function getMonthlyVoiceMeetingCount(
       and(
         eq(meetings.userId, userId),
         gte(meetings.createdAt, startOfMonth),
+        sql`${meetings.status} IN ('joining', 'active', 'processing', 'completed')`,
         sql`coalesce((${meetings.metadata}->>'silent')::boolean, false) = false`
       )
     );
