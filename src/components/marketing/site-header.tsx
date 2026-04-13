@@ -15,6 +15,7 @@ import {
   BookOpen,
   LayoutDashboard,
   LogOut,
+  Github,
 } from "lucide-react";
 
 const FEATURE_LINKS = [
@@ -127,6 +128,15 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <a
+            href="https://github.com/timborovkov/Vernix"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="GitHub"
+          >
+            <Github className="h-5 w-5" />
+          </a>
           <ThemeToggle />
           {isLoggedIn ? (
             <>
@@ -210,6 +220,17 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
+          <div className="border-border my-1 border-t" />
+          <a
+            href="https://github.com/timborovkov/Vernix"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-2 py-2 text-sm"
+            onClick={() => setMobileOpen(false)}
+          >
+            <Github className="h-4 w-4" />
+            GitHub
+          </a>
           <div className="mt-3 flex flex-col gap-2">
             {isLoggedIn ? (
               <>
