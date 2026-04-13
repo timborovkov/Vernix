@@ -86,7 +86,8 @@ export async function syncBillingFromPolar(
         .where(eq(users.id, userId));
     } else if (
       activeSub.status === "active" ||
-      activeSub.status === "past_due"
+      activeSub.status === "past_due" ||
+      activeSub.status === "canceled"
     ) {
       // Active subscription: set Pro
       await db
