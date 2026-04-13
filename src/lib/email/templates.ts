@@ -22,7 +22,7 @@ function emailShell(
 ): string {
   const APP_URL = getAppUrl();
   const unsubFooter = unsubscribeUrl
-    ? `<p style="font-size:11px;color:#aaa;margin:16px 0 0;text-align:center"><a href="${escapeHtml(unsubscribeUrl)}" style="color:#aaa;text-decoration:underline">Unsubscribe</a> from these emails</p>`
+    ? `<p style="font-size:11px;color:#aaa;margin:16px 0 0;text-align:center"><a href="${unsubscribeUrl}" style="color:#aaa;text-decoration:underline">Unsubscribe</a> from these emails</p>`
     : "";
   return `<!DOCTYPE html>
 <html>
