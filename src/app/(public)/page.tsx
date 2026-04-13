@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
+import { OpenSourceBadge } from "@/components/open-source-badge";
 import { LandingCta } from "@/components/landing-cta";
 import { HeroVideo } from "@/components/hero-video";
 import {
@@ -188,6 +189,9 @@ export default async function LandingPage() {
               height={72}
               className="hidden dark:block"
             />
+          </div>
+          <div className="animate-fade-up delay-75">
+            <OpenSourceBadge />
           </div>
           <h1 className="animate-fade-up mb-4 text-4xl font-bold tracking-tight delay-100 sm:text-5xl">
             An AI assistant in every call that knows your business

@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { IntegrationCloud } from "@/components/integration-cloud";
 import { HeroBg } from "@/components/hero-bg";
+import { OpenSourceBadge } from "@/components/open-source-badge";
 import { Plug, ArrowRight } from "lucide-react";
 import { DISPLAY } from "@/lib/billing/constants";
 import { getIntegrations, CATEGORIES } from "@/lib/integrations/catalog";
@@ -72,6 +73,7 @@ export default function IntegrationsPage() {
           <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
             <Plug className="text-ring h-8 w-8" />
           </div>
+          <OpenSourceBadge />
           <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
             Stop switching tabs. Ask your in-call AI assistant for every tool.
           </h1>
