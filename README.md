@@ -4,6 +4,8 @@ AI that joins your video calls, creates embeddings from the meeting content, and
 
 **Supported platforms:** Zoom, Google Meet, Microsoft Teams, and Cisco Webex.
 
+**[API Documentation](https://vernix.app/docs)**
+
 ## Tech Stack
 
 - **Next.js 16** (App Router, Turbopack, TypeScript)
