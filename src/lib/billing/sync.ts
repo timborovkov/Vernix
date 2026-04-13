@@ -55,17 +55,33 @@ export async function syncBillingFromPolar(
     const isTrialing = activeSub.status === "trialing";
 
     if (isTrialing) {
-      // Polar trial: keep plan as free, set trial end date
-      const trialEndsAt = activeSub.trialEnd
-        ? new Date(activeSub.trialEnd)
-        : new Date(Date.now() + FREE_TRIAL.days * 24 * 60 * 60 * 1000);
+      // If trialEnd is missing or in the past, the trial has expired.
+      // Don't use a fallback date — that would extend the trial indefinitely.
+      if (
+        !activeSub.trialEnd ||
+        new Date(activeSub.trialEnd) <= new Date()
+      ) {
+        await db
+          .update(users)
+          .set({
+            plan: PLANS.FREE,
+            polarSubscriptionId: null,
+            trialEndsAt: null,
+            currentPeriodStart: null,
+            currentPeriodEnd: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, userId));
+        return { synced: true };
+      }
 
+      // Polar trial still active: keep plan as free, set trial end date
       await db
         .update(users)
         .set({
           plan: PLANS.FREE,
           polarSubscriptionId: activeSub.id,
-          trialEndsAt,
+          trialEndsAt: new Date(activeSub.trialEnd),
           currentPeriodStart: new Date(activeSub.currentPeriodStart),
           currentPeriodEnd: new Date(activeSub.currentPeriodEnd),
           updatedAt: new Date(),
@@ -83,6 +99,19 @@ export async function syncBillingFromPolar(
           polarSubscriptionId: activeSub.id,
           currentPeriodStart: new Date(activeSub.currentPeriodStart),
           currentPeriodEnd: new Date(activeSub.currentPeriodEnd),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    } else {
+      // Unknown or terminal status (canceled, incomplete, etc.) — clear everything
+      await db
+        .update(users)
+        .set({
+          plan: PLANS.FREE,
+          polarSubscriptionId: null,
+          trialEndsAt: null,
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
