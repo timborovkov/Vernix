@@ -181,12 +181,32 @@ describe("syncBillingFromPolar", () => {
     );
   });
 
-  it("clears everything for unhandled subscription status like canceled", async () => {
+  it("keeps pro access for canceled subscription (active until period end)", async () => {
     mockGetState.mockResolvedValueOnce({
       activeSubscriptions: [
         {
           id: "sub_123",
           status: "canceled",
+          trialEnd: null,
+          currentPeriodStart: new Date("2026-03-28"),
+          currentPeriodEnd: new Date("2026-04-28"),
+        },
+      ],
+    });
+
+    await syncBillingFromPolar(USER_ID);
+
+    const setCall = mockDb.set.mock.calls[0][0];
+    expect(setCall.plan).toBe("pro");
+    expect(setCall.polarSubscriptionId).toBe("sub_123");
+  });
+
+  it("clears everything for unhandled subscription status like incomplete", async () => {
+    mockGetState.mockResolvedValueOnce({
+      activeSubscriptions: [
+        {
+          id: "sub_123",
+          status: "incomplete",
           trialEnd: null,
           currentPeriodStart: new Date("2026-03-28"),
           currentPeriodEnd: new Date("2026-04-28"),
