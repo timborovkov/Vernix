@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { HeroBg } from "@/components/hero-bg";
+import { OpenSourceBadge } from "@/components/open-source-badge";
 import { BookOpen, ArrowRight, FileText, Plug } from "lucide-react";
 import { DISPLAY, LIMITS, PLANS } from "@/lib/billing/constants";
 
@@ -57,6 +58,7 @@ export default function ContextPage() {
           <div className="bg-ring/10 mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full">
             <BookOpen className="text-ring h-8 w-8" />
           </div>
+          <OpenSourceBadge />
           <h1 className="mx-auto mb-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
             Your in-call AI assistant that knows your docs.
           </h1>
