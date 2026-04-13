@@ -377,32 +377,24 @@ export function getMidTrialCheckinHtml(
   );
 }
 
-export function getTrialWarningHtml(
+export function getPaymentFailedHtml(
   name: string,
-  daysLeft: number,
   unsubscribeUrl?: string
 ): string {
   const APP_URL = getAppUrl();
-  const dayText = daysLeft === 1 ? "1 day" : `${daysLeft} days`;
   return emailShell(
-    `Your Trial Ends in ${dayText}`,
+    "Payment Failed &mdash; Action Required",
     `
       <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
       <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px">
-        Your Vernix Pro trial ends in ${dayText}. Upgrade now to keep access to all Pro features without interruption.
+        We were unable to process your payment for Vernix Pro. Please update your payment method to avoid losing access to Pro features.
       </p>
-      <div style="background:#f0f0ff;border-radius:8px;padding:16px;margin:0 0 24px">
-        <p style="font-size:13px;font-weight:600;color:#333;margin:0 0 8px">With Pro, you keep:</p>
-        <ul style="font-size:13px;color:#555;line-height:1.8;padding-left:18px;margin:0">
-          <li>Tool integrations for live data in calls</li>
-          <li>Voice agent responses during calls</li>
-          <li>Higher limits and API/MCP access</li>
-          <li>&euro;${MONTHLY_CREDIT[PLANS.PRO]} monthly call credit</li>
-        </ul>
-      </div>
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">
+        If the issue isn&rsquo;t resolved soon, your account will be downgraded to the Free plan.
+      </p>
       <div style="text-align:center;margin:32px 0">
-        <a href="${APP_URL}/pricing" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
-          Upgrade to Pro
+        <a href="${APP_URL}/dashboard/settings" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+          Update Payment Method
         </a>
       </div>
   `,
