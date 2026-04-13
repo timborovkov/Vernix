@@ -149,7 +149,7 @@ export const POST = Webhooks({
       })
       .where(eq(users.id, externalId));
 
-    // Payment failed — notify user before downgrade
+    // Payment failed — notify user before downgrade (max once per 24h)
     if (payload.data.status === "past_due") {
       console.log(
         `[Polar Webhook] Subscription past_due for user ${externalId}, sending payment failure email`
@@ -161,10 +161,23 @@ export const POST = Webhooks({
               name: users.name,
               email: users.email,
               emailPreferences: users.emailPreferences,
+              trialWarningEmailSentAt: users.trialWarningEmailSentAt,
             })
             .from(users)
             .where(eq(users.id, externalId));
-          if (user && shouldSendEmail(user.emailPreferences, "product")) {
+          if (!user) return;
+
+          // Throttle: skip if a payment failure email was sent in the last 24h
+          // (reuses trialWarningEmailSentAt since trial warnings were removed)
+          const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+          if (
+            user.trialWarningEmailSentAt &&
+            user.trialWarningEmailSentAt > oneDayAgo
+          ) {
+            return;
+          }
+
+          if (shouldSendEmail(user.emailPreferences, "product")) {
             const unsubscribeUrl = buildUnsubscribeUrl(externalId, "product");
             await sendEmail({
               to: user.email,
@@ -172,6 +185,13 @@ export const POST = Webhooks({
               html: getPaymentFailedHtml(user.name, unsubscribeUrl),
               unsubscribeUrl,
             });
+            await db
+              .update(users)
+              .set({
+                trialWarningEmailSentAt: new Date(),
+                updatedAt: new Date(),
+              })
+              .where(eq(users.id, externalId));
           }
         } catch (err) {
           console.error("[Polar Webhook] Payment failed email error:", err);
