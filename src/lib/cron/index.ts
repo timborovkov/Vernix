@@ -11,7 +11,6 @@ import { runStorageCleanup } from "./jobs/storage-cleanup";
 import { runInactiveCleanup } from "./jobs/inactive-cleanup";
 import { runOrphanSweeper } from "./jobs/orphan-sweeper";
 import { runMidTrialCheckin } from "./jobs/mid-trial-checkin";
-import { runTrialWarning } from "./jobs/trial-warning";
 import { runWinBack } from "./jobs/win-back";
 
 interface CronJob {
@@ -119,12 +118,6 @@ export const CRON_JOBS: CronJob[] = [
   {
     name: "mid-trial-checkin",
     handler: runMidTrialCheckin,
-    // Daily at 10:00 UTC
-    shouldRun: (now) => now.getUTCHours() === 10 && now.getUTCMinutes() < 5,
-  },
-  {
-    name: "trial-warning",
-    handler: runTrialWarning,
     // Daily at 10:00 UTC
     shouldRun: (now) => now.getUTCHours() === 10 && now.getUTCMinutes() < 5,
   },

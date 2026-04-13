@@ -57,10 +57,7 @@ export async function syncBillingFromPolar(
     if (isTrialing) {
       // If trialEnd is missing or in the past, the trial has expired.
       // Don't use a fallback date — that would extend the trial indefinitely.
-      if (
-        !activeSub.trialEnd ||
-        new Date(activeSub.trialEnd) <= new Date()
-      ) {
+      if (!activeSub.trialEnd || new Date(activeSub.trialEnd) <= new Date()) {
         await db
           .update(users)
           .set({

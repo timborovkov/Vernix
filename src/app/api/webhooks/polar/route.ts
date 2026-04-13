@@ -8,6 +8,7 @@ import {
   getLastChanceRetentionHtml,
   getTrialStartedEmailHtml,
   getTrialExpiredEmailHtml,
+  getPaymentFailedHtml,
 } from "@/lib/email/templates";
 import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 
@@ -147,6 +148,36 @@ export const POST = Webhooks({
         updatedAt: new Date(),
       })
       .where(eq(users.id, externalId));
+
+    // Payment failed — notify user before downgrade
+    if (payload.data.status === "past_due") {
+      console.log(
+        `[Polar Webhook] Subscription past_due for user ${externalId}, sending payment failure email`
+      );
+      (async () => {
+        try {
+          const [user] = await db
+            .select({
+              name: users.name,
+              email: users.email,
+              emailPreferences: users.emailPreferences,
+            })
+            .from(users)
+            .where(eq(users.id, externalId));
+          if (user && shouldSendEmail(user.emailPreferences, "product")) {
+            const unsubscribeUrl = buildUnsubscribeUrl(externalId, "product");
+            await sendEmail({
+              to: user.email,
+              subject: "Vernix Pro — payment failed",
+              html: getPaymentFailedHtml(user.name, unsubscribeUrl),
+              unsubscribeUrl,
+            });
+          }
+        } catch (err) {
+          console.error("[Polar Webhook] Payment failed email error:", err);
+        }
+      })();
+    }
   },
 
   onSubscriptionCanceled: async (payload) => {
