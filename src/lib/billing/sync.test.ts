@@ -53,7 +53,7 @@ describe("syncBillingFromPolar", () => {
   });
 
   it("keeps plan free and sets trialEndsAt when Polar subscription is trialing", async () => {
-    const trialEnd = new Date("2026-04-15T00:00:00Z");
+    const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     mockGetState.mockResolvedValueOnce({
       activeSubscriptions: [
         {
