@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
-import { sendEmail } from "@/lib/email/send";
-import { escapeHtml } from "@/lib/email/templates";
+import { getResend } from "@/lib/email/client";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -66,23 +65,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true, event: eventType });
   }
 
-  // Handle inbound email forwarding
+  // Handle inbound email forwarding via Resend's passthrough forward API.
+  // The webhook payload only contains metadata (no body/attachments).
+  // Passthrough forward preserves the full original email server-side.
   const data = payload.data as
     | {
+        email_id?: string;
         from?: string;
-        to?: string[];
         subject?: string;
-        text?: string;
-        html?: string;
       }
     | undefined;
 
+  const emailId = data?.email_id;
   const from = data?.from;
   const subject = data?.subject;
 
-  if (!from || !subject) {
+  if (!emailId || !from || !subject) {
     console.log(
-      "[Webhook:resend] Inbound email missing from/subject, skipping"
+      "[Webhook:resend] Inbound email missing email_id/from/subject, skipping"
     );
     return NextResponse.json({ skipped: true });
   }
@@ -104,27 +104,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   }
 
+  const resend = getResend();
+  if (!resend) {
+    console.error("[Webhook:resend] Resend client not configured");
+    return NextResponse.json(
+      { error: "Email client not configured" },
+      { status: 503 }
+    );
+  }
+
   console.log(
     `[Webhook:resend] Forwarding inbound email from ${from} to ${recipients.join(", ")}`
   );
 
-  // Add forwarded-from header to distinguish from regular Vernix emails
-  const forwardHeader = `<div style="padding:12px 16px;background:#f5f5f5;border-radius:8px;margin-bottom:16px;font-size:13px;color:#666">Forwarded from <strong>${escapeHtml(from)}</strong> to <strong>${escapeHtml((data?.to ?? []).join(", "))}</strong></div>`;
-
-  const emailBody =
-    data?.html ??
-    `<pre style="font-family:sans-serif;white-space:pre-wrap">${escapeHtml(data?.text ?? "")}</pre>`;
-
-  const result = await sendEmail({
+  const { error } = await resend.emails.receiving.forward({
+    emailId,
     to: recipients,
-    subject: `[Fwd] ${subject}`,
-    html: forwardHeader + emailBody,
-    text: data?.text ?? undefined,
-    replyTo: from,
+    from: "Vernix <hello@vernix.app>",
   });
 
-  if (!result.success) {
-    console.error("[Webhook:resend] Forward failed:", result.error);
+  if (error) {
+    console.error("[Webhook:resend] Forward failed:", error);
     return NextResponse.json({ error: "Forward failed" }, { status: 500 });
   }
 
