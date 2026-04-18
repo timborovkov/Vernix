@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, or, sql } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, type EmailPreferences } from "@/lib/db/schema";
 
@@ -90,7 +90,7 @@ export async function filterSuppressedEmails(
     .from(users)
     .where(
       and(
-        sql`LOWER(${users.email}) = ANY(${normalized})`,
+        inArray(sql<string>`LOWER(${users.email})`, normalized),
         or(isNotNull(users.emailBouncedAt), isNotNull(users.emailComplainedAt))
       )
     );
