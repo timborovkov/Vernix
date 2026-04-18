@@ -91,6 +91,22 @@ describe("sendEmail", () => {
     expect(mockResendSend).not.toHaveBeenCalled();
   });
 
+  it("falls open and still sends when the suppression check throws", async () => {
+    mockFilter.mockRejectedValueOnce(new Error("db down"));
+    mockResendSend.mockResolvedValueOnce({ data: { id: "msg" }, error: null });
+
+    const result = await sendEmail({
+      to: "test@example.com",
+      subject: "Test",
+      html: "<p>Hello</p>",
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockResendSend).toHaveBeenCalledWith(
+      expect.objectContaining({ to: ["test@example.com"] })
+    );
+  });
+
   it("drops suppressed addresses from mixed to lists", async () => {
     mockFilter.mockResolvedValueOnce({
       allowed: ["ok@example.com"],

@@ -1,6 +1,11 @@
-import { and, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
+import { and, eq, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, type EmailPreferences } from "@/lib/db/schema";
+
+// Email addresses are compared case-insensitively — the users.email column is
+// plain text and the registration flow does not lowercase on insert, so a user
+// who signed up as "User@Example.com" must still match a webhook event for
+// "user@example.com".
 
 export type SuppressionReason = "bounce" | "complaint";
 
@@ -24,7 +29,7 @@ export async function suppressEmail(
         emailBouncedAt: sql`COALESCE(${users.emailBouncedAt}, NOW())`,
         updatedAt: new Date(),
       })
-      .where(eq(users.email, normalized))
+      .where(sql`LOWER(${users.email}) = ${normalized}`)
       .returning({ id: users.id });
     if (result.length === 0) {
       console.log(
@@ -40,7 +45,7 @@ export async function suppressEmail(
       emailPreferences: users.emailPreferences,
     })
     .from(users)
-    .where(eq(users.email, normalized));
+    .where(sql`LOWER(${users.email}) = ${normalized}`);
 
   if (!row) {
     console.log(
@@ -85,7 +90,7 @@ export async function filterSuppressedEmails(
     .from(users)
     .where(
       and(
-        inArray(users.email, normalized),
+        sql`LOWER(${users.email}) = ANY(${normalized})`,
         or(isNotNull(users.emailBouncedAt), isNotNull(users.emailComplainedAt))
       )
     );

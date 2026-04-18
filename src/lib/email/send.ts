@@ -24,11 +24,23 @@ export async function sendEmail(
   }
 
   const toList = Array.isArray(options.to) ? options.to : [options.to];
-  const { allowed, suppressed } = await filterSuppressedEmails(toList);
 
-  if (suppressed.length > 0) {
-    console.log(
-      `[Email] Skipping suppressed recipients (${options.subject}): ${suppressed.join(", ")}`
+  // Fail-open on suppression-check errors: if the DB is unreachable we'd
+  // rather send the email (risking a bounce) than drop it silently. Preserves
+  // the never-throw contract of sendEmail.
+  let allowed = toList;
+  try {
+    const result = await filterSuppressedEmails(toList);
+    allowed = result.allowed;
+    if (result.suppressed.length > 0) {
+      console.log(
+        `[Email] Skipping suppressed recipients (${options.subject}): ${result.suppressed.join(", ")}`
+      );
+    }
+  } catch (err) {
+    console.error(
+      "[Email] Suppression check failed, sending to all recipients:",
+      err
     );
   }
 
