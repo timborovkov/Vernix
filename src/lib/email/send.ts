@@ -1,4 +1,5 @@
 import { getResend } from "./client";
+import { filterSuppressedEmails } from "./suppression";
 
 const FROM = "Vernix <hello@vernix.app>";
 
@@ -22,6 +23,31 @@ export async function sendEmail(
     return { success: true };
   }
 
+  const toList = Array.isArray(options.to) ? options.to : [options.to];
+
+  // Fail-open on suppression-check errors: if the DB is unreachable we'd
+  // rather send the email (risking a bounce) than drop it silently. Preserves
+  // the never-throw contract of sendEmail.
+  let allowed = toList;
+  try {
+    const result = await filterSuppressedEmails(toList);
+    allowed = result.allowed;
+    if (result.suppressed.length > 0) {
+      console.log(
+        `[Email] Skipping suppressed recipients (${options.subject}): ${result.suppressed.join(", ")}`
+      );
+    }
+  } catch (err) {
+    console.error(
+      "[Email] Suppression check failed, sending to all recipients:",
+      err
+    );
+  }
+
+  if (allowed.length === 0) {
+    return { success: true };
+  }
+
   try {
     const headers: Record<string, string> = {};
     if (options.unsubscribeUrl) {
@@ -31,7 +57,7 @@ export async function sendEmail(
 
     const { error } = await resend.emails.send({
       from: FROM,
-      to: Array.isArray(options.to) ? options.to : [options.to],
+      to: allowed,
       subject: options.subject,
       html: options.html,
       text: options.text,

@@ -1,8 +1,9 @@
-const { mockForward, mockSvixVerify } = vi.hoisted(() => ({
+const { mockForward, mockSvixVerify, mockSuppressEmail } = vi.hoisted(() => ({
   mockForward: vi
     .fn()
     .mockResolvedValue({ data: { id: "fwd_123" }, error: null }),
   mockSvixVerify: vi.fn(),
+  mockSuppressEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/email/client", () => ({
@@ -13,6 +14,9 @@ vi.mock("@/lib/email/client", () => ({
       },
     },
   }),
+}));
+vi.mock("@/lib/email/suppression", () => ({
+  suppressEmail: mockSuppressEmail,
 }));
 vi.mock("svix", () => ({
   Webhook: class {
@@ -49,6 +53,8 @@ describe("POST /api/webhooks/resend", () => {
     vi.stubEnv("EMAIL_FORWARD_TO", "admin@example.com");
     mockSvixVerify.mockImplementation((body: string) => JSON.parse(body));
     mockForward.mockResolvedValue({ data: { id: "fwd_123" }, error: null });
+    mockSuppressEmail.mockReset();
+    mockSuppressEmail.mockResolvedValue(undefined);
   });
 
   it("forwards inbound email via Resend passthrough API", async () => {
@@ -197,6 +203,115 @@ describe("POST /api/webhooks/resend", () => {
       await POST(createWebhookRequest({ data: {} }))
     );
     expect(status).toBe(400);
+  });
+
+  it("suppresses recipients on Permanent bounce", async () => {
+    const { status, data } = await parseJsonResponse(
+      await POST(
+        createWebhookRequest({
+          type: "email.bounced",
+          data: {
+            email_id: "em_abc",
+            to: ["bouncer@example.com"],
+            bounce: { type: "Permanent" },
+          },
+        })
+      )
+    );
+    expect(status).toBe(200);
+    expect(data.received).toBe(true);
+    expect(data.event).toBe("email.bounced");
+    expect(mockSuppressEmail).toHaveBeenCalledTimes(1);
+    expect(mockSuppressEmail).toHaveBeenCalledWith(
+      "bouncer@example.com",
+      "bounce"
+    );
+    expect(mockForward).not.toHaveBeenCalled();
+  });
+
+  it("suppresses every recipient when bounce.to is an array", async () => {
+    await POST(
+      createWebhookRequest({
+        type: "email.bounced",
+        data: {
+          to: ["a@example.com", "b@example.com"],
+          bounce: { type: "Permanent" },
+        },
+      })
+    );
+    expect(mockSuppressEmail).toHaveBeenCalledTimes(2);
+    expect(mockSuppressEmail).toHaveBeenNthCalledWith(
+      1,
+      "a@example.com",
+      "bounce"
+    );
+    expect(mockSuppressEmail).toHaveBeenNthCalledWith(
+      2,
+      "b@example.com",
+      "bounce"
+    );
+  });
+
+  it("does not suppress on Transient bounce", async () => {
+    const { status } = await parseJsonResponse(
+      await POST(
+        createWebhookRequest({
+          type: "email.bounced",
+          data: {
+            to: ["transient@example.com"],
+            bounce: { type: "Transient" },
+          },
+        })
+      )
+    );
+    expect(status).toBe(200);
+    expect(mockSuppressEmail).not.toHaveBeenCalled();
+  });
+
+  it("suppresses recipients on complaint", async () => {
+    const { status, data } = await parseJsonResponse(
+      await POST(
+        createWebhookRequest({
+          type: "email.complained",
+          data: { to: ["complainer@example.com"] },
+        })
+      )
+    );
+    expect(status).toBe(200);
+    expect(data.event).toBe("email.complained");
+    expect(mockSuppressEmail).toHaveBeenCalledWith(
+      "complainer@example.com",
+      "complaint"
+    );
+  });
+
+  it("returns 200 when a bounce recipient is unknown (no throw)", async () => {
+    mockSuppressEmail.mockResolvedValue(undefined);
+    const { status } = await parseJsonResponse(
+      await POST(
+        createWebhookRequest({
+          type: "email.bounced",
+          data: {
+            to: ["ghost@example.com"],
+            bounce: { type: "Permanent" },
+          },
+        })
+      )
+    );
+    expect(status).toBe(200);
+  });
+
+  it("still 200s if suppressEmail throws (logs and continues)", async () => {
+    mockSuppressEmail.mockRejectedValueOnce(new Error("db down"));
+    const { status } = await parseJsonResponse(
+      await POST(
+        createWebhookRequest({
+          type: "email.complained",
+          data: { to: ["a@b.com"] },
+        })
+      )
+    );
+    expect(status).toBe(200);
   });
 
   it("returns 503 when Resend client is not configured", async () => {

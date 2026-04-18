@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { getResend } from "@/lib/email/client";
+import { suppressEmail } from "@/lib/email/suppression";
 import { rateLimitByIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
@@ -58,6 +59,48 @@ export async function POST(request: Request) {
   const eventType = payload.type;
   if (!eventType) {
     return NextResponse.json({ error: "Missing event type" }, { status: 400 });
+  }
+
+  if (eventType === "email.bounced") {
+    const d = payload.data as
+      | { to?: string[]; bounce?: { type?: string } }
+      | undefined;
+    const recipients = Array.isArray(d?.to) ? d.to : [];
+    // Resend classifies bounces as "Permanent" / "Transient" / "Undetermined".
+    // Only hard-suppress on Permanent; Transient is retriable so we log and move on.
+    if (d?.bounce?.type === "Permanent") {
+      for (const addr of recipients) {
+        try {
+          await suppressEmail(addr, "bounce");
+        } catch (err) {
+          console.error(
+            `[Webhook:resend] Failed to suppress bounced address ${addr}:`,
+            err
+          );
+        }
+      }
+    } else {
+      console.log(
+        `[Webhook:resend] Transient/undetermined bounce for ${recipients.join(", ") || "(no recipients)"}, not suppressing`
+      );
+    }
+    return NextResponse.json({ received: true, event: eventType });
+  }
+
+  if (eventType === "email.complained") {
+    const d = payload.data as { to?: string[] } | undefined;
+    const recipients = Array.isArray(d?.to) ? d.to : [];
+    for (const addr of recipients) {
+      try {
+        await suppressEmail(addr, "complaint");
+      } catch (err) {
+        console.error(
+          `[Webhook:resend] Failed to record complaint for ${addr}:`,
+          err
+        );
+      }
+    }
+    return NextResponse.json({ received: true, event: eventType });
   }
 
   // Only process inbound emails — acknowledge everything else with 200
