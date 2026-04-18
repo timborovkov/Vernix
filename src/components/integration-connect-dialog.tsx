@@ -53,6 +53,7 @@ export function IntegrationConnectDialog({
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  /* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps -- intentional reset of all form fields when the selected integration changes */
   useEffect(() => {
     setCustomName("");
     setServerUrl(integration?.serverUrl ?? "");
@@ -70,7 +71,8 @@ export function IntegrationConnectDialog({
     setUsername("");
     setPassword("");
     setLoading(false);
-  }, [integration?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [integration?.id]);
+  /* eslint-enable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 
   if (!integration) return null;
 
