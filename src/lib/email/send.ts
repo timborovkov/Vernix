@@ -1,4 +1,5 @@
 import { getResend } from "./client";
+import { filterSuppressedEmails } from "./suppression";
 
 const FROM = "Vernix <hello@vernix.app>";
 
@@ -22,6 +23,19 @@ export async function sendEmail(
     return { success: true };
   }
 
+  const toList = Array.isArray(options.to) ? options.to : [options.to];
+  const { allowed, suppressed } = await filterSuppressedEmails(toList);
+
+  if (suppressed.length > 0) {
+    console.log(
+      `[Email] Skipping suppressed recipients (${options.subject}): ${suppressed.join(", ")}`
+    );
+  }
+
+  if (allowed.length === 0) {
+    return { success: true };
+  }
+
   try {
     const headers: Record<string, string> = {};
     if (options.unsubscribeUrl) {
@@ -31,7 +45,7 @@ export async function sendEmail(
 
     const { error } = await resend.emails.send({
       from: FROM,
-      to: Array.isArray(options.to) ? options.to : [options.to],
+      to: allowed,
       subject: options.subject,
       html: options.html,
       text: options.text,

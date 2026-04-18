@@ -67,6 +67,10 @@ export const users = pgTable("users", {
   emailPreferences: jsonb("email_preferences")
     .$type<EmailPreferences>()
     .default({}),
+  // Provider-mandated suppression (Resend webhook). If either is set, do not send
+  // any mail (including transactional) to this address.
+  emailBouncedAt: timestamp("email_bounced_at", { withTimezone: true }),
+  emailComplainedAt: timestamp("email_complained_at", { withTimezone: true }),
   // Profile
   emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
   phone: text("phone"),
