@@ -86,10 +86,7 @@ export async function filterSuppressedEmails(
     .where(
       and(
         inArray(users.email, normalized),
-        or(
-          isNotNull(users.emailBouncedAt),
-          isNotNull(users.emailComplainedAt)
-        )
+        or(isNotNull(users.emailBouncedAt), isNotNull(users.emailComplainedAt))
       )
     );
 

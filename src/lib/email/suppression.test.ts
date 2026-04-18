@@ -44,7 +44,9 @@ describe("suppressEmail", () => {
 
   it("no-ops on bounce for an unknown address (no throw)", async () => {
     mockDb.returning.mockResolvedValueOnce([]);
-    await expect(suppressEmail("ghost@example.com", "bounce")).resolves.toBeUndefined();
+    await expect(
+      suppressEmail("ghost@example.com", "bounce")
+    ).resolves.toBeUndefined();
   });
 
   it("flips marketing/product prefs and sets email_complained_at on complaint", async () => {
@@ -59,7 +61,10 @@ describe("suppressEmail", () => {
 
     expect(mockDb.update).toHaveBeenCalledTimes(1);
     const setArg = mockDb.set.mock.calls[0][0];
-    expect(setArg.emailPreferences).toEqual({ marketing: false, product: false });
+    expect(setArg.emailPreferences).toEqual({
+      marketing: false,
+      product: false,
+    });
     expect(setArg).toHaveProperty("emailComplainedAt");
     expect(setArg).toHaveProperty("updatedAt");
   });
