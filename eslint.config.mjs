@@ -20,10 +20,17 @@ const eslintConfig = defineConfig([
     rules: {
       "react-hooks/globals": "off",
       "react-hooks/immutability": "off",
+      "react-hooks/refs": "off",
       "drizzle/enforce-delete-with-where": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "vernix-demo-video-v1/**",
+  ]),
 ]);
 
 export default eslintConfig;

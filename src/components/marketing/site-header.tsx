@@ -15,8 +15,8 @@ import {
   BookOpen,
   LayoutDashboard,
   LogOut,
-  Github,
 } from "lucide-react";
+import { GithubIcon } from "@/components/icons/github";
 
 const FEATURE_LINKS = [
   {
@@ -135,7 +135,7 @@ export function SiteHeader() {
             className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="GitHub"
           >
-            <Github className="h-5 w-5" />
+            <GithubIcon className="h-5 w-5" />
           </a>
           <ThemeToggle />
           {isLoggedIn ? (
@@ -228,7 +228,7 @@ export function SiteHeader() {
             className="text-muted-foreground hover:text-foreground flex items-center gap-2 py-2 text-sm"
             onClick={() => setMobileOpen(false)}
           >
-            <Github className="h-4 w-4" />
+            <GithubIcon className="h-4 w-4" />
             GitHub
           </a>
           <div className="mt-3 flex flex-col gap-2">
