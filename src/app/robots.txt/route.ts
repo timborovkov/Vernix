@@ -7,7 +7,9 @@ const TEXT_HEADERS = {
 
 export function GET() {
   if (process.env.NEXT_PUBLIC_DISABLE_INDEXING === "true") {
-    return new Response("User-agent: *\nDisallow: /\n", { headers: TEXT_HEADERS });
+    return new Response("User-agent: *\nDisallow: /\n", {
+      headers: TEXT_HEADERS,
+    });
   }
 
   const body = [

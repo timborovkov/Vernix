@@ -36,21 +36,12 @@ const MD_EXCLUDE_PREFIXES = [
   "/.well-known",
 ];
 
-function markdownSlug(pathname: string): string {
-  if (pathname === "/" || pathname === "") return "index";
-  return (
-    pathname
-      .replace(/^\/+/, "")
-      .replace(/\/+$/, "")
-      .replace(/\//g, "_") || "index"
-  );
-}
-
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  // Markdown content negotiation — serve the pre-generated markdown version
-  // of public pages when an agent sends `Accept: text/markdown`. Runs before
+  // Markdown content negotiation — when an agent sends `Accept: text/markdown`
+  // on a public page, rewrite to /api/agent-md which renders markdown
+  // on-demand from the HTML response, cached in-process for 1h. Runs before
   // auth so it works without a session.
   const accept = req.headers.get("accept") ?? "";
   if (
@@ -58,10 +49,15 @@ export default auth((req) => {
     !MD_EXCLUDE_PREFIXES.some((p) => req.nextUrl.pathname.startsWith(p))
   ) {
     const url = req.nextUrl.clone();
-    url.pathname = `/agent-md/${markdownSlug(req.nextUrl.pathname)}.md`;
-    return NextResponse.rewrite(url, {
-      headers: { "Content-Type": "text/markdown; charset=utf-8" },
-    });
+    const originalPath = req.nextUrl.pathname;
+    url.pathname = "/api/agent-md";
+    url.search = "";
+    // Pass the original path via a request header — request.url in the
+    // downstream handler reflects the client's URL, not the rewrite target,
+    // so query params on the rewritten URL would be invisible.
+    const forwarded = new Headers(req.headers);
+    forwarded.set("x-agent-md-path", originalPath);
+    return NextResponse.rewrite(url, { request: { headers: forwarded } });
   }
 
   if (PUBLIC_AGENT_PATHS.some((p) => req.nextUrl.pathname === p)) {

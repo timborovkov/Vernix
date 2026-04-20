@@ -9,7 +9,15 @@ import { buildOpenApiSpec } from "./openapi";
 
 type AnySchema = Record<string, any>;
 
-const METHOD_ORDER = ["get", "post", "put", "patch", "delete", "head", "options"] as const;
+const METHOD_ORDER = [
+  "get",
+  "post",
+  "put",
+  "patch",
+  "delete",
+  "head",
+  "options",
+] as const;
 
 function summariseSchema(schema: AnySchema | undefined, depth = 0): string {
   if (!schema || depth > 3) return "";
@@ -69,12 +77,15 @@ function renderOperation(method: string, path: string, op: AnySchema): string {
     out.push("\n**Responses:**");
     for (const [status, resp] of Object.entries(responses)) {
       const desc = resp.description ? ` — ${resp.description}` : "";
-      const content = resp.content ? Object.entries<AnySchema>(resp.content)[0] : undefined;
+      const content = resp.content
+        ? Object.entries<AnySchema>(resp.content)[0]
+        : undefined;
       if (content) {
         const [mime, media] = content;
         out.push(`- \`${status}\` (${mime})${desc}`);
         const schema = summariseSchema(media.schema);
-        if (schema && schema !== "any") out.push(`  ${schema.replace(/\n/g, "\n  ")}`);
+        if (schema && schema !== "any")
+          out.push(`  ${schema.replace(/\n/g, "\n  ")}`);
       } else {
         out.push(`- \`${status}\`${desc}`);
       }
