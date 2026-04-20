@@ -12,13 +12,15 @@ export function GET() {
     });
   }
 
+  // Content-Signal must live inside the User-agent group (no blank line
+  // before it) or the Robots Exclusion Protocol treats the group as closed
+  // and parsers ignore the directive.
   const body = [
     "User-agent: *",
     "Allow: /",
     "Disallow: /dashboard/",
     "Disallow: /api/",
     "Disallow: /welcome",
-    "",
     "Content-Signal: ai-train=yes, search=yes, ai-input=yes",
     "",
     `Sitemap: ${BASE_URL}/sitemap.xml`,
