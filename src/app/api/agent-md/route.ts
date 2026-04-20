@@ -53,11 +53,32 @@ function stripChrome(html: string): string {
     .replace(/<header[\s\S]*?<\/header>/gi, "");
 }
 
+// Paths whose HTML we must NOT convert to markdown. Must stay in sync with
+// `MD_EXCLUDE_PREFIXES` in src/middleware.ts. Without this, a caller could
+// request `?path=/dashboard/settings`, the unauthenticated self-fetch would
+// be redirected to `/login` by the middleware, `fetch` (with the default
+// follow policy) would return the 200 login HTML, and we'd cache the login
+// page as the markdown for `/dashboard/settings` for an hour.
+const RENDER_EXCLUDE_PREFIXES = [
+  "/api/",
+  "/dashboard",
+  "/login",
+  "/register",
+  "/accept-terms",
+  "/welcome",
+  "/welcome-to-pro",
+  "/unsubscribe",
+  "/_next",
+  "/.well-known",
+];
+
 function isSafePath(p: string): boolean {
   // Only render absolute same-origin paths. Block scheme/host injection and
-  // anything that could recurse into /api/*.
+  // anything that mirrors the middleware's own exclusion list.
   if (!p.startsWith("/") || p.startsWith("//")) return false;
-  if (p.startsWith("/api/")) return false;
+  if (RENDER_EXCLUDE_PREFIXES.some((prefix) => p.startsWith(prefix))) {
+    return false;
+  }
   return true;
 }
 
@@ -70,9 +91,17 @@ async function renderPath(origin: string, path: string): Promise<string> {
       // triggers only on `Accept: text/markdown`, so we avoid the loop.
       Accept: "text/html",
     },
+    // Defense-in-depth: refuse to follow auth redirects. If the upstream
+    // redirects us (e.g. a path we didn't exclude that 302s to /login),
+    // fail loudly rather than caching the redirect target's HTML.
+    redirect: "manual",
   });
-  if (!res.ok) {
-    throw new Error(`Upstream ${path} returned ${res.status}`);
+  // With redirect: "manual", a redirect response yields type === "opaqueredirect"
+  // and status 0 — treat any non-2xx as an upstream failure.
+  if (!res.ok || res.type === "opaqueredirect") {
+    throw new Error(
+      `Upstream ${path} returned ${res.status || res.type} (no markdown available)`
+    );
   }
   const html = await res.text();
   return nhm.translate(stripChrome(html)).trim();
