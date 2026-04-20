@@ -19,9 +19,51 @@ const PUBLIC_AGENT_PATHS = [
   "/api/email/unsubscribe",
 ];
 
+// Paths that should NOT serve a markdown alternate: APIs, dashboard, auth
+// flows, and anything Next.js owns. Extra protected paths from the matcher
+// below are skipped automatically because this check only runs on requests
+// that carry `Accept: text/markdown`.
+const MD_EXCLUDE_PREFIXES = [
+  "/api/",
+  "/dashboard",
+  "/login",
+  "/register",
+  "/accept-terms",
+  "/welcome",
+  "/welcome-to-pro",
+  "/unsubscribe",
+  "/_next",
+  "/.well-known",
+];
+
+function markdownSlug(pathname: string): string {
+  if (pathname === "/" || pathname === "") return "index";
+  return (
+    pathname
+      .replace(/^\/+/, "")
+      .replace(/\/+$/, "")
+      .replace(/\//g, "_") || "index"
+  );
+}
+
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
+  // Markdown content negotiation — serve the pre-generated markdown version
+  // of public pages when an agent sends `Accept: text/markdown`. Runs before
+  // auth so it works without a session.
+  const accept = req.headers.get("accept") ?? "";
+  if (
+    accept.includes("text/markdown") &&
+    !MD_EXCLUDE_PREFIXES.some((p) => req.nextUrl.pathname.startsWith(p))
+  ) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/agent-md/${markdownSlug(req.nextUrl.pathname)}.md`;
+    return NextResponse.rewrite(url, {
+      headers: { "Content-Type": "text/markdown; charset=utf-8" },
+    });
+  }
+
   if (PUBLIC_AGENT_PATHS.some((p) => req.nextUrl.pathname === p)) {
     return NextResponse.next();
   }
@@ -80,5 +122,13 @@ export const config = {
     "/api/export",
     "/api/mcp",
     "/api/mcp/:path*",
+    // Markdown negotiation: any page request with `Accept: text/markdown`
+    // runs the middleware so we can rewrite to /agent-md/<slug>.md. The
+    // header `has` guard keeps this off the hot path for normal browsing.
+    {
+      source:
+        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|css|js|mp4|webm|woff2?|ttf|eot|map|json|xml|txt)).*)",
+      has: [{ type: "header", key: "accept", value: ".*text/markdown.*" }],
+    },
   ],
 };

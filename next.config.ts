@@ -1,6 +1,18 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+// RFC 8288 Link header advertising agent discovery resources. Served on the
+// homepage and /docs so crawlers that don't parse HTML can still find the
+// OpenAPI spec, MCP endpoint, api-catalog, and markdown alternate.
+const AGENT_LINK_HEADER = [
+  '</.well-known/api-catalog>; rel="api-catalog"',
+  '</api/v1/openapi.json>; rel="service-desc"; type="application/vnd.oai.openapi+json"',
+  '</docs>; rel="service-doc"',
+  '</api/mcp>; rel="mcp"',
+  '</llms.txt>; rel="alternate"; type="text/markdown"',
+  '</terms>; rel="terms-of-service"',
+].join(", ");
+
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdfjs-dist", "pdfkit"],
   images: {
@@ -12,6 +24,18 @@ const nextConfig: NextConfig = {
         ? [{ hostname: new URL(process.env.S3_ENDPOINT).hostname }]
         : []),
     ],
+  },
+  async headers() {
+    return [
+      {
+        source: "/",
+        headers: [{ key: "Link", value: AGENT_LINK_HEADER }],
+      },
+      {
+        source: "/docs",
+        headers: [{ key: "Link", value: AGENT_LINK_HEADER }],
+      },
+    ];
   },
 };
 

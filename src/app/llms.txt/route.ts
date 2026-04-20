@@ -4,7 +4,7 @@ import { RATE_LIMIT_STANDARD, RATE_LIMIT_EXPENSIVE } from "@/lib/api/constants";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
-function buildContent(): string {
+export function buildContent(): string {
   const integrations = getIntegrations();
   const available = integrations.filter((i) => i.status === "available");
   const comingSoon = integrations.filter((i) => i.status === "coming-soon");

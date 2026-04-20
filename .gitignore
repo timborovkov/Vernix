@@ -53,3 +53,6 @@ next-env.d.ts
 TODO.md
 CLAUDE.md
 AGENTS.md
+
+# Generated markdown for Accept: text/markdown negotiation
+/public/agent-md/
