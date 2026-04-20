@@ -36,6 +36,46 @@ const MD_EXCLUDE_PREFIXES = [
   "/.well-known",
 ];
 
+// Paths that the middleware is actually responsible for gating (auth +
+// terms acceptance). These mirror the original explicit matcher entries.
+// The broader `Accept: text/markdown` matcher below runs middleware on
+// many more paths — for those, we short-circuit after the markdown check
+// without running the auth block, otherwise unauthenticated agent calls
+// to public APIs (e.g. `/api/v1/*`, `/.well-known/*`) would 401 or be
+// redirected to `/login`.
+function isAuthGatedPath(pathname: string): boolean {
+  if (pathname.startsWith("/dashboard/") || pathname === "/dashboard")
+    return true;
+  if (
+    pathname === "/welcome-to-pro" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/accept-terms" ||
+    pathname === "/welcome"
+  ) {
+    return true;
+  }
+  const GATED_API_PREFIXES = [
+    "/api/meetings",
+    "/api/agent",
+    "/api/search",
+    "/api/knowledge",
+    "/api/tasks",
+    "/api/settings",
+    "/api/user",
+    "/api/mcp",
+  ];
+  if (
+    GATED_API_PREFIXES.some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`)
+    )
+  ) {
+    return true;
+  }
+  if (pathname === "/api/billing" || pathname === "/api/export") return true;
+  return false;
+}
+
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
@@ -58,6 +98,14 @@ export default auth((req) => {
     const forwarded = new Headers(req.headers);
     forwarded.set("x-agent-md-path", originalPath);
     return NextResponse.rewrite(url, { request: { headers: forwarded } });
+  }
+
+  // Only the paths in `isAuthGatedPath` are this middleware's responsibility
+  // to gate. The `Accept: text/markdown` matcher below may bring in paths
+  // that have their own auth model (e.g. `/api/v1/*` uses API keys, public
+  // `/.well-known/*` endpoints have none) — pass those through untouched.
+  if (!isAuthGatedPath(req.nextUrl.pathname)) {
+    return NextResponse.next();
   }
 
   if (PUBLIC_AGENT_PATHS.some((p) => req.nextUrl.pathname === p)) {
