@@ -145,8 +145,7 @@ export async function GET(request: Request) {
   // reflect a spoofed `X-Forwarded-Host` from the edge and end up cached in
   // the `<!-- Source: -->` comment + forwarded to the self-fetched page
   // (poisoning any `headers()`-based absolute URLs for an hour).
-  const publicOrigin =
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+  const publicOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
 
   const cached = getCached(path);
   if (cached !== undefined) {
