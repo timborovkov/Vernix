@@ -82,14 +82,33 @@ function isSafePath(p: string): boolean {
   return true;
 }
 
+// In hosted environments (Railway, Fly, etc.) self-fetching the public origin
+// hairpins out through the CDN and frequently fails. When we're running inside
+// a container with a known PORT, hit the loopback interface directly — this
+// still goes through Next.js middleware and route handlers, just without the
+// external round-trip.
+function getSelfFetchOrigin(publicOrigin: string): string {
+  const port = process.env.PORT;
+  if (port && process.env.NODE_ENV === "production") {
+    return `http://127.0.0.1:${port}`;
+  }
+  return publicOrigin;
+}
+
 async function renderPath(origin: string, path: string): Promise<string> {
   if (path === "/docs") return renderOpenApiMarkdown();
 
-  const res = await fetch(`${origin}${path}`, {
+  const selfOrigin = getSelfFetchOrigin(origin);
+  const publicUrl = new URL(origin);
+  const res = await fetch(`${selfOrigin}${path}`, {
     headers: {
       // Explicitly ask for HTML — the middleware's markdown negotiation
       // triggers only on `Accept: text/markdown`, so we avoid the loop.
       Accept: "text/html",
+      // Preserve the public host so any Host-based routing / absolute URL
+      // generation in the upstream page doesn't leak the loopback hostname.
+      "X-Forwarded-Host": publicUrl.host,
+      "X-Forwarded-Proto": publicUrl.protocol.replace(":", ""),
     },
     // Defense-in-depth: refuse to follow auth redirects. If the upstream
     // redirects us (e.g. a path we didn't exclude that 302s to /login),
@@ -122,6 +141,12 @@ export async function GET(request: Request) {
     return new Response("Invalid path", { status: 400 });
   }
 
+  // Always source the public origin from config — not `request.url`, which can
+  // reflect a spoofed `X-Forwarded-Host` from the edge and end up cached in
+  // the `<!-- Source: -->` comment + forwarded to the self-fetched page
+  // (poisoning any `headers()`-based absolute URLs for an hour).
+  const publicOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://vernix.app";
+
   const cached = getCached(path);
   if (cached !== undefined) {
     return new Response(cached, {
@@ -134,9 +159,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    const body = await renderPath(url.origin, path);
+    const body = await renderPath(publicOrigin, path);
     const withHeader =
-      `<!-- Source: ${url.origin}${path} -->\n` +
+      `<!-- Source: ${publicOrigin}${path} -->\n` +
       `<!-- Rendered on-demand from HTML; cached ${CACHE_TTL_MS / 1000}s -->\n\n` +
       body;
     setCached(path, withHeader);
