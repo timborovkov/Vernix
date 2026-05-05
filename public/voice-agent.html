@@ -1034,6 +1034,15 @@
               isPlaying = false;
               audioDone = true;
               clearIdleTimer();
+              // If we were silently waiting for a follow-up and the user
+              // just started speaking near the end of the window, cancel
+              // the timer so it doesn't fire mid-utterance and tear down
+              // the session. Leave awaitingFollowup=true so speech_stopped
+              // still triggers response.create.
+              if (followupTimer) {
+                clearTimeout(followupTimer);
+                followupTimer = null;
+              }
               setStatus("Hearing speech...", "listening");
               break;
 
