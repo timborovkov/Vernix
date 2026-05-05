@@ -179,6 +179,7 @@
       let currentSource = null; // active AudioBufferSourceNode (for instant stop)
       let hasRespondedThisSession = false; // gate: after first response, treat each turn as a follow-up
       let audioStartedThisResponse = false; // detect empty-response so we don't hang the session
+      let pendingToolCall = false; // current response is a tool call, not an audio reply — don't treat as empty
       let lastSelfMuteAt = 0; // suppress stale-poll un-mute echo right after a local self-mute
       const SELF_MUTE_GRACE_MS = 5000;
 
@@ -512,6 +513,7 @@
       function sendResponseCreate() {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
         audioStartedThisResponse = false;
+        pendingToolCall = false;
         hasRespondedThisSession = true;
         ws.send(JSON.stringify({ type: "response.create" }));
       }
@@ -523,6 +525,7 @@
         activating = false;
         hasRespondedThisSession = false;
         audioStartedThisResponse = false;
+        pendingToolCall = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -991,10 +994,18 @@
               break;
 
             case "response.done":
-              // If the model returned an empty response (no audio events),
-              // we'd otherwise sit on an open WS forever — no audio.done
-              // means startIdleTimer never runs. Close silently so polling
-              // and wake-detect can resume.
+              // Tool-call responses produce no audio by design — the async
+              // tool handler will issue its own response.create afterward.
+              // Don't close on those; just clear the flag so the *next*
+              // response.done is evaluated normally.
+              if (pendingToolCall) {
+                pendingToolCall = false;
+                break;
+              }
+              // If the model returned an empty audio response (e.g. it
+              // decided to stay silent per the system prompt), no audio.done
+              // fires, so startIdleTimer never runs. Close silently so
+              // polling and wake-detect can resume.
               if (!audioStartedThisResponse && sessionActive) {
                 log("Model returned empty response — closing silently");
                 cancelAndCloseSession("empty-response");
@@ -1003,6 +1014,12 @@
 
             case "response.function_call_arguments.done":
               clearIdleTimer();
+              // Mark the current response as a tool call so the upcoming
+              // response.done isn't treated as an empty-audio response and
+              // doesn't kill the session out from under the async tool
+              // handler. handleToolCall (or sendToolOutput within it) issues
+              // its own response.create afterward, which resets the flag.
+              pendingToolCall = true;
               try {
                 const args = JSON.parse(msg.arguments);
                 handleToolCall(msg.call_id, msg.name, args);
