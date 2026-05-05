@@ -178,6 +178,9 @@
       let followupTimer = null;
       let currentSource = null; // active AudioBufferSourceNode (for instant stop)
       let hasRespondedThisSession = false; // gate: after first response, treat each turn as a follow-up
+      let audioStartedThisResponse = false; // detect empty-response so we don't hang the session
+      let lastSelfMuteAt = 0; // suppress stale-poll un-mute echo right after a local self-mute
+      const SELF_MUTE_GRACE_MS = 5000;
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -198,6 +201,7 @@
       function queueAudio(base64Pcm) {
         try {
           audioDone = false;
+          audioStartedThisResponse = true;
           const binary = atob(base64Pcm);
           if (binary.length === 0) return;
           const bytes = new Uint8Array(binary.length);
@@ -501,12 +505,24 @@
         closeSession(reason);
       }
 
+      // Send response.create and reset per-response audio tracking. Used by
+      // every code path that asks the model to speak so we can detect when
+      // the model returns an empty response (no audio events) and avoid
+      // hanging the session.
+      function sendResponseCreate() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        audioStartedThisResponse = false;
+        hasRespondedThisSession = true;
+        ws.send(JSON.stringify({ type: "response.create" }));
+      }
+
       function closeSession(reason) {
         clearIdleTimer();
         clearFollowupTimer();
         sessionActive = false;
         activating = false;
         hasRespondedThisSession = false;
+        audioStartedThisResponse = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -629,6 +645,10 @@
         if (name === "mute_self") {
           // Shut up immediately: no verbal acknowledgment, no 3 s wait.
           // Cancel any in-flight audio, kill the WS, then notify the server.
+          // Stamp the local-mute time so a stale in-flight poll response
+          // (started before the server saw our mute write) doesn't flip
+          // isMuted back to false in pollActivation's un-mute branch.
+          lastSelfMuteAt = Date.now();
           isMuted = true;
           cancelAndCloseSession("muted");
           setStatus("Muted", "");
@@ -706,8 +726,7 @@
             },
           })
         );
-        hasRespondedThisSession = true;
-        ws.send(JSON.stringify({ type: "response.create" }));
+        sendResponseCreate();
       }
 
       // --- Server state notifications ---
@@ -758,6 +777,13 @@
             return;
           }
           if (!data.muted && isMuted) {
+            // If we just self-muted locally, the poll that flipped this
+            // response was likely in flight before our mute write reached
+            // the server — ignore the stale echo. The next poll within ~1 s
+            // will see the real muted=true.
+            if (Date.now() - lastSelfMuteAt < SELF_MUTE_GRACE_MS) {
+              return;
+            }
             isMuted = false;
             leaving = false;
             setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
@@ -933,8 +959,7 @@
                   ? QUESTION_PATTERN.test(lastTurnText)
                   : false;
                 if (looksLikeQuestion) {
-                  hasRespondedThisSession = true;
-                  ws.send(JSON.stringify({ type: "response.create" }));
+                  sendResponseCreate();
                 } else {
                   awaitingFollowup = true;
                   log("No question detected — waiting up to 8s for follow-up");
@@ -962,6 +987,17 @@
               if (!isPlaying) {
                 setStatus("Listening...", "listening");
                 startIdleTimer();
+              }
+              break;
+
+            case "response.done":
+              // If the model returned an empty response (no audio events),
+              // we'd otherwise sit on an open WS forever — no audio.done
+              // means startIdleTimer never runs. Close silently so polling
+              // and wake-detect can resume.
+              if (!audioStartedThisResponse && sessionActive) {
+                log("Model returned empty response — closing silently");
+                cancelAndCloseSession("empty-response");
               }
               break;
 
@@ -998,11 +1034,10 @@
               // the followup timer).
               if (awaitingFollowup) {
                 clearFollowupTimer();
-                hasRespondedThisSession = true;
                 log("Follow-up speech committed — generating response");
-                ws.send(JSON.stringify({ type: "response.create" }));
+                sendResponseCreate();
               } else if (hasRespondedThisSession) {
-                ws.send(JSON.stringify({ type: "response.create" }));
+                sendResponseCreate();
               }
               break;
 
