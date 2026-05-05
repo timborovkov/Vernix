@@ -177,6 +177,7 @@
       let awaitingFollowup = false;
       let followupTimer = null;
       let currentSource = null; // active AudioBufferSourceNode (for instant stop)
+      let hasRespondedThisSession = false; // gate: after first response, treat each turn as a follow-up
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -505,6 +506,7 @@
         clearFollowupTimer();
         sessionActive = false;
         activating = false;
+        hasRespondedThisSession = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -704,6 +706,7 @@
             },
           })
         );
+        hasRespondedThisSession = true;
         ws.send(JSON.stringify({ type: "response.create" }));
       }
 
@@ -859,6 +862,15 @@
         // Token ready — cancel the fallback timer.
         clearTimeout(fallbackTimer);
 
+        // State may have flipped during the token-fetch await: host could
+        // have muted us, user could have asked to leave, or another path
+        // could have torn the session down. Don't open an orphan WS that
+        // would speak despite isMuted=true.
+        if (isMuted || leaving || !sessionActive) {
+          log("State changed during token fetch — aborting activation");
+          return;
+        }
+
         const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
           "realtime",
@@ -901,14 +913,27 @@
               // Flush buffered audio so the model hears the full question
               flushRingBuffer();
 
-              // Only respond immediately if the wake-window text looks like a
-              // question or instruction. Otherwise wait up to 8 s for a
-              // follow-up turn; if nothing comes, close silently.
+              // Only respond immediately if the most recent turn (not the
+              // whole 30 s multi-speaker window — that almost always contains
+              // a question word somewhere) looks like a question or
+              // instruction. Otherwise wait up to 8 s for a follow-up turn;
+              // if nothing comes, close silently.
               {
-                const looksLikeQuestion = transcriptWindow
-                  ? QUESTION_PATTERN.test(transcriptWindow)
+                const lastTurn = (transcriptWindow || "")
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter(Boolean)
+                  .pop();
+                // Strip "Speaker: " prefix so question words in speaker names
+                // (e.g. "Whoever") don't false-positive.
+                const lastTurnText = lastTurn
+                  ? lastTurn.replace(/^[^:]+:\s*/, "")
+                  : "";
+                const looksLikeQuestion = lastTurnText
+                  ? QUESTION_PATTERN.test(lastTurnText)
                   : false;
                 if (looksLikeQuestion) {
+                  hasRespondedThisSession = true;
                   ws.send(JSON.stringify({ type: "response.create" }));
                 } else {
                   awaitingFollowup = true;
@@ -961,11 +986,22 @@
 
             case "input_audio_buffer.speech_stopped":
               setStatus("Processing...", "thinking");
-              // If we opened the session without an obvious question and were
-              // waiting for a follow-up, the user just gave us one — respond.
+              // We're in manual response mode (create_response: false in the
+              // session config), so each user turn needs an explicit
+              // response.create. Two cases trigger one:
+              //   1. We were silently awaiting a follow-up (initial wake had
+              //      no question pattern) — this turn IS the follow-up.
+              //   2. We've already spoken once this session — treat every
+              //      subsequent user turn as a normal in-session follow-up.
+              // The only state we deliberately skip: pre-first-response
+              // silent wait that hasn't received any speech yet (handled by
+              // the followup timer).
               if (awaitingFollowup) {
                 clearFollowupTimer();
+                hasRespondedThisSession = true;
                 log("Follow-up speech committed — generating response");
+                ws.send(JSON.stringify({ type: "response.create" }));
+              } else if (hasRespondedThisSession) {
                 ws.send(JSON.stringify({ type: "response.create" }));
               }
               break;
