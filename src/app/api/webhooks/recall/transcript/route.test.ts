@@ -39,6 +39,9 @@ vi.mock("@/lib/vector/upsert", () => ({
 }));
 vi.mock("@/lib/agent/activation", () => ({
   handleVoiceTranscript: mockHandleVoiceTranscript,
+  // Default to non-matching so existing tests don't get muted by the
+  // shut-up fast path. Tests that exercise the fast path can override.
+  containsShutupCommand: vi.fn().mockReturnValue(false),
 }));
 vi.mock("@/lib/agent/silent", () => ({
   handleSilentTranscript: mockHandleSilentTranscript,
