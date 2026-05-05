@@ -5,7 +5,7 @@ import { meetings } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { processMeetingEnd } from "@/lib/agent/processing";
 import { generateAgentResponse } from "@/lib/agent/response";
-import { WAKE_WORDS } from "@/lib/agent/activation";
+import { containsVoiceMention } from "@/lib/agent/activation";
 const DEBOUNCE_MS = 3000;
 const RATE_LIMIT_INTERVAL_MS = 30_000;
 
@@ -14,8 +14,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 export function containsMention(text: string): boolean {
-  const lower = text.toLowerCase();
-  return WAKE_WORDS.some((kw) => lower.includes(kw));
+  return containsVoiceMention(text);
 }
 
 interface BufferedChunk {

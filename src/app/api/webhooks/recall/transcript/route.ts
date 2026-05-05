@@ -195,8 +195,44 @@ export async function POST(request: Request) {
     console.error("Failed to update participants:", error);
   }
 
-  // Silent agent: monitor transcript for mentions and respond via meeting chat
   const metadata = (meeting.metadata ?? {}) as Record<string, unknown>;
+
+  // Shut-up fast path: if the participant explicitly tells the agent to be
+  // quiet, mute it directly here — bypass the model so there's no verbal
+  // acknowledgment, and skip the activation handlers below for this chunk.
+  if (
+    !metadata.muted &&
+    meeting.status === "active" &&
+    meeting.userId &&
+    speaker !== "Vernix Agent"
+  ) {
+    const { containsShutupCommand } = await import("@/lib/agent/activation");
+    if (containsShutupCommand(text)) {
+      try {
+        // Use jsonb_set so we don't clobber concurrent voiceActivation writes
+        // from the activation handlers that run after this in the same flow.
+        await db
+          .update(meetings)
+          .set({
+            metadata: sql`jsonb_set(
+              COALESCE(${meetings.metadata}, '{}'::jsonb),
+              '{muted}',
+              'true'::jsonb
+            )`,
+            updatedAt: new Date(),
+          })
+          .where(eq(meetings.id, meeting.id));
+        metadata.muted = true;
+        console.log(
+          `[Webhook:transcript] Shut-up command detected — muted meeting ${meeting.id}`
+        );
+      } catch (err) {
+        console.error("[Webhook:transcript] Failed to mute on shut-up:", err);
+      }
+    }
+  }
+
+  // Silent agent: monitor transcript for mentions and respond via meeting chat
   if (
     metadata.silent &&
     !metadata.muted &&

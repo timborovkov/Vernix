@@ -160,15 +160,28 @@
       const IDLE_TIMEOUT_MS = 15000;
       const AUDIO_BUFFER_SECONDS = 10;
       const FALLBACK_TIMEOUT_MS = 4000;
+      const FOLLOWUP_WINDOW_MS = 8000;
       const VAD_RMS_THRESHOLD = 0.015;
       const VAD_BUFFER_DURATION_MS = 800;
       const WAKE_DETECT_COOLDOWN_MS = 1500;
+      // Patterns that indicate the user is actually asking the agent something
+      // (vs. just mentioning "the agent" / "vernix" in passing).
+      const QUESTION_PATTERN =
+        /\?|\b(can you|could you|would you|please|tell us|show us|what(?:'s| is)|how|why|when|who|where|summari[sz]e|explain|note that|remember|recap|read back)\b/i;
       let activating = false; // mutex to prevent dual activation
       let cachedToken = null;
       let cachedTokenExpiresAt = 0;
       let lastWakeDetectAt = 0;
       let vadBuffer = [];
       let vadBufferStartAt = 0;
+      let awaitingFollowup = false;
+      let followupTimer = null;
+      let currentSource = null; // active AudioBufferSourceNode (for instant stop)
+      let hasRespondedThisSession = false; // gate: after first response, treat each turn as a follow-up
+      let audioStartedThisResponse = false; // detect empty-response so we don't hang the session
+      let pendingToolCall = false; // current response is a tool call, not an audio reply — don't treat as empty
+      let lastSelfMuteAt = 0; // suppress stale-poll un-mute echo right after a local self-mute
+      const SELF_MUTE_GRACE_MS = 5000;
 
       function setStatus(text, state) {
         statusEl.textContent = text;
@@ -189,6 +202,7 @@
       function queueAudio(base64Pcm) {
         try {
           audioDone = false;
+          audioStartedThisResponse = true;
           const binary = atob(base64Pcm);
           if (binary.length === 0) return;
           const bytes = new Uint8Array(binary.length);
@@ -226,7 +240,11 @@
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
         source.connect(audioContext.destination);
-        source.onended = playNext;
+        source.onended = () => {
+          if (currentSource === source) currentSource = null;
+          playNext();
+        };
+        currentSource = source;
         source.start();
       }
 
@@ -331,7 +349,6 @@
           if (data.activated && !sessionActive && !activating) {
             log("Wake word detected — activating");
             activating = true;
-            stopPolling();
             activateSession(data.transcriptWindow);
           }
         } catch {
@@ -456,10 +473,59 @@
       }
 
       // --- Session lifecycle ---
+      function clearFollowupTimer() {
+        if (followupTimer) {
+          clearTimeout(followupTimer);
+          followupTimer = null;
+        }
+        awaitingFollowup = false;
+      }
+
+      // Hard-stop the active session: cancel any in-flight model response,
+      // drop queued audio, kill the currently-playing buffer, then close.
+      // Used when the user says "shut up" or the host toggles mute mid-utterance.
+      function cancelAndCloseSession(reason) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          try {
+            ws.send(JSON.stringify({ type: "response.cancel" }));
+          } catch {
+            /* best effort */
+          }
+        }
+        audioQueue.length = 0;
+        isPlaying = false;
+        if (currentSource) {
+          try {
+            currentSource.onended = null;
+            currentSource.stop();
+          } catch {
+            /* may already be stopped */
+          }
+          currentSource = null;
+        }
+        closeSession(reason);
+      }
+
+      // Send response.create and reset per-response audio tracking. Used by
+      // every code path that asks the model to speak so we can detect when
+      // the model returns an empty response (no audio events) and avoid
+      // hanging the session.
+      function sendResponseCreate() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        audioStartedThisResponse = false;
+        pendingToolCall = false;
+        hasRespondedThisSession = true;
+        ws.send(JSON.stringify({ type: "response.create" }));
+      }
+
       function closeSession(reason) {
         clearIdleTimer();
+        clearFollowupTimer();
         sessionActive = false;
         activating = false;
+        hasRespondedThisSession = false;
+        audioStartedThisResponse = false;
+        pendingToolCall = false;
         if (ws) {
           ws.onclose = null;
           ws.close();
@@ -467,6 +533,15 @@
         }
         audioQueue.length = 0;
         isPlaying = false;
+        if (currentSource) {
+          try {
+            currentSource.onended = null;
+            currentSource.stop();
+          } catch {
+            /* may already be stopped */
+          }
+          currentSource = null;
+        }
         vadBuffer = [];
         vadBufferStartAt = 0;
         audioDone = true;
@@ -571,26 +646,20 @@
         }
 
         if (name === "mute_self") {
-          setStatus("Muting...", "thinking");
-          sendToolOutput(
-            callId,
-            "I'll be quiet now. The host can unmute me from the dashboard."
-          );
-          setTimeout(async () => {
-            if (leaving) return;
-            try {
-              await fetch(`${appUrl}/api/agent/mute-self`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ meetingId, botSecret }),
-              });
-            } catch (err) {
-              log("Mute error: " + err.message);
-            }
-            isMuted = true;
-            closeSession("muted");
-            setStatus("Muted", "");
-          }, 3000);
+          // Shut up immediately: no verbal acknowledgment, no 3 s wait.
+          // Cancel any in-flight audio, kill the WS, then notify the server.
+          // Stamp the local-mute time so a stale in-flight poll response
+          // (started before the server saw our mute write) doesn't flip
+          // isMuted back to false in pollActivation's un-mute branch.
+          lastSelfMuteAt = Date.now();
+          isMuted = true;
+          cancelAndCloseSession("muted");
+          setStatus("Muted", "");
+          fetch(`${appUrl}/api/agent/mute-self`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meetingId, botSecret }),
+          }).catch((err) => log("Mute error: " + err.message));
           return;
         }
 
@@ -660,7 +729,7 @@
             },
           })
         );
-        ws.send(JSON.stringify({ type: "response.create" }));
+        sendResponseCreate();
       }
 
       // --- Server state notifications ---
@@ -690,7 +759,7 @@
       }
 
       async function pollActivation() {
-        if (leaving || sessionActive) return;
+        if (leaving) return;
         try {
           const res = await fetch(`${appUrl}/api/agent/activation-status`, {
             method: "POST",
@@ -700,13 +769,24 @@
           if (!res.ok) return;
           const data = await res.json();
 
-          // Handle mute state
+          // Host muted us — kill any in-flight session immediately.
           if (data.muted && !isMuted) {
             isMuted = true;
             setStatus("Muted by host", "");
+            if (sessionActive) {
+              log("Host muted mid-session — closing immediately");
+              cancelAndCloseSession("muted-by-host");
+            }
             return;
           }
           if (!data.muted && isMuted) {
+            // If we just self-muted locally, the poll that flipped this
+            // response was likely in flight before our mute write reached
+            // the server — ignore the stale echo. The next poll within ~1 s
+            // will see the real muted=true.
+            if (Date.now() - lastSelfMuteAt < SELF_MUTE_GRACE_MS) {
+              return;
+            }
             isMuted = false;
             leaving = false;
             setStatus('Say "Vernix", "Agent", or "Assistant"', "idle");
@@ -714,10 +794,13 @@
 
           if (isMuted) return;
 
+          // Skip activation logic while a session is live — but keep polling
+          // running so we can still detect a host-mute toggle above.
+          if (sessionActive || activating) return;
+
           // Handle activation
-          if (data.state === "activated" && !sessionActive && !activating) {
+          if (data.state === "activated") {
             activating = true;
-            stopPolling();
             activateSession(data.transcriptWindow);
           }
         } catch {
@@ -808,6 +891,15 @@
         // Token ready — cancel the fallback timer.
         clearTimeout(fallbackTimer);
 
+        // State may have flipped during the token-fetch await: host could
+        // have muted us, user could have asked to leave, or another path
+        // could have torn the session down. Don't open an orphan WS that
+        // would speak despite isMuted=true.
+        if (isMuted || leaving || !sessionActive) {
+          log("State changed during token fetch — aborting activation");
+          return;
+        }
+
         const url = "wss://api.openai.com/v1/realtime?model=gpt-realtime-1.5";
         ws = new WebSocket(url, [
           "realtime",
@@ -838,7 +930,7 @@
                         {
                           type: "input_text",
                           text:
-                            "Here is the recent meeting transcript. Someone just addressed you — listen to the audio to hear their question and respond.\n\n" +
+                            "Here is the recent meeting transcript. Someone may have just addressed you — only respond if the most recent turn is actually a question or instruction directed at you. Otherwise stay silent.\n\n" +
                             transcriptWindow,
                         },
                       ],
@@ -850,8 +942,38 @@
               // Flush buffered audio so the model hears the full question
               flushRingBuffer();
 
-              // Trigger a response to the wake-word question
-              ws.send(JSON.stringify({ type: "response.create" }));
+              // Only respond immediately if the most recent turn (not the
+              // whole 30 s multi-speaker window — that almost always contains
+              // a question word somewhere) looks like a question or
+              // instruction. Otherwise wait up to 8 s for a follow-up turn;
+              // if nothing comes, close silently.
+              {
+                const lastTurn = (transcriptWindow || "")
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter(Boolean)
+                  .pop();
+                // Strip "Speaker: " prefix so question words in speaker names
+                // (e.g. "Whoever") don't false-positive.
+                const lastTurnText = lastTurn
+                  ? lastTurn.replace(/^[^:]+:\s*/, "")
+                  : "";
+                const looksLikeQuestion = lastTurnText
+                  ? QUESTION_PATTERN.test(lastTurnText)
+                  : false;
+                if (looksLikeQuestion) {
+                  sendResponseCreate();
+                } else {
+                  awaitingFollowup = true;
+                  log("No question detected — waiting up to 8s for follow-up");
+                  followupTimer = setTimeout(() => {
+                    if (awaitingFollowup && sessionActive) {
+                      log("No follow-up — closing session silently");
+                      cancelAndCloseSession("no-followup");
+                    }
+                  }, FOLLOWUP_WINDOW_MS);
+                }
+              }
               break;
 
             case "session.updated":
@@ -871,8 +993,33 @@
               }
               break;
 
+            case "response.done":
+              // Tool-call responses produce no audio by design — the async
+              // tool handler will issue its own response.create afterward.
+              // Don't close on those; just clear the flag so the *next*
+              // response.done is evaluated normally.
+              if (pendingToolCall) {
+                pendingToolCall = false;
+                break;
+              }
+              // If the model returned an empty audio response (e.g. it
+              // decided to stay silent per the system prompt), no audio.done
+              // fires, so startIdleTimer never runs. Close silently so
+              // polling and wake-detect can resume.
+              if (!audioStartedThisResponse && sessionActive) {
+                log("Model returned empty response — closing silently");
+                cancelAndCloseSession("empty-response");
+              }
+              break;
+
             case "response.function_call_arguments.done":
               clearIdleTimer();
+              // Mark the current response as a tool call so the upcoming
+              // response.done isn't treated as an empty-audio response and
+              // doesn't kill the session out from under the async tool
+              // handler. handleToolCall (or sendToolOutput within it) issues
+              // its own response.create afterward, which resets the flag.
+              pendingToolCall = true;
               try {
                 const args = JSON.parse(msg.arguments);
                 handleToolCall(msg.call_id, msg.name, args);
@@ -887,11 +1034,37 @@
               isPlaying = false;
               audioDone = true;
               clearIdleTimer();
+              // If we were silently waiting for a follow-up and the user
+              // just started speaking near the end of the window, cancel
+              // the timer so it doesn't fire mid-utterance and tear down
+              // the session. Leave awaitingFollowup=true so speech_stopped
+              // still triggers response.create.
+              if (followupTimer) {
+                clearTimeout(followupTimer);
+                followupTimer = null;
+              }
               setStatus("Hearing speech...", "listening");
               break;
 
             case "input_audio_buffer.speech_stopped":
               setStatus("Processing...", "thinking");
+              // We're in manual response mode (create_response: false in the
+              // session config), so each user turn needs an explicit
+              // response.create. Two cases trigger one:
+              //   1. We were silently awaiting a follow-up (initial wake had
+              //      no question pattern) — this turn IS the follow-up.
+              //   2. We've already spoken once this session — treat every
+              //      subsequent user turn as a normal in-session follow-up.
+              // The only state we deliberately skip: pre-first-response
+              // silent wait that hasn't received any speech yet (handled by
+              // the followup timer).
+              if (awaitingFollowup) {
+                clearFollowupTimer();
+                log("Follow-up speech committed — generating response");
+                sendResponseCreate();
+              } else if (hasRespondedThisSession) {
+                sendResponseCreate();
+              }
               break;
 
             case "error":

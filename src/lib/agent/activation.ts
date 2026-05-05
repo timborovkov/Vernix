@@ -5,7 +5,8 @@ import { rateLimit, resetRateLimitKey } from "@/lib/rate-limit";
 import { recordActivation } from "@/lib/agent/telemetry";
 
 // Wake words for all agents (voice + silent)
-// "vernix" includes fuzzy variants for transcription errors
+// "vernix" includes fuzzy variants for transcription errors.
+// Matched with word boundaries so e.g. "agentic", "assistance" don't false-fire.
 export const WAKE_WORDS = [
   "vernix",
   "vern ix",
@@ -18,6 +19,22 @@ export const WAKE_WORDS = [
   "agent",
   "assistant",
 ];
+
+function escapeForRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const WAKE_WORD_REGEX = new RegExp(
+  `\\b(?:${WAKE_WORDS.map(escapeForRegex).join("|")})\\b`,
+  "i"
+);
+
+// Imperative "be quiet" patterns. Anchored with word boundaries so "that shut up
+// the room" or "the muted track" don't trigger. Kept narrow on purpose — when
+// in doubt, the model can still call mute_self via tool.
+const SHUTUP_REGEX =
+  /\b(shut up|shut it|be quiet|quiet please|please be quiet|stop (?:talking|speaking|yapping)|mute (?:yourself|yourselves|the (?:bot|agent|assistant)))\b/i;
+
 const VOICE_DEBOUNCE_MS = 500;
 const VOICE_RATE_LIMIT_MS = 15_000;
 const TRANSCRIPT_WINDOW_SECONDS = 30;
@@ -44,8 +61,11 @@ interface VoiceBuffer {
 const buffers = new Map<string, VoiceBuffer>();
 
 export function containsVoiceMention(text: string): boolean {
-  const lower = text.toLowerCase();
-  return WAKE_WORDS.some((kw) => lower.includes(kw));
+  return WAKE_WORD_REGEX.test(text);
+}
+
+export function containsShutupCommand(text: string): boolean {
+  return SHUTUP_REGEX.test(text);
 }
 
 function buildTranscriptWindow(chunks: BufferedChunk[]): string {
