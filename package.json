@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm db:push && next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",
