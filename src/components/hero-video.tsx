@@ -8,15 +8,16 @@ export function HeroVideo() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
 
+  const resetPlaybackState = () => {
+    setIsStarting(false);
+    setIsPlaying(false);
+  };
+
   function handlePlay() {
     const video = videoRef.current;
     if (!video) return;
 
     setIsStarting(true);
-    const resetPlaybackState = () => {
-      setIsStarting(false);
-      setIsPlaying(false);
-    };
 
     try {
       const playRequest = video.play();
@@ -36,14 +37,8 @@ export function HeroVideo() {
         preload="none"
         controls={isPlaying}
         playsInline
-        onEnded={() => {
-          setIsStarting(false);
-          setIsPlaying(false);
-        }}
-        onPause={() => {
-          setIsStarting(false);
-          setIsPlaying(false);
-        }}
+        onEnded={resetPlaybackState}
+        onPause={resetPlaybackState}
         onPlay={() => {
           setIsStarting(false);
           setIsPlaying(true);
