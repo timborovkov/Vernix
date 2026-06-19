@@ -208,6 +208,10 @@ export const POST = Webhooks({
       .select({
         email: users.email,
         name: users.name,
+        plan: users.plan,
+        polarSubscriptionId: users.polarSubscriptionId,
+        trialEndsAt: users.trialEndsAt,
+        currentPeriodEnd: users.currentPeriodEnd,
         lastRetentionEmailSentAt: users.lastRetentionEmailSentAt,
         emailPreferences: users.emailPreferences,
       })
@@ -217,6 +221,24 @@ export const POST = Webhooks({
     if (!user) return;
 
     const now = new Date();
+    const payloadPeriodEnd = payload.data.currentPeriodEnd
+      ? new Date(payload.data.currentPeriodEnd)
+      : null;
+    const accessStillActive =
+      (user.currentPeriodEnd !== null && user.currentPeriodEnd > now) ||
+      (payloadPeriodEnd !== null && payloadPeriodEnd > now) ||
+      (user.trialEndsAt !== null && user.trialEndsAt > now);
+    const hasLocalSubscription =
+      accessStillActive &&
+      (user.plan === PLANS.PRO || user.polarSubscriptionId === payload.data.id);
+
+    if (!hasLocalSubscription) {
+      console.log(
+        `[Polar Webhook] Skipping cancellation email for user ${externalId}; local account is already free`
+      );
+      return;
+    }
+
     const cooldownBoundary = new Date(now);
     cooldownBoundary.setDate(
       cooldownBoundary.getDate() - RETENTION_EMAIL_COOLDOWN_DAYS
@@ -229,15 +251,15 @@ export const POST = Webhooks({
       shouldSendRetentionEmail &&
       shouldSendEmail(user.emailPreferences, "marketing")
     ) {
-      const periodEnd = payload.data.currentPeriodEnd
-        ? new Date(payload.data.currentPeriodEnd)
-        : null;
-
       const unsubscribeUrl = buildUnsubscribeUrl(externalId, "marketing");
       await sendEmail({
         to: user.email,
         subject: "Last chance to keep your Vernix Pro benefits",
-        html: getLastChanceRetentionHtml(user.name, periodEnd, unsubscribeUrl),
+        html: getLastChanceRetentionHtml(
+          user.name,
+          payloadPeriodEnd,
+          unsubscribeUrl
+        ),
         unsubscribeUrl,
       });
 
@@ -267,10 +289,19 @@ export const POST = Webhooks({
       .select({
         name: users.name,
         email: users.email,
+        plan: users.plan,
+        polarSubscriptionId: users.polarSubscriptionId,
+        trialEndsAt: users.trialEndsAt,
+        churnedAt: users.churnedAt,
         emailPreferences: users.emailPreferences,
       })
       .from(users)
       .where(eq(users.id, externalId));
+
+    const alreadyDowngraded =
+      user?.plan === PLANS.FREE &&
+      user.polarSubscriptionId === null &&
+      user.trialEndsAt === null;
 
     await db
       .update(users)
@@ -280,7 +311,7 @@ export const POST = Webhooks({
         trialEndsAt: null,
         currentPeriodStart: null,
         currentPeriodEnd: null,
-        churnedAt: new Date(),
+        churnedAt: user?.churnedAt ?? new Date(),
         updatedAt: new Date(),
       })
       .where(eq(users.id, externalId));
@@ -288,7 +319,11 @@ export const POST = Webhooks({
     console.log(`[Polar Webhook] Subscription revoked for user ${externalId}`);
 
     // Send trial expired / downgrade email (fire-and-forget)
-    if (user && shouldSendEmail(user.emailPreferences, "product")) {
+    if (
+      user &&
+      !alreadyDowngraded &&
+      shouldSendEmail(user.emailPreferences, "product")
+    ) {
       const unsubscribeUrl = buildUnsubscribeUrl(externalId, "product");
       sendEmail({
         to: user.email,

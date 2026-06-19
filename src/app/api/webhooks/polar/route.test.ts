@@ -34,6 +34,7 @@ vi.mock("@/lib/email/templates", () => ({
   getTrialExpiredEmailHtml: vi
     .fn()
     .mockReturnValue("<html>trial-expired</html>"),
+  getPaymentFailedHtml: vi.fn().mockReturnValue("<html>payment-failed</html>"),
 }));
 vi.mock("@/lib/email/preferences", () => ({
   shouldSendEmail: vi.fn().mockReturnValue(true),
@@ -75,6 +76,7 @@ const POLAR_CUSTOMER_ID = "polar_cust_123";
 const SUBSCRIPTION_ID = "polar_sub_456";
 const PERIOD_START = "2026-03-01T00:00:00Z";
 const PERIOD_END = "2026-04-01T00:00:00Z";
+const FUTURE_PERIOD_END = "2099-04-01T00:00:00Z";
 
 const TRIAL_END = "2026-04-11T00:00:00Z";
 
@@ -193,13 +195,19 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
         {
           email: "user@example.com",
           name: "Test User",
+          plan: "pro",
+          polarSubscriptionId: SUBSCRIPTION_ID,
+          trialEndsAt: null,
+          currentPeriodEnd: new Date(FUTURE_PERIOD_END),
           lastRetentionEmailSentAt: null,
           emailPreferences: null,
         },
       ])
       .mockImplementation(() => mockDb);
 
-    await capturedHandlers.onSubscriptionCanceled(subscriptionPayload());
+    await capturedHandlers.onSubscriptionCanceled(
+      subscriptionPayload({ currentPeriodEnd: FUTURE_PERIOD_END })
+    );
 
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -209,7 +217,7 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
     );
     expect(mockLastChanceTemplate).toHaveBeenCalledWith(
       "Test User",
-      new Date(PERIOD_END),
+      new Date(FUTURE_PERIOD_END),
       expect.any(String)
     );
 
@@ -228,7 +236,53 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
       {
         email: "user@example.com",
         name: "Test User",
+        plan: "pro",
+        polarSubscriptionId: SUBSCRIPTION_ID,
+        trialEndsAt: null,
+        currentPeriodEnd: new Date(FUTURE_PERIOD_END),
         lastRetentionEmailSentAt: new Date(),
+        emailPreferences: null,
+      },
+    ]);
+
+    await capturedHandlers.onSubscriptionCanceled(
+      subscriptionPayload({ currentPeriodEnd: FUTURE_PERIOD_END })
+    );
+
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("skips retention email when subscription id is stale but access ended", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        email: "user@example.com",
+        name: "Test User",
+        plan: "free",
+        polarSubscriptionId: SUBSCRIPTION_ID,
+        trialEndsAt: null,
+        currentPeriodEnd: new Date("2020-01-01T00:00:00Z"),
+        lastRetentionEmailSentAt: null,
+        emailPreferences: null,
+      },
+    ]);
+
+    await capturedHandlers.onSubscriptionCanceled(
+      subscriptionPayload({ currentPeriodEnd: "2020-01-01T00:00:00Z" })
+    );
+
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("skips retention email when local account is already free", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        email: "user@example.com",
+        name: "Test User",
+        plan: "free",
+        polarSubscriptionId: null,
+        trialEndsAt: null,
+        currentPeriodEnd: null,
+        lastRetentionEmailSentAt: null,
         emailPreferences: null,
       },
     ]);
@@ -236,6 +290,11 @@ describe("Polar webhook: onSubscriptionCanceled", () => {
     await capturedHandlers.onSubscriptionCanceled(subscriptionPayload());
 
     expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockDb.set).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        lastRetentionEmailSentAt: expect.any(Date),
+      })
+    );
   });
 });
 
@@ -247,6 +306,10 @@ describe("Polar webhook: onSubscriptionRevoked", () => {
         {
           name: "Test User",
           email: "user@example.com",
+          plan: "pro",
+          polarSubscriptionId: SUBSCRIPTION_ID,
+          trialEndsAt: null,
+          churnedAt: null,
           emailPreferences: null,
         },
       ])
@@ -276,6 +339,10 @@ describe("Polar webhook: onSubscriptionRevoked", () => {
         {
           name: "Test User",
           email: "user@example.com",
+          plan: "pro",
+          polarSubscriptionId: SUBSCRIPTION_ID,
+          trialEndsAt: null,
+          churnedAt: null,
           emailPreferences: null,
         },
       ])
@@ -288,6 +355,34 @@ describe("Polar webhook: onSubscriptionRevoked", () => {
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({ plan: "free" })
     );
+  });
+
+  it("does not send ended email again when user is already downgraded", async () => {
+    mockDb.where
+      .mockResolvedValueOnce([
+        {
+          name: "Test User",
+          email: "user@example.com",
+          plan: "free",
+          polarSubscriptionId: null,
+          trialEndsAt: null,
+          churnedAt: new Date("2026-06-03T00:00:00Z"),
+          emailPreferences: null,
+        },
+      ])
+      .mockImplementation(() => mockDb);
+
+    await capturedHandlers.onSubscriptionRevoked(subscriptionPayload());
+
+    expect(mockDb.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        plan: "free",
+        polarSubscriptionId: null,
+        trialEndsAt: null,
+        churnedAt: new Date("2026-06-03T00:00:00Z"),
+      })
+    );
+    expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it("skips when no externalId", async () => {
