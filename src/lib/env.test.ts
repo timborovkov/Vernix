@@ -22,6 +22,7 @@ function parseEnv(overrides: Record<string, string | undefined> = {}) {
       AUTH_SECRET: z.string().min(1),
       AUTH_URL: z.string().min(1),
       NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
+      ADMIN_USER_EMAILS: z.string().optional(),
       MEETING_BOT_PROVIDER: z.enum(["recall", "mock"]),
       RECALL_API_KEY: z.string().optional(),
       RECALL_API_URL: z.string().optional(),
@@ -53,6 +54,14 @@ describe("env validation", () => {
     expect(env.DATABASE_URL).toBe("postgresql://localhost/test");
     expect(env.QDRANT_URL).toBe("http://localhost:6333");
     expect(env.S3_BUCKET).toBe("vernix-knowledge");
+  });
+
+  it("allows optional admin emails", () => {
+    const env = parseEnv({
+      ADMIN_USER_EMAILS: "tim@example.com,founder@example.com",
+    });
+
+    expect(env.ADMIN_USER_EMAILS).toBe("tim@example.com,founder@example.com");
   });
 
   it("throws when DATABASE_URL is missing", () => {

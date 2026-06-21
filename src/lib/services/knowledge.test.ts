@@ -111,6 +111,20 @@ describe("uploadDocument", () => {
     );
   });
 
+  it("rejects files above the technical upload ceiling before billing or storage", async () => {
+    const file = createMockFile("huge.pdf", 100, "application/pdf");
+    Object.defineProperty(file, "size", {
+      value: 101 * 1024 * 1024,
+    });
+
+    await expect(uploadDocument(USER_ID, file)).rejects.toThrow(
+      "File exceeds 100MB technical upload limit"
+    );
+
+    expect(canUploadDocument).not.toHaveBeenCalled();
+    expect(mockUploadFile).not.toHaveBeenCalled();
+  });
+
   it("throws BillingError when upload limit exceeded", async () => {
     vi.mocked(canUploadDocument).mockReturnValueOnce({
       allowed: false,

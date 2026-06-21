@@ -6,6 +6,7 @@ import type { EffectiveLimits } from "@/lib/billing/limits";
 
 export interface BillingData {
   plan: Plan;
+  isAdmin: boolean;
   trialing: boolean;
   trialDaysRemaining: number;
   trialEndsAt: string | null;

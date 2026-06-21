@@ -9,12 +9,14 @@ import {
   getMonthlyVoiceMeetingCount,
 } from "@/lib/billing/usage";
 import {
+  ADMIN_LIMITS,
   getEffectiveLimits,
   isTrialActive,
   getTrialDaysRemaining,
 } from "@/lib/billing/limits";
-import type { Plan } from "@/lib/billing/constants";
+import { PLANS, type Plan } from "@/lib/billing/constants";
 import { syncBillingFromPolar } from "@/lib/billing/sync";
+import { isAdminUserEmail } from "@/lib/billing/admin";
 
 export async function GET() {
   const sessionUser = await requireSessionUser();
@@ -25,6 +27,8 @@ export async function GET() {
 
   const [user] = await db
     .select({
+      email: users.email,
+      emailVerifiedAt: users.emailVerifiedAt,
       plan: users.plan,
       polarCustomerId: users.polarCustomerId,
       polarSubscriptionId: users.polarSubscriptionId,
@@ -39,7 +43,8 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const plan = user.plan as Plan;
+  const isAdmin = !!user.emailVerifiedAt && isAdminUserEmail(user.email);
+  const plan = isAdmin ? PLANS.PRO : (user.plan as Plan);
   const period = getEffectivePeriod(user);
   const [usage, voiceMeetingsUsed] = await Promise.all([
     getUsageSummary(sessionUser.id, plan, period.start, period.end),
@@ -50,12 +55,17 @@ export async function GET() {
   const effectiveTrialEndsAt = user.polarSubscriptionId
     ? user.trialEndsAt
     : null;
-  const limits = getEffectiveLimits(plan, effectiveTrialEndsAt);
-  const trialing = isTrialActive(plan, effectiveTrialEndsAt);
-  const trialDaysRemaining = getTrialDaysRemaining(effectiveTrialEndsAt);
+  const limits = isAdmin
+    ? ADMIN_LIMITS
+    : getEffectiveLimits(plan, effectiveTrialEndsAt);
+  const trialing = isAdmin ? false : isTrialActive(plan, effectiveTrialEndsAt);
+  const trialDaysRemaining = isAdmin
+    ? 0
+    : getTrialDaysRemaining(effectiveTrialEndsAt);
 
   return NextResponse.json({
     plan,
+    isAdmin,
     trialing,
     trialDaysRemaining,
     trialEndsAt: user.trialEndsAt,

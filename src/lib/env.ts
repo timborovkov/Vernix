@@ -18,6 +18,7 @@ const envSchema = z
     // App
     NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
     NEXT_PUBLIC_DISABLE_INDEXING: z.string().optional(),
+    ADMIN_USER_EMAILS: z.string().optional(),
 
     // Analytics
     NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),

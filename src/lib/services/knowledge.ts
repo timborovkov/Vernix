@@ -25,6 +25,7 @@ import { NotFoundError, BillingError, ValidationError } from "@/lib/api/errors";
 import { decodeCursor, buildPaginationMeta } from "@/lib/api/pagination";
 
 const MAX_FILENAME_LENGTH = 255;
+export const MAX_DOCUMENT_UPLOAD_SIZE_MB = 100;
 
 const ALLOWED_TYPES: Record<string, string> = {
   "application/pdf": "pdf",
@@ -119,9 +120,15 @@ export async function uploadDocument(
     throw new ValidationError("Invalid filename");
   }
 
+  const fileSizeMB = file.size / (1024 * 1024);
+  if (fileSizeMB > MAX_DOCUMENT_UPLOAD_SIZE_MB) {
+    throw new ValidationError(
+      `File exceeds ${MAX_DOCUMENT_UPLOAD_SIZE_MB}MB technical upload limit`
+    );
+  }
+
   // Billing check
   const { limits } = await requireLimits(userId);
-  const fileSizeMB = file.size / (1024 * 1024);
   const [docCount, monthlyUploads, totalStorageMB] = await Promise.all([
     getDocumentCount(userId),
     getMonthlyDocUploads(userId),

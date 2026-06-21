@@ -78,8 +78,9 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
   if (!billing) return null;
 
   const isPro = billing.plan === PLANS.PRO;
+  const isAdmin = billing.isAdmin;
   const creditUsedPct =
-    isPro && billing.usage.creditEur > 0
+    isPro && !isAdmin && billing.usage.creditEur > 0
       ? Math.min(
           100,
           (billing.usage.totalCostEur / billing.usage.creditEur) * 100
@@ -95,7 +96,9 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
             Plan & Usage
           </CardTitle>
           <div className="flex items-center gap-2">
-            {billing.trialing ? (
+            {isAdmin ? (
+              <Badge variant="default">Admin</Badge>
+            ) : billing.trialing ? (
               <Badge variant="default">
                 Pro Trial: {billing.trialDaysRemaining}d left
               </Badge>
@@ -109,7 +112,7 @@ export function BillingCard({ billing, loading }: BillingCardProps) {
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Credit usage (Pro only) */}
-        {isPro && (
+        {isPro && !isAdmin && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">

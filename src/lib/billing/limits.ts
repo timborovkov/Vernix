@@ -8,20 +8,38 @@ import { LIMITS, TRIAL_LIMITS, PLANS } from "./constants";
 export interface EffectiveLimits {
   meetingMinutesPerMonth: number | null;
   voiceMeetingsPerMonth: number | null;
-  documentsCount: number;
-  maxDocumentSizeMB: number;
-  docUploadsPerMonth: number;
-  totalStorageMB: number;
-  ragQueriesPerDay: number;
-  meetingScopedDocs: number;
-  concurrentMeetings: number;
-  meetingsPerMonth: number;
+  documentsCount: number | null;
+  maxDocumentSizeMB: number | null;
+  docUploadsPerMonth: number | null;
+  totalStorageMB: number | null;
+  ragQueriesPerDay: number | null;
+  meetingScopedDocs: number | null;
+  concurrentMeetings: number | null;
+  meetingsPerMonth: number | null;
   apiEnabled: boolean;
   mcpEnabled: boolean;
-  apiRequestsPerDay: number;
+  apiRequestsPerDay: number | null;
   mcpServerConnections: number | null;
   mcpClientConnections: number | null;
 }
+
+export const ADMIN_LIMITS: EffectiveLimits = {
+  meetingMinutesPerMonth: null,
+  voiceMeetingsPerMonth: null,
+  documentsCount: null,
+  maxDocumentSizeMB: null,
+  docUploadsPerMonth: null,
+  totalStorageMB: null,
+  ragQueriesPerDay: null,
+  meetingScopedDocs: null,
+  concurrentMeetings: null,
+  meetingsPerMonth: null,
+  apiEnabled: true,
+  mcpEnabled: true,
+  apiRequestsPerDay: null,
+  mcpServerConnections: null,
+  mcpClientConnections: null,
+};
 
 export function getEffectiveLimits(
   plan: Plan,
@@ -69,14 +87,20 @@ export function canStartMeeting(
     return { allowed: false, reason: "Monthly voice meeting limit reached" };
   }
 
-  if (activeMeetings >= limits.concurrentMeetings) {
+  if (
+    limits.concurrentMeetings !== null &&
+    activeMeetings >= limits.concurrentMeetings
+  ) {
     return {
       allowed: false,
       reason: `Maximum ${limits.concurrentMeetings} concurrent meeting${limits.concurrentMeetings === 1 ? "" : "s"}`,
     };
   }
 
-  if (monthlyMeetingCount >= limits.meetingsPerMonth) {
+  if (
+    limits.meetingsPerMonth !== null &&
+    monthlyMeetingCount >= limits.meetingsPerMonth
+  ) {
     return { allowed: false, reason: "Monthly meeting limit reached" };
   }
 
@@ -98,25 +122,37 @@ export function canUploadDocument(
   currentStorageMB: number,
   fileSizeMB: number
 ): LimitCheck {
-  if (currentDocCount >= limits.documentsCount) {
+  if (
+    limits.documentsCount !== null &&
+    currentDocCount >= limits.documentsCount
+  ) {
     return {
       allowed: false,
       reason: `Maximum ${limits.documentsCount} documents`,
     };
   }
 
-  if (monthlyUploads >= limits.docUploadsPerMonth) {
+  if (
+    limits.docUploadsPerMonth !== null &&
+    monthlyUploads >= limits.docUploadsPerMonth
+  ) {
     return { allowed: false, reason: "Monthly upload limit reached" };
   }
 
-  if (fileSizeMB > limits.maxDocumentSizeMB) {
+  if (
+    limits.maxDocumentSizeMB !== null &&
+    fileSizeMB > limits.maxDocumentSizeMB
+  ) {
     return {
       allowed: false,
       reason: `File exceeds ${limits.maxDocumentSizeMB}MB limit`,
     };
   }
 
-  if (currentStorageMB + fileSizeMB > limits.totalStorageMB) {
+  if (
+    limits.totalStorageMB !== null &&
+    currentStorageMB + fileSizeMB > limits.totalStorageMB
+  ) {
     return { allowed: false, reason: "Storage limit reached" };
   }
 
@@ -127,7 +163,10 @@ export function canMakeRagQuery(
   limits: EffectiveLimits,
   dailyCount: number
 ): LimitCheck {
-  if (dailyCount >= limits.ragQueriesPerDay) {
+  if (
+    limits.ragQueriesPerDay !== null &&
+    dailyCount >= limits.ragQueriesPerDay
+  ) {
     return { allowed: false, reason: "Daily RAG query limit reached" };
   }
   return { allowed: true };
@@ -140,7 +179,10 @@ export function canMakeApiRequest(
   if (!limits.apiEnabled) {
     return { allowed: false, reason: "API access requires a Pro plan" };
   }
-  if (dailyCount >= limits.apiRequestsPerDay) {
+  if (
+    limits.apiRequestsPerDay !== null &&
+    dailyCount >= limits.apiRequestsPerDay
+  ) {
     return { allowed: false, reason: "Daily API request limit reached" };
   }
   return { allowed: true };

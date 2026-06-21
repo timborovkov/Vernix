@@ -50,6 +50,10 @@ Open [http://localhost:3000](http://localhost:3000) to see the dashboard.
 
 See `.env.example` for all environment variables.
 
+`ADMIN_USER_EMAILS` can be set to a comma-separated list of internal admin
+emails. Verified matching users keep their stored billing state, but receive
+uncapped Pro capabilities inside the app.
+
 ## Recall.ai Webhook Configuration
 
 Two webhook endpoints, each serving a different purpose:
