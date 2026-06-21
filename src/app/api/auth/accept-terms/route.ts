@@ -13,7 +13,7 @@ export async function POST() {
     .set({ termsAcceptedAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
-  // Set a short-lived cookie to bypass the middleware terms check
+  // Set a short-lived cookie to bypass the proxy terms check
   // until the JWT is refreshed on next sign-in
   const res = NextResponse.json({ success: true });
   res.cookies.set("terms_accepted", "1", {

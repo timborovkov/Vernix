@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import matter from "gray-matter";
+import { load } from "js-yaml";
 
 import { frontmatterSchema } from "./types";
 import type { BlogPost } from "./types";
@@ -11,6 +11,16 @@ const WORDS_PER_MINUTE = 200;
 
 const postCache = new Map<string, BlogPost>();
 let allPostsCache: BlogPost[] | null = null;
+
+function parseFrontmatter(raw: string): { data: unknown; content: string } {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(raw);
+  if (!match) return { data: {}, content: raw };
+
+  return {
+    data: load(match[1] ?? "") ?? {},
+    content: match[2] ?? "",
+  };
+}
 
 function getReadingTime(content: string): number {
   const words = content.split(/\s+/).filter(Boolean).length;
@@ -23,7 +33,7 @@ function readPost(slug: string): BlogPost | null {
   if (!fs.existsSync(filePath)) return null;
 
   const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
+  const { data, content } = parseFrontmatter(raw);
   const frontmatter = frontmatterSchema.parse(data);
 
   return {

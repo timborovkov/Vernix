@@ -1,4 +1,4 @@
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import {
   formatMeetingMarkdown,
   slugify,
@@ -9,7 +9,7 @@ export async function generateMeetingsZip(
   data: MeetingExportData[]
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const archive = archiver("zip", { zlib: { level: 9 } });
+    const archive = new ZipArchive({ zlib: { level: 9 } });
     const chunks: Buffer[] = [];
 
     archive.on("data", (chunk: Buffer) => chunks.push(chunk));

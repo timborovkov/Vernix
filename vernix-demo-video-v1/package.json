@@ -6,23 +6,23 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "@remotion/cli": "4.0.443",
-    "@remotion/fonts": "4.0.443",
-    "@remotion/google-fonts": "4.0.443",
-    "@remotion/tailwind-v4": "4.0.443",
-    "@remotion/transitions": "4.0.443",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "remotion": "4.0.443",
-    "tailwindcss": "4.0.0"
+    "@remotion/cli": "4.0.481",
+    "@remotion/fonts": "4.0.481",
+    "@remotion/google-fonts": "4.0.481",
+    "@remotion/tailwind-v4": "4.0.481",
+    "@remotion/transitions": "4.0.481",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.481",
+    "tailwindcss": "4.3.1"
   },
   "devDependencies": {
-    "@remotion/eslint-config-flat": "4.0.443",
-    "@types/react": "19.2.7",
-    "@types/web": "0.0.166",
-    "eslint": "9.19.0",
-    "prettier": "3.8.1",
-    "typescript": "5.9.3"
+    "@remotion/eslint-config-flat": "4.0.481",
+    "@types/react": "19.2.17",
+    "@types/web": "0.0.350",
+    "eslint": "9.39.4",
+    "prettier": "3.8.4",
+    "typescript": "6.0.3"
   },
   "scripts": {
     "dev": "remotion studio",
@@ -32,5 +32,8 @@
   },
   "sideEffects": [
     "*.css"
-  ]
+  ],
+  "overrides": {
+    "source-map": "0.7.6"
+  }
 }
