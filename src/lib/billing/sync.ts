@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { isPolarEnabled, getPolar } from "@/lib/polar";
-import { PLANS, FREE_TRIAL } from "./constants";
+import { PLANS } from "./constants";
 
 /**
  * Sync a user's billing state with Polar.

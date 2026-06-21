@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const { meetingId, question } = parsed.data;
 
   // Ownership is validated by getRAGContext (MeetingNotFoundError if not found)
-  // The middleware already ensures the user is authenticated
+  // The proxy already ensures the user is authenticated
   try {
     const ragResults = await getRAGContext(question, {
       meetingId,

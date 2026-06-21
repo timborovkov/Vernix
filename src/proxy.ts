@@ -36,9 +36,9 @@ const MD_EXCLUDE_PREFIXES = [
   "/.well-known",
 ];
 
-// Paths that the middleware is actually responsible for gating (auth +
+// Paths that the proxy is actually responsible for gating (auth +
 // terms acceptance). These mirror the original explicit matcher entries.
-// The broader `Accept: text/markdown` matcher below runs middleware on
+// The broader `Accept: text/markdown` matcher below runs the proxy on
 // many more paths — for those, we short-circuit after the markdown check
 // without running the auth block, otherwise unauthenticated agent calls
 // to public APIs (e.g. `/api/v1/*`, `/.well-known/*`) would 401 or be
@@ -78,7 +78,7 @@ function isAuthGatedPath(pathname: string): boolean {
 
 const { auth } = NextAuth(authConfig);
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   // Markdown content negotiation — when an agent sends `Accept: text/markdown`
   // on a public page, rewrite to /api/agent-md which renders markdown
   // on-demand from the HTML response, cached in-process for 1h. Runs before
@@ -100,7 +100,7 @@ export default auth((req) => {
     return NextResponse.rewrite(url, { request: { headers: forwarded } });
   }
 
-  // Only the paths in `isAuthGatedPath` are this middleware's responsibility
+  // Only the paths in `isAuthGatedPath` are this proxy's responsibility
   // to gate. The `Accept: text/markdown` matcher below may bring in paths
   // that have their own auth model (e.g. `/api/v1/*` uses API keys, public
   // `/.well-known/*` endpoints have none) — pass those through untouched.
@@ -167,7 +167,7 @@ export const config = {
     "/api/mcp",
     "/api/mcp/:path*",
     // Markdown negotiation: any page request with `Accept: text/markdown`
-    // runs the middleware so we can rewrite to /agent-md/<slug>.md. The
+// runs the proxy so we can rewrite to /agent-md/<slug>.md. The
     // header `has` guard keeps this off the hot path for normal browsing.
     {
       source:

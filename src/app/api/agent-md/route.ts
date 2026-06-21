@@ -1,4 +1,4 @@
-// On-demand Markdown-for-Agents renderer. The middleware rewrites
+// On-demand Markdown-for-Agents renderer. The proxy rewrites
 // `Accept: text/markdown` requests for public pages to
 // `/api/agent-md?path=<original-path>`. We fetch the HTML version of the
 // page from our own origin, strip chrome, and convert to markdown. Results
@@ -54,9 +54,9 @@ function stripChrome(html: string): string {
 }
 
 // Paths whose HTML we must NOT convert to markdown. Must stay in sync with
-// `MD_EXCLUDE_PREFIXES` in src/middleware.ts. Without this, a caller could
+// `MD_EXCLUDE_PREFIXES` in src/proxy.ts. Without this, a caller could
 // request `?path=/dashboard/settings`, the unauthenticated self-fetch would
-// be redirected to `/login` by the middleware, `fetch` (with the default
+// be redirected to `/login` by the proxy, `fetch` (with the default
 // follow policy) would return the 200 login HTML, and we'd cache the login
 // page as the markdown for `/dashboard/settings` for an hour.
 const RENDER_EXCLUDE_PREFIXES = [
@@ -85,7 +85,7 @@ function isSafePath(p: string): boolean {
 // In hosted environments (Railway, Fly, etc.) self-fetching the public origin
 // hairpins out through the CDN and frequently fails. When we're running inside
 // a container with a known PORT, hit the loopback interface directly — this
-// still goes through Next.js middleware and route handlers, just without the
+// still goes through Next.js proxy and route handlers, just without the
 // external round-trip.
 function getSelfFetchOrigin(publicOrigin: string): string {
   const port = process.env.PORT;
@@ -102,7 +102,7 @@ async function renderPath(origin: string, path: string): Promise<string> {
   const publicUrl = new URL(origin);
   const res = await fetch(`${selfOrigin}${path}`, {
     headers: {
-      // Explicitly ask for HTML — the middleware's markdown negotiation
+      // Explicitly ask for HTML — the proxy's markdown negotiation
       // triggers only on `Accept: text/markdown`, so we avoid the loop.
       Accept: "text/html",
       // Preserve the public host so any Host-based routing / absolute URL
@@ -128,7 +128,7 @@ async function renderPath(origin: string, path: string): Promise<string> {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  // The middleware passes the original path via `x-agent-md-path` because
+  // The proxy passes the original path via `x-agent-md-path` because
   // request.url reflects the client's URL, not the rewrite target. Fall back
   // to the `path` query param so direct hits from tooling / warmers work.
   const rawPath =
