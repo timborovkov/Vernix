@@ -167,7 +167,7 @@ export const config = {
     "/api/mcp",
     "/api/mcp/:path*",
     // Markdown negotiation: any page request with `Accept: text/markdown`
-// runs the proxy so we can rewrite to /agent-md/<slug>.md. The
+    // runs the proxy so we can rewrite to /agent-md/<slug>.md. The
     // header `has` guard keeps this off the hot path for normal browsing.
     {
       source:
