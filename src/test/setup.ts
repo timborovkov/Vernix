@@ -49,6 +49,8 @@ const { mockBillingError } = vi.hoisted(() => {
 
 vi.mock("@/lib/billing/enforce", () => ({
   getUserBilling: vi.fn().mockResolvedValue({
+    email: "test@example.com",
+    emailVerifiedAt: new Date("2026-01-01T00:00:00.000Z"),
     plan: "free",
     trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
     currentPeriodStart: null,
@@ -77,6 +79,7 @@ vi.mock("@/lib/billing/enforce", () => ({
       end: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
     },
     plan: "free",
+    isAdmin: false,
   }),
   billingError: vi.fn().mockImplementation(mockBillingError),
 }));
@@ -112,6 +115,23 @@ vi.mock("@/lib/billing/usage", () => ({
 }));
 
 vi.mock("@/lib/billing/limits", () => ({
+  ADMIN_LIMITS: {
+    meetingMinutesPerMonth: null,
+    voiceMeetingsPerMonth: null,
+    documentsCount: null,
+    maxDocumentSizeMB: null,
+    docUploadsPerMonth: null,
+    totalStorageMB: null,
+    ragQueriesPerDay: null,
+    meetingScopedDocs: null,
+    concurrentMeetings: null,
+    meetingsPerMonth: null,
+    apiEnabled: true,
+    mcpEnabled: true,
+    apiRequestsPerDay: null,
+    mcpServerConnections: null,
+    mcpClientConnections: null,
+  },
   getEffectiveLimits: vi.fn().mockReturnValue({
     meetingMinutesPerMonth: null,
     voiceMeetingsPerMonth: null,

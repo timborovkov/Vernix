@@ -13,6 +13,7 @@ import {
   canMakeRagQuery,
   canMakeApiRequest,
   canAddMcpServer,
+  ADMIN_LIMITS,
 } from "./limits";
 import { LIMITS, PLANS } from "./constants";
 
@@ -151,6 +152,19 @@ describe("canStartMeeting", () => {
     expect(canStartMeeting(proLimits, true, 0, 4, 0, 0).allowed).toBe(true);
     expect(canStartMeeting(proLimits, true, 0, 5, 0, 0).allowed).toBe(false);
   });
+
+  it("admin limits bypass meeting caps", () => {
+    const result = canStartMeeting(
+      ADMIN_LIMITS,
+      true,
+      1_000_000,
+      1_000,
+      1_000_000,
+      1_000_000
+    );
+
+    expect(result.allowed).toBe(true);
+  });
 });
 
 describe("canUploadDocument", () => {
@@ -184,6 +198,18 @@ describe("canUploadDocument", () => {
     const result = canUploadDocument(freeLimits, 3, 2, 20, 5);
     expect(result.allowed).toBe(true);
   });
+
+  it("admin limits bypass document caps", () => {
+    const result = canUploadDocument(
+      ADMIN_LIMITS,
+      1_000_000,
+      1_000_000,
+      1_000_000,
+      1_000_000
+    );
+
+    expect(result.allowed).toBe(true);
+  });
 });
 
 describe("canMakeRagQuery", () => {
@@ -197,6 +223,11 @@ describe("canMakeRagQuery", () => {
 
   it("allows when under limit", () => {
     const result = canMakeRagQuery(freeLimits, 19);
+    expect(result.allowed).toBe(true);
+  });
+
+  it("admin limits bypass daily RAG caps", () => {
+    const result = canMakeRagQuery(ADMIN_LIMITS, 1_000_000);
     expect(result.allowed).toBe(true);
   });
 });
@@ -221,6 +252,11 @@ describe("canMakeApiRequest", () => {
     const result = canMakeApiRequest(proLimits, 999);
     expect(result.allowed).toBe(true);
   });
+
+  it("admin limits bypass daily API caps", () => {
+    const result = canMakeApiRequest(ADMIN_LIMITS, 1_000_000);
+    expect(result.allowed).toBe(true);
+  });
 });
 
 describe("canAddMcpServer", () => {
@@ -240,6 +276,11 @@ describe("canAddMcpServer", () => {
 
   it("allows unlimited integrations on pro plan", () => {
     const result = canAddMcpServer(proLimits, 50);
+    expect(result.allowed).toBe(true);
+  });
+
+  it("admin limits bypass MCP server caps", () => {
+    const result = canAddMcpServer(ADMIN_LIMITS, 1_000_000);
     expect(result.allowed).toBe(true);
   });
 });

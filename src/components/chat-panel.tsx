@@ -43,12 +43,14 @@ export function ChatPanel({
   const isLoading = status === "streaming" || status === "submitted";
 
   const ragUsed = billing?.usage.ragQueries ?? 0;
-  const ragLimit =
-    billing?.limits.ragQueriesPerDay ?? LIMITS[PLANS.FREE].ragQueriesPerDay;
-  const ragPct = Math.min(100, (ragUsed / ragLimit) * 100);
+  const ragLimit = billing
+    ? billing.limits.ragQueriesPerDay
+    : LIMITS[PLANS.FREE].ragQueriesPerDay;
+  const ragPct =
+    ragLimit === null ? 0 : Math.min(100, (ragUsed / ragLimit) * 100);
 
   // Detect billing limit from usage data rather than fragile string matching
-  const isBillingLimitError = error && ragUsed >= ragLimit;
+  const isBillingLimitError = error && ragLimit !== null && ragUsed >= ragLimit;
 
   // Auto-scroll after DOM updates
   useLayoutEffect(() => {
@@ -78,7 +80,10 @@ export function ChatPanel({
           </CardTitle>
           {billing && (
             <span className="text-muted-foreground text-xs">
-              {ragUsed}/{ragLimit} today
+              {ragLimit === null
+                ? `${ragUsed}/unlimited`
+                : `${ragUsed}/${ragLimit}`}{" "}
+              today
             </span>
           )}
         </div>
