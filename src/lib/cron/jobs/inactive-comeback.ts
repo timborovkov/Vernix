@@ -1,18 +1,18 @@
-import { and, eq, gte, isNull, lte, or } from "drizzle-orm";
+import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email/send";
-import { getFreePlanUpgradeReminderHtml } from "@/lib/email/templates";
-import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 import {
   getMarketingCampaignCutoffs,
-  isActiveMarketingUser,
+  isInactiveMarketingUser,
   isRecurringMarketingCampaignDue,
 } from "@/lib/email/campaigns";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
+import { sendEmail } from "@/lib/email/send";
+import { getInactiveComeBackEmailHtml } from "@/lib/email/templates";
 
-export async function runUpgradeReminders() {
+export async function runInactiveComeback() {
   const now = new Date();
-  const { active, cooldown } = getMarketingCampaignCutoffs(now);
+  const { inactive, cooldown } = getMarketingCampaignCutoffs(now);
 
   const eligibleUsers = await db
     .select({
@@ -31,8 +31,8 @@ export async function runUpgradeReminders() {
         eq(users.plan, "free"),
         or(isNull(users.trialEndsAt), lte(users.trialEndsAt, now)),
         or(
-          gte(users.lastActiveAt, active),
-          and(isNull(users.lastActiveAt), gte(users.createdAt, active))
+          lte(users.lastActiveAt, inactive),
+          and(isNull(users.lastActiveAt), lte(users.createdAt, inactive))
         ),
         or(
           isNull(users.lastUpgradeReminderSentAt),
@@ -48,15 +48,15 @@ export async function runUpgradeReminders() {
   let sent = 0;
   let failed = 0;
   for (const user of eligibleUsers) {
-    if (!isActiveMarketingUser(user, now)) continue;
+    if (!isInactiveMarketingUser(user, now)) continue;
     if (!isRecurringMarketingCampaignDue(user, now)) continue;
     if (!shouldSendEmail(user.emailPreferences, "marketing")) continue;
 
     const unsubscribeUrl = buildUnsubscribeUrl(user.id, "marketing");
     const result = await sendEmail({
       to: user.email,
-      subject: "Unlock more with Vernix Pro",
-      html: getFreePlanUpgradeReminderHtml(user.name, unsubscribeUrl),
+      subject: "Come back to Vernix",
+      html: getInactiveComeBackEmailHtml(user.name, unsubscribeUrl),
       unsubscribeUrl,
     });
     if (!result.success) {
@@ -66,15 +66,12 @@ export async function runUpgradeReminders() {
 
     await db
       .update(users)
-      .set({
-        lastUpgradeReminderSentAt: now,
-        updatedAt: now,
-      })
+      .set({ lastComeBackEmailSentAt: now, updatedAt: now })
       .where(eq(users.id, user.id));
 
     sent++;
   }
 
-  console.log(`[Upgrade Reminders] Sent ${sent}, failed ${failed}`);
+  console.log(`[Inactive Comeback] Sent ${sent}, failed ${failed}`);
   return { sent, failed };
 }

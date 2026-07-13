@@ -43,6 +43,9 @@ export const users = pgTable("users", {
   lastUpgradeReminderSentAt: timestamp("last_upgrade_reminder_sent_at", {
     withTimezone: true,
   }),
+  lastComeBackEmailSentAt: timestamp("last_come_back_email_sent_at", {
+    withTimezone: true,
+  }),
   lastRetentionEmailSentAt: timestamp("last_retention_email_sent_at", {
     withTimezone: true,
   }),

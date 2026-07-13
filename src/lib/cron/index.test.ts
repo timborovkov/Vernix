@@ -13,6 +13,7 @@ const mockHandlers = vi.hoisted(() => ({
   runStorageCleanup: vi.fn().mockResolvedValue({ deleted: 0 }),
   runInactiveCleanup: vi.fn().mockResolvedValue({ flagged: 0 }),
   runOrphanSweeper: vi.fn().mockResolvedValue({ cleaned: 0 }),
+  runInactiveComeback: vi.fn().mockResolvedValue({ sent: 0, failed: 0 }),
 }));
 
 vi.mock("./jobs/meeting-recovery", () => ({
@@ -50,6 +51,9 @@ vi.mock("./jobs/inactive-cleanup", () => ({
 }));
 vi.mock("./jobs/orphan-sweeper", () => ({
   runOrphanSweeper: mockHandlers.runOrphanSweeper,
+}));
+vi.mock("./jobs/inactive-comeback", () => ({
+  runInactiveComeback: mockHandlers.runInactiveComeback,
 }));
 
 import { CRON_JOBS, runDueCronJobs } from "./index";
@@ -124,6 +128,21 @@ describe("CRON_JOBS schedule logic", () => {
 
     it("does not run after the 5-min window on Monday", () => {
       expect(job().shouldRun(new Date("2026-03-16T09:05:00Z"))).toBe(false);
+    });
+  });
+
+  describe("inactive-comeback", () => {
+    const job = () => CRON_JOBS.find((j) => j.name === "inactive-comeback")!;
+
+    it("runs on Monday at 12:00 UTC within the 5-min window", () => {
+      expect(job().shouldRun(new Date("2026-03-16T12:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-16T12:04:59Z"))).toBe(true);
+    });
+
+    it("does not run on other days, hours, or after the window", () => {
+      expect(job().shouldRun(new Date("2026-03-17T12:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-16T11:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-16T12:05:00Z"))).toBe(false);
     });
   });
 
