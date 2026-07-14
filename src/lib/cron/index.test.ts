@@ -13,7 +13,12 @@ const mockHandlers = vi.hoisted(() => ({
   runStorageCleanup: vi.fn().mockResolvedValue({ deleted: 0 }),
   runInactiveCleanup: vi.fn().mockResolvedValue({ flagged: 0 }),
   runOrphanSweeper: vi.fn().mockResolvedValue({ cleaned: 0 }),
-  runInactiveComeback: vi.fn().mockResolvedValue({ sent: 0, failed: 0 }),
+  runInactiveComeback: vi.fn().mockResolvedValue({
+    sent: 0,
+    suppressed: 0,
+    skipped: 0,
+    failed: 0,
+  }),
 }));
 
 vi.mock("./jobs/meeting-recovery", () => ({
@@ -108,41 +113,64 @@ describe("CRON_JOBS schedule logic", () => {
   describe("upgrade-reminders", () => {
     const job = () => CRON_JOBS.find((j) => j.name === "upgrade-reminders")!;
 
-    it("runs on Monday at 09:00 UTC within the 5-min window", () => {
-      // 2026-03-16 is a Monday
+    it("runs Monday at 09:00 UTC within the 5-min window", () => {
       expect(job().shouldRun(new Date("2026-03-16T09:00:00Z"))).toBe(true);
-      expect(job().shouldRun(new Date("2026-03-16T09:04:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-16T09:04:59Z"))).toBe(true);
     });
 
-    it("does not run on non-Monday days", () => {
-      // 2026-03-15 is a Sunday
-      expect(job().shouldRun(new Date("2026-03-15T09:00:00Z"))).toBe(false);
-      // 2026-03-17 is a Tuesday
+    it("does not run on another day, hour, or after the window", () => {
       expect(job().shouldRun(new Date("2026-03-17T09:00:00Z"))).toBe(false);
-    });
-
-    it("does not run at wrong hour on Monday", () => {
       expect(job().shouldRun(new Date("2026-03-16T08:00:00Z"))).toBe(false);
-      expect(job().shouldRun(new Date("2026-03-16T10:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-16T09:05:00Z"))).toBe(false);
+    });
+  });
+
+  describe("upgrade-reminders-recovery", () => {
+    const job = () =>
+      CRON_JOBS.find((j) => j.name === "upgrade-reminders-recovery")!;
+
+    it("runs every 6 hours at the 01:00 UTC offset", () => {
+      expect(job().shouldRun(new Date("2026-03-16T01:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-16T07:04:59Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-17T13:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-17T19:04:59Z"))).toBe(true);
     });
 
-    it("does not run after the 5-min window on Monday", () => {
-      expect(job().shouldRun(new Date("2026-03-16T09:05:00Z"))).toBe(false);
+    it("does not run at another offset or after the 5-min window", () => {
+      expect(job().shouldRun(new Date("2026-03-16T02:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-16T07:05:00Z"))).toBe(false);
     });
   });
 
   describe("inactive-comeback", () => {
     const job = () => CRON_JOBS.find((j) => j.name === "inactive-comeback")!;
 
-    it("runs on Monday at 12:00 UTC within the 5-min window", () => {
+    it("runs Monday at 12:00 UTC within the 5-min window", () => {
       expect(job().shouldRun(new Date("2026-03-16T12:00:00Z"))).toBe(true);
       expect(job().shouldRun(new Date("2026-03-16T12:04:59Z"))).toBe(true);
     });
 
-    it("does not run on other days, hours, or after the window", () => {
+    it("does not run on another day, hour, or after the window", () => {
       expect(job().shouldRun(new Date("2026-03-17T12:00:00Z"))).toBe(false);
       expect(job().shouldRun(new Date("2026-03-16T11:00:00Z"))).toBe(false);
       expect(job().shouldRun(new Date("2026-03-16T12:05:00Z"))).toBe(false);
+    });
+  });
+
+  describe("inactive-comeback-recovery", () => {
+    const job = () =>
+      CRON_JOBS.find((j) => j.name === "inactive-comeback-recovery")!;
+
+    it("runs every 6 hours at the 02:00 UTC offset", () => {
+      expect(job().shouldRun(new Date("2026-03-16T02:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-16T08:04:59Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-17T14:00:00Z"))).toBe(true);
+      expect(job().shouldRun(new Date("2026-03-17T20:04:59Z"))).toBe(true);
+    });
+
+    it("does not run at another offset or after the 5-min window", () => {
+      expect(job().shouldRun(new Date("2026-03-16T01:00:00Z"))).toBe(false);
+      expect(job().shouldRun(new Date("2026-03-16T08:05:00Z"))).toBe(false);
     });
   });
 
@@ -261,16 +289,30 @@ describe("runDueCronJobs", () => {
     expect(mockHandlers.runRecordingRetention).toHaveBeenCalledOnce();
   });
 
-  it("runs all jobs on Monday at 09:00 UTC that matches 6-hour boundary too", async () => {
-    // Monday 2026-03-16 at 09:00 — but 9 % 6 !== 0, so billing-sync should NOT run
+  it("runs the primary upgrade campaign Monday at 09:00 UTC", async () => {
     vi.setSystemTime(new Date("2026-03-16T09:01:00Z"));
 
     const result = await runDueCronJobs();
 
     expect(result.ran).toContain("meeting-recovery");
     expect(result.ran).toContain("upgrade-reminders");
+    expect(result.skipped).toContain("upgrade-reminders-recovery");
+    expect(mockHandlers.runUpgradeReminders).toHaveBeenCalledWith();
+  });
+
+  it("runs only stale upgrade recovery at the 13:00 UTC offset", async () => {
+    vi.setSystemTime(new Date("2026-03-16T13:01:00Z"));
+
+    const result = await runDueCronJobs();
+
+    expect(result.ran).toContain("meeting-recovery");
+    expect(result.ran).toContain("upgrade-reminders-recovery");
+    expect(result.skipped).toContain("upgrade-reminders");
     expect(result.skipped).toContain("billing-sync");
     expect(result.skipped).toContain("recording-retention");
+    expect(mockHandlers.runUpgradeReminders).toHaveBeenCalledWith({
+      recoveryOnly: true,
+    });
   });
 
   it("captures handler errors without crashing", async () => {

@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildRecurringMarketingIdempotencyKey,
   isActiveMarketingUser,
   isInactiveMarketingUser,
+  isMarketingCampaignClaimAvailable,
   isRecurringMarketingCampaignDue,
 } from "./campaigns";
 
 const now = new Date("2026-07-14T12:00:00Z");
 const daysAgo = (days: number) =>
   new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+const minutesAgo = (minutes: number) =>
+  new Date(now.getTime() - minutes * 60 * 1000);
 
 describe("marketing campaign audiences", () => {
   it("treats recent activity and the exact 30-day boundary as active", () => {
@@ -92,5 +96,64 @@ describe("recurring marketing campaign cooldown", () => {
         now
       )
     ).toBe(true);
+  });
+});
+
+describe("marketing campaign claims", () => {
+  it("blocks a concurrent send while a claim is active", () => {
+    expect(isMarketingCampaignClaimAvailable(minutesAgo(10), now)).toBe(false);
+  });
+
+  it("allows an abandoned claim to be recovered after 30 minutes", () => {
+    expect(isMarketingCampaignClaimAvailable(minutesAgo(30), now)).toBe(true);
+    expect(isMarketingCampaignClaimAvailable(null, now)).toBe(true);
+  });
+});
+
+describe("recurring marketing campaign idempotency", () => {
+  it("keeps the key stable while the successful-send history is unchanged", () => {
+    const history = {
+      lastUpgradeReminderSentAt: daysAgo(200),
+      lastComeBackEmailSentAt: null,
+    };
+
+    expect(
+      buildRecurringMarketingIdempotencyKey(
+        "inactive-comeback",
+        "user-1",
+        history
+      )
+    ).toBe(
+      buildRecurringMarketingIdempotencyKey(
+        "inactive-comeback",
+        "user-1",
+        history
+      )
+    );
+  });
+
+  it("starts a new logical send after either campaign records success", () => {
+    const initial = buildRecurringMarketingIdempotencyKey(
+      "upgrade-reminder",
+      "user-1",
+      {
+        lastUpgradeReminderSentAt: null,
+        lastComeBackEmailSentAt: null,
+      }
+    );
+    const afterComeback = buildRecurringMarketingIdempotencyKey(
+      "upgrade-reminder",
+      "user-1",
+      {
+        lastUpgradeReminderSentAt: daysAgo(200),
+        lastComeBackEmailSentAt: daysAgo(150),
+      }
+    );
+
+    expect(initial).toBe("upgrade-reminder/user-1/initial");
+    expect(afterComeback).toBe(
+      `upgrade-reminder/user-1/${daysAgo(150).getTime()}`
+    );
+    expect(afterComeback).not.toBe(initial);
   });
 });

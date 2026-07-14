@@ -46,6 +46,10 @@ export const users = pgTable("users", {
   lastComeBackEmailSentAt: timestamp("last_come_back_email_sent_at", {
     withTimezone: true,
   }),
+  marketingCampaignClaimToken: uuid("marketing_campaign_claim_token"),
+  marketingCampaignClaimedAt: timestamp("marketing_campaign_claimed_at", {
+    withTimezone: true,
+  }),
   lastRetentionEmailSentAt: timestamp("last_retention_email_sent_at", {
     withTimezone: true,
   }),
