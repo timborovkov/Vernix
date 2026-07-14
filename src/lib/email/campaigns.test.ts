@@ -4,6 +4,7 @@ import {
   isActiveMarketingUser,
   isInactiveMarketingUser,
   isMarketingCampaignClaimAvailable,
+  isMarketingCampaignClaimRecoverable,
   isRecurringMarketingCampaignDue,
 } from "./campaigns";
 
@@ -12,6 +13,8 @@ const daysAgo = (days: number) =>
   new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 const minutesAgo = (minutes: number) =>
   new Date(now.getTime() - minutes * 60 * 1000);
+const hoursAgo = (hours: number) =>
+  new Date(now.getTime() - hours * 60 * 60 * 1000);
 
 describe("marketing campaign audiences", () => {
   it("treats recent activity and the exact 30-day boundary as active", () => {
@@ -100,13 +103,38 @@ describe("recurring marketing campaign cooldown", () => {
 });
 
 describe("marketing campaign claims", () => {
-  it("blocks a concurrent send while a claim is active", () => {
-    expect(isMarketingCampaignClaimAvailable(minutesAgo(10), now)).toBe(false);
+  it("does not recover a claim while its lease is active", () => {
+    expect(
+      isMarketingCampaignClaimRecoverable(minutesAgo(10), hoursAgo(1), now)
+    ).toBe(false);
   });
 
-  it("allows an abandoned claim to be recovered after 30 minutes", () => {
-    expect(isMarketingCampaignClaimAvailable(minutesAgo(30), now)).toBe(true);
-    expect(isMarketingCampaignClaimAvailable(null, now)).toBe(true);
+  it("recovers an abandoned claim only inside the provider window", () => {
+    expect(
+      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(23), now)
+    ).toBe(true);
+    expect(
+      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(24), now)
+    ).toBe(false);
+    expect(isMarketingCampaignClaimRecoverable(null, hoursAgo(1), now)).toBe(
+      false
+    );
+  });
+
+  it("releases an unresolved attempt only after the shared cooldown", () => {
+    expect(
+      isMarketingCampaignClaimAvailable(hoursAgo(1), daysAgo(149), now)
+    ).toBe(false);
+    expect(
+      isMarketingCampaignClaimAvailable(hoursAgo(1), daysAgo(150), now)
+    ).toBe(true);
+    expect(isMarketingCampaignClaimAvailable(daysAgo(149), null, now)).toBe(
+      false
+    );
+    expect(isMarketingCampaignClaimAvailable(daysAgo(150), null, now)).toBe(
+      true
+    );
+    expect(isMarketingCampaignClaimAvailable(null, null, now)).toBe(true);
   });
 });
 

@@ -17,7 +17,13 @@ interface SendEmailOptions {
 
 export type SendEmailResult =
   | { success: true; status: "sent" | "suppressed" | "skipped" }
-  | { success: false; status: "failed"; error: string };
+  | {
+      success: false;
+      status: "failed";
+      error: string;
+      /** True when the request may have reached Resend and must be retried idempotently. */
+      retryable: boolean;
+    };
 
 export async function sendEmail(
   options: SendEmailOptions
@@ -78,13 +84,23 @@ export async function sendEmail(
 
     if (error) {
       console.error("[Email] Send failed:", error);
-      return { success: false, status: "failed", error: error.message };
+      return {
+        success: false,
+        status: "failed",
+        error: error.message,
+        retryable: false,
+      };
     }
 
     return { success: true, status: "sent" };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[Email] Send error:", message);
-    return { success: false, status: "failed", error: message };
+    return {
+      success: false,
+      status: "failed",
+      error: message,
+      retryable: true,
+    };
   }
 }
