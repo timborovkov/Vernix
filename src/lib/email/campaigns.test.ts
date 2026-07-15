@@ -121,17 +121,17 @@ describe("marketing campaign claims", () => {
     );
   });
 
-  it("releases an unresolved attempt after the provider recovery window", () => {
+  it("releases an unresolved attempt only after the shared cooldown", () => {
     expect(
-      isMarketingCampaignClaimAvailable(hoursAgo(1), hoursAgo(22), now)
+      isMarketingCampaignClaimAvailable(daysAgo(1), daysAgo(149), now)
     ).toBe(false);
     expect(
-      isMarketingCampaignClaimAvailable(hoursAgo(1), hoursAgo(23), now)
+      isMarketingCampaignClaimAvailable(daysAgo(1), daysAgo(150), now)
     ).toBe(true);
-    expect(isMarketingCampaignClaimAvailable(hoursAgo(22), null, now)).toBe(
+    expect(isMarketingCampaignClaimAvailable(daysAgo(149), null, now)).toBe(
       false
     );
-    expect(isMarketingCampaignClaimAvailable(hoursAgo(23), null, now)).toBe(
+    expect(isMarketingCampaignClaimAvailable(daysAgo(150), null, now)).toBe(
       true
     );
     expect(isMarketingCampaignClaimAvailable(null, null, now)).toBe(true);

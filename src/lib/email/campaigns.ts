@@ -69,8 +69,8 @@ export function isMarketingCampaignClaimAvailable(
   startedAt: Date | null,
   now: Date
 ): boolean {
-  const { recovery } = getMarketingCampaignCutoffs(now);
-  return claimedAt === null || (startedAt ?? claimedAt) <= recovery;
+  const { cooldown } = getMarketingCampaignCutoffs(now);
+  return claimedAt === null || (startedAt ?? claimedAt) <= cooldown;
 }
 
 export function getEffectiveActivityAt(user: UserActivity): Date {

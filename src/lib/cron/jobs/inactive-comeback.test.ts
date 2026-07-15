@@ -77,6 +77,7 @@ describe("runInactiveComeback", () => {
       suppressed: 0,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -123,6 +124,7 @@ describe("runInactiveComeback", () => {
       suppressed: 0,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
@@ -152,13 +154,12 @@ describe("runInactiveComeback", () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("does not consume the cooldown when delivery fails", async () => {
+  it("retains the claim when the delivery outcome is unknown", async () => {
     mockDb.where.mockResolvedValueOnce([candidate]);
     mockSendEmail.mockResolvedValueOnce({
       success: false,
-      status: "failed",
+      status: "unknown",
       error: "provider unavailable",
-      retryable: true,
     });
 
     const result = await runInactiveComeback();
@@ -167,7 +168,8 @@ describe("runInactiveComeback", () => {
       sent: 0,
       suppressed: 0,
       skipped: 0,
-      failed: 1,
+      failed: 0,
+      unknown: 1,
     });
     expect(mockDb.set).toHaveBeenCalledTimes(1);
     expect(mockDb.set).toHaveBeenLastCalledWith(
@@ -205,6 +207,7 @@ describe("runInactiveComeback", () => {
       suppressed: 1,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockDb.set).toHaveBeenLastCalledWith({
       marketingCampaignClaimToken: null,
@@ -318,12 +321,30 @@ describe("runInactiveComeback", () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("starts a fresh attempt after an unresolved claim leaves recovery", async () => {
+  it("does not start a fresh attempt after recovery ends", async () => {
     mockDb.where.mockResolvedValueOnce([
       {
         ...candidate,
         marketingCampaignClaimedAt: new Date("2026-07-13T12:00:00Z"),
         marketingCampaignClaimStartedAt: new Date("2026-07-13T12:00:00Z"),
+        marketingCampaignClaimType: "inactive-comeback",
+        marketingCampaignClaimPayload: storedComebackPayload,
+      },
+    ]);
+
+    const result = await runInactiveComeback();
+
+    expect(result.sent).toBe(0);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockDb.set).not.toHaveBeenCalled();
+  });
+
+  it("starts a fresh attempt after an unresolved claim reaches 150 days", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        ...candidate,
+        marketingCampaignClaimedAt: new Date("2026-02-14T12:00:00Z"),
+        marketingCampaignClaimStartedAt: new Date("2026-02-14T12:00:00Z"),
         marketingCampaignClaimType: "inactive-comeback",
         marketingCampaignClaimPayload: storedComebackPayload,
       },
@@ -394,7 +415,6 @@ describe("runInactiveComeback", () => {
       success: false,
       status: "failed",
       error: "invalid request",
-      retryable: false,
     });
 
     const result = await runInactiveComeback();
@@ -423,6 +443,7 @@ describe("runInactiveComeback", () => {
       suppressed: 0,
       skipped: 0,
       failed: 1,
+      unknown: 0,
     });
   });
 });

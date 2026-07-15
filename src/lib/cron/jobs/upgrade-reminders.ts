@@ -41,11 +41,11 @@ export async function runUpgradeReminders(
           isNull(users.marketingCampaignClaimedAt),
           and(
             isNotNull(users.marketingCampaignClaimStartedAt),
-            lte(users.marketingCampaignClaimStartedAt, recovery)
+            lte(users.marketingCampaignClaimStartedAt, cooldown)
           ),
           and(
             isNull(users.marketingCampaignClaimStartedAt),
-            lte(users.marketingCampaignClaimedAt, recovery)
+            lte(users.marketingCampaignClaimedAt, cooldown)
           )
         );
   const eligibilityPredicate = () =>
@@ -89,6 +89,7 @@ export async function runUpgradeReminders(
 
   let sent = 0;
   let failed = 0;
+  let unknown = 0;
   let suppressed = 0;
   let skipped = 0;
   for (const user of eligibleUsers) {
@@ -161,8 +162,8 @@ export async function runUpgradeReminders(
       ...payload,
     });
     if (result.status !== "sent") {
-      if (result.status === "failed" && result.retryable) {
-        failed++;
+      if (result.status === "unknown") {
+        unknown++;
         continue;
       }
 
@@ -217,7 +218,7 @@ export async function runUpgradeReminders(
   }
 
   console.log(
-    `[Upgrade Reminders] Sent ${sent}, suppressed ${suppressed}, skipped ${skipped}, failed ${failed}`
+    `[Upgrade Reminders] Sent ${sent}, suppressed ${suppressed}, skipped ${skipped}, failed ${failed}, unknown ${unknown}`
   );
-  return { sent, suppressed, skipped, failed };
+  return { sent, suppressed, skipped, failed, unknown };
 }

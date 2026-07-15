@@ -77,6 +77,7 @@ describe("runUpgradeReminders", () => {
       suppressed: 0,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -124,6 +125,7 @@ describe("runUpgradeReminders", () => {
       suppressed: 0,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockSendEmail).not.toHaveBeenCalled();
     expect(mockDb.set).not.toHaveBeenCalled();
@@ -140,13 +142,12 @@ describe("runUpgradeReminders", () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("does not consume the cooldown when delivery fails", async () => {
+  it("retains the claim when the delivery outcome is unknown", async () => {
     mockDb.where.mockResolvedValueOnce([candidate]);
     mockSendEmail.mockResolvedValueOnce({
       success: false,
-      status: "failed",
+      status: "unknown",
       error: "provider unavailable",
-      retryable: true,
     });
 
     const result = await runUpgradeReminders();
@@ -155,7 +156,8 @@ describe("runUpgradeReminders", () => {
       sent: 0,
       suppressed: 0,
       skipped: 0,
-      failed: 1,
+      failed: 0,
+      unknown: 1,
     });
     expect(mockDb.set).toHaveBeenCalledTimes(1);
     expect(mockDb.set).toHaveBeenLastCalledWith(
@@ -193,6 +195,7 @@ describe("runUpgradeReminders", () => {
       suppressed: 1,
       skipped: 0,
       failed: 0,
+      unknown: 0,
     });
     expect(mockDb.set).toHaveBeenLastCalledWith({
       marketingCampaignClaimToken: null,
@@ -287,12 +290,30 @@ describe("runUpgradeReminders", () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("starts a fresh attempt after an unresolved claim leaves recovery", async () => {
+  it("does not start a fresh attempt after recovery ends", async () => {
     mockDb.where.mockResolvedValueOnce([
       {
         ...candidate,
         marketingCampaignClaimedAt: new Date("2026-07-13T12:00:00Z"),
         marketingCampaignClaimStartedAt: new Date("2026-07-13T12:00:00Z"),
+        marketingCampaignClaimType: "upgrade-reminder",
+        marketingCampaignClaimPayload: storedUpgradePayload,
+      },
+    ]);
+
+    const result = await runUpgradeReminders();
+
+    expect(result.sent).toBe(0);
+    expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockDb.set).not.toHaveBeenCalled();
+  });
+
+  it("starts a fresh attempt after an unresolved claim reaches 150 days", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        ...candidate,
+        marketingCampaignClaimedAt: new Date("2026-02-14T12:00:00Z"),
+        marketingCampaignClaimStartedAt: new Date("2026-02-14T12:00:00Z"),
         marketingCampaignClaimType: "upgrade-reminder",
         marketingCampaignClaimPayload: storedUpgradePayload,
       },
@@ -363,7 +384,6 @@ describe("runUpgradeReminders", () => {
       success: false,
       status: "failed",
       error: "invalid request",
-      retryable: false,
     });
 
     const result = await runUpgradeReminders();
@@ -392,6 +412,7 @@ describe("runUpgradeReminders", () => {
       suppressed: 0,
       skipped: 0,
       failed: 1,
+      unknown: 0,
     });
   });
 });

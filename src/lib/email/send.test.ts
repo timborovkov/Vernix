@@ -80,11 +80,10 @@ describe("sendEmail", () => {
       success: false,
       status: "failed",
       error: "Bad request",
-      retryable: false,
     });
   });
 
-  it("marks transport exceptions as ambiguous and retryable", async () => {
+  it("marks transport exceptions as unknown delivery outcomes", async () => {
     mockResendSend.mockRejectedValueOnce(new Error("connection reset"));
 
     const result = await sendEmail({
@@ -95,9 +94,8 @@ describe("sendEmail", () => {
 
     expect(result).toEqual({
       success: false,
-      status: "failed",
+      status: "unknown",
       error: "connection reset",
-      retryable: true,
     });
   });
 
