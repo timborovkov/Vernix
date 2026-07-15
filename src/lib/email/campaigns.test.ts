@@ -111,27 +111,27 @@ describe("marketing campaign claims", () => {
 
   it("recovers an abandoned claim only inside the provider window", () => {
     expect(
-      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(23), now)
+      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(22), now)
     ).toBe(true);
     expect(
-      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(24), now)
+      isMarketingCampaignClaimRecoverable(minutesAgo(30), hoursAgo(23), now)
     ).toBe(false);
     expect(isMarketingCampaignClaimRecoverable(null, hoursAgo(1), now)).toBe(
       false
     );
   });
 
-  it("releases an unresolved attempt only after the shared cooldown", () => {
+  it("releases an unresolved attempt after the provider recovery window", () => {
     expect(
-      isMarketingCampaignClaimAvailable(hoursAgo(1), daysAgo(149), now)
+      isMarketingCampaignClaimAvailable(hoursAgo(1), hoursAgo(22), now)
     ).toBe(false);
     expect(
-      isMarketingCampaignClaimAvailable(hoursAgo(1), daysAgo(150), now)
+      isMarketingCampaignClaimAvailable(hoursAgo(1), hoursAgo(23), now)
     ).toBe(true);
-    expect(isMarketingCampaignClaimAvailable(daysAgo(149), null, now)).toBe(
+    expect(isMarketingCampaignClaimAvailable(hoursAgo(22), null, now)).toBe(
       false
     );
-    expect(isMarketingCampaignClaimAvailable(daysAgo(150), null, now)).toBe(
+    expect(isMarketingCampaignClaimAvailable(hoursAgo(23), null, now)).toBe(
       true
     );
     expect(isMarketingCampaignClaimAvailable(null, null, now)).toBe(true);

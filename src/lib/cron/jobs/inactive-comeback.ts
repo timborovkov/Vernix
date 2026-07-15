@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { and, eq, gte, isNotNull, isNull, lte, or } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import {
@@ -35,17 +35,17 @@ export async function runInactiveComeback(
           isNotNull(users.marketingCampaignClaimedAt),
           lte(users.marketingCampaignClaimedAt, claim),
           isNotNull(users.marketingCampaignClaimStartedAt),
-          gte(users.marketingCampaignClaimStartedAt, recovery)
+          gt(users.marketingCampaignClaimStartedAt, recovery)
         )
       : or(
           isNull(users.marketingCampaignClaimedAt),
           and(
             isNotNull(users.marketingCampaignClaimStartedAt),
-            lte(users.marketingCampaignClaimStartedAt, cooldown)
+            lte(users.marketingCampaignClaimStartedAt, recovery)
           ),
           and(
             isNull(users.marketingCampaignClaimStartedAt),
-            lte(users.marketingCampaignClaimedAt, cooldown)
+            lte(users.marketingCampaignClaimedAt, recovery)
           )
         );
   const eligibilityPredicate = () =>
@@ -63,7 +63,8 @@ export async function runInactiveComeback(
       or(
         isNull(users.lastComeBackEmailSentAt),
         lte(users.lastComeBackEmailSentAt, cooldown)
-      )
+      ),
+      sql`${users.emailPreferences}->>'marketing' IS DISTINCT FROM 'false'`
     );
 
   const eligibleUsers = await db
@@ -84,11 +85,7 @@ export async function runInactiveComeback(
       marketingCampaignClaimPayload: users.marketingCampaignClaimPayload,
     })
     .from(users)
-    .where(
-      options.recoveryOnly
-        ? claimPredicate()
-        : and(eligibilityPredicate(), claimPredicate())
-    );
+    .where(and(eligibilityPredicate(), claimPredicate()));
 
   let sent = 0;
   let failed = 0;
@@ -155,9 +152,7 @@ export async function runInactiveComeback(
         updatedAt: now,
       })
       .where(
-        options.recoveryOnly
-          ? and(eq(users.id, user.id), claimPredicate())
-          : and(eq(users.id, user.id), eligibilityPredicate(), claimPredicate())
+        and(eq(users.id, user.id), eligibilityPredicate(), claimPredicate())
       )
       .returning({ id: users.id });
     if (claimed.length === 0) continue;

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PgDialect } from "drizzle-orm/pg-core";
 
 const { mockDb, mockSendEmail } = vi.hoisted(() => {
   const db: Record<string, ReturnType<typeof vi.fn>> = {};
@@ -286,12 +287,12 @@ describe("runUpgradeReminders", () => {
     expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
-  it("starts a fresh attempt after an unresolved claim reaches 150 days", async () => {
+  it("starts a fresh attempt after an unresolved claim leaves recovery", async () => {
     mockDb.where.mockResolvedValueOnce([
       {
         ...candidate,
-        marketingCampaignClaimedAt: new Date("2026-02-14T12:00:00Z"),
-        marketingCampaignClaimStartedAt: new Date("2026-02-14T12:00:00Z"),
+        marketingCampaignClaimedAt: new Date("2026-07-13T12:00:00Z"),
+        marketingCampaignClaimStartedAt: new Date("2026-07-13T12:00:00Z"),
         marketingCampaignClaimType: "upgrade-reminder",
         marketingCampaignClaimPayload: storedUpgradePayload,
       },
@@ -310,6 +311,32 @@ describe("runUpgradeReminders", () => {
         marketingCampaignClaimType: "upgrade-reminder",
       })
     );
+  });
+
+  it("atomically rechecks recovery eligibility and marketing preference", async () => {
+    mockDb.where.mockResolvedValueOnce([
+      {
+        ...candidate,
+        marketingCampaignClaimedAt: new Date("2026-07-14T11:00:00Z"),
+        marketingCampaignClaimStartedAt: new Date("2026-07-14T10:00:00Z"),
+        marketingCampaignClaimType: "upgrade-reminder",
+        marketingCampaignClaimPayload: storedUpgradePayload,
+      },
+    ]);
+    mockDb.returning.mockResolvedValueOnce([]);
+
+    const result = await runUpgradeReminders({ recoveryOnly: true });
+
+    const claimSql = new PgDialect().sqlToQuery(
+      mockDb.where.mock.calls[1][0]
+    ).sql;
+    expect(claimSql).toContain('"users"."plan" =');
+    expect(claimSql).toContain('"users"."last_active_at"');
+    expect(claimSql).toContain(
+      "\"users\".\"email_preferences\"->>'marketing' IS DISTINCT FROM 'false'"
+    );
+    expect(result.sent).toBe(0);
+    expect(mockSendEmail).not.toHaveBeenCalled();
   });
 
   it("does not recover after the user opts out", async () => {
