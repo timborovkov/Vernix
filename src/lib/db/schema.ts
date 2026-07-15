@@ -43,6 +43,29 @@ export const users = pgTable("users", {
   lastUpgradeReminderSentAt: timestamp("last_upgrade_reminder_sent_at", {
     withTimezone: true,
   }),
+  lastComeBackEmailSentAt: timestamp("last_come_back_email_sent_at", {
+    withTimezone: true,
+  }),
+  marketingCampaignClaimToken: uuid("marketing_campaign_claim_token"),
+  marketingCampaignClaimedAt: timestamp("marketing_campaign_claimed_at", {
+    withTimezone: true,
+  }),
+  marketingCampaignClaimStartedAt: timestamp(
+    "marketing_campaign_claim_started_at",
+    { withTimezone: true }
+  ),
+  marketingCampaignClaimType: text("marketing_campaign_claim_type").$type<
+    "upgrade-reminder" | "inactive-comeback"
+  >(),
+  marketingCampaignClaimPayload: jsonb(
+    "marketing_campaign_claim_payload"
+  ).$type<{
+    idempotencyKey: string;
+    to: string;
+    subject: string;
+    html: string;
+    unsubscribeUrl: string;
+  }>(),
   lastRetentionEmailSentAt: timestamp("last_retention_email_sent_at", {
     withTimezone: true,
   }),

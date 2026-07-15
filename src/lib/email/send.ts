@@ -11,16 +11,22 @@ interface SendEmailOptions {
   replyTo?: string;
   /** When provided, adds List-Unsubscribe header for email clients */
   unsubscribeUrl?: string;
+  /** Stable key for safely retrying the same logical email with Resend */
+  idempotencyKey?: string;
 }
+
+export type SendEmailResult =
+  | { success: true; status: "sent" | "suppressed" | "skipped" }
+  | { success: false; status: "failed" | "unknown"; error: string };
 
 export async function sendEmail(
   options: SendEmailOptions
-): Promise<{ success: boolean; error?: string }> {
+): Promise<SendEmailResult> {
   const resend = getResend();
 
   if (!resend) {
     console.log("[Email] Resend not configured, skipping:", options.subject);
-    return { success: true };
+    return { success: true, status: "skipped" };
   }
 
   const toList = Array.isArray(options.to) ? options.to : [options.to];
@@ -34,7 +40,7 @@ export async function sendEmail(
     allowed = result.allowed;
     if (result.suppressed.length > 0) {
       console.log(
-        `[Email] Skipping suppressed recipients (${options.subject}): ${result.suppressed.join(", ")}`
+        `[Email] Skipping ${result.suppressed.length} suppressed recipient(s) (${options.subject})`
       );
     }
   } catch (err) {
@@ -45,7 +51,7 @@ export async function sendEmail(
   }
 
   if (allowed.length === 0) {
-    return { success: true };
+    return { success: true, status: "suppressed" };
   }
 
   try {
@@ -55,7 +61,7 @@ export async function sendEmail(
       headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
     }
 
-    const { error } = await resend.emails.send({
+    const payload = {
       from: FROM,
       to: allowed,
       subject: options.subject,
@@ -63,17 +69,30 @@ export async function sendEmail(
       text: options.text,
       replyTo: options.replyTo,
       ...(Object.keys(headers).length > 0 && { headers }),
-    });
+    };
+    const { error } = options.idempotencyKey
+      ? await resend.emails.send(payload, {
+          idempotencyKey: options.idempotencyKey,
+        })
+      : await resend.emails.send(payload);
 
     if (error) {
       console.error("[Email] Send failed:", error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        status: "failed",
+        error: error.message,
+      };
     }
 
-    return { success: true };
+    return { success: true, status: "sent" };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[Email] Send error:", message);
-    return { success: false, error: message };
+    return {
+      success: false,
+      status: "unknown",
+      error: message,
+    };
   }
 }

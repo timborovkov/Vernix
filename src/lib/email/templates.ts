@@ -120,6 +120,34 @@ export function getFreePlanUpgradeReminderHtml(
   );
 }
 
+export function getInactiveComeBackEmailHtml(
+  name: string,
+  unsubscribeUrl?: string
+): string {
+  const appUrl = getAppUrl();
+  return emailShell(
+    "Ready When You Are",
+    `
+      <p style="font-size:16px;color:#333;margin:0 0 16px">Hi ${escapeHtml(name)},</p>
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 16px">
+        It&rsquo;s been a while since your last visit. Bring Vernix to your next call and turn the conversation into a searchable transcript, summary, and action items.
+      </p>
+      <p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 24px">
+        Your workspace is ready whenever you are.
+      </p>
+      <div style="text-align:center;margin:32px 0">
+        <a href="${appUrl}/dashboard" style="display:inline-block;background:#242424;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+          Return to Vernix
+        </a>
+      </div>
+      <p style="font-size:12px;color:#999;line-height:1.6;margin:0;text-align:center">
+        You&rsquo;re receiving this because you haven&rsquo;t used Vernix recently.
+      </p>
+  `,
+    unsubscribeUrl
+  );
+}
+
 export function getLastChanceRetentionHtml(
   name: string,
   accessEndsAt?: Date | null,

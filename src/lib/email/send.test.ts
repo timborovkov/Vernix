@@ -35,12 +35,32 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({ success: true, status: "sent" });
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: ["test@example.com"],
         subject: "Test",
       })
+    );
+  });
+
+  it("passes a stable idempotency key to Resend retry options", async () => {
+    mockResendSend.mockResolvedValueOnce({
+      data: { id: "msg-1" },
+      error: null,
+    });
+
+    const result = await sendEmail({
+      to: "test@example.com",
+      subject: "Test",
+      html: "<p>Hello</p>",
+      idempotencyKey: "upgrade-reminder/user-1/initial",
+    });
+
+    expect(result).toEqual({ success: true, status: "sent" });
+    expect(mockResendSend).toHaveBeenCalledWith(
+      expect.objectContaining({ to: ["test@example.com"] }),
+      { idempotencyKey: "upgrade-reminder/user-1/initial" }
     );
   });
 
@@ -56,8 +76,27 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(false);
-    expect(result.error).toBe("Bad request");
+    expect(result).toEqual({
+      success: false,
+      status: "failed",
+      error: "Bad request",
+    });
+  });
+
+  it("marks transport exceptions as unknown delivery outcomes", async () => {
+    mockResendSend.mockRejectedValueOnce(new Error("connection reset"));
+
+    const result = await sendEmail({
+      to: "test@example.com",
+      subject: "Test",
+      html: "<p>Hello</p>",
+    });
+
+    expect(result).toEqual({
+      success: false,
+      status: "unknown",
+      error: "connection reset",
+    });
   });
 
   it("no-ops when Resend is not configured", async () => {
@@ -69,13 +108,14 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({ success: true, status: "skipped" });
     expect(mockResendSend).not.toHaveBeenCalled();
 
     noClient.value = false;
   });
 
   it("short-circuits when all recipients are suppressed", async () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     mockFilter.mockResolvedValueOnce({
       allowed: [],
       suppressed: ["blocked@example.com"],
@@ -87,8 +127,15 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({ success: true, status: "suppressed" });
     expect(mockResendSend).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledWith(
+      "[Email] Skipping 1 suppressed recipient(s) (Test)"
+    );
+    expect(logSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("blocked@example.com")
+    );
+    logSpy.mockRestore();
   });
 
   it("falls open and still sends when the suppression check throws", async () => {
@@ -101,7 +148,7 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({ success: true, status: "sent" });
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({ to: ["test@example.com"] })
     );
@@ -120,7 +167,7 @@ describe("sendEmail", () => {
       html: "<p>Hello</p>",
     });
 
-    expect(result.success).toBe(true);
+    expect(result).toEqual({ success: true, status: "sent" });
     expect(mockResendSend).toHaveBeenCalledWith(
       expect.objectContaining({ to: ["ok@example.com"] })
     );

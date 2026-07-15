@@ -12,6 +12,7 @@ import { runInactiveCleanup } from "./jobs/inactive-cleanup";
 import { runOrphanSweeper } from "./jobs/orphan-sweeper";
 import { runMidTrialCheckin } from "./jobs/mid-trial-checkin";
 import { runWinBack } from "./jobs/win-back";
+import { runInactiveComeback } from "./jobs/inactive-comeback";
 
 interface CronJob {
   name: string;
@@ -46,11 +47,17 @@ export const CRON_JOBS: CronJob[] = [
   {
     name: "upgrade-reminders",
     handler: runUpgradeReminders,
-    // Weekly on Monday at 09:00 UTC
+    // Weekly Monday at 09:00 UTC
     shouldRun: (now) =>
       now.getUTCDay() === 1 &&
       now.getUTCHours() === 9 &&
       now.getUTCMinutes() < 5,
+  },
+  {
+    name: "upgrade-reminders-recovery",
+    handler: () => runUpgradeReminders({ recoveryOnly: true }),
+    // Retry only stale in-flight claims every 6 hours within Resend's 24h window
+    shouldRun: (now) => now.getUTCHours() % 6 === 1 && now.getUTCMinutes() < 5,
   },
   {
     name: "token-purge",
@@ -126,6 +133,21 @@ export const CRON_JOBS: CronJob[] = [
     handler: runWinBack,
     // Daily at 11:00 UTC
     shouldRun: (now) => now.getUTCHours() === 11 && now.getUTCMinutes() < 5,
+  },
+  {
+    name: "inactive-comeback",
+    handler: runInactiveComeback,
+    // Weekly Monday at 12:00 UTC
+    shouldRun: (now) =>
+      now.getUTCDay() === 1 &&
+      now.getUTCHours() === 12 &&
+      now.getUTCMinutes() < 5,
+  },
+  {
+    name: "inactive-comeback-recovery",
+    handler: () => runInactiveComeback({ recoveryOnly: true }),
+    // Retry only stale in-flight claims every 6 hours within Resend's 24h window
+    shouldRun: (now) => now.getUTCHours() % 6 === 2 && now.getUTCMinutes() < 5,
   },
 ];
 

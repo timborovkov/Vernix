@@ -1,31 +1,31 @@
 import { randomUUID } from "crypto";
-import { and, eq, gt, gte, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
+import { and, eq, gt, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { sendEmail } from "@/lib/email/send";
-import { getFreePlanUpgradeReminderHtml } from "@/lib/email/templates";
-import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
 import {
   buildRecurringMarketingIdempotencyKey,
   getMarketingCampaignCutoffs,
-  isActiveMarketingUser,
+  isInactiveMarketingUser,
   isMarketingCampaignClaimAvailable,
   isMarketingCampaignClaimRecoverable,
   isRecurringMarketingCampaignDue,
   type RecurringMarketingCampaignPayload,
 } from "@/lib/email/campaigns";
+import { shouldSendEmail, buildUnsubscribeUrl } from "@/lib/email/preferences";
+import { sendEmail } from "@/lib/email/send";
+import { getInactiveComeBackEmailHtml } from "@/lib/email/templates";
 
-const CAMPAIGN = "upgrade-reminder" as const;
+const CAMPAIGN = "inactive-comeback" as const;
 
-interface UpgradeReminderRunOptions {
+interface InactiveComebackRunOptions {
   recoveryOnly?: boolean;
 }
 
-export async function runUpgradeReminders(
-  options: UpgradeReminderRunOptions = {}
+export async function runInactiveComeback(
+  options: InactiveComebackRunOptions = {}
 ) {
   const now = new Date();
-  const { active, cooldown, claim, recovery } =
+  const { inactive, cooldown, claim, recovery } =
     getMarketingCampaignCutoffs(now);
   const claimPredicate = () =>
     options.recoveryOnly
@@ -53,8 +53,8 @@ export async function runUpgradeReminders(
       eq(users.plan, "free"),
       or(isNull(users.trialEndsAt), lte(users.trialEndsAt, now)),
       or(
-        gte(users.lastActiveAt, active),
-        and(isNull(users.lastActiveAt), gte(users.createdAt, active))
+        lte(users.lastActiveAt, inactive),
+        and(isNull(users.lastActiveAt), lte(users.createdAt, inactive))
       ),
       or(
         isNull(users.lastUpgradeReminderSentAt),
@@ -96,7 +96,7 @@ export async function runUpgradeReminders(
     const currentlyEligible =
       user.plan === "free" &&
       (user.trialEndsAt === null || user.trialEndsAt <= now) &&
-      isActiveMarketingUser(user, now) &&
+      isInactiveMarketingUser(user, now) &&
       isRecurringMarketingCampaignDue(user, now) &&
       shouldSendEmail(user.emailPreferences, "marketing");
 
@@ -128,8 +128,8 @@ export async function runUpgradeReminders(
       const unsubscribeUrl = buildUnsubscribeUrl(user.id, "marketing");
       payload = {
         to: user.email,
-        subject: "Unlock more with Vernix Pro",
-        html: getFreePlanUpgradeReminderHtml(user.name, unsubscribeUrl),
+        subject: "Come back to Vernix",
+        html: getInactiveComeBackEmailHtml(user.name, unsubscribeUrl),
         unsubscribeUrl,
         idempotencyKey: buildRecurringMarketingIdempotencyKey(
           CAMPAIGN,
@@ -193,7 +193,7 @@ export async function runUpgradeReminders(
     const finalized = await db
       .update(users)
       .set({
-        lastUpgradeReminderSentAt: now,
+        lastComeBackEmailSentAt: now,
         marketingCampaignClaimToken: null,
         marketingCampaignClaimedAt: null,
         marketingCampaignClaimStartedAt: null,
@@ -218,7 +218,7 @@ export async function runUpgradeReminders(
   }
 
   console.log(
-    `[Upgrade Reminders] Sent ${sent}, suppressed ${suppressed}, skipped ${skipped}, failed ${failed}, unknown ${unknown}`
+    `[Inactive Comeback] Sent ${sent}, suppressed ${suppressed}, skipped ${skipped}, failed ${failed}, unknown ${unknown}`
   );
   return { sent, suppressed, skipped, failed, unknown };
 }

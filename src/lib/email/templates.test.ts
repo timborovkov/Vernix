@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   escapeHtml,
   getFreePlanUpgradeReminderHtml,
+  getInactiveComeBackEmailHtml,
   getLastChanceRetentionHtml,
   getWelcomeEmailHtml,
   getContactNotificationHtml,
@@ -92,6 +93,23 @@ describe("getFreePlanUpgradeReminderHtml", () => {
     expect(html).toContain("Upgrade to Pro");
     expect(html).toContain("&lt;script&gt;");
     expect(html).not.toContain("<script>");
+  });
+});
+
+describe("getInactiveComeBackEmailHtml", () => {
+  it("uses general comeback copy, dashboard CTA, and an unsubscribe link", () => {
+    const html = getInactiveComeBackEmailHtml(
+      '<script>alert("xss")</script>',
+      "https://vernix.app/unsubscribe-token"
+    );
+
+    expect(html).toContain("Return to Vernix");
+    expect(html).toContain("/dashboard");
+    expect(html).toContain("https://vernix.app/unsubscribe-token");
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain("<script>");
+    expect(html.toLowerCase()).not.toContain("re-subscribe");
+    expect(html).not.toContain("Vernix Pro");
   });
 });
 
